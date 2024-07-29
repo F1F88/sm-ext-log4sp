@@ -7,7 +7,7 @@
 #define PLUGIN_AUTHOR                       "F1F88"
 #define PLUGIN_VERSION                      "v1.0.0"
 #define PLUGIN_DESCRIPTION                  "Test Logging for SourcePawn extension"
-#define PLUGIN_URL                          "https://github.com/F1F88/Log4sp"
+#define PLUGIN_URL                          "https://github.com/F1F88/sm-ext-log4sp"
 
 public Plugin myinfo = {
     name        = PLUGIN_NAME,
@@ -28,43 +28,55 @@ public void OnPluginStart()
 
 Action CB_CMD(int client, int args)
 {
-    // Logger logger = Logger.CreateServerConsoleLogger("F1F88");
-    // TestLoggerLvl(logger);
-    // delete logger;
-    // logger = Logger.CreateServerConsoleLogger("F1F88");
-    // TestLoggerLog(logger);
-    // delete logger;
-    // logger = Logger.CreateServerConsoleLogger("F1F88");
-    // TestLoggerPattern(logger);
-    // delete logger;
-    Logger logger = Logger.CreateServerConsoleLogger("F1F88");
-    TestLoggerFlush(logger);
-    delete logger;
-    // logger = Logger.CreateServerConsoleLogger("F1F88");
-    // TestLoggerBacktrace(logger);
-    // delete logger;
+    Logger logger1 = Logger.CreateServerConsoleLogger("logger1");
+    TestLoggerLvl(logger1);
+    delete logger1;
 
-    // Sink sink = new ServerConsoleSinkST();
-    // TestSinkLvl(sink);
-    // delete sink;
-    // sink = new ServerConsoleSinkST();
-    // TestSinkLog(sink);
-    // delete sink;
-    // sink = new ServerConsoleSinkST();
-    // TestSinkPattern(sink);
-    // delete sink;
+    Logger logger2 = Logger.CreateServerConsoleLogger("logger2", true);
+    TestLoggerLog(logger2);
+    delete logger2;
+
+    Logger logger3 = Logger.CreateServerConsoleLogger("logger3");
+    TestLoggerPattern(logger3);
+    delete logger3;
+
+    Logger logger4 = Logger.CreateServerConsoleLogger("logger4", true);
+    TestLoggerFlush(logger4);
+    delete logger4;
+
+    Logger logger5 = Logger.CreateServerConsoleLogger("logger5");
+    TestLoggerBacktrace(logger5);
+    delete logger5;
+
+    Logger logger6 = Logger.CreateServerConsoleLogger("logger6", true);
+    TestLoggerSink(logger6);
+    delete logger6;
+
+
+    Sink sink1 = new ServerConsoleSinkST();
+    TestSinkLvl(sink1);
+    delete sink1;
+
+    Sink sink2 = new ServerConsoleSinkMT();
+    TestSinkLog(sink2);
+    delete sink2;
+
+    Sink sink3 = new ServerConsoleSinkST();
+    TestSinkPattern(sink3);
+    delete sink3;
+
+    ClientConsoleSinkMT sink4 = new ClientConsoleSinkMT();
+    TestSinkLvl(sink4);
+    TestSinkLog(sink4);
+    sink4.SetFilter(filter);
+    TestSinkLog(sink4);
+    delete sink4;
 
     // BenchmarkServerConsole1();
+    // BenchmarkServerConsole2();
     // BenchmarkBaseFile1();
     // BenchmarkBaseFile2();
 
-    // ClientConsoleSinkST sink = new ClientConsoleSinkST();
-    // TestSinkLvl(sink);
-    // TestSinkLog(sink);
-    // sink.SetFilter(filter);
-    // delete sink;
-
-    // TestServerConsoleSTLogging();
     return Plugin_Handled;
 }
 
@@ -300,13 +312,13 @@ void TestSinkPattern(Sink sink)
     PrintToServer("========== Test Sink Pattern End ==========");
 }
 
-void BenchmarkServerConsole1()
+stock void BenchmarkServerConsole1(bool mt = false)
 {
     float startTime1, endTime1;
     float startTime2, endTime2;
     const int count = 1000000;
 
-    Logger logger = Logger.CreateServerConsoleLogger("F1F88", true);
+    Logger logger = Logger.CreateServerConsoleLogger("F1F88", mt);
     logger.FlushOn(LogLevel_Error);
     startTime1 = GetEngineTime();
     for (int i=0; i<count; ++i)
@@ -356,13 +368,13 @@ void BenchmarkServerConsole1()
      */
 }
 
-void BenchmarkServerConsole2()
+stock void BenchmarkServerConsole2(bool mt = false)
 {
     float startTime1, endTime1;
     float startTime2, endTime2;
     const int count = 1000000;
 
-    Logger logger = Logger.CreateServerConsoleLogger("F1F88", true);
+    Logger logger = Logger.CreateServerConsoleLogger("F1F88", mt);
     startTime1 = GetEngineTime();
     for (int i=0; i<count; ++i)
     {
@@ -399,15 +411,14 @@ void BenchmarkServerConsole2()
      */
 }
 
-void BenchmarkBaseFile1()
+stock void BenchmarkBaseFile1(bool mt = false)
 {
     float startTime1, endTime1;
     float startTime2, endTime2;
     const int count = 1000000;
-    bool mt = true;
 
     Logger logger = Logger.CreateBaseFileLogger("F1F88", "logs/benchmark_BaseFile.log", .mt=mt);
-    Sink sink = mt ? new ServerConsoleSinkMT() : new ServerConsoleSinkST();
+    Sink sink = mt ? view_as<Sink>(new ServerConsoleSinkMT()) : view_as<Sink>(new ServerConsoleSinkST());
     logger.AddSink(sink);
     startTime1 = GetEngineTime();
     for (int i=0; i<count; ++i)
@@ -457,12 +468,11 @@ void BenchmarkBaseFile1()
      */
 }
 
-void BenchmarkBaseFile2()
+stock void BenchmarkBaseFile2(bool mt = false)
 {
     float startTime1, endTime1;
     float startTime2, endTime2;
     const int count = 1000000;
-    bool mt = true;
 
     Logger logger = Logger.CreateBaseFileLogger("F1F88", "logs/benchmark_BaseFile.log", .mt=mt);
     startTime1 = GetEngineTime();
