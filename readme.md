@@ -6,64 +6,64 @@ NOTE: This readme.md is derived from chatgpt's translation readme-chi.md
 
 ## Features
 
-1. **High Performance:** Significantly faster than `LogMessage()`.
+1. High Performance: Significantly faster than [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks)
-   - [log4sp benchmarks](./sourcemod/scripting/test-log4sp.sp)
+   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks).
+   - [log4sp benchmarks](./sourcemod/scripting/test-log4sp.sp).
 
-2. **Supports per-Logger Log Levels:**
+2. Supports set different log level for each Logger
 
-   - Messages below the configured log level are not output.
-   - Log levels can be dynamically adjusted.
+   - If the level of a log message is lower than the configured log level, no log message is displayed.
+   - Log level can be dynamically adjusted.
 
-3. **Supports per-Logger Log Formats:**
+3. Supports set different log format for each Logger
 
    - Log message composition independent of parameter formatting.
-   - Log formats can be dynamically adjusted.
-   - Supported formats: [Custom formatting](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+   - Log format can be dynamically adjusted.
+   - [Custom formatting](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-4. **Supports multiple Sinks per Logger:**
+4. Supports set multiple Sinks for each Logger
 
-   - Each Logger can invoke multiple Sinks for output.
-   - For example, emulating `LogMessage()` can add a DailyFileSink and ServerConsoleSink to a Logger.
-   - Each Sink can have different levels and formats.
+   - The Logger traverses all Sink output when logging.
+   - For example, add a DailyFileSink and ServerConsoleSink to a Logger to simulate [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
+   - Each Sink can have different level and format.
 
-5. **Supports multiple plugins reusing the same Logger:**
+5. Supports multiple plugins reusing the same Logger
 
    - After creating a Logger in one plugin, another plugin can use `Logger.Get("name")` to retrieve it.
 
-6. **Supports passing variable arguments when logging, formatted as log messages:**
+6. Supports format variable parameters when logging
 
-   - For reduced learning and development costs, the parameter formatting scheme is similar to `Format`. Simply use the `XXXAmxTpl` method and use it like `LogMessage`.
+   - For reduced learning and development costs, the parameter formatting scheme is similar to [Format()](https://sm.alliedmods.net/new-api/string/Format). Simply use the XXXAmxTpl method and use it like [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
 
-   - Format formatting: [Format Class Functions (SourceMod Scripting)](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting))
+   - [Format Class Functions (SourceMod Scripting)](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting))
 
    - Note: The maximum length for variable argument strings is 2048 characters. Strings longer than this will be truncated.
 
-     To log longer messages, format the string in advance and use functions like `void Trace(const char[] msg)`. While these functions do not accept variable arguments or format parameters for you, the length of the `char[] msg` parameter is unrestricted.
+     To log longer messages, format the string in advance and use functions like void `Trace(const char[] msg)`, `void Info(const char[] msg)`. While these functions do not accept variable arguments or format parameters for you, the length of the `char[] msg` parameter is unrestricted.
 
-7. **Supports flush strategies:**
+7. Supports flush strategies
 
    - Typically, log messages are not immediately flushed but temporarily stored in a buffer.
    - Modify the Flush Level to determine when to flush.
-   - Flush policies: [Flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+   - [Flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
 
-8. **Supports log backtracking:**
+8. Supports backtrace
 
-   - When enabled, Trace and Debug-level logs are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`.
-   - Backtrace strategy: [Backtrace support](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
+   - When enabled, Trace and Debug level logs are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`.
+   - [Backtrace support](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
 
-9. **Supports multiple Sinks:**
+9. Supports various log targets:
 
    - ServerConsoleSink: Prints log messages to the server console.
-     - Similar to PrintToServer.
-     - Performance is comparable to PrintToServer.
+     - Similar to [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer).
+     - Performance is comparable to [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer).
    - ClientConsoleSink: Prints log messages to the client console.
-     - Similar to PrintToConsole.
+     - Similar to [PrintToConsole()](https://sm.alliedmods.net/new-api/console/PrintToConsole).
    - BaseFileSink: Writes log messages to a file.
-     - Similar to LogMessage but does not output log messages to the server console.
-     - Much faster than LogMessage.
-     - Even with a complete simulation of LogMessage (additional ServerConsoleSink), it is approximately 5 times faster than LogMessage.
+     - Similar to [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) but does not output log messages to the server console.
+     - Much faster than [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
+     - Even with a complete simulation of [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) (additional ServerConsoleSink), it is approximately 5 times faster than LogMessage.
    - RotatingFileSink: Distinguishes log messages into files based on rotation.
      - After the log file reaches a set size, it creates and writes to a new log file.
      - After creating a set number of files, it deletes old files, rotating their use.
@@ -240,7 +240,7 @@ idk
    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
    sudo apt-get update
    sudo apt-get install gcc-4.9
-   
+
    # If the issue is resolved, the following step is not needed
    # sudo apt-get upgrade libstdc++6
    ```

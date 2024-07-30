@@ -4,7 +4,7 @@
 
 ## 特点
 
-1. 非常快，比 LogMessage() 快得多
+1. 非常快，比 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
 
    - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)
    - [log4sp 性能测试](./sourcemod/scripting/test-log4sp.sp)
@@ -22,24 +22,24 @@
 
 4. 支持每个 Logger 设定多个 Sink
 
-   - Logger 输出时会调用每一个 Sink 进行输出
-   - 例如模拟 LogMessage，可以在一个 Logger 添加 DailyFileSink 和 ServerConsoleSink
+   - Logger 输出时会遍历所有 Sink 输出
+   - 例如模拟 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 可以为 Logger 添加 DailyFileSink 和 ServerConsoleSink
    - 每个 Sink 可以拥有不同的级别
    - 每个 Sink 可以拥有不同的格式
 
 5. 支持多个插件复用同一个 Logger
 
-   - 在一个插件里创建 Logger 后，另一个插件使用 Logger.Get("name") 来获取 Logger
+   - 在一个插件里创建 Logger 后，另一个插件使用 `Logger.Get("name")` 来获取 Logger
 
 6. 支持 Log 时传递可变参数，并格式化为日志消息
 
-   - 出于降低学习成本和开发成本考虑，目前参数格式化方案与 Format 相同，只需调用 XXXAmxTpl 方法，然后像使用 LogMessage 一样使用它即可
+   - 出于降低学习成本和开发成本考虑，目前参数格式化方案与 [Format()](https://sm.alliedmods.net/new-api/string/Format) 相同，只需调用 XXXAmxTpl 方法，然后像使用 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 一样使用它即可
 
    - Format 格式化：https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)
 
    - 注意：可变参数的字符串最大长度为 2048，超过这个长度的字符会被截断
 
-     如需要记录更长的日志消息，可以自己先提前格式化好字符串，然后使用 void Trace(const char[] msg)、void Debug(const char[] msg) 这些函数虽然不能接受可变参数，也不能为你格式化参数，但参数 char[] msg 的长度不受限制
+     如需要记录更长的日志消息，可以自己先提前格式化好字符串，然后使用 `void Trace(const char[] msg)`、`void Debug(const char[] msg)` 这些函数虽然不能接受可变参数，也不能为你格式化参数，但参数 `char[] msg` 的长度不受限制
 
 7. 支持刷新策略
 
@@ -49,7 +49,7 @@
 
 8. 支持日志回溯
 
-   - 开启后，Trace、Debug 级别的日志存储在环形缓冲区中，显式调用 DumpBacktrace() 后才会输出
+   - 开启后，Trace、Debug 级别的日志存储在环形缓冲区中，显式调用 `DumpBacktrace()` 后才会输出
    - 回溯策略：https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support
 
 9. 支持多种 Sink
@@ -60,9 +60,9 @@
    - ClientConsoleSink：支持将日志消息打印到客户控制台
      - 类似于 PrintToConsole
    - BaseFileSink：支持将日志消息写入文件
-     - 类似于 LogMessage，但不会将日志消息输出到 server console
-     - 比 LogMessage 快得多
-     - 即使完全模拟 LogMessage （额外添加 1 个 ServerConsoleSink），也比 LogMessage 快 5 倍左右
+     - 类似于 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) server console
+     - 比 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
+     - 即使完全模拟 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) （额外添加 1 个 ServerConsoleSink），也比 LogMessage 快 5 倍左右
    - RotatingFileSink：支持将日志消息按轮询区分文件
      - 日志文件大小达到设定值后，会创建并写入新的日志文件
      - 创建文件个数达到设定值后，会删除旧文件，轮询使用
@@ -204,7 +204,7 @@ Action CommandCallback(int client, int args)
   - 版本：1.11-dev
 
 - [spdlog](https://github.com/gabime/spdlog)
-  - 版本：v1.14.1 
+  - 版本：v1.14.1
   - 仅需头文件（已包含在 [./extern](./extern) 文件夹内）
 
 
@@ -222,7 +222,7 @@ cd log4sp
 mkdir build && cd build
 # 把 $SOURCEMOD_HOME111 替换为你的 sourcemod 环境变量或路径
 # 如："/home/nmr/sourcemod"
-python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME111 
+python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME111
 ambuild
 ```
 
@@ -261,7 +261,7 @@ ambuild
    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
    sudo apt-get update
    sudo apt-get install gcc-4.9
-   
+
    # 如果问题解决，则不需要下面这一步
    # sudo apt-get upgrade libstdc++6
    ```
