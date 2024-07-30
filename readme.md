@@ -253,6 +253,7 @@ idk
    # Then check if the server has the required GLIBCXX version
    strings ./server/bin/libstdc++.so | grep GLIBCXX
    # If the operating system has it but the server doesn't, try renaming the server's ./server/bin/libstdc++.so.6 file to use the operating system's version
+   mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
    ```
 
 2. Is the project code complex/hard to learn?
@@ -270,10 +271,10 @@ Next, thanks to the following projects for providing inspiration:
 - Dr. McKay - [logdebug.inc](https://forums.alliedmods.net/showthread.php?t=258855)
 - disawar1 - [SM-Logger](https://forums.alliedmods.net/showthread.php?t=317168)
 
-Thanks to the following projects for providing Sourcemod extension code references:
+Thanks for the code reference provided by the following projects
 
-- ProjectSky's https://github.com/ProjectSky/sm-ext-yyjson
-- Code4Cookie's https://github.com/Code4Cookie/SM-Cereal
+- ProjectSky - [sm-ext-yyjson](https://github.com/ProjectSky/sm-ext-yyjson)
+- Code4Cookie - [SM-Cereal](https://github.com/Code4Cookie/SM-Cereal)
 
 Thanks to the following users for answering some questions I had during extension development:
 

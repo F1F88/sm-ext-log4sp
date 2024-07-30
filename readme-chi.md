@@ -274,6 +274,7 @@ ambuild
    # 再查看服务器是否有需要的 GLIBCXX 版本
    strings ./server/bin/libstdc++.so | grep GLIBCXX
    # 如果操作系统有，但服务器没有，可以尝试重命名服务器的 ./server/bin/libstdc++.so.6 文件，从而使用操作系统的版本
+   mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
    ```
 
 2. 这个项目代码复杂/学习难度大吗？
@@ -291,10 +292,10 @@ ambuild
 - Dr. McKay - [logdebug.inc](https://forums.alliedmods.net/showthread.php?t=258855)
 - disawar1 - [SM-Logger](https://forums.alliedmods.net/showthread.php?t=317168)
 
-感谢以下项目提供的 sourcemod extension 代码参考
+感谢以下项目提供的代码参考
 
-- ProjectSky 的 https://github.com/ProjectSky/sm-ext-yyjson
-- Code4Cookie 的 https://github.com/Code4Cookie/SM-Cereal
+- ProjectSky - [sm-ext-yyjson](https://github.com/ProjectSky/sm-ext-yyjson)
+- Code4Cookie - [SM-Cereal](https://github.com/Code4Cookie/SM-Cereal)
 
 感谢以下用户为我解答了拓展开发时的一些问题
 
