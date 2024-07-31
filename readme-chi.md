@@ -7,14 +7,14 @@
 1. 非常快，比 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
 
    - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)
-   - [log4sp 性能测试](./sourcemod/scripting/test-log4sp.sp)
+   - [log4sp 性能测试](./sourcemod/scripting/log4sp-benchmark.sp)
 
-2. 支持每个 Logger 设定不同的日志级别
+2. 支持每个 Logger(记录器) 和 Sink(输出源) 设定不同的日志级别
 
    - 低于设定日志级别的日志消息不会输出
    - 日志级别可以动态调整
 
-3. 支持每个 Logger 设定不同的日志格式
+3. 支持每个 Logger(记录器) 和 Sink(输出源) 设定不同的日志格式
 
    - 日志消息的组成，与参数格式化无关
    - 日志格式可以动态调整
@@ -27,13 +27,14 @@
    - 每个 Sink 可以拥有不同的级别
    - 每个 Sink 可以拥有不同的格式
 
-5. 支持多个插件复用同一个 Logger
+5. 支持多个插件复用同一个 Logger 对象
 
    - 在一个插件里创建 Logger 后，另一个插件使用 `Logger.Get("name")` 来获取 Logger
 
 6. 支持 Log 时传递可变参数，并格式化为日志消息
 
-   - 出于降低学习成本和开发成本考虑，目前参数格式化方案与 [Format()](https://sm.alliedmods.net/new-api/string/Format) 相同，只需调用 XXXAmxTpl 方法，然后像使用 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 一样使用它即可
+   - 出于降低学习成本和开发成本考虑，目前参数格式化方案与 [Format()](https://sm.alliedmods.net/new-api/string/Format) 相同
+   - 只需调用 XXXAmxTpl 方法，然后像使用 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 一样使用它即可
 
    - Format 格式化：https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)
 
@@ -54,46 +55,76 @@
 
 9. 支持多种 Sink
 
-   - ServerConsoleSink：支持将日志消息打印到服务器控制台
-     - 类似于 PrintToServer
-     - 性能 PrintToServer 与相差无几
-   - ClientConsoleSink：支持将日志消息打印到客户控制台
-     - 类似于 PrintToConsole
-   - BaseFileSink：支持将日志消息写入文件
+   - ServerConsoleSink
+     - 类似于 [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer)
+   - ClientConsoleSink
+     - 类似于 [PrintToConsole()](https://sm.alliedmods.net/new-api/console/PrintToConsole)
+   - BaseFileSink
      - 类似于 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) server console
-     - 比 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
+     - 但比 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
      - 即使完全模拟 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) （额外添加 1 个 ServerConsoleSink），也比 LogMessage 快 5 倍左右
-   - RotatingFileSink：支持将日志消息按轮询区分文件
-     - 日志文件大小达到设定值后，会创建并写入新的日志文件
-     - 创建文件个数达到设定值后，会删除旧文件，轮询使用
-   - DailyFileSink：支持将日志消息按天区分文件；
-     - 默认 0 点 0 分 0 秒时切换到新文件
-     - 创建文件个数达到设定值后，会删除旧文件，轮询使用
+   - RotatingFileSink
+   - DailyFileSink
 
 ## 使用示例
 
 ### 一个简单的示例
 
-```
-#include <sourcemod>
+```sourcepawn
+#include <sdktools>
 #include <log4sp>
 
 Logger myLogger;
 public void OnPluginStart()
 {
-    myLogger = Logger.CreateServerConsoleLogger("myLogger");
-    myLogger.Debug("===== Example code initialization is complete! =====");
+    myLogger = Logger.CreateServerConsoleLogger("logger-example-1");
+
+    RegConsoleCmd("sm_log4sp_example1", CommandCallback);
+
+    myLogger.Debug("===== Example 1 code initialization is complete! =====");
 }
 
-public void OnClientPutInServer(int client)
+/**
+ * 获取玩家瞄准的实体信息
+ */
+Action CommandCallback(int client, int args)
 {
-	myLogger.InfoAmxTpl("Client %L put in server.", client);
+    if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+    {
+        myLogger.Info("[SM] Command is in-game only.");
+        return Plugin_Handled;
+    }
+
+    int entity = GetClientAimTarget(client, false);
+    if (entity == -2)
+    {
+        myLogger.Fatal("[SM] The GetClientAimTarget() function is not supported.");
+        return Plugin_Handled;
+    }
+
+    if (entity == -1)
+    {
+        myLogger.Warn("[SM] No entity is being aimed at.");
+        return Plugin_Handled;
+    }
+
+    if (!IsValidEntity(entity))
+    {
+        myLogger.ErrorAmxTpl("[SM] entity %d is invalid.", entity);
+        return Plugin_Handled;
+    }
+
+    char classname[64];
+    GetEntityClassname(entity, classname, sizeof(classname));
+    myLogger.InfoAmxTpl("[SM] The client %L is aiming a (%d) %s entity.", client, entity, classname);
+
+    return Plugin_Handled;
 }
 ```
 
 ### 更详细一点的示例
 
-```pawn
+```sourcepawn
 #include <sourcemod>
 #include <log4sp>
 
@@ -117,7 +148,7 @@ Logger myLogger;
 public void OnPluginStart()
 {
     // 创建一个 单线程的, 名为 "myLogger" 的 Logger 对象
-    myLogger = Logger.CreateServerConsoleLogger("myLogger");
+    myLogger = Logger.CreateServerConsoleLogger("logger-example-2");
 
     // 配置 myLogger 的输出级别. 默认级别: LogLevel_Info
     myLogger.SetLevel(LogLevel_Debug);
@@ -158,17 +189,17 @@ public void OnPluginStart()
     // 你也可以使用: "myLogger.DropSink(mySink);"  +  "delete mySink;"
 
     // 现在我们自定义的 Logger 配置完成了，尽情使用吧
-    myLogger.Info("===== Example code initialization is complete! =====");
+    myLogger.Info("===== Example 2 code initialization is complete! =====");
 
     // 注册一个命令用于演示
-    RegConsoleCmd("sm_test_log4sp", CommandCallback);
+    RegConsoleCmd("sm_log4sp_example2", CommandCallback);
 }
 
 Action CommandCallback(int client, int args)
 {
     static int count = 0;
     // mySink 的级别是 LogLevel_Warn 所以这条消息不会输出到 client console
-    myLogger.DebugAmxTpl("Command 'sm_test_log4sp' is invoked %d times.", ++count);
+    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' is invoked %d times.", ++count);
 
     // myLogger 的级别是 LogLevel_Debug 所以这条消息不会输出到任何地方
     myLogger.TraceAmxTpl("CommandCallback param client = %L param args = %d.", client, args);
@@ -181,13 +212,14 @@ Action CommandCallback(int client, int args)
 
         switch (lvl)
         {
-            LogLevel_Trace: myLogger.TraceAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Debug: myLogger.DebugAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Info: myLogger.InfoAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Warn: myLogger.WarnAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Error: myLogger.ErrorAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Fatal: myLogger.FatalAmxTpl("[%d] %s", count, buffer);
-            default: LogLevel_Info: myLogger.WarnAmxTpl("[%d] The level cannot be resolved.", count);
+            case LogLevel_Trace: myLogger.TraceAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Debug: myLogger.DebugAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Info:  myLogger.InfoAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Warn:  myLogger.WarnAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Error: myLogger.ErrorAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Fatal: myLogger.FatalAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Off:   myLogger.LogAmxTpl(LogLevel_Off, "[%d] %s", count, buffer);
+            default:             myLogger.WarnAmxTpl("[%d] The level (%d) cannot be resolved.", count, lvl);
         }
     }
     return Plugin_Handled;
@@ -230,26 +262,6 @@ ambuild
 
 我不知道
 
-## 待办
-
-1. 完善英语版 readme.md
-2. 在 Windows 系统中测试 log4sp.ext.dll
-3. 支持 XXXAmxTpl 格式化的字符串无限长度
-4. 支持参数格式不匹配时不抛出异常
-    - 没记错的话 spdlog 也是这么做的
-    - 目前 XXXAmlTpl 调用 sm 内部的 API，如果格式与参数不匹配会直接抛出异常
-    - 值得考虑：其他API是否也可需要减少抛出异常？
-5. 支持 fmt 风格的格式化方案
-    - 可能需要自定义一个 cell_t 类型来识别参数
-    - 如何处理参数个数的问题？也许可以参考 flink tuple
-6. 实现更多不同类型的 sink
-    - 如果有时间的话
-7. 支持纯 sourcepawn 自定义 sink
-    - 使用一个代理 sink，通过 forward 来调用 sp 自定义的 sink_it\_() 和 flush_()
-    - 自定义构造器、以及如何识别自定义的 sink 类型还需要进一步考虑
-8. 实现更多的 SPDLOG_API
-    - 使用 forward 实现 logger、sinks 的 file_event_handlers
-
 ## 疑难解答
 
 1. 服务器启动时报错：**bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found**
@@ -286,17 +298,6 @@ ambuild
 
 首先感谢 **[gabime](https://github.com/gabime)** 提供了 **[spdlog](https://github.com/gabime/spdlog)** 这么好的一个库，否则这个项目可能不会诞生
 
-其次感谢以下项目提供的灵感来源
-
-- Alienmario - [sm-logdebug](https://github.com/Alienmario/sm-logdebug/tree/main)
-- Dr. McKay - [logdebug.inc](https://forums.alliedmods.net/showthread.php?t=258855)
-- disawar1 - [SM-Logger](https://forums.alliedmods.net/showthread.php?t=317168)
-
-感谢以下项目提供的代码参考
-
-- ProjectSky - [sm-ext-yyjson](https://github.com/ProjectSky/sm-ext-yyjson)
-- Code4Cookie - [SM-Cereal](https://github.com/Code4Cookie/SM-Cereal)
-
 感谢以下用户为我解答了拓展开发时的一些问题
 
 - Fyren
@@ -304,3 +305,23 @@ ambuild
 - Deathreus
 
 如有遗漏，请联系我
+
+## 待办
+
+1. 完善英语版 readme.md
+2. 在 Windows 系统中测试 log4sp.ext.dll
+3. 支持 XXXAmxTpl 格式化的字符串无限长度
+4. 支持参数格式不匹配时不抛出异常
+    - 没记错的话 spdlog 也是这么做的
+    - 目前 XXXAmlTpl 调用 sm 内部的 API，如果格式与参数不匹配会直接抛出异常
+    - 值得考虑：其他API是否也可需要减少抛出异常？
+5. 支持 fmt 风格的格式化方案
+    - 可能需要自定义一个 cell_t 类型来识别参数
+    - 如何处理参数个数的问题？也许可以参考 flink tuple
+6. 实现更多不同类型的 sink
+    - 如果有时间的话
+7. 支持纯 sourcepawn 自定义 sink
+    - 使用一个代理 sink，通过 forward 来调用 sp 自定义的 sink_it\_() 和 flush_()
+    - 自定义构造器、以及如何识别自定义的 sink 类型还需要进一步考虑
+8. 实现更多的 SPDLOG_API
+    - 使用 forward 实现 logger、sinks 的 file_event_handlers

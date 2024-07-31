@@ -9,14 +9,14 @@ NOTE: This readme.md is derived from chatgpt's translation readme-chi.md
 1. High Performance: Significantly faster than [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
    - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks).
-   - [log4sp benchmarks](./sourcemod/scripting/test-log4sp.sp).
+   - [log4sp benchmarks](./sourcemod/scripting/log4sp-benchmark.sp).
 
-2. Supports set different log level for each Logger
+2. Supports set different log level for each Logger and Sink
 
    - If the level of a log message is lower than the configured log level, no log message is displayed.
    - Log level can be dynamically adjusted.
 
-3. Supports set different log format for each Logger
+3. Supports set different log format for each Logger and Sink
 
    - Log message composition independent of parameter formatting.
    - Log format can be dynamically adjusted.
@@ -34,7 +34,8 @@ NOTE: This readme.md is derived from chatgpt's translation readme-chi.md
 
 6. Supports format variable parameters when logging
 
-   - For reduced learning and development costs, the parameter formatting scheme is similar to [Format()](https://sm.alliedmods.net/new-api/string/Format). Simply use the XXXAmxTpl method and use it like [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
+   - For reduced learning and development costs, the parameter formatting scheme is similar to [Format()](https://sm.alliedmods.net/new-api/string/Format).
+   - Simply use the XXXAmxTpl method and use it like [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
 
    - [Format Class Functions (SourceMod Scripting)](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting))
 
@@ -55,46 +56,77 @@ NOTE: This readme.md is derived from chatgpt's translation readme-chi.md
 
 9. Supports various log targets:
 
-   - ServerConsoleSink: Prints log messages to the server console.
+   - ServerConsoleSink
      - Similar to [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer).
      - Performance is comparable to [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer).
-   - ClientConsoleSink: Prints log messages to the client console.
+   - ClientConsoleSink
      - Similar to [PrintToConsole()](https://sm.alliedmods.net/new-api/console/PrintToConsole).
-   - BaseFileSink: Writes log messages to a file.
+   - BaseFileSink
      - Similar to [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) but does not output log messages to the server console.
-     - Much faster than [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
+     - But much faster than [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
      - Even with a complete simulation of [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) (additional ServerConsoleSink), it is approximately 5 times faster than LogMessage.
-   - RotatingFileSink: Distinguishes log messages into files based on rotation.
-     - After the log file reaches a set size, it creates and writes to a new log file.
-     - After creating a set number of files, it deletes old files, rotating their use.
-   - DailyFileSink: Distinguishes log messages into files daily.
-     - Defaults to switching to a new file at 00:00:00.
-     - After creating a set number of files, it deletes old files, rotating their use.
+   - RotatingFileSink
+   - DailyFileSink
 
 ## Usage Examples
 
 ### Simple Example
 
-```
-#include <sourcemod>
+```sourcepawn
+#include <sdktools>
 #include <log4sp>
 
 Logger myLogger;
 public void OnPluginStart()
 {
-    myLogger = Logger.CreateServerConsoleLogger("myLogger");
-    myLogger.Debug("===== Example code initialization is complete! =====");
+    myLogger = Logger.CreateServerConsoleLogger("logger-example-1");
+
+    RegConsoleCmd("sm_log4sp_example1", CommandCallback);
+
+    myLogger.Debug("===== Example 1 code initialization is complete! =====");
 }
 
-public void OnClientPutInServer(int client)
+/**
+ * Get client aiming entity info.
+ */
+Action CommandCallback(int client, int args)
 {
-    myLogger.InfoAmxTpl("Client %L put in server.", client);
+    if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+    {
+        myLogger.Info("[SM] Command is in-game only.");
+        return Plugin_Handled;
+    }
+
+    int entity = GetClientAimTarget(client, false);
+    if (entity == -2)
+    {
+        myLogger.Fatal("[SM] The GetClientAimTarget() function is not supported.");
+        return Plugin_Handled;
+    }
+
+    if (entity == -1)
+    {
+        myLogger.Warn("[SM] No entity is being aimed at.");
+        return Plugin_Handled;
+    }
+
+    if (!IsValidEntity(entity))
+    {
+        myLogger.ErrorAmxTpl("[SM] entity %d is invalid.", entity);
+        return Plugin_Handled;
+    }
+
+    char classname[64];
+    GetEntityClassname(entity, classname, sizeof(classname));
+    myLogger.InfoAmxTpl("[SM] The client %L is aiming a (%d) %s entity.", client, entity, classname);
+
+    return Plugin_Handled;
 }
 ```
 
 ### More Detailed Example
 
-```
+```sourcepawn
 #include <sourcemod>
 #include <log4sp>
 
@@ -118,7 +150,7 @@ Logger myLogger;
 public void OnPluginStart()
 {
     // Create a single-threaded Logger object named "myLogger".
-    myLogger = Logger.CreateServerConsoleLogger("myLogger");
+    myLogger = Logger.CreateServerConsoleLogger("logger-example-2");
 
     // Configure myLogger output level. Default level: LogLevel_Info.
     myLogger.SetLevel(LogLevel_Debug);
@@ -159,17 +191,17 @@ public void OnPluginStart()
     // Alternatively, you can use: "myLogger.DropSink(mySink);" + "delete mySink;"
 
     // Now our custom Logger configuration is complete, feel free to use it.
-    myLogger.Info("===== Example code initialization is complete! =====");
+    myLogger.Info("===== Example 2 code initialization is complete! =====");
 
     // Register a command for demonstration.
-    RegConsoleCmd("sm_test_log4sp", CommandCallback);
+    RegConsoleCmd("sm_log4sp_example2", CommandCallback);
 }
 
 Action CommandCallback(int client, int args)
 {
     static int count = 0;
     // mySink level is LogLevel_Warn so this message won't be output to client console.
-    myLogger.DebugAmxTpl("Command 'sm_test_log4sp' is invoked %d times.", ++count);
+    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' is invoked %d times.", ++count);
 
     // myLogger level is LogLevel_Debug so this message won't be output anywhere.
     myLogger.TraceAmxTpl("CommandCallback param client = %L param args = %d.", client, args);
@@ -182,13 +214,14 @@ Action CommandCallback(int client, int args)
 
         switch (lvl)
         {
-            LogLevel_Trace: myLogger.TraceAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Debug: myLogger.DebugAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Info: myLogger.InfoAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Warn: myLogger.WarnAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Error: myLogger.ErrorAmxTpl("[%d] %s", count, buffer);
-            LogLevel_Fatal: myLogger.FatalAmxTpl("[%d] %s", count, buffer);
-            default: LogLevel_Info: myLogger.WarnAmxTpl("[%d] The level cannot be resolved.", count);
+            case LogLevel_Trace: myLogger.TraceAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Debug: myLogger.DebugAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Info:  myLogger.InfoAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Warn:  myLogger.WarnAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Error: myLogger.ErrorAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Fatal: myLogger.FatalAmxTpl("[%d] %s", count, buffer);
+            case LogLevel_Off:   myLogger.LogAmxTpl(LogLevel_Off, "[%d] %s", count, buffer);
+            default:             myLogger.WarnAmxTpl("[%d] The level (%d) cannot be resolved.", count, lvl);
         }
     }
     return Plugin_Handled;
@@ -263,18 +296,7 @@ idk
 
 ## Acknowledgements
 
-First, thanks to **[gabime](https://github.com/gabime)** for providing the excellent library **[spdlog](https://github.com/gabime/spdlog)**, without which this project might not have been possible.
-
-Next, thanks to the following projects for providing inspiration:
-
-- Alienmario - [sm-logdebug](https://github.com/Alienmario/sm-logdebug/tree/main)
-- Dr. McKay - [logdebug.inc](https://forums.alliedmods.net/showthread.php?t=258855)
-- disawar1 - [SM-Logger](https://forums.alliedmods.net/showthread.php?t=317168)
-
-Thanks for the code reference provided by the following projects
-
-- ProjectSky - [sm-ext-yyjson](https://github.com/ProjectSky/sm-ext-yyjson)
-- Code4Cookie - [SM-Cereal](https://github.com/Code4Cookie/SM-Cereal)
+First, thanks to **[gabime](https://github.com/gabime)** for providing the excellent library **[spdlog](https://github.com/gabime/spdlog)**, without which this project might not have been born.
 
 Thanks to the following users for answering some questions I had during extension development:
 

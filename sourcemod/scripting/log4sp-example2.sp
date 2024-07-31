@@ -3,10 +3,10 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_NAME                         "Test Log4sp"
+#define PLUGIN_NAME                         "Log4sp Example 2"
 #define PLUGIN_AUTHOR                       "F1F88"
 #define PLUGIN_VERSION                      "v1.0.0"
-#define PLUGIN_DESCRIPTION                  "Test Logging for SourcePawn extension"
+#define PLUGIN_DESCRIPTION                  "Logging for SourcePawn example 2"
 #define PLUGIN_URL                          "https://github.com/F1F88/sm-ext-log4sp"
 
 public Plugin myinfo = {
@@ -39,7 +39,7 @@ Logger myLogger;
 public void OnPluginStart()
 {
     // 创建一个 单线程的, 名为 "myLogger" 的 Logger 对象
-    myLogger = Logger.CreateServerConsoleLogger("myLogger2");
+    myLogger = Logger.CreateServerConsoleLogger("logger-example-2");
 
     // 配置 myLogger 的输出级别. 默认级别: LogLevel_Info
     myLogger.SetLevel(LogLevel_Debug);
@@ -80,17 +80,17 @@ public void OnPluginStart()
     // 你也可以使用: "myLogger.DropSink(mySink);"  +  "delete mySink;"
 
     // 现在我们自定义的 Logger 配置完成了，尽情使用吧
-    myLogger.Info("===== Example2 code initialization is complete! =====");
+    myLogger.Info("===== Example 2 code initialization is complete! =====");
 
     // 注册一个命令用于演示
-    RegConsoleCmd("sm_test_log4sp", CommandCallback);
+    RegConsoleCmd("sm_log4sp_example2", CommandCallback);
 }
 
 Action CommandCallback(int client, int args)
 {
     static int count = 0;
     // mySink 的级别是 LogLevel_Warn 所以这条消息不会输出到 client console
-    myLogger.DebugAmxTpl("Command 'sm_test_log4sp' is invoked %d times.", ++count);
+    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' is invoked %d times.", ++count);
 
     // myLogger 的级别是 LogLevel_Debug 所以这条消息不会输出到任何地方
     myLogger.TraceAmxTpl("CommandCallback param client = %L param args = %d.", client, args);
