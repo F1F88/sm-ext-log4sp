@@ -230,7 +230,7 @@ Action CommandCallback(int client, int args)
 
 ### Additional Examples
 
-- [./sourcemod/scripting/test-log4sp.sp](./sourcemod/scripting/test-log4sp.sp)
+- [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
 
 ## Dependencies
 

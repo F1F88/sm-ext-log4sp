@@ -228,7 +228,7 @@ Action CommandCallback(int client, int args)
 
 ### 更多示例
 
-- [./sourcemod/scripting/test-log4sp.sp](./sourcemod/scripting/test-log4sp.sp)
+- [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
 
 ## 依赖
 
