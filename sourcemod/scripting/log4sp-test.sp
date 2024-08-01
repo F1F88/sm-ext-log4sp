@@ -5,7 +5,7 @@
 
 #define PLUGIN_NAME                         "Log4sp Test"
 #define PLUGIN_AUTHOR                       "F1F88"
-#define PLUGIN_VERSION                      "v1.0.0"
+#define PLUGIN_VERSION                      "v1.0.1"
 #define PLUGIN_DESCRIPTION                  "Logging for SourcePawn test"
 #define PLUGIN_URL                          "https://github.com/F1F88/sm-ext-log4sp"
 
