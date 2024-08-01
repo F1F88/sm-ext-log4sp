@@ -1,76 +1,57 @@
-# Logging for SourcePawn [EN](./readme.md) | [简中](./readme-chi.md)
+## Logging for SourcePawn
 
-This is a Sourcemod extension that wraps some of the spdlog API (a very fast C++ logging library) to enable more flexible logging in SourcePawn.
+**[English](./readme.md) | [Chinese](./readme-chi.md)**
 
-NOTE: This readme.md is derived from chatgpt's translation readme-chi.md
+This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library, allowing SourcePawn to record logs more flexibly.
 
-## Features
+### Useage
 
-1. High Performance: Significantly faster than [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage)
+1. Download the latest Zip from [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) that matches your operating system and sourcemod version
+1. Upload the `addons/sourcemod/extension/log4sp.ext.XXX` in the ZIP to the `game/addons/sourcemod/extension` folder on the server
 
-   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks).
-   - [log4sp benchmarks](./sourcemod/scripting/log4sp-benchmark.sp).
+### Features
 
-2. Supports set different log level for each Logger and Sink
+1. Very fast, much faster than [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-   - If the level of a log message is lower than the configured log level, no log message is displayed.
-   - Log level can be dynamically adjusted.
+   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp benchmarks](./sourcemod/scripting/log4sp-benchmark.sp)
 
-3. Supports set different log format for each Logger and Sink
+2. Each `Logger` and `Sink` can customize the log level
 
-   - Log message composition independent of parameter formatting.
-   - Log format can be dynamically adjusted.
-   - [Custom formatting](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+3. Each `Logger` and `Sink` can customize the [log pattern](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-4. Supports set multiple Sinks for each Logger
+4. Each `Logger` and `Sink` can customize the [flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
 
-   - The Logger traverses all Sink output when logging.
-   - For example, add a DailyFileSink and ServerConsoleSink to a Logger to simulate [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
-   - Each Sink can have different level and format.
+5. Each `Logger` can have multiple `Sink`
 
-5. Supports multiple plugins reusing the same Logger
+   - For example: A `Logger` that has both `ServerConsoleSink` and `DailyFileSink` is similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-   - After creating a Logger in one plugin, another plugin can use `Logger.Get("name")` to retrieve it.
+6. Each `Logger` can dynamic change the log level and pattern
+   - see server command `"sm log4sp"`
 
-6. Supports format variable parameters when logging
+7. Supports format parameters with variable numbers
 
-   - For reduced learning and development costs, the parameter formatting scheme is similar to [Format()](https://sm.alliedmods.net/new-api/string/Format).
-   - Simply use the XXXAmxTpl method and use it like [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
+   - [Parameter formatting](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) usage is consistent with [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-   - [Format Class Functions (SourceMod Scripting)](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting))
+   - The maximum length of a variable parameter string is **2048** characters
 
-   - Note: The maximum length for variable argument strings is 2048 characters. Strings longer than this will be truncated.
+     If characters exceeding this length will be truncated
+     If longer log messages need to be log, non `AmxTpl` methods can be used, e.g. `void Info(const char [] msg)`
 
-     To log longer messages, format the string in advance and use functions like void `Trace(const char[] msg)`, `void Info(const char[] msg)`. While these functions do not accept variable arguments or format parameters for you, the length of the `char[] msg` parameter is unrestricted.
+8. Supports [backtrace](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
 
-7. Supports flush strategies
+   - When enabled, Trace and Debug level log message are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`
 
-   - Typically, log messages are not immediately flushed but temporarily stored in a buffer.
-   - Modify the Flush Level to determine when to flush.
-   - [Flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+9. Supports various log targets
 
-8. Supports backtrace
-
-   - When enabled, Trace and Debug level logs are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`.
-   - [Backtrace support](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
-
-9. Supports various log targets:
-
-   - ServerConsoleSink
-     - Similar to [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer).
-     - Performance is comparable to [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer).
-   - ClientConsoleSink
-     - Similar to [PrintToConsole()](https://sm.alliedmods.net/new-api/console/PrintToConsole).
+   - ServerConsoleSink  (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
+   - ClientConsoleSink  (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
    - BaseFileSink
-     - Similar to [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) but does not output log messages to the server console.
-     - But much faster than [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage).
-     - Even with a complete simulation of [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) (additional ServerConsoleSink), it is approximately 5 times faster than LogMessage.
    - RotatingFileSink
    - DailyFileSink
 
-## Usage Examples
+### Usage Examples
 
-### Simple Example
+##### Simple Example
 
 ```sourcepawn
 #include <sdktools>
@@ -124,7 +105,7 @@ Action CommandCallback(int client, int args)
 }
 ```
 
-### More Detailed Example
+##### More Detailed Example
 
 ```sourcepawn
 #include <sourcemod>
@@ -228,81 +209,81 @@ Action CommandCallback(int client, int args)
 }
 ```
 
-### Additional Examples
+##### Additional Examples
 
+- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 - [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
 
-## Dependencies
+### Dependencies
 
 - [Sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
-  - Version: 1.11-dev
 - [spdlog](https://github.com/gabime/spdlog)
-  - Version: v1.14.1
-  - Only requires header files (included in [./extern](./extern) folder)
 
-## Basic Build Steps
+  Only requires [include files](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog), already included in [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog)
 
-If you are new, I recommend reading these two articles first. This project is not very complex, but the articles are very helpful for beginners.
+### Basic Build Steps
 
-- [Building SourceMod](https://wiki.alliedmods.net/Building_SourceMod)
-- [Writing Extensions](https://wiki.alliedmods.net/Writing_Extensions)
-
-### Linux
+##### Linux
 
 ```shell
 cd log4sp
 mkdir build && cd build
-# Replace $SOURCEMOD_HOME111 with your Sourcemod environment variable or path
-# e.g., "/home/nmr/sourcemod"
-python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME111
+# Replace $SOURCEMOD_HOME with your Sourcemod environment variable or path
+# e.g. "~/sourcemod"
+python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME
 ambuild
 ```
 
-### Windows
+##### Windows
 
 idk
 
-## Q & A
+### Q & A
 
-1. Error on server startup: **bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found**
+#### Loading the plugin failed
 
-   Option 1
+##### [SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running
 
-   ```shell
-   # Reference link: https://stackoverflow.com/questions/44773296/libstdc-so-6-version-glibcxx%203-4-20-not-found
-   sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-   sudo apt-get update
-   sudo apt-get install gcc-4.9
+1. Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions`
+2. Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX`
 
-   # If the issue is resolved, the following step is not needed
-   # sudo apt-get upgrade libstdc++6
-   ```
+#### Loading the log4sp extension failed
 
-   Option 2
+##### [SM] Unable to load extension "log4sp.ext": Could not find interface: XXX
 
-   ```shell
-   # First, check if the operating system has the required GLIBCXX version
-   strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
-   # Then check if the server has the required GLIBCXX version
-   strings ./server/bin/libstdc++.so | grep GLIBCXX
-   # If the operating system has it but the server doesn't, try renaming the server's ./server/bin/libstdc++.so.6 file to use the operating system's version
-   mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
-   ```
+1. Check if the `log4sp.ext.XXX` matches the operating system
+2. Check if the version of `log4sp.ext.XXX` matches the version of the sourcemod version
 
-2. Is the project code complex/hard to learn?
+#### bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found
 
-   - This is my first Sourcemod extension project and my first C++ project. As a beginner, I didn't use any particularly new features or advanced algorithms and data structures. So, I don't think it's difficult.
-   - Thanks to the power of SM 1.11 and spdlog 1.14.1, most functionalities don't need to be implemented manually. The extension only needs to act as a wrapper for SourcePawn calls. Therefore, the code is relatively concise.
+- Option 1
 
-## Acknowledgements
+    ```shell
+    # Reference link: https://stackoverflow.com/questions/44773296/libstdc-so-6-version-glibcxx%203-4-20-not-found
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt-get update
+    sudo apt-get install gcc-4.9
 
-First, thanks to **[gabime](https://github.com/gabime)** for providing the excellent library **[spdlog](https://github.com/gabime/spdlog)**, without which this project might not have been born.
+    # If the issue is resolved, the following step is not needed
+    # sudo apt-get upgrade libstdc++6
+    ```
 
-Thanks to the following users for answering some questions I had during extension development:
+- Option 2
 
-- Fyren
-- nosoop
-- Deathreus
+    ```shell
+    # First, check if the operating system has the required GLIBCXX version
+    strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
+    # Then check if the server has the required GLIBCXX version
+    strings ./server/bin/libstdc++.so | grep GLIBCXX
+    # If the operating system has it but the server doesn't, try renaming the server's ./server/bin/libstdc++.so.6 file to use the operating system's version
+    mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
+    ```
+
+## Credits
+
+- **[gabime](https://github.com/gabime) [spdlog](https://github.com/gabime/spdlog)** library implements most of the functionality, log4sp.ext wraps the spdlog API for SourcePawn to use
+
+- Fyren, nosoop, Deathreus provides solution for expanding the Sink Handle of management
 
 If I missed anyone, please contact me.
 

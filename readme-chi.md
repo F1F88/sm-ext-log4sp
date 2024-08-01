@@ -1,74 +1,47 @@
-# Logging for SourcePawn [EN](./readme.md) | [简中](./readme-chi.md)
+# Logging for SourcePawn
 
-这是一个 Sourcemod 拓展，封装了 spdlog（非常快的 C++ logging 库）部分 API，可以在 SourcePawn 中更灵活的记录日志。
+**[英语](./readme.md) | [中文](./readme-chi.md)**
 
-## 特点
+这是一个包装了 [spdlog](https://github.com/gabime/spdlog) 库的 Sourcemod 拓展，能让 SourcePawn 更灵活的记录日志。
 
-1. 非常快，比 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
+### 使用
 
-   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)
-   - [log4sp 性能测试](./sourcemod/scripting/log4sp-benchmark.sp)
+1. 从 [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) 下载最新版压缩包，注意选择与操作系统和 sourcemod 版本匹配的版本
+2. 将压缩包中的 `addons/sourcemod/extension/log4sp.ext.XXX` 上传到服务器的 `game/addons/sourcemod/extension` 文件夹
 
-2. 支持每个 Logger(记录器) 和 Sink(输出源) 设定不同的日志级别
+### 特点
 
-   - 低于设定日志级别的日志消息不会输出
-   - 日志级别可以动态调整
+1. 非常快，比 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
 
-3. 支持每个 Logger(记录器) 和 Sink(输出源) 设定不同的日志格式
+   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp 性能测试](./sourcemod/scripting/log4sp-benchmark.sp)
+2. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义日志级别
 
-   - 日志消息的组成，与参数格式化无关
-   - 日志格式可以动态调整
-   - 支持的格式：https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
+3. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义[日志模板](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-4. 支持每个 Logger 设定多个 Sink
+4. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义[刷新策略](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+5. 每个 `Logger` 都可以拥有多个 `Sink`
 
-   - Logger 输出时会遍历所有 Sink 输出
-   - 例如模拟 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 可以为 Logger 添加 DailyFileSink 和 ServerConsoleSink
-   - 每个 Sink 可以拥有不同的级别
-   - 每个 Sink 可以拥有不同的格式
+   - 例如： `ServerConsoleSink` + `DailyFileSink` 相当于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+6. 每个 `Logger` (记录器)  都可以动态调整日志级别、模板
+   - 详见指令`"sm log4sp"`
+7. 支持格式化可变个数的参数
 
-5. 支持多个插件复用同一个 Logger 对象
-
-   - 在一个插件里创建 Logger 后，另一个插件使用 `Logger.Get("name")` 来获取 Logger
-
-6. 支持 Log 时传递可变参数，并格式化为日志消息
-
-   - 出于降低学习成本和开发成本考虑，目前参数格式化方案与 [Format()](https://sm.alliedmods.net/new-api/string/Format) 相同
-   - 只需调用 XXXAmxTpl 方法，然后像使用 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 一样使用它即可
-
-   - Format 格式化：https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)
-
-   - 注意：可变参数的字符串最大长度为 2048，超过这个长度的字符会被截断
-
-     如需要记录更长的日志消息，可以自己先提前格式化好字符串，然后使用 `void Trace(const char[] msg)`、`void Debug(const char[] msg)` 这些函数虽然不能接受可变参数，也不能为你格式化参数，但参数 `char[] msg` 的长度不受限制
-
-7. 支持刷新策略
-
-   - 通常日志消息不会立即刷新，而是先暂存在缓冲区
-   - 你可以修改 Flush Level 来决定什么时候刷新
-   - 刷新策略：https://github.com/gabime/spdlog/wiki/7.-Flush-policy
-
-8. 支持日志回溯
-
-   - 开启后，Trace、Debug 级别的日志存储在环形缓冲区中，显式调用 `DumpBacktrace()` 后才会输出
-   - 回溯策略：https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support
+   - [参数格式化用法](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 与 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 相同
+   - 可变参数的字符串最大长度为 **2048**，超过这个长度的字符会被截断
+     如需要记录更长的日志消息，可以使用非 `AmxTpl` 的方法, 例如: `void Info(const char[] msg)`
+8. 支持[日志回溯](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
 
 9. 支持多种 Sink
 
-   - ServerConsoleSink
-     - 类似于 [PrintToServer()](https://sm.alliedmods.net/new-api/console/PrintToServer)
-   - ClientConsoleSink
-     - 类似于 [PrintToConsole()](https://sm.alliedmods.net/new-api/console/PrintToConsole)
+   - ServerConsoleSink （类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+   - ClientConsoleSink （类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
    - BaseFileSink
-     - 类似于 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) server console
-     - 但比 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
-     - 即使完全模拟 [LogMessage()](https://sm.alliedmods.net/new-api/logging/LogMessage) （额外添加 1 个 ServerConsoleSink），也比 LogMessage 快 5 倍左右
    - RotatingFileSink
    - DailyFileSink
 
-## 使用示例
+### 使用示例
 
-### 一个简单的示例
+##### 一个简单的示例
 
 ```sourcepawn
 #include <sdktools>
@@ -122,7 +95,7 @@ Action CommandCallback(int client, int args)
 }
 ```
 
-### 更详细一点的示例
+##### 更详细一点的示例
 
 ```sourcepawn
 #include <sourcemod>
@@ -226,89 +199,88 @@ Action CommandCallback(int client, int args)
 }
 ```
 
-### 更多示例
+##### 更多示例
 
+- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 - [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
 
-## 依赖
+### 依赖
 
 - [sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
-  - 版本：1.11-dev
 
 - [spdlog](https://github.com/gabime/spdlog)
-  - 版本：v1.14.1
-  - 仅需头文件（已包含在 [./extern](./extern) 文件夹内）
 
+  仅需[头文件](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog)，已包含在 [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog)
 
-## 基本构建步骤
+### 基本编译步骤
 
-如果你是一个小白，建议先阅读这两篇文章。这个项目没有那么复杂，但是文章内容对入门有很大的帮助。
-
-- https://wiki.alliedmods.net/Building_SourceMod
-- https://wiki.alliedmods.net/Writing_Extensions
-
-### Linux
+##### Linux
 
 ```shell
-cd log4sp
+cd sm-ext-log4sp
 mkdir build && cd build
-# 把 $SOURCEMOD_HOME111 替换为你的 sourcemod 环境变量或路径
-# 如："/home/nmr/sourcemod"
-python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME111
+# 把 $SOURCEMOD_HOME 替换为你的 sourcemod 环境变量或路径. 如 "~/sourcemod"
+python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME
 ambuild
 ```
 
-### Windows
+##### Windows
 
 我不知道
 
-## 疑难解答
+### 疑难解答
 
-1. 服务器启动时报错：**bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found**
+#### 加载插件时报错
 
-   方案一：
+##### [SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running
 
-   ```
-   # 参考链接：https://stackoverflow.com/questions/44773296/libstdc-so-6-version-glibcxx%203-4-20-not-found
-   sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-   sudo apt-get update
-   sudo apt-get install gcc-4.9
+1. 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions`
 
-   # 如果问题解决，则不需要下面这一步
-   # sudo apt-get upgrade libstdc++6
-   ```
+2. 检查日志信息, 查看 log4sp.ext.XXX 加载失败的原因并解决
 
-   方案二：
+#### 加载拓展时报错
 
-   ```
-   # 先查看操作系统是否有需要的 GLIBCXX 版本
-   strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
-   # 再查看服务器是否有需要的 GLIBCXX 版本
-   strings ./server/bin/libstdc++.so | grep GLIBCXX
-   # 如果操作系统有，但服务器没有，可以尝试重命名服务器的 ./server/bin/libstdc++.so.6 文件，从而使用操作系统的版本
-   mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
-   ```
+##### [SM] Unable to load extension "log4sp.ext": Could not find interface: XXX
 
-2. 这个项目代码复杂/学习难度大吗？
+1. 检查 `log4sp.ext.XXX` 与操作系统是否匹配
+2. 检查 `log4sp.ext.XXX` 的版本与 sourcemod 版本是否匹配
 
-   - 这是我制作的的第一个 sourcemod extension 项目，也是我第一个 cpp 项目，作为初学者我并没有使用到什么特别新的特性或者高深的算法与数据结构。所以我认为不难
-   - 得益于 sm 1.11 和 spdlog 1.14.1 的强大，大部分功能不需要手动实现，拓展只需要做一层包装，以供 sourcepawn 调用。所以代码相对来说比较简洁
+##### bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found
 
-## 致谢
+- 方案一
 
-首先感谢 **[gabime](https://github.com/gabime)** 提供了 **[spdlog](https://github.com/gabime/spdlog)** 这么好的一个库，否则这个项目可能不会诞生
+    ```shell
+    # 参考链接：https://stackoverflow.com/questions/44773296/libstdc-so-6-version-glibcxx%203-4-20-not-found
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt-get update
+    sudo apt-get install gcc-4.9
 
-感谢以下用户为我解答了拓展开发时的一些问题
+    # 如果问题解决，则不需要下面这一步
+    # sudo apt-get upgrade libstdc++6
+    ```
 
-- Fyren
-- nosoop
-- Deathreus
+- 方案二：
+
+    ```shell
+    # 先查看操作系统是否有需要的 GLIBCXX 版本
+    strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
+    # 再查看服务器是否有需要的 GLIBCXX 版本
+    strings ./server/bin/libstdc++.so | grep GLIBCXX
+    # 如果操作系统有，但服务器没有，可以尝试重命名服务器的 ./server/bin/libstdc++.so.6 文件，从而使用操作系统的版本
+    mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
+    ```
+
+## 制作人员
+
+- **[gabime](https://github.com/gabime)** 的 **[spdlog](https://github.com/gabime/spdlog)** 库实现了绝大部分功能，拓展将 spdlog API 包装后提供给 SourcePawn 使用
+
+- Fyren, nosoop, Deathreus 为拓展管理 Sink Handle 提供了解决思路
 
 如有遗漏，请联系我
 
 ## 待办
 
-1. 完善英语版 readme.md
+1. server command 支持修改 flush level
 2. 在 Windows 系统中测试 log4sp.ext.dll
 3. 支持 XXXAmxTpl 格式化的字符串无限长度
 4. 支持参数格式不匹配时不抛出异常
