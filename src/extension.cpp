@@ -211,23 +211,27 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
     int argCnt = args->ArgC();
     if (argCnt < 3)
     {
-        rootconsole->ConsolePrint("Logging For SourcePawn Menu:");
+        rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
 
         // rootconsole->DrawGenericOption("list", "Show all loggers name."); // ref: https://github.com/gabime/spdlog/issues/180
         rootconsole->DrawGenericOption("get_lvl", "Get a logger logging level.");
         rootconsole->DrawGenericOption("set_lvl", "Set a logger logging level. [trace, debug, info, warn, error, fatal, off]");
         rootconsole->DrawGenericOption("set_pattern", "Change a logger log pattern.");
+        rootconsole->DrawGenericOption("should_log", "Get whether logger is enabled at the given level.");
         rootconsole->DrawGenericOption("log", "Logging a Message.");
+        rootconsole->DrawGenericOption("flush", "Manual flush logger contents.");
+        rootconsole->DrawGenericOption("get_flush_lvl", "Get the minimum log level that will trigger automatic flush.");
+        rootconsole->DrawGenericOption("set_flush_lvl", "Set the minimum log level that will trigger automatic flush. [trace, debug, info, warn, error, fatal, off]");
+        rootconsole->DrawGenericOption("should_bt", "Create new backtrace sink and move to it all our child sinks.");
         rootconsole->DrawGenericOption("enable_bt", "Create new backtrace sink and move to it all our child sinks.");
         rootconsole->DrawGenericOption("disable_bt", "Restore orig sinks and level and delete the backtrace sink.");
         rootconsole->DrawGenericOption("dump_bt", "Dump the backtrace of logged messages in the logger.");
         return;
     }
 
-    const char *func = args->Arg(2);
     if (argCnt < 4)
     {
-        rootconsole->ConsolePrint("[SM] Usage: sm log4sp %s <logger_name>", func);
+        rootconsole->ConsolePrint("[SM] Usage: sm log4sp <function> <logger_name>");
         return;
     }
 
@@ -235,10 +239,11 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
     std::shared_ptr<spdlog::logger> logger = spdlog::get(name);
     if (logger == nullptr)
     {
-        rootconsole->ConsolePrint("[SM] Logger %s does not exist.", name);
+        rootconsole->ConsolePrint("[SM] The logger named '%s' does not exist.", name);
         return;
     }
 
+    const char *func = args->Arg(2);
     if (!strcmp(func, "get_lvl"))
     {
         spdlog::level::level_enum lvl = logger->level();
@@ -287,6 +292,32 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
         return;
     }
 
+    if (!strcmp(func, "should_log"))
+    {
+        if (argCnt < 5)
+        {
+            rootconsole->ConsolePrint("[SM] Usage: sm log4sp should_log <logger_name> <level>");
+            return;
+        }
+
+        spdlog::level::level_enum lvl;
+        {
+            const char *str = args->Arg(4);
+            if (strlen(str) == 1 && str[0] < '0' + spdlog::level::n_levels && str[0] >= '0')
+            {
+                lvl = static_cast<spdlog::level::level_enum>(str[0] - '0');
+            }
+            else
+            {
+                lvl = spdlog::level::from_str(str); // If name does not exist, return LogLevel_Off
+            }
+        }
+
+        bool result = logger->should_log(lvl);
+        rootconsole->ConsolePrint("[SM] The logger '%s' has %s at '%s'.", name, result ? "enabled" : "disabled", spdlog::level::to_string_view(lvl));
+        return;
+    }
+
     if (!strcmp(func, "log"))
     {
         if (argCnt < 6)
@@ -312,6 +343,53 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 
         rootconsole->ConsolePrint("[SM] Use logger '%s' log a '%s' level message.", name, spdlog::level::to_string_view(lvl));
         logger->log(lvl, msg);
+        return;
+    }
+
+    if (!strcmp(func, "flush"))
+    {
+        rootconsole->ConsolePrint("[SM] Logger '%s' starts flush.", name);
+        logger->flush();
+        return;
+    }
+
+    if (!strcmp(func, "get_flush_lvl"))
+    {
+        spdlog::level::level_enum lvl = logger->flush_level();
+        rootconsole->ConsolePrint("[SM] The flush level of the logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl));
+        return;
+    }
+
+    if (!strcmp(func, "set_flush_lvl"))
+    {
+        if (argCnt < 5)
+        {
+            rootconsole->ConsolePrint("[SM] Usage: sm log4sp set_flush_lvl <logger_name> <level>");
+            return;
+        }
+
+        spdlog::level::level_enum lvl;
+        {
+            const char *str = args->Arg(4);
+            if (strlen(str) == 1 && str[0] < '0' + spdlog::level::n_levels && str[0] >= '0')
+            {
+                lvl = static_cast<spdlog::level::level_enum>(str[0] - '0');
+            }
+            else
+            {
+                lvl = spdlog::level::from_str(str); // If name does not exist, return LogLevel_Off
+            }
+        }
+
+        rootconsole->ConsolePrint("[SM] Set the logger '%s' flush level to '%s'", name, spdlog::level::to_string_view(lvl));
+        logger->flush_on(lvl);
+        return;
+    }
+
+    if (!strcmp(func, "should_bt"))
+    {
+        bool result = logger->should_backtrace();
+        rootconsole->ConsolePrint("[SM] The logger '%s' has %s backtrace.", name, result ? "enabled" : "disabled");
         return;
     }
 
@@ -352,4 +430,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
         logger->dump_backtrace();
         return;
     }
+
+    // 所有的 function 都不匹配
+    rootconsole->ConsolePrint("[SM] The function '%s' does not exist.", func);
 }
