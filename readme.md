@@ -74,32 +74,32 @@ Action CommandCallback(int client, int args)
 {
     if (client <= 0 || client > MaxClients || !IsClientInGame(client))
     {
-        myLogger.Info("[SM] Command is in-game only.");
+        myLogger.Info("Command is in-game only.");
         return Plugin_Handled;
     }
 
     int entity = GetClientAimTarget(client, false);
     if (entity == -2)
     {
-        myLogger.Fatal("[SM] The GetClientAimTarget() function is not supported.");
+        myLogger.Fatal("The GetClientAimTarget() function is not supported.");
         return Plugin_Handled;
     }
 
     if (entity == -1)
     {
-        myLogger.Warn("[SM] No entity is being aimed at.");
+        myLogger.Warn("No entity is being aimed at.");
         return Plugin_Handled;
     }
 
     if (!IsValidEntity(entity))
     {
-        myLogger.ErrorAmxTpl("[SM] entity %d is invalid.", entity);
+        myLogger.ErrorAmxTpl("entity %d is invalid.", entity);
         return Plugin_Handled;
     }
 
     char classname[64];
     GetEntityClassname(entity, classname, sizeof(classname));
-    myLogger.InfoAmxTpl("[SM] The client %L is aiming a (%d) %s entity.", client, entity, classname);
+    myLogger.InfoAmxTpl("The client %L is aiming a (%d) %s entity.", client, entity, classname);
 
     return Plugin_Handled;
 }
