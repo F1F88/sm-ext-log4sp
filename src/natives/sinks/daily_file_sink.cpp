@@ -106,9 +106,9 @@ static cell_t DailyFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *par
 
 const sp_nativeinfo_t DailyFileSinkNatives[] =
 {
-    {"DailyFileSinkST.DailyFileSink",           DailyFileSinkST},
+    {"DailyFileSinkST.DailyFileSinkST",         DailyFileSinkST},
     {"DailyFileSinkST.GetFilename",             DailyFileSinkST_GetFilename},
-    {"DailyFileSinkMT.DailyFileSink",           DailyFileSinkMT},
+    {"DailyFileSinkMT.DailyFileSinkMT",         DailyFileSinkMT},
     {"DailyFileSinkMT.GetFilename",             DailyFileSinkMT_GetFilename},
 
     {NULL,                                      NULL}

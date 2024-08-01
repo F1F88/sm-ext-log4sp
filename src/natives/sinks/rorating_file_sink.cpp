@@ -153,10 +153,10 @@ static cell_t RotatingFileSinkMT_CalcFilename(IPluginContext *ctx, const cell_t 
 
 const sp_nativeinfo_t RotatingFileSinkNatives[] =
 {
-    {"RotatingFileSinkST.RotatingFileSink",     RotatingFileSinkST},
+    {"RotatingFileSinkST.RotatingFileSinkST",   RotatingFileSinkST},
     {"RotatingFileSinkST.GetFilename",          RotatingFileSinkST_GetFilename},
     {"RotatingFileSinkST.CalcFilename",         RotatingFileSinkST_CalcFilename},
-    {"RotatingFileSinkMT.RotatingFileSink",     RotatingFileSinkMT},
+    {"RotatingFileSinkMT.RotatingFileSinkMT",   RotatingFileSinkMT},
     {"RotatingFileSinkMT.GetFilename",          RotatingFileSinkMT_GetFilename},
     {"RotatingFileSinkMT.CalcFilename",         RotatingFileSinkMT_CalcFilename},
 
