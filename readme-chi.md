@@ -52,11 +52,14 @@ Logger myLogger;
 
 public void OnPluginStart()
 {
+    // 默认日志级别: LogLevel_Info
+    // 默认日志模板: [%Y-%m-%d %H:%M%S.e] [%n] [%l] %v
     myLogger = Logger.CreateServerConsoleLogger("logger-example-1");
 
     RegConsoleCmd("sm_log4sp_example1", CommandCallback);
 
-    myLogger.Debug("===== Example 1 code initialization is complete! =====");
+    // Debug 小于默认日志级别 Info, 所以这行代码不会输出日志消息
+    myLogger.Debug("===== 示例 1 代码初始化成功! =====");
 }
 
 /**
@@ -66,32 +69,38 @@ Action CommandCallback(int client, int args)
 {
     if (client <= 0 || client > MaxClients || !IsClientInGame(client))
     {
-        myLogger.Info("Command is in-game only.");
+        // [2024-08-01 12:34:56.789] [logger-example-1] [info] 指令只能在游戏中使用
+        myLogger.Info("指令只能在游戏中使用");
         return Plugin_Handled;
     }
 
     int entity = GetClientAimTarget(client, false);
     if (entity == -2)
     {
-        myLogger.Fatal("The GetClientAimTarget() function is not supported.");
+        // [2024-08-01 12:34:56.789] [logger-example-1] [fatal] 当前游戏不支持 GetClientAimTarget() 函数
+        myLogger.Fatal("当前游戏不支持 GetClientAimTarget() 函数");
         return Plugin_Handled;
     }
 
     if (entity == -1)
     {
-        myLogger.Warn("No entity is being aimed at.");
+        // [2024-08-01 12:34:56.789] [logger-example-1] [warn] 玩家 (1) 没有瞄准实体
+        myLogger.Warn("玩家 (%d) 没有瞄准实体", client);
         return Plugin_Handled;
     }
 
     if (!IsValidEntity(entity))
     {
-        myLogger.ErrorAmxTpl("entity %d is invalid.", entity);
+        // [2024-08-01 12:34:56.789] [logger-example-1] [error] 实体 (444) 是无效的
+        myLogger.ErrorAmxTpl("实体 (%d) 是无效的", entity);
         return Plugin_Handled;
     }
 
     char classname[64];
     GetEntityClassname(entity, classname, sizeof(classname));
-    myLogger.InfoAmxTpl("The client %L is aiming a (%d) %s entity.", client, entity, classname);
+
+    // [2024-08-01 12:34:56.789] [logger-example-1] [info] 玩家 (1) 瞄准了一个 (403 - prop_door_breakable) 实体
+    myLogger.InfoAmxTpl("玩家 (%d) 瞄准了 1 个 (%d - %s) 实体", client, entity, classname);
 
     return Plugin_Handled;
 }
@@ -141,7 +150,7 @@ public void OnPluginStart()
      * 1 个是 "myLogger.AddSink()" 时, myLogger 对 mySink 的引用
      */
 
-    // 如果后续不需要 mySink 修改, 可以直接 "删除" 它
+    // 如果后续不需要 mySink 修改, 可以直接 '删除' 它
     delete mySink;
 
     /**
@@ -149,15 +158,15 @@ public void OnPluginStart()
      *
      * "delete mySink;" 实际上做的只是从拓展内部的 SinkRegister 里删除对 mySink 的引用
      * 所以 mySink 对象的引用数将 -1
-     * 但只有引用数减少至 0 时，mySink 对象才会真正的被 "删除"
+     * 但只有引用数减少至 0 时，mySink 对象才会真正的被 '删除'
      *
-     * 在本示例中即为: "delete mySink;"  +  "delete myLogger;"
-     * 也可以是: "myLogger.DropSink(mySink);"  +  "delete mySink;"
+     * 在本示例中即为   "delete mySink;"    +   "myLogger.DropSink(mySink);"
+     * 也可以是         "delete mySink;"    +   "delete myLogger;"
      */
 
     RegConsoleCmd("sm_log4sp_example2", CommandCallback);
 
-    myLogger.Info("===== Example 2 code initialization is complete! =====");
+    myLogger.Info("===== 示例 2 代码初始化成功! =====");
 }
 
 /**
@@ -181,13 +190,13 @@ Action CommandCallback(int client, int args)
      * 由于 "mySink.SetLevel(LogLevel_Info);" 修改了级别
      * 所以这条消息只会输出到 server console, 不会输出到 client console
      */
-    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' is invoked %d times.", count);
+    myLogger.DebugAmxTpl("指令 'sm_log4sp_example2' 调用了 (%d) 次", count);
 
     /**
      * 由于 "myLogger.SetLevel(LogLevel_Debug);" 修改后的日志级别大于 LogLevel_Trace
      * 所以这条消息不会输出到任何地方
      */
-    myLogger.TraceAmxTpl("CommandCallback param client = %L param args = %d.", client, args);
+    myLogger.TraceAmxTpl("CommandCallback 参数： client (%d), args (%d)", client, args);
 
     if (args >= 2)
     {

@@ -62,10 +62,13 @@ Logger myLogger;
 
 public void OnPluginStart()
 {
+    // Default LogLevel: LogLevel_Info
+    // Default Pattern: [%Y-%m-%d %H:%M%S.e] [%n] [%l] %v
     myLogger = Logger.CreateServerConsoleLogger("logger-example-1");
 
     RegConsoleCmd("sm_log4sp_example1", CommandCallback);
 
+    // Debug is lower than the default LogLevel, so this line of code won't output log message
     myLogger.Debug("===== Example 1 code initialization is complete! =====");
 }
 
@@ -76,6 +79,7 @@ Action CommandCallback(int client, int args)
 {
     if (client <= 0 || client > MaxClients || !IsClientInGame(client))
     {
+        // [2024-08-01 12:34:56.789] [logger-example-1] [info] Command is in-game only.
         myLogger.Info("Command is in-game only.");
         return Plugin_Handled;
     }
@@ -83,25 +87,30 @@ Action CommandCallback(int client, int args)
     int entity = GetClientAimTarget(client, false);
     if (entity == -2)
     {
+        // [2024-08-01 12:34:56.789] [logger-example-1] [fatal] The GetClientAimTarget() function is not supported.
         myLogger.Fatal("The GetClientAimTarget() function is not supported.");
         return Plugin_Handled;
     }
 
     if (entity == -1)
     {
-        myLogger.Warn("No entity is being aimed at.");
+        // [2024-08-01 12:34:56.789] [logger-example-1] [warn] client (1) is not aiming at entity.
+        myLogger.WarnAmxTpl("client (%d) is not aiming at entity.", client);
         return Plugin_Handled;
     }
 
     if (!IsValidEntity(entity))
     {
-        myLogger.ErrorAmxTpl("entity %d is invalid.", entity);
+        // [2024-08-01 12:34:56.789] [logger-example-1] [error] entity (444) is invalid.
+        myLogger.ErrorAmxTpl("entity (%d) is invalid.", entity);
         return Plugin_Handled;
     }
 
     char classname[64];
     GetEntityClassname(entity, classname, sizeof(classname));
-    myLogger.InfoAmxTpl("The client %L is aiming a (%d) %s entity.", client, entity, classname);
+
+    // [2024-08-01 12:34:56.789] [logger-example-1] [info] client (1) is aiming a (403 - prop_door_breakable) entity.
+    myLogger.InfoAmxTpl("client (%d) is aiming a (%d - %s) entity.", client, entity, classname);
 
     return Plugin_Handled;
 }
@@ -152,7 +161,7 @@ public void OnPluginStart()
      * One is myLogger references mySink when using "myLogger.AddSink()"
      */
 
-    // If you do not need to modify mySink any more, you can "delete" it
+    // If you do not need to modify mySink any more, you can 'delete' it
     delete mySink;
 
     /**
@@ -160,10 +169,10 @@ public void OnPluginStart()
      *
      * "delete mySink;" actually just removes the reference to mySink from the SinkRegister
      * So the number of references to mySink object will be decreases 1
-     * But only when the number of references decreases to 0, the mySink object will be truly "deleted"
+     * But only when the number of references decreases to 0, the mySink object will be truly 'delete'
      *
-     * In this example is: "delete mySink;" + "delete myLogger;"
-     * or: myLogger.DropSink(mySink);" + "delete mySink;"
+     * In this example is   "delete mySink;"    +   "myLogger.DropSink(mySink);"
+     * or                   "delete mySink;"    +   "delete myLogger;"
      */
 
     RegConsoleCmd("sm_log4sp_example2", CommandCallback);
@@ -192,13 +201,13 @@ Action CommandCallback(int client, int args)
      * Due to the modification of the level in "mySink.SetLevel(LogLevel_Info);"
      * So this message will only be output to the server console, not to the client console
      */
-    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' is invoked %d times.", ++count);
+    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' was called (%d) times.", count);
 
     /**
      * Due to the modified level of "myLogger.SetLevel(LogLevel_Debug);" being greater than LogLevel_Trace
      * So this message will not be output anywhere
      */
-    myLogger.TraceAmxTpl("CommandCallback param client = %L param args = %d.", client, args);
+    myLogger.TraceAmxTpl("CommandCallback params: client (%d), args (%d)", client, args);
 
     if (args >= 2)
     {

@@ -57,7 +57,7 @@ public void OnPluginStart()
      * 1 个是 "myLogger.AddSink()" 时, myLogger 对 mySink 的引用
      */
 
-    // 如果后续不需要 mySink 修改, 可以直接 "删除" 它
+    // 如果后续不需要 mySink 修改, 可以直接 '删除' 它
     delete mySink;
 
     /**
@@ -65,10 +65,10 @@ public void OnPluginStart()
      *
      * "delete mySink;" 实际上做的只是从拓展内部的 SinkRegister 里删除对 mySink 的引用
      * 所以 mySink 对象的引用数将 -1
-     * 但只有引用数减少至 0 时，mySink 对象才会真正的被 "删除"
+     * 但只有引用数减少至 0 时，mySink 对象才会真正的被 '删除'
      *
-     * 在本示例中即为: "delete mySink;"  +  "delete myLogger;"
-     * 也可以是: "myLogger.DropSink(mySink);"  +  "delete mySink;"
+     * 在本示例中即为   "delete mySink;"    +   "myLogger.DropSink(mySink);"
+     * 也可以是         "delete mySink;"    +   "delete myLogger;"
      */
 
     RegConsoleCmd("sm_log4sp_example2", CommandCallback);
@@ -97,13 +97,13 @@ Action CommandCallback(int client, int args)
      * 由于 "mySink.SetLevel(LogLevel_Info);" 修改了级别
      * 所以这条消息只会输出到 server console, 不会输出到 client console
      */
-    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' is invoked %d times.", count);
+    myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' was called (%d) times.", count);
 
     /**
      * 由于 "myLogger.SetLevel(LogLevel_Debug);" 修改后的日志级别大于 LogLevel_Trace
      * 所以这条消息不会输出到任何地方
      */
-    myLogger.TraceAmxTpl("CommandCallback param client = %L param args = %d.", client, args);
+    myLogger.TraceAmxTpl("CommandCallback params: client (%d), args (%d)", client, args);
 
     if (args >= 2)
     {
