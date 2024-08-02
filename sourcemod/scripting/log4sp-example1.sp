@@ -16,10 +16,12 @@ public Plugin myinfo = {
     version     = PLUGIN_VERSION,
     url         = PLUGIN_URL
 };
+
 #include <sdktools>
 #include <log4sp>
 
 Logger myLogger;
+
 public void OnPluginStart()
 {
     myLogger = Logger.CreateServerConsoleLogger("logger-example-1");

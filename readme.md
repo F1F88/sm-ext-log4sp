@@ -1,8 +1,8 @@
-## Logging for SourcePawn
-
 **[English](./readme.md) | [Chinese](./readme-chi.md)**
 
-This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library, allowing SourcePawn to record logs more flexibly.
+## Logging for SourcePawn
+
+This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library to enhance SourcePawn logging and debugging.
 
 ### Useage
 
@@ -54,10 +54,12 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 ##### Simple Example
 
 ```sourcepawn
+#include <sourcemod>
 #include <sdktools>
 #include <log4sp>
 
 Logger myLogger;
+
 public void OnPluginStart()
 {
     myLogger = Logger.CreateServerConsoleLogger("logger-example-1");
@@ -111,80 +113,91 @@ Action CommandCallback(int client, int args)
 #include <sourcemod>
 #include <log4sp>
 
-/**
- * ClientConsoleSink filter
- * Used to filter out dead players; we only output log messages to live players.
- */
-Action FilterAlivePlayer(int client)
-{
-    /**
-     * Extends the call before this filter has been judged the validity of the player
-     *  if(IsClientInGame(client) == false || IsFakeClient(client) == true)
-     *      return;
-     *  call filter...
-     */
-    return IsPlayerAlive(client) ? Plugin_Continue : Plugin_Handled;
-}
-
 Logger myLogger;
 
 public void OnPluginStart()
 {
-    // Create a single-threaded Logger object named "myLogger".
+    // Create a single-threaded Logger object named "myLogger"
     myLogger = Logger.CreateServerConsoleLogger("logger-example-2");
 
-    // Configure myLogger output level. Default level: LogLevel_Info.
+    // Change the level of myLogger. Default is LogLevel_Info
     myLogger.SetLevel(LogLevel_Debug);
 
-    // Configure log format. Default format: [2014-10-31 23:46:59.678] [my_loggername] [info] Some message
+    // Change the pattern of myLogger. Default is "[2014-10-31 23:46:59.678] [name] [info] message"
     myLogger.SetPattern("[Date: %Y/%m/%d %H:%M:%S] [Name: %n] [LogLevel: %l] [message: %v]");
 
-    // Create an output source mySink that outputs to the player console.
-    // Every manually created sink is registered to the internal sink register of the extension, with a reference count of 1.
+    /**
+     * Each manually created sink is registered to the sink register within the extension
+     * meaning that the number of references must be at least 1
+     */
+    // Create a Sink object for output to the client console
     ClientConsoleSinkST mySink = new ClientConsoleSinkST();
 
-    // Set mySink level separately. Default is LogLevel_Trace.
+    // Change the level of mySink. Default is LogLevel_Trace
     mySink.SetLevel(LogLevel_Info);
 
-    // Set mySink filter rule: output only to the console of live players. Default output to all player consoles.
+    // Set mySink filter. Default output to all client in the game
     mySink.SetFilter(FilterAlivePlayer);
 
-    // Add mySink output source to Logger myLogger.
+    // Add mySink to Logger myLogger
     myLogger.AddSink(mySink);
 
-    // Now myLogger has 2 output sources:
-    // 1. A sink that outputs to the server console added when CreateServerConsoleLogger was called.
-    // 2. A sink that outputs to the console of live players added when AddSink was called.
+    /**
+     * Now myLogger has 2 Sinks
+     * One is ServerConsoleSink added when "Logger.CreateServerConsoleLogger()"
+     * One is ClientConsoleSink added when "myLogger.AddSink()"
+     *
+     * Now mySink has 2 references
+     * One is the reference registered in SinkRegister when using new "ClientConsoleSinkST()"
+     * One is myLogger references mySink when using "myLogger.AddSink()"
+     */
 
-    // Now mySink has 2 references:
-    // 1. Registered to the sink register after new ClientConsoleSinkST() registration.
-    // 2. Referenced by myLogger.AddSink() after myLogger's reference to mySink.
-
-    // If you no longer need to modify mySink, you can "delete" it directly.
-    // This will not cause an error, and myLogger can still output to the server console and client console.
+    // If you do not need to modify mySink any more, you can "delete" it
     delete mySink;
 
-    // delete mySink; effectively only unregisters mySink from the internal sink register of the extension
-    // After unregistering, mySink's reference count decreases from 2 to 1.
-    // Only when the reference count is 0, mySink object will be truly "deleted".
+    /**
+     * This will not cause INVALID_HANDLE, as myLogger also references this ClientConsoleSink
+     *
+     * "delete mySink;" actually just removes the reference to mySink from the SinkRegister
+     * So the number of references to mySink object will be decreases 1
+     * But only when the number of references decreases to 0, the mySink object will be truly "deleted"
+     *
+     * In this example is: "delete mySink;" + "delete myLogger;"
+     * or: myLogger.DropSink(mySink);" + "delete mySink;"
+     */
 
-    // In this example: "delete mySink;" + "delete myLogger;"
-    // Alternatively, you can use: "myLogger.DropSink(mySink);" + "delete mySink;"
-
-    // Now our custom Logger configuration is complete, feel free to use it.
-    myLogger.Info("===== Example 2 code initialization is complete! =====");
-
-    // Register a command for demonstration.
     RegConsoleCmd("sm_log4sp_example2", CommandCallback);
+
+    myLogger.Info("===== Example 2 code initialization is complete! =====");
+}
+
+/**
+ * ClientConsoleSink filter
+ * Used to filter out dead players, we only output log messages to live players
+ *
+ * Only when (IsClientInGame(client) && !IsFakeClient(client)) == true, the extension will call this filter
+ * So there is no need to repeat IsClientInGame(client) or IsFakeClient(client) within this filter
+ */
+Action FilterAlivePlayer(int client)
+{
+    return IsPlayerAlive(client) ? Plugin_Continue : Plugin_Handled;
 }
 
 Action CommandCallback(int client, int args)
 {
     static int count = 0;
-    // mySink level is LogLevel_Warn so this message won't be output to client console.
+    ++count;
+
+    /**
+     * Due to the modification of the level in "mySink.SetLevel(LogLevel_Info);"
+     * So this message will only be output to the server console, not to the client console
+     */
     myLogger.DebugAmxTpl("Command 'sm_log4sp_example2' is invoked %d times.", ++count);
 
-    // myLogger level is LogLevel_Debug so this message won't be output anywhere.
+    /**
+     * Due to the modified level of "myLogger.SetLevel(LogLevel_Debug);" being greater than LogLevel_Trace
+     * So this message will not be output anywhere
+     */
     myLogger.TraceAmxTpl("CommandCallback param client = %L param args = %d.", client, args);
 
     if (args >= 2)
