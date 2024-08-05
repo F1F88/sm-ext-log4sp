@@ -21,8 +21,20 @@ static cell_t RotatingFileSinkST(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    int maxFileSize = params[2];
-    int maxFiles = params[3];
+    size_t maxFileSize = params[2];
+    if (maxFileSize <= 0)
+    {
+        ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
+        return false;
+    }
+
+    size_t maxFiles = params[3];
+    if (maxFiles > 200000)
+    {
+        ctx->ReportError("maxFiles arg cannot exceed 200000.");
+        return false;
+    }
+
     bool rotateOnOpen = params[4];
 
     return log4sp::sinks::CreateHandleOrReportError(
@@ -93,8 +105,20 @@ static cell_t RotatingFileSinkMT(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    int maxFileSize = params[2];
-    int maxFiles = params[3];
+    size_t maxFileSize = params[2];
+    if (maxFileSize <= 0)
+    {
+        ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
+        return false;
+    }
+
+    size_t maxFiles = params[3];
+    if (maxFiles > 200000)
+    {
+        ctx->ReportError("maxFiles arg cannot exceed 200000.");
+        return false;
+    }
+
     bool rotateOnOpen = params[4];
 
     return log4sp::sinks::CreateHandleOrReportError(

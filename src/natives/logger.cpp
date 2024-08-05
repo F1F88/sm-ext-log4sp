@@ -32,10 +32,10 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 
     cell_t *sinkArray;
     ctx->LocalToPhysAddr(params[2], &sinkArray);
-    int num = params[3];
+    int numSinks = params[3];
 
     std::vector<spdlog::sink_ptr> sinks;
-    for (int i = 0; i < num; ++i)
+    for (unsigned int i = 0; i < numSinks; ++i)
     {
         spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinkArray[i]);
         if (sink == nullptr)
@@ -142,7 +142,19 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
     size_t maxFileSize = params[3];
+    if (maxFileSize <= 0)
+    {
+        ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
+        return false;
+    }
+
     size_t maxFiles = params[4];
+    if (maxFiles > 200000)
+    {
+        ctx->ReportError("maxFiles arg cannot exceed 200000.");
+        return false;
+    }
+
     bool rotateOnOpen = params[5];
     bool mt = params[6];
 
@@ -179,6 +191,12 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 
     int hour = params[3];
     int minute = params[4];
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
+    {
+        ctx->ReportError("Invalid rotation time in ctor");
+        return false;
+    }
+
     bool truncate = params[5];
     uint16_t maxFiles = params[6];
     bool mt = params[7];

@@ -24,8 +24,14 @@ static cell_t DailyFileSinkST(IPluginContext *ctx, const cell_t *params)
 
     int rotationHour = params[2];
     int rotationMinute = params[3];
+    if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
+    {
+        ctx->ReportError("Invalid rotation time in ctor");
+        return false;
+    }
+
     bool truncate = params[4];
-    int maxFiles = params[5];
+    uint16_t maxFiles = params[5];
 
     return log4sp::sinks::CreateHandleOrReportError(
         ctx,
@@ -73,8 +79,14 @@ static cell_t DailyFileSinkMT(IPluginContext *ctx, const cell_t *params)
 
     int rotationHour = params[2];
     int rotationMinute = params[3];
+    if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
+    {
+        ctx->ReportError("Invalid rotation time in ctor");
+        return false;
+    }
+
     bool truncate = params[4];
-    int maxFiles = params[5];
+    uint16_t maxFiles = params[5];
 
     return log4sp::sinks::CreateHandleOrReportError(
         ctx,
