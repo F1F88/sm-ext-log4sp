@@ -25,7 +25,7 @@ methodmap RotatingFileSinkST < Sink
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  Whether to rotate the log file upon opening.
      * @return              Handle for a single-threaded rotating file sink.
-     * @error               Create sink handle failed.
+     * @error               Param maxFileSize <= 0, Param maxFiles > 200000, create sink handle failed.
      */
     public native RotatingFileSinkST(
         const char[] file,
@@ -74,7 +74,7 @@ methodmap RotatingFileSinkMT < Sink
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  Whether to rotate the log file upon opening.
      * @return              Handle for a multi-threaded rotating file sink.
-     * @error               Create sink handle failed.
+     * @error               Param maxFileSize <= 0, Param maxFiles > 200000, create sink handle failed.
      */
     public native RotatingFileSinkMT(
         const char[] file,

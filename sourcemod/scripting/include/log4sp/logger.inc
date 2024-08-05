@@ -23,18 +23,18 @@ methodmap Logger < Handle
      *
      * @param name      Name of new logger.
      * @param sinkArray The sinks array of the logger.
-     * @param num       Number of slots in the sinks array.
+     * @param numSinks  Number of slots in the sinks array.
      * @return          Handle of Logger.
-     * @error           Logger name already exits or invalid sink handle or create logger handle failed.
+     * @error           Logger name already exits, invalid sink handle, create logger handle failed.
      */
-    public native Logger(const char[] name, Sink[] sinkArray, int num);
+    public native Logger(const char[] name, Sink[] sinkArray, int numSinks);
 
     /**
      * Get a logger by logger name
      *
      * @param name      Name of logger.
      * @return          Handle of Logger.
-     * @error           Logger name does not exits or create logger handle failed.
+     * @error           Logger name does not exits, create logger handle failed.
      */
     public static native Logger Get(const char[] name);
 
@@ -44,7 +44,7 @@ methodmap Logger < Handle
      * @param name      Name of new logger.
      * @param mt        If true, sink run in multi threaded. they might be faster because no locking is employed.
      * @return          Handle of Logger.
-     * @error           Logger name already exits or create logger handle failed.
+     * @error           Logger name already exits, create logger handle failed.
      */
     public static native Logger CreateServerConsoleLogger(const char[] name, bool mt = false);
 
@@ -56,7 +56,7 @@ methodmap Logger < Handle
      * @param truncate  If truncate != false , the created file will be truncated.
      * @param mt        If true, sink run in multi threaded. they might be faster because no locking is employed.
      * @return          Handle of Logger.
-     * @error           Logger name already exits or create logger handle failed.
+     * @error           Logger name already exits, create logger handle failed.
      */
     public static native Logger CreateBaseFileLogger(
         const char[] name,
@@ -80,7 +80,7 @@ methodmap Logger < Handle
      * @param rotateOnOpen  Whether to rotate the log file upon opening.
      * @param mt            If true, sink run in multi threaded. they might be faster because no locking is employed.
      * @return              Handle of Logger.
-     * @error               Logger name already exits or create logger handle failed.
+     * @error               Logger name already exits, Param maxFileSize <= 0, Param maxFiles > 200000, create logger handle failed.
      */
     public static native Logger CreateRotatingFileLogger(
         const char[] name,
@@ -104,7 +104,7 @@ methodmap Logger < Handle
      * @param maxFiles  If max_files > 0, retain only the last max_files and delete previous.
      * @param mt        If true, sinks run in multi threaded. they might be faster because no locking is employed.
      * @return          Handle of Logger.
-     * @error           Logger name already exits or create logger handle failed.
+     * @error           Logger name already exits, invalid rotation time in ctor, create logger handle failed.
      */
     public static native Logger CreateDailyFileLogger(
         const char[] name,
@@ -296,7 +296,7 @@ methodmap Logger < Handle
      * Add a new sink to sinks.
      *
      * @param sink      Handle of sink.
-     * @error           Invalid logger handle or invalid sink handle.
+     * @error           Invalid logger handle, invalid sink handle.
      */
     public native void AddSink(Sink sink);
 
@@ -305,7 +305,7 @@ methodmap Logger < Handle
      *
      * @param sink      Handle of Sink.
      * @return          True on success, false if the sink was not found.
-     * @error           Invalid logger handle or invalid sink handle.
+     * @error           Invalid logger handle, invalid sink handle.
      */
     public native bool DropSink(Sink sink);
 
@@ -315,7 +315,7 @@ methodmap Logger < Handle
      * @note 还不完善
      *
      * @param callback  A function to use as a callback when the logger occur errors.
-     * @error           Invalid logger handle or callback not found.
+     * @error           Invalid logger handle, callback not found.
      */
     public native void SetErrorHandler(Log4spErrorCallback callback);
 }

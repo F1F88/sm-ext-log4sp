@@ -41,7 +41,7 @@ methodmap ClientConsoleSinkST < Sink
      *
      * @note 重复调用会替换旧的 filter
      *
-     * @error           Invalid sink handle or invalid filter or set filter failed.
+     * @error           Invalid sink handle, invalid filter, set filter failed.
      */
     public native void SetFilter(ClientConsoleSinkFilter filter);
 }
@@ -55,7 +55,7 @@ methodmap ClientConsoleSinkMT < Sink
      *
      * @note 重复调用会替换旧的 filter
      *
-     * @error           Invalid sink handle or invalid filter or set filter failed.
+     * @error           Invalid sink handle, invalid filter, set filter failed.
      */
     public native void SetFilter(ClientConsoleSinkFilter filter);
 }

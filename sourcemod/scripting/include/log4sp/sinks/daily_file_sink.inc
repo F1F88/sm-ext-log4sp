@@ -25,7 +25,7 @@ methodmap DailyFileSinkST < Sink
      * @param truncate      If truncate != false , the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
      * @return              Handle for a single-threaded daily file sink.
-     * @error               Create sink handle failed.
+     * @error               Invalid rotation time in ctor, create sink handle failed, invalid rotation time in ctor.
      */
     public native DailyFileSinkST(
         const char[] file,
@@ -61,7 +61,7 @@ methodmap DailyFileSinkMT < Sink
      * @param truncate      If truncate != false , the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
      * @return              Handle for a multi-threaded daily file sink.
-     * @error               Create sink handle failed.
+     * @error               Invalid rotation time in ctor, create sink handle failed.
      */
     public native DailyFileSinkMT(
         const char[] file,
