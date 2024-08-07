@@ -13,7 +13,7 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
 1. Very fast, much faster than [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp benchmarks](./sourcemod/scripting/log4sp-benchmark.sp)
+   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp benchmarks](https://github.com/F1F88/sm-ext-log4sp#benchmarks)
 
 2. Each `Logger` and `Sink` can customize the log level
 
@@ -28,7 +28,9 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 6. Each `Logger` can dynamic change the log level and pattern
    - see server command `"sm log4sp"`
 
-7. Supports format parameters with variable numbers
+7. Supports asynchronous `Logger`
+
+8. Supports format parameters with variable numbers
 
    - [Parameter formatting](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) usage is consistent with [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
@@ -37,17 +39,21 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
      If characters exceeding this length will be truncated
      If longer log messages need to be log, non `AmxTpl` methods can be used, e.g. `void Info(const char [] msg)`
 
-8. Supports [backtrace](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
+9. Supports [backtrace](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
 
    - When enabled, Trace and Debug level log message are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`
 
-9. Supports various log targets
+10. Supports various log targets
 
    - ServerConsoleSink  (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
+
    - ClientConsoleSink  (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
-   - BaseFileSink
+
+   - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+
+   - DailyFileSink  (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+
    - RotatingFileSink
-   - DailyFileSink
 
 ### Usage Examples
 
@@ -233,8 +239,98 @@ Action CommandCallback(int client, int args)
 
 ##### Additional Examples
 
-- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 - [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
+
+- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+
+### Benchmarks
+
+Test platform: Windows 11 23H2 + VMware + Ubuntu 24.04 LTS + NMRIH Dedicated Server v1.13.6 + SM 1.11
+
+Host hardware configuration: AMD Ryzen 7 6800H + 32GB Memory
+
+VMware configuration: 1 CPU  + 8 kernel  + 4GB Memory
+
+##### Single thread (Synchronous)
+
+[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+
+```
+sm_log4sp_bench_files_st
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext API Single thread, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] base-file-st__________   Elapsed:  0.29 secs      3415020 /sec
+[log4sp-benchmark] rotating-file-st______   Elapsed:  0.30 secs      3239957 /sec
+[log4sp-benchmark] daily-file-st_________   Elapsed:  0.30 secs      3314001 /sec
+
+sm_log4sp_bench_server_console_st
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext Server Console Single thread, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] server-console-st_____   Elapsed:  5.74 secs       174034 /sec
+```
+
+##### Multi thread (Asynchronous)
+
+[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+
+```
+sm_log4sp_bench_files_async
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext API Asynchronous mode, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: block
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] base-file-block_______   Elapsed:  0.49 secs      2031570 /sec
+[log4sp-benchmark] rotating-file-block___   Elapsed:  0.49 secs      2006179 /sec
+[log4sp-benchmark] daily-file-block______   Elapsed:  0.49 secs      2020079 /sec
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: overrun
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] base-file-overrun_____   Elapsed:  0.46 secs      2158032 /sec
+[log4sp-benchmark] rotating-file-overrun_   Elapsed:  0.44 secs      2236701 /sec
+[log4sp-benchmark] daily-file-overrun____   Elapsed:  0.46 secs      2169291 /sec
+
+sm_log4sp_bench_server_console_async
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext Server Console Asynchronous mode, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: block
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] server-console-block__   Elapsed:  8.56 secs       116712 /sec
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: overrun
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] server-console-overrun   Elapsed:  8.44 secs       118378 /sec
+```
+
+##### Sourcemod logging API
+
+As a reference, it is also used [./sourcemod/scripting/sm-logging-benchmark.sp](./sourcemod/scripting/sm-logging-benchmark.sp) tested the Sourcemod [logging API](https://sm.alliedmods.net/new-api/logging)
+
+
+```
+sm_log4sp_bench_sm_logging
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Sourcemod Logging API, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] LogMessage               Elapsed: 10.99 secs        90979 /sec
+[log4sp-benchmark] LogToFile                Elapsed:  8.91 secs       112111 /sec
+[log4sp-benchmark] LogToFileEx              Elapsed:  9.07 secs       110141 /sec
+ *
+sm_log4sp_bench_sm_console
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Sourcemod Console API, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] PrintToServer            Elapsed:  5.86 secs       170446 /sec
+```
 
 ### Dependencies
 

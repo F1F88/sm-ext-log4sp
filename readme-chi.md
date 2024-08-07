@@ -13,31 +13,44 @@
 
 1. 非常快，比 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
 
-   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp 性能测试](./sourcemod/scripting/log4sp-benchmark.sp)
+   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp 性能测试](https://github.com/F1F88/sm-ext-log4sp#benchmarks)
+
 2. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义日志级别
 
 3. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义[日志模板](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
 4. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义[刷新策略](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+
 5. 每个 `Logger` 都可以拥有多个 `Sink`
 
    - 例如： `ServerConsoleSink` + `DailyFileSink` 相当于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+
 6. 每个 `Logger` (记录器)  都可以动态调整日志级别、模板
+
    - 详见指令`"sm log4sp"`
-7. 支持格式化可变个数的参数
+
+7. 支持异步 `Logger` (记录器)
+
+8. 支持格式化可变个数的参数
 
    - [参数格式化用法](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 与 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 相同
+
    - 可变参数的字符串最大长度为 **2048**，超过这个长度的字符会被截断
      如需要记录更长的日志消息，可以使用非 `AmxTpl` 的方法, 例如: `void Info(const char[] msg)`
-8. 支持[日志回溯](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
 
-9. 支持多种 Sink
+9. 支持[日志回溯](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
+
+10. 支持多种 Sink
 
    - ServerConsoleSink （类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+
    - ClientConsoleSink （类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
-   - BaseFileSink
+
+   - BaseFileSink （类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile))
+
+   - DailyFileSink (类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage))
+
    - RotatingFileSink
-   - DailyFileSink
 
 ### 使用示例
 
@@ -222,8 +235,98 @@ Action CommandCallback(int client, int args)
 
 ##### 更多示例
 
-- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 - [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
+
+- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+
+### 性能测试
+
+测试平台: Windows 11 23H2 + VMware + Ubuntu 24.04 LTS + NMRIH Dedicated Server v1.13.6 + SM 1.11
+
+宿主机硬件配置: AMD Ryzen 7 6800H + 32GB 内存
+
+VMware 配置: 1 CPU + 8 核心 + 4GB 内存
+
+##### 单线程(同步)
+
+[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+
+```
+sm_log4sp_bench_files_st
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext API Single thread, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] base-file-st__________   Elapsed:  0.29 secs      3415020 /sec
+[log4sp-benchmark] rotating-file-st______   Elapsed:  0.30 secs      3239957 /sec
+[log4sp-benchmark] daily-file-st_________   Elapsed:  0.30 secs      3314001 /sec
+
+sm_log4sp_bench_server_console_st
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext Server Console Single thread, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] server-console-st_____   Elapsed:  5.74 secs       174034 /sec
+```
+
+##### 多线程(异步)
+
+[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+
+```
+sm_log4sp_bench_files_async
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext API Asynchronous mode, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: block
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] base-file-block_______   Elapsed:  0.49 secs      2031570 /sec
+[log4sp-benchmark] rotating-file-block___   Elapsed:  0.49 secs      2006179 /sec
+[log4sp-benchmark] daily-file-block______   Elapsed:  0.49 secs      2020079 /sec
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: overrun
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] base-file-overrun_____   Elapsed:  0.46 secs      2158032 /sec
+[log4sp-benchmark] rotating-file-overrun_   Elapsed:  0.44 secs      2236701 /sec
+[log4sp-benchmark] daily-file-overrun____   Elapsed:  0.46 secs      2169291 /sec
+
+sm_log4sp_bench_server_console_async
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Log4sp.ext Server Console Asynchronous mode, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: block
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] server-console-block__   Elapsed:  8.56 secs       116712 /sec
+[log4sp-benchmark]
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] Queue Overflow Policy: overrun
+[log4sp-benchmark] *********************************
+[log4sp-benchmark] server-console-overrun   Elapsed:  8.44 secs       118378 /sec
+```
+
+##### Sourcemod logging API
+
+作为参考, 也用 [./sourcemod/scripting/sm-logging-benchmark.sp](./sourcemod/scripting/sm-logging-benchmark.sp) 测试了 Sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
+
+
+```
+sm_log4sp_bench_sm_logging
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Sourcemod Logging API, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] LogMessage               Elapsed: 10.99 secs        90979 /sec
+[log4sp-benchmark] LogToFile                Elapsed:  8.91 secs       112111 /sec
+[log4sp-benchmark] LogToFileEx              Elapsed:  9.07 secs       110141 /sec
+ *
+sm_log4sp_bench_sm_console
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] Sourcemod Console API, 1000000 iterations
+[log4sp-benchmark] **************************************************************
+[log4sp-benchmark] PrintToServer            Elapsed:  5.86 secs       170446 /sec
+```
 
 ### 依赖
 
@@ -301,20 +404,22 @@ ambuild
 
 ## 待办
 
-1. server command 支持修改 flush level
-2. 在 Windows 系统中测试 log4sp.ext.dll
-3. 支持 XXXAmxTpl 格式化的字符串无限长度
-4. 支持参数格式不匹配时不抛出异常
+1. 支持通过配置文件配置全局线程池
+2. 支持通过配置文件配置默认 Logger
+3. server command 支持修改 flush level
+4. 编译 Windows 系统的 log4sp.ext.dll 并测试
+5. 支持 XXXAmxTpl 格式化的字符串无限长度
+6. 支持参数格式不匹配时不抛出异常
     - 没记错的话 spdlog 也是这么做的
     - 目前 XXXAmlTpl 调用 sm 内部的 API，如果格式与参数不匹配会直接抛出异常
     - 值得考虑：其他API是否也可需要减少抛出异常？
-5. 支持 fmt 风格的格式化方案
+7. 支持 fmt 风格的格式化方案
     - 可能需要自定义一个 cell_t 类型来识别参数
     - 如何处理参数个数的问题？也许可以参考 flink tuple
-6. 实现更多不同类型的 sink
+8. 实现更多不同类型的 sink
     - 如果有时间的话
-7. 支持纯 sourcepawn 自定义 sink
-    - 使用一个代理 sink，通过 forward 来调用 sp 自定义的 sink_it\_() 和 flush_()
+9. 支持纯 sourcepawn 自定义 sink
+    - 使用一个代理 sink，通过 forward 来调用 sp 自定义的 sink_it\_() 和 flush\_()
     - 自定义构造器、以及如何识别自定义的 sink 类型还需要进一步考虑
-8. 实现更多的 SPDLOG_API
+10. 实现更多的 SPDLOG_API
     - 使用 forward 实现 logger、sinks 的 file_event_handlers
