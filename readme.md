@@ -26,6 +26,7 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
    - For example: A `Logger` that has both `ServerConsoleSink` and `DailyFileSink` is similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
 6. Each `Logger` can dynamic change the log level and pattern
+
    - see server command `"sm log4sp"`
 
 7. Supports asynchronous `Logger`
@@ -247,7 +248,7 @@ Action CommandCallback(int client, int args)
 
 Test platform: Windows 11 23H2 + VMware + Ubuntu 24.04 LTS + NMRIH Dedicated Server v1.13.6 + SM 1.11
 
-Host hardware configuration: AMD Ryzen 7 6800H + 32GB Memory
+Host configuration: AMD Ryzen 7 6800H + 32GB Memory
 
 VMware configuration: 1 CPU  + 8 kernel  + 4GB Memory
 
@@ -260,15 +261,15 @@ sm_log4sp_bench_files_st
 [log4sp-benchmark] **************************************************************
 [log4sp-benchmark] Log4sp.ext API Single thread, 1000000 iterations
 [log4sp-benchmark] **************************************************************
-[log4sp-benchmark] base-file-st__________   Elapsed:  0.29 secs      3415020 /sec
-[log4sp-benchmark] rotating-file-st______   Elapsed:  0.30 secs      3239957 /sec
-[log4sp-benchmark] daily-file-st_________   Elapsed:  0.30 secs      3314001 /sec
+[log4sp-benchmark] base-file-st             Elapsed:  0.28 secs      3524341 /sec
+[log4sp-benchmark] rotating-file-st         Elapsed:  0.29 secs      3390347 /sec
+[log4sp-benchmark] daily-file-st            Elapsed:  0.29 secs      3385034 /sec
 
 sm_log4sp_bench_server_console_st
 [log4sp-benchmark] **************************************************************
 [log4sp-benchmark] Log4sp.ext Server Console Single thread, 1000000 iterations
 [log4sp-benchmark] **************************************************************
-[log4sp-benchmark] server-console-st_____   Elapsed:  5.74 secs       174034 /sec
+[log4sp-benchmark] server-console-st        Elapsed:  5.60 secs       178455 /sec
 ```
 
 #### Multi thread (Asynchronous)
@@ -284,16 +285,16 @@ sm_log4sp_bench_files_async
 [log4sp-benchmark] *********************************
 [log4sp-benchmark] Queue Overflow Policy: block
 [log4sp-benchmark] *********************************
-[log4sp-benchmark] base-file-block_______   Elapsed:  0.49 secs      2031570 /sec
-[log4sp-benchmark] rotating-file-block___   Elapsed:  0.49 secs      2006179 /sec
-[log4sp-benchmark] daily-file-block______   Elapsed:  0.49 secs      2020079 /sec
+[log4sp-benchmark] base-file-block          Elapsed:  0.46 secs      2164179 /sec
+[log4sp-benchmark] rotating-file-block      Elapsed:  0.48 secs      2071195 /sec
+[log4sp-benchmark] daily-file-block         Elapsed:  0.46 secs      2131532 /sec
 [log4sp-benchmark]
 [log4sp-benchmark] *********************************
 [log4sp-benchmark] Queue Overflow Policy: overrun
 [log4sp-benchmark] *********************************
-[log4sp-benchmark] base-file-overrun_____   Elapsed:  0.46 secs      2158032 /sec
-[log4sp-benchmark] rotating-file-overrun_   Elapsed:  0.44 secs      2236701 /sec
-[log4sp-benchmark] daily-file-overrun____   Elapsed:  0.46 secs      2169291 /sec
+[log4sp-benchmark] base-file-overrun        Elapsed:  0.43 secs      2288062 /sec
+[log4sp-benchmark] rotating-file-overrun    Elapsed:  0.43 secs      2310306 /sec
+[log4sp-benchmark] daily-file-overrun       Elapsed:  0.34 secs      2876704 /sec
 
 sm_log4sp_bench_server_console_async
 [log4sp-benchmark] **************************************************************
@@ -303,12 +304,12 @@ sm_log4sp_bench_server_console_async
 [log4sp-benchmark] *********************************
 [log4sp-benchmark] Queue Overflow Policy: block
 [log4sp-benchmark] *********************************
-[log4sp-benchmark] server-console-block__   Elapsed:  8.56 secs       116712 /sec
+[log4sp-benchmark] server-console-block     Elapsed:  8.05 secs       124192 /sec
 [log4sp-benchmark]
 [log4sp-benchmark] *********************************
 [log4sp-benchmark] Queue Overflow Policy: overrun
 [log4sp-benchmark] *********************************
-[log4sp-benchmark] server-console-overrun   Elapsed:  8.44 secs       118378 /sec
+[log4sp-benchmark] server-console-overrun   Elapsed:  8.19 secs       121953 /sec
 ```
 
 #### Sourcemod logging API
