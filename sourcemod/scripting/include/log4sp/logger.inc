@@ -22,12 +22,14 @@ methodmap Logger < Handle
      * Creating logger manually.
      *
      * @param name      Name of new logger.
-     * @param sinkArray The sinks array of the logger.
+     * @param sinks     The sinks array of the logger.
      * @param numSinks  Number of slots in the sinks array.
+     * @param async     If true, cteate an asynchronous logger.
+     * @param policy    Asynchronous queue overflow policy. Only valid when param async = true.
      * @return          Handle of Logger.
-     * @error           Logger name already exits, invalid sink handle, create logger handle failed.
+     * @error           Logger name already exits, param sinks has invalid sink handle, param policy is out of bounds, create logger handle failed.
      */
-    public native Logger(const char[] name, Sink[] sinkArray, int numSinks);
+    public native Logger(const char[] name, Sink[] sinks, int numSinks, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
      * Get a logger by logger name
@@ -42,11 +44,13 @@ methodmap Logger < Handle
      * Server console sink base on stdout.
      *
      * @param name      Name of new logger.
-     * @param mt        If true, sink run in multi threaded. they might be faster because no locking is employed.
+     * @param async     If true, cteate an asynchronous logger.
+     *                  And sink run in multi threaded. They might be slower because locking is required.
+     * @param policy    Asynchronous queue overflow policy. Only valid when param async = true.
      * @return          Handle of Logger.
-     * @error           Logger name already exits, create logger handle failed.
+     * @error           Logger name already exits, invalid policy, create logger handle failed.
      */
-    public static native Logger CreateServerConsoleLogger(const char[] name, bool mt = false);
+    public static native Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
      * Trivial file sink with single file as target.
@@ -54,15 +58,18 @@ methodmap Logger < Handle
      * @param name      The name of the logger. This is used to identify the logger instance.
      * @param file      The file path where the log messages will be written.
      * @param truncate  If truncate != false , the created file will be truncated.
-     * @param mt        If true, sink run in multi threaded. they might be faster because no locking is employed.
+     * @param async     If true, cteate an asynchronous logger.
+     *                  And sink run in multi threaded. They might be slower because locking is required.
+     * @param policy    Asynchronous queue overflow policy. Only valid when param async = true.
      * @return          Handle of Logger.
-     * @error           Logger name already exits, create logger handle failed.
+     * @error           Logger name already exits, invalid policy, create logger handle failed.
      */
     public static native Logger CreateBaseFileLogger(
         const char[] name,
         const char[] file,
-        bool turncate = false,
-        bool mt = false
+        bool truncate = false,
+        bool async = false,
+        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
     );
 
     /**
@@ -78,9 +85,11 @@ methodmap Logger < Handle
      * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  Whether to rotate the log file upon opening.
-     * @param mt            If true, sink run in multi threaded. they might be faster because no locking is employed.
+     * @param async         If true, cteate an asynchronous logger. And sink run in multi threaded.
+     *                      They might be slower because locking is required.
+     * @param policy        Asynchronous queue overflow policy. Useful only if async = true.
      * @return              Handle of Logger.
-     * @error               Logger name already exits, Param maxFileSize <= 0, Param maxFiles > 200000, create logger handle failed.
+     * @error               Logger name already exits, param maxFileSize <= 0, param maxFiles > 200000, param policy is out of bounds, create logger handle failed.
      */
     public static native Logger CreateRotatingFileLogger(
         const char[] name,
@@ -88,7 +97,8 @@ methodmap Logger < Handle
         int maxFileSize,
         int maxFiles,
         bool rotateOnOpen = false,
-        bool mt = false
+        bool async = false,
+        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
     );
 
     /**
@@ -102,9 +112,11 @@ methodmap Logger < Handle
      * @param minute    The minute of the hour when the log file should be rotated (0-59). Default is 0.
      * @param truncate  If truncate != false , the created file will be truncated.
      * @param maxFiles  If max_files > 0, retain only the last max_files and delete previous.
-     * @param mt        If true, sinks run in multi threaded. they might be faster because no locking is employed.
+     * @param async     If true, cteate an asynchronous logger. And sink run in multi threaded.
+     *                  They might be slower because locking is required.
+     * @param policy    Asynchronous queue overflow policy. Useful only if async = true.
      * @return          Handle of Logger.
-     * @error           Logger name already exits, invalid rotation time in ctor, create logger handle failed.
+     * @error           Logger name already exits, invalid rotation time in ctor, invalid policy, create logger handle failed.
      */
     public static native Logger CreateDailyFileLogger(
         const char[] name,
@@ -113,7 +125,8 @@ methodmap Logger < Handle
         int minute = 0,
         bool truncate = false,
         int maxFiles = 0,
-        bool mt = false
+        bool async = false,
+        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
     );
 
     /**

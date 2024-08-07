@@ -1,3 +1,4 @@
+#include "spdlog/async.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/rotating_file_sink.h"
@@ -19,7 +20,7 @@
  */
 
 /**
- * public native Logger(const char[] name, Sink[] sinkArray, int num);
+ * public native Logger(const char[] name, Sink[] sinks, int numSinks, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
  */
 static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 {
@@ -30,23 +31,40 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    cell_t *sinkArray;
-    ctx->LocalToPhysAddr(params[2], &sinkArray);
-    int numSinks = params[3];
+    cell_t *sinks;
+    ctx->LocalToPhysAddr(params[2], &sinks);
+    unsigned int numSinks = params[3];
 
-    std::vector<spdlog::sink_ptr> sinks;
+    std::vector<spdlog::sink_ptr> sinksList;
     for (unsigned int i = 0; i < numSinks; ++i)
     {
-        spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinkArray[i]);
+        spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinks[i]);
         if (sink == nullptr)
         {
             return BAD_HANDLE;
         }
-        sinks.push_back(sink);
+        sinksList.push_back(sink);
     }
 
-    auto logger = std::make_shared<spdlog::logger>(name, sinks.begin(), sinks.end());
-    spdlog::register_logger(logger);    // 暂时不考虑匿名 logger
+    bool async = params[4];
+    int policy = params[5];
+    if (policy < 0 || policy > 2)
+    {
+        ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
+        return false;
+    }
+
+    std::shared_ptr<spdlog::logger> logger;
+    if (async)
+    {
+        logger = std::make_shared<spdlog::async_logger>(name, sinksList.begin(), sinksList.end(), spdlog::thread_pool(), spdlog::async_overflow_policy(policy));
+    }
+    else
+    {
+        logger = std::make_shared<spdlog::logger>(name, sinksList.begin(), sinksList.end());
+    }
+
+    spdlog::register_logger(logger);
     return log4sp::logger::CreateHandleOrReportError(ctx, logger);
 }
 
@@ -67,7 +85,7 @@ static cell_t Get(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public static native Logger CreateServerConsoleLogger(const char[] name, bool mt = false);
+ * public static native Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
  */
 static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *params)
 {
@@ -78,11 +96,35 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    bool mt = params[2];
+    bool async = params[2];
+    int policy = params[3];
+    if (policy < 0 || policy > 2)
+    {
+        ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
+        return false;
+    }
 
-    auto logger = mt ?
-        spdlog::stdout_logger_mt(name) :
-        spdlog::stdout_logger_st(name);
+    std::shared_ptr<spdlog::logger> logger;
+    if (async)
+    {
+        switch (policy)
+        {
+        case 1:
+            logger = spdlog::stdout_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::overrun_oldest>>(name);
+            break;
+        case 2:
+            logger = spdlog::stdout_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::discard_new>>(name);
+            break;
+        default:
+            logger = spdlog::stdout_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::block>>(name);
+            break;
+        }
+    }
+    else
+    {
+        logger = spdlog::stdout_logger_st(name);
+    }
+
     return log4sp::logger::CreateHandleOrReportError(ctx, logger);
 }
 
@@ -90,8 +132,9 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
  * public static native Logger CreateBaseFileLogger(
  *     const char[] name,
  *     const char[] file,
- *     bool turncate = false,
- *     bool mt = false
+ *     bool truncate = false,
+ *     bool async = false,
+ *     AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
  * );
  */
 static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
@@ -108,12 +151,36 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    bool turncate = params[3];
-    bool mt = params[4];
+    bool truncate = params[3];
+    bool async = params[4];
+    int policy = params[5];
+    if (policy < 0 || policy > 2)
+    {
+        ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
+        return false;
+    }
 
-    auto logger = mt ?
-        spdlog::basic_logger_mt(name, path, turncate) :
-        spdlog::basic_logger_st(name, path, turncate);
+    std::shared_ptr<spdlog::logger> logger;
+    if (async)
+    {
+        switch (policy)
+        {
+        case 1:
+            logger = spdlog::basic_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::overrun_oldest>>(name, path, truncate);
+            break;
+        case 2:
+            logger = spdlog::basic_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::discard_new>>(name, path, truncate);
+            break;
+        default:
+            logger = spdlog::basic_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::block>>(name, path, truncate);
+            break;
+        }
+    }
+    else
+    {
+        logger = spdlog::basic_logger_st(name, path, truncate);
+    }
+
     return log4sp::logger::CreateHandleOrReportError(ctx, logger);
 }
 
@@ -124,7 +191,8 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
  *      int maxFileSize,
  *      int maxFiles,
  *      bool rotateOnOpen = false,
- *      bool mt = false
+ *      bool async = false,
+ *      AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
  * );
  */
 static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params)
@@ -156,11 +224,35 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     }
 
     bool rotateOnOpen = params[5];
-    bool mt = params[6];
+    bool async = params[6];
+    int policy = params[7];
+    if (policy < 0 || policy > 2)
+    {
+        ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
+        return false;
+    }
 
-    auto logger = mt ?
-        spdlog::rotating_logger_mt(name, path, maxFileSize, maxFiles, rotateOnOpen) :
-        spdlog::rotating_logger_st(name, path, maxFileSize, maxFiles, rotateOnOpen);
+    std::shared_ptr<spdlog::logger> logger;
+    if (async)
+    {
+        switch (policy)
+        {
+        case 1:
+            logger = spdlog::rotating_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::overrun_oldest>>(name, path, maxFileSize, maxFiles, rotateOnOpen);
+            break;
+        case 2:
+            logger = spdlog::rotating_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::discard_new>>(name, path, maxFileSize, maxFiles, rotateOnOpen);
+            break;
+        default:
+            logger = spdlog::rotating_logger_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::block>>(name, path, maxFileSize, maxFiles, rotateOnOpen);
+            break;
+        }
+    }
+    else
+    {
+        logger = spdlog::rotating_logger_st(name, path, maxFileSize, maxFiles, rotateOnOpen);
+    }
+
     return log4sp::logger::CreateHandleOrReportError(ctx, logger);
 }
 
@@ -172,7 +264,8 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
  *      int minute = 0,
  *      bool truncate = false,
  *      int maxFiles = 0,
- *      bool mt = false
+ *      bool async = false,
+ *      AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
  * );
  */
 static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
@@ -199,11 +292,35 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 
     bool truncate = params[5];
     uint16_t maxFiles = params[6];
-    bool mt = params[7];
+    bool async = params[7];
+    int policy = params[8];
+    if (policy < 0 || policy > 2)
+    {
+        ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
+        return false;
+    }
 
-    auto logger = mt ?
-        spdlog::daily_logger_format_mt(name, path, hour, minute, truncate, maxFiles) :
-        spdlog::daily_logger_format_st(name, path, hour, minute, truncate, maxFiles);
+    std::shared_ptr<spdlog::logger> logger;
+    if (async)
+    {
+        switch (policy)
+        {
+        case 1:
+            logger = spdlog::daily_logger_format_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::overrun_oldest>>(name, path, hour, minute, truncate, maxFiles);
+            break;
+        case 2:
+            logger = spdlog::daily_logger_format_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::discard_new>>(name, path, hour, minute, truncate, maxFiles);
+            break;
+        default:
+            logger = spdlog::daily_logger_format_mt<spdlog::async_factory_impl<spdlog::async_overflow_policy::block>>(name, path, hour, minute, truncate, maxFiles);
+            break;
+        }
+    }
+    else
+    {
+        logger = spdlog::daily_logger_format_st(name, path, hour, minute, truncate, maxFiles);
+    }
+
     return log4sp::logger::CreateHandleOrReportError(ctx, logger);
 }
 

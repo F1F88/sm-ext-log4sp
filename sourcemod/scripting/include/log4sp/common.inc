@@ -52,10 +52,19 @@ enum LogLevel
  */
 enum PatternTimeType
 {
-    PatternTimeType_Local,          // log localtime
-    PatternTimeType_Utc             // log utc
+    PatternTimeType_Local,              // log localtime
+    PatternTimeType_Utc                 // log utc
 };
 
+/**
+ * Async overflow policy - block by default.
+ */
+enum AsyncOverflowPolicy
+{
+    AsyncOverflowPolicy_Block,          // Block until message can be enqueued.
+    AsyncOverflowPolicy_OverrunOldest,  // Discard oldest message in the queue if full when trying to add new item.
+    AsyncOverflowPolicy_DiscardNew      // Discard new message if the queue is full when trying to add new item.
+}
 
 /**
  * Convert a logging level enum to name.
