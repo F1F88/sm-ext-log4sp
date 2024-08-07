@@ -247,7 +247,7 @@ Action CommandCallback(int client, int args)
 
 VMware 配置: 1 CPU + 8 核心 + 4GB 内存
 
-##### 单线程(同步)
+#### 单线程(同步)
 
 [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
@@ -267,7 +267,7 @@ sm_log4sp_bench_server_console_st
 [log4sp-benchmark] server-console-st_____   Elapsed:  5.74 secs       174034 /sec
 ```
 
-##### 多线程(异步)
+#### 多线程(异步)
 
 [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
@@ -307,7 +307,7 @@ sm_log4sp_bench_server_console_async
 [log4sp-benchmark] server-console-overrun   Elapsed:  8.44 secs       118378 /sec
 ```
 
-##### Sourcemod logging API
+#### Sourcemod logging API
 
 作为参考, 也用 [./sourcemod/scripting/sm-logging-benchmark.sp](./sourcemod/scripting/sm-logging-benchmark.sp) 测试了 Sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
 
@@ -320,7 +320,7 @@ sm_log4sp_bench_sm_logging
 [log4sp-benchmark] LogMessage               Elapsed: 10.99 secs        90979 /sec
 [log4sp-benchmark] LogToFile                Elapsed:  8.91 secs       112111 /sec
 [log4sp-benchmark] LogToFileEx              Elapsed:  9.07 secs       110141 /sec
- *
+
 sm_log4sp_bench_sm_console
 [log4sp-benchmark] **************************************************************
 [log4sp-benchmark] Sourcemod Console API, 1000000 iterations

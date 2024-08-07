@@ -251,7 +251,7 @@ Host hardware configuration: AMD Ryzen 7 6800H + 32GB Memory
 
 VMware configuration: 1 CPU  + 8 kernel  + 4GB Memory
 
-##### Single thread (Synchronous)
+#### Single thread (Synchronous)
 
 [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
@@ -271,7 +271,7 @@ sm_log4sp_bench_server_console_st
 [log4sp-benchmark] server-console-st_____   Elapsed:  5.74 secs       174034 /sec
 ```
 
-##### Multi thread (Asynchronous)
+#### Multi thread (Asynchronous)
 
 [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
@@ -311,7 +311,7 @@ sm_log4sp_bench_server_console_async
 [log4sp-benchmark] server-console-overrun   Elapsed:  8.44 secs       118378 /sec
 ```
 
-##### Sourcemod logging API
+#### Sourcemod logging API
 
 As a reference, it is also used [./sourcemod/scripting/sm-logging-benchmark.sp](./sourcemod/scripting/sm-logging-benchmark.sp) tested the Sourcemod [logging API](https://sm.alliedmods.net/new-api/logging)
 
@@ -324,7 +324,7 @@ sm_log4sp_bench_sm_logging
 [log4sp-benchmark] LogMessage               Elapsed: 10.99 secs        90979 /sec
 [log4sp-benchmark] LogToFile                Elapsed:  8.91 secs       112111 /sec
 [log4sp-benchmark] LogToFileEx              Elapsed:  9.07 secs       110141 /sec
- *
+
 sm_log4sp_bench_sm_console
 [log4sp-benchmark] **************************************************************
 [log4sp-benchmark] Sourcemod Console API, 1000000 iterations
