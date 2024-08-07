@@ -47,15 +47,15 @@ Action CMD_BenchLog4spFilesST(int client, int args)
     PrintToServer("[log4sp-benchmark] Log4sp.ext API Single thread, %d iterations", iters);
     PrintToServer("[log4sp-benchmark] **************************************************************");
 
-    Logger baseFileST = Logger.CreateBaseFileLogger("base-file-st__________", "logs/benchmark/base-file-st_______________.log", true);
+    Logger baseFileST = Logger.CreateBaseFileLogger("base-file-st          ", "logs/benchmark/base-file-st_______________.log", true);
     BenchLogger(iters, baseFileST);
     delete baseFileST;
 
-    Logger rotatingFileST = Logger.CreateRotatingFileLogger("rotating-file-st______", "logs/benchmark/rotating-file-st___________.log", g_iFileSize, g_iRotatingFiles);
+    Logger rotatingFileST = Logger.CreateRotatingFileLogger("rotating-file-st      ", "logs/benchmark/rotating-file-st___________.log", g_iFileSize, g_iRotatingFiles);
     BenchLogger(iters, rotatingFileST);
     delete rotatingFileST;
 
-    Logger dailyFileST = Logger.CreateDailyFileLogger("daily-file-st_________", "logs/benchmark/daily-file-st_____________.log");
+    Logger dailyFileST = Logger.CreateDailyFileLogger("daily-file-st         ", "logs/benchmark/daily-file-st_____________.log");
     BenchLogger(iters, dailyFileST);
     delete dailyFileST;
 
@@ -75,7 +75,7 @@ Action CMD_BenchLog4spServerConsoleST(int client, int args)
     LogToFileEx(file, "[log4sp-benchmark] Log4sp.ext Server Console Single thread, %d iterations", iters);
     LogToFileEx(file, "[log4sp-benchmark] **************************************************************");
 
-    Logger console = Logger.CreateServerConsoleLogger("server-console-st_____");
+    Logger console = Logger.CreateServerConsoleLogger("server-console-st     ");
     BenchLoggerServerConsole(iters, console, file);
     delete console;
 
@@ -100,15 +100,15 @@ Action CMD_BenchLog4spFilesAsync(int client, int args)
     PrintToServer("[log4sp-benchmark] Queue Overflow Policy: block");
     PrintToServer("[log4sp-benchmark] *********************************");
 
-    Logger baseFileBlock = Logger.CreateBaseFileLogger("base-file-block_______", "logs/benchmark/base-file-block____________.log", true, .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger baseFileBlock = Logger.CreateBaseFileLogger("base-file-block       ", "logs/benchmark/base-file-block____________.log", true, .async=true, .policy=AsyncOverflowPolicy_Block);
     BenchLogger(iters, baseFileBlock);
     delete baseFileBlock;
 
-    Logger rotatingFileBlock = Logger.CreateRotatingFileLogger("rotating-file-block___", "logs/benchmark/rotating-file-block________.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger rotatingFileBlock = Logger.CreateRotatingFileLogger("rotating-file-block   ", "logs/benchmark/rotating-file-block________.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_Block);
     BenchLogger(iters, rotatingFileBlock);
     delete rotatingFileBlock;
 
-    Logger dailyFileBlock = Logger.CreateDailyFileLogger("daily-file-block______", "logs/benchmark/daily-file-block___________.log", .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger dailyFileBlock = Logger.CreateDailyFileLogger("daily-file-block      ", "logs/benchmark/daily-file-block___________.log", .async=true, .policy=AsyncOverflowPolicy_Block);
     BenchLogger(iters, dailyFileBlock);
     delete dailyFileBlock;
 
@@ -117,15 +117,15 @@ Action CMD_BenchLog4spFilesAsync(int client, int args)
     PrintToServer("[log4sp-benchmark] Queue Overflow Policy: overrun");
     PrintToServer("[log4sp-benchmark] *********************************");
 
-    Logger baseFileOverrun = Logger.CreateBaseFileLogger("base-file-overrun_____", "logs/benchmark/base-file-overrun__________.log", true, .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
+    Logger baseFileOverrun = Logger.CreateBaseFileLogger("base-file-overrun     ", "logs/benchmark/base-file-overrun__________.log", true, .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
     BenchLogger(iters, baseFileOverrun);
     delete baseFileOverrun;
 
-    Logger rotatingFileOverrun = Logger.CreateRotatingFileLogger("rotating-file-overrun_", "logs/benchmark/rotating-file-overrun______.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
+    Logger rotatingFileOverrun = Logger.CreateRotatingFileLogger("rotating-file-overrun ", "logs/benchmark/rotating-file-overrun______.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
     BenchLogger(iters, rotatingFileOverrun);
     delete rotatingFileOverrun;
 
-    Logger dailyFileOverrun = Logger.CreateDailyFileLogger("daily-file-overrun____", "logs/benchmark/daily-file-overrun_________.log", .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
+    Logger dailyFileOverrun = Logger.CreateDailyFileLogger("daily-file-overrun    ", "logs/benchmark/daily-file-overrun_________.log", .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
     BenchLogger(iters, dailyFileOverrun);
     delete dailyFileOverrun;
 
@@ -150,7 +150,7 @@ Action CMD_BenchLog4spServerConsoleAsync(int client, int args)
     LogToFileEx(file, "[log4sp-benchmark] Queue Overflow Policy: block");
     LogToFileEx(file, "[log4sp-benchmark] *********************************");
 
-    Logger consoleBlock = Logger.CreateServerConsoleLogger("server-console-block__", .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger consoleBlock = Logger.CreateServerConsoleLogger("server-console-block  ", .async=true, .policy=AsyncOverflowPolicy_Block);
     BenchLoggerServerConsole(iters, consoleBlock, file);
     delete consoleBlock;
 
@@ -219,9 +219,9 @@ void BenchLoggerServerConsole(int howmany, Logger logger, const char[] file)
  * [log4sp-benchmark] **************************************************************
  * [log4sp-benchmark] Log4sp.ext API Single thread, 1000000 iterations
  * [log4sp-benchmark] **************************************************************
- * [log4sp-benchmark] base-file-st__________   Elapsed:  0.29 secs      3415020 /sec
- * [log4sp-benchmark] rotating-file-st______   Elapsed:  0.30 secs      3239957 /sec
- * [log4sp-benchmark] daily-file-st_________   Elapsed:  0.30 secs      3314001 /sec
+ * [log4sp-benchmark] base-file-st             Elapsed:  0.28 secs      3524341 /sec
+ * [log4sp-benchmark] rotating-file-st         Elapsed:  0.29 secs      3390347 /sec
+ * [log4sp-benchmark] daily-file-st            Elapsed:  0.29 secs      3385034 /sec
  *
  *
  *
@@ -229,7 +229,7 @@ void BenchLoggerServerConsole(int howmany, Logger logger, const char[] file)
  * [log4sp-benchmark] **************************************************************
  * [log4sp-benchmark] Log4sp.ext Server Console Single thread, 1000000 iterations
  * [log4sp-benchmark] **************************************************************
- * [log4sp-benchmark] server-console-st_____   Elapsed:  5.74 secs       174034 /sec
+ * [log4sp-benchmark] server-console-st        Elapsed:  5.60 secs       178455 /sec
  *
  *
  *
@@ -241,16 +241,16 @@ void BenchLoggerServerConsole(int howmany, Logger logger, const char[] file)
  * [log4sp-benchmark] *********************************
  * [log4sp-benchmark] Queue Overflow Policy: block
  * [log4sp-benchmark] *********************************
- * [log4sp-benchmark] base-file-block_______   Elapsed:  0.49 secs      2031570 /sec
- * [log4sp-benchmark] rotating-file-block___   Elapsed:  0.49 secs      2006179 /sec
- * [log4sp-benchmark] daily-file-block______   Elapsed:  0.49 secs      2020079 /sec
+ * [log4sp-benchmark] base-file-block          Elapsed:  0.46 secs      2164179 /sec
+ * [log4sp-benchmark] rotating-file-block      Elapsed:  0.48 secs      2071195 /sec
+ * [log4sp-benchmark] daily-file-block         Elapsed:  0.46 secs      2131532 /sec
  * [log4sp-benchmark]
  * [log4sp-benchmark] *********************************
  * [log4sp-benchmark] Queue Overflow Policy: overrun
  * [log4sp-benchmark] *********************************
- * [log4sp-benchmark] base-file-overrun_____   Elapsed:  0.46 secs      2158032 /sec
- * [log4sp-benchmark] rotating-file-overrun_   Elapsed:  0.44 secs      2236701 /sec
- * [log4sp-benchmark] daily-file-overrun____   Elapsed:  0.46 secs      2169291 /sec
+ * [log4sp-benchmark] base-file-overrun        Elapsed:  0.43 secs      2288062 /sec
+ * [log4sp-benchmark] rotating-file-overrun    Elapsed:  0.43 secs      2310306 /sec
+ * [log4sp-benchmark] daily-file-overrun       Elapsed:  0.34 secs      2876704 /sec
  *
  *
  *
@@ -262,10 +262,10 @@ void BenchLoggerServerConsole(int howmany, Logger logger, const char[] file)
  * [log4sp-benchmark] *********************************
  * [log4sp-benchmark] Queue Overflow Policy: block
  * [log4sp-benchmark] *********************************
- * [log4sp-benchmark] server-console-block__   Elapsed:  8.56 secs       116712 /sec
+ * [log4sp-benchmark] server-console-block     Elapsed:  8.05 secs       124192 /sec
  * [log4sp-benchmark]
  * [log4sp-benchmark] *********************************
  * [log4sp-benchmark] Queue Overflow Policy: overrun
  * [log4sp-benchmark] *********************************
- * [log4sp-benchmark] server-console-overrun   Elapsed:  8.44 secs       118378 /sec
+ * [log4sp-benchmark] server-console-overrun   Elapsed:  8.19 secs       121953 /sec
  */
