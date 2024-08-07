@@ -40,7 +40,7 @@
 /* Basic information exposed publicly */
 #define SMEXT_CONF_NAME         "Logging for SourcePawn"
 #define SMEXT_CONF_DESCRIPTION  "SourcePawn logging utils extension to help developers"
-#define SMEXT_CONF_VERSION      "1.1.1"
+#define SMEXT_CONF_VERSION      "1.1.2"
 #define SMEXT_CONF_AUTHOR       "F1F88"
 #define SMEXT_CONF_URL          "https://github.com/F1F88/sm-ext-log4sp"
 #define SMEXT_CONF_LOGTAG       "LOG4SP"

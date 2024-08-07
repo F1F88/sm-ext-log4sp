@@ -7,7 +7,7 @@
 // *                                   BaseFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native BaseFileSinkST(const char[] file, bool turncate = false);
+ * public native BaseFileSinkST(const char[] file, bool truncate = false);
  */
 static cell_t BaseFileSinkST(IPluginContext *ctx, const cell_t *params)
 {
@@ -16,12 +16,12 @@ static cell_t BaseFileSinkST(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    bool turncate = params[2];
+    bool truncate = params[2];
 
     return log4sp::sinks::CreateHandleOrReportError(
         ctx,
         g_BaseFileSinkSTHandleType,
-        std::make_shared<spdlog::sinks::basic_file_sink_st>(path, turncate));
+        std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate));
 }
 
 /**
@@ -47,7 +47,7 @@ static cell_t BaseFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *para
 }
 
 /**
- * public native BaseFileSinkMT(const char[] file, bool turncate = false);
+ * public native BaseFileSinkMT(const char[] file, bool truncate = false);
  */
 static cell_t BaseFileSinkMT(IPluginContext *ctx, const cell_t *params)
 {
@@ -56,12 +56,12 @@ static cell_t BaseFileSinkMT(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    bool turncate = params[2];
+    bool truncate = params[2];
 
     return log4sp::sinks::CreateHandleOrReportError(
         ctx,
         g_BaseFileSinkMTHandleType,
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, turncate));
+        std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, truncate));
 }
 
 /**

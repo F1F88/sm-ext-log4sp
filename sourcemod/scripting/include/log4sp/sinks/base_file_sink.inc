@@ -19,7 +19,7 @@ methodmap BaseFileSinkST < Sink
      * @return          Handle for a single-threaded base file sink.
      * @error           Create sink handle failed.
      */
-    public native BaseFileSinkST(const char[] file, bool turncate = false);
+    public native BaseFileSinkST(const char[] file, bool truncate = false);
 
     /**
      * Get the current filename being used by the file sink.
@@ -41,7 +41,7 @@ methodmap BaseFileSinkMT < Sink
      * @return          Handle for a multi-threaded base file sink.
      * @error           Create sink handle failed.
      */
-    public native BaseFileSinkMT(const char[] file, bool turncate = false);
+    public native BaseFileSinkMT(const char[] file, bool truncate = false);
 
     /**
      * Get the current filename being used by the file sink.
