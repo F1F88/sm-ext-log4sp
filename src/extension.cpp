@@ -160,7 +160,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->RegisterLibrary(myself, "log4sp");
 
     spdlog::init_thread_pool(8192, 1);
-    spdlog::set_default_logger(spdlog::stdout_logger_mt("log4sp"));
+    spdlog::set_default_logger(spdlog::stdout_logger_mt<spdlog::async_factory_nonblock>("log4sp"));
     SPDLOG_INFO("****************** log4sp.ext initialize complete! ******************");
     return true;
 }
