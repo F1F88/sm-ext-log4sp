@@ -32,6 +32,7 @@
 #include "extension.h"
 
 #include "spdlog/spdlog.h"
+#include "spdlog/async.h"
 #include "spdlog/sinks/stdout_sinks.h"
 
 #include <log4sp/common.h>
@@ -158,6 +159,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
     sharesys->RegisterLibrary(myself, "log4sp");
 
+    spdlog::init_thread_pool(8192, 1);
     spdlog::set_default_logger(spdlog::stdout_logger_mt("log4sp"));
     SPDLOG_INFO("****************** log4sp.ext initialize complete! ******************");
     return true;
