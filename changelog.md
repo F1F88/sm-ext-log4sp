@@ -1,3 +1,9 @@
+### 2024/08/09 - v1.2.2
+- perf: change the default logger to asynchronous
+
+### 2024/08/09 - v1.2.1
+- fix: construct async logger directly may not work
+
 ### 2024/08/07 - v1.2.0
 - feat: support asynchronous logging
     - Add the logger parameter async to configure the asynchronous logger
