@@ -4,11 +4,6 @@
 
 这是一个包装了 [spdlog](https://github.com/gabime/spdlog) 库的 Sourcemod 拓展，用于增强 SourcePawn 记录日志和调试功能。
 
-### 使用
-
-1. 从 [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) 里下载最新版压缩包，注意选择与操作系统和 sourcemod 版本匹配的版本
-2. 将压缩包中的 `addons/sourcemod/extension/log4sp.ext.XXX` 上传到 `game/addons/sourcemod/extension` 文件夹内
-
 ### 特点
 
 1. 非常快，比 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
@@ -53,6 +48,11 @@
     - DailyFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
 
     - RotatingFileSink
+
+### 使用
+
+1. 从 [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) 里下载最新版压缩包，注意选择与操作系统以及 sourcemod 版本匹配的版本
+2. 将压缩包中的 `addons/sourcemod/extension/log4sp.ext.XXX` 上传到 `game/addons/sourcemod/extension` 文件夹内
 
 ### 使用示例
 

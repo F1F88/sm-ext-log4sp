@@ -4,11 +4,6 @@
 
 This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library to enhance SourcePawn logging and debugging.
 
-### Usage
-
-1. Download the latest Zip from [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) that matches your operating system and sourcemod version
-1. Upload the `addons/sourcemod/extension/log4sp.ext.XXX` in the ZIP to the `game/addons/sourcemod/extension` folder
-
 ### Features
 
 1. Very fast, much faster than [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
@@ -55,6 +50,10 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
     - RotatingFileSink
 
+### Usage
+
+1. Download the latest Zip from [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) that matches your operating system and sourcemod version
+1. Upload the `addons/sourcemod/extension/log4sp.ext.XXX` in the ZIP to the `game/addons/sourcemod/extension` folder
 
 ### Usage Examples
 
@@ -337,17 +336,17 @@ sm_log4sp_bench_sm_console
 
 Error: `[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
 
-- Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions` 
-- Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX` 
+- Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions`
+- Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX`
 
 ##### Loading the log4sp extension failed
 
-Error: `[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX` 
+Error: `[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
 
 - Check if the `log4sp.ext.XXX` matches the operating system
 - Check if the version of `log4sp.ext.XXX` matches the version of the sourcemod version
 
-Error: `bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found` 
+Error: `bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
 
 - Option 1
 
@@ -372,7 +371,7 @@ Error: `bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
     # try renaming the server's ./server/bin/libstdc++.so.6 file to use the operating system's version
     mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
     ```
-    
+
     Also see: [wiki](https://wiki.alliedmods.net/Installing_Metamod:Source#Normal_Installation)
 
 ### Build Dependencies
@@ -401,7 +400,7 @@ idk
 
 - **[gabime](https://github.com/gabime) [spdlog](https://github.com/gabime/spdlog)** library implements most of the functionality, log4sp.ext wraps the spdlog API for SourcePawn to use
 
-- Fyren, nosoop, Deathreus provides solution for expanding the Sink Handle of management
+- Fyren, nosoop, Deathreus provides solution for managing the Sink Handle
 
 If I missed anyone, please contact me.
 
