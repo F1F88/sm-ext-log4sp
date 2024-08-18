@@ -3,12 +3,7 @@
 
 name: build
 on:
-  push:
-    paths:
-      - pushbuild.txt
-  pull_request:
-    paths:
-      - pushbuild.txt
+  workflow_dispatch:
 
 jobs:
   build:
