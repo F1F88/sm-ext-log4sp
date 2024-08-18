@@ -1,14 +1,16 @@
 #include <sourcemod>
 #include <profiler>
 
+#include <log4sp>
+
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_NAME                         "SM-Logging-Benchmark"
-#define PLUGIN_AUTHOR                       "F1F88"
-#define PLUGIN_VERSION                      "v1.2.0"
-#define PLUGIN_DESCRIPTION                  "Sourcemod Logging lib Benchmark"
-#define PLUGIN_URL                          "https://github.com/F1F88/sm-ext-log4sp"
+#define PLUGIN_NAME             "SM-Logging-Benchmark"
+#define PLUGIN_AUTHOR           "F1F88"
+#define PLUGIN_VERSION          LOG4SP_EXT_VERSION
+#define PLUGIN_DESCRIPTION      "Sourcemod Logging lib Benchmark"
+#define PLUGIN_URL              "https://github.com/F1F88/sm-ext-log4sp"
 
 public Plugin myinfo = {
     name        = PLUGIN_NAME,

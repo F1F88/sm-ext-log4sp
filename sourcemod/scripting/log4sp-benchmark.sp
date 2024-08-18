@@ -1,14 +1,16 @@
 #include <sourcemod>
 #include <profiler>
 
+#include <log4sp>
+
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_NAME                         "Log4sp Benchmark"
-#define PLUGIN_AUTHOR                       "F1F88"
-#define PLUGIN_VERSION                      "v1.2.0"
-#define PLUGIN_DESCRIPTION                  "Logging for SourcePawn Benchmark"
-#define PLUGIN_URL                          "https://github.com/F1F88/sm-ext-log4sp"
+#define PLUGIN_NAME             "Log4sp Benchmark"
+#define PLUGIN_AUTHOR           "F1F88"
+#define PLUGIN_VERSION          LOG4SP_EXT_VERSION
+#define PLUGIN_DESCRIPTION      "Logging for SourcePawn Benchmark"
+#define PLUGIN_URL              "https://github.com/F1F88/sm-ext-log4sp"
 
 public Plugin myinfo = {
     name        = PLUGIN_NAME,
@@ -17,8 +19,6 @@ public Plugin myinfo = {
     version     = PLUGIN_VERSION,
     url         = PLUGIN_URL
 };
-
-#include <log4sp>
 
 
 static const int g_iFileSize      = 30 * 1024 * 1024;
