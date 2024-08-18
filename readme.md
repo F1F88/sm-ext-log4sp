@@ -7,7 +7,7 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 ### Useage
 
 1. Download the latest Zip from [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) that matches your operating system and sourcemod version
-1. Upload the `addons/sourcemod/extension/log4sp.ext.XXX` in the ZIP to the `game/addons/sourcemod/extension` folder on the server
+1. Upload the `addons/sourcemod/extension/log4sp.ext.XXX` in the ZIP to the `game/addons/sourcemod/extension` folder
 
 ### Features
 
@@ -17,9 +17,9 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
 2. Each `Logger` and `Sink` can customize the log level
 
-3. Each `Logger` and `Sink` can customize the [log pattern](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+3. Each `Logger` and `Sink` can customize the [log message pattern](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-4. Each `Logger` and `Sink` can customize the [flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+4. Each `Logger` can customize the [flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
 
 5. Each `Logger` can have multiple `Sink`
 
@@ -36,25 +36,29 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
    - [Parameter formatting](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) usage is consistent with [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
    - The maximum length of a variable parameter string is **2048** characters
-
      If characters exceeding this length will be truncated
-     If longer log messages need to be log, non `AmxTpl` methods can be used, e.g. `void Info(const char [] msg)`
+     If longer message need to be log, non `AmxTpl` API can be used, e.g. `void Info(const char [] msg)`
 
 9. Supports [backtrace](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
 
-   - When enabled, Trace and Debug level log message are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`
+   - When enabled, `Trace` and `Debug` level log message are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`
 
 10. Supports various log targets
 
-   - ServerConsoleSink  (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
+       - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
 
-   - ClientConsoleSink  (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
 
-   - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+       - ClientConsoleSink  (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
 
-   - DailyFileSink  (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
 
-   - RotatingFileSink
+       - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+
+
+       - DailyFileSink  (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+
+
+       - RotatingFileSink
+
 
 ### Usage Examples
 
@@ -240,21 +244,21 @@ Action CommandCallback(int client, int args)
 
 ##### Additional Examples
 
-- [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
+- [Test case](./sourcemod/scripting/log4sp-test.sp)
 
-- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+- [Benchmarks](./sourcemod/scripting/log4sp-benchmark.sp)
 
 ### Benchmarks
 
-Test platform: Windows 11 23H2 + VMware + Ubuntu 24.04 LTS + NMRIH Dedicated Server v1.13.6 + SM 1.11
+Test platform: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
 
-Host configuration: AMD Ryzen 7 6800H + 32GB Memory
+Host configuration: AMD Ryzen 7 6800H + 32 GB Memory
 
-VMware configuration: 1 CPU  + 8 kernel  + 4GB Memory
+VMware configuration: 1 CPU  + 8 kernel  + 4 GB Memory
 
-#### Single thread (Synchronous)
+Test case:  [log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
-[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+##### Single thread (Synchronous)
 
 ```
 sm_log4sp_bench_files_st
@@ -272,9 +276,7 @@ sm_log4sp_bench_server_console_st
 [log4sp-benchmark] server-console-st        Elapsed:  5.60 secs       178455 /sec
 ```
 
-#### Multi thread (Asynchronous)
-
-[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+##### Multi thread (Asynchronous)
 
 ```
 sm_log4sp_bench_files_async
@@ -312,9 +314,9 @@ sm_log4sp_bench_server_console_async
 [log4sp-benchmark] server-console-overrun   Elapsed:  8.19 secs       121953 /sec
 ```
 
-#### Sourcemod logging API
+##### Sourcemod logging
 
-As a reference, it is also used [./sourcemod/scripting/sm-logging-benchmark.sp](./sourcemod/scripting/sm-logging-benchmark.sp) tested the Sourcemod [logging API](https://sm.alliedmods.net/new-api/logging)
+As a reference, [sourcemod logging API](https://sm.alliedmods.net/new-api/logging) was also tested
 
 
 ```
@@ -333,47 +335,23 @@ sm_log4sp_bench_sm_console
 [log4sp-benchmark] PrintToServer            Elapsed:  5.86 secs       170446 /sec
 ```
 
-### Dependencies
-
-- [Sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
-- [spdlog](https://github.com/gabime/spdlog)
-
-  Only requires [include files](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog), already included in [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog)
-
-### Basic Build Steps
-
-##### Linux
-
-```shell
-cd log4sp
-mkdir build && cd build
-# Replace $SOURCEMOD_HOME with your Sourcemod environment variable or path
-# e.g. "~/sourcemod"
-python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME
-ambuild
-```
-
-##### Windows
-
-idk
-
 ### Q & A
 
-#### Loading the plugin failed
+##### Loading the plugin failed
 
-##### [SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running
+Error: `[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
 
-1. Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions`
-2. Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX`
+- Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions`
+- Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX`
 
-#### Loading the log4sp extension failed
+##### Loading the log4sp extension failed
 
-##### [SM] Unable to load extension "log4sp.ext": Could not find interface: XXX
+Error: `[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
 
-1. Check if the `log4sp.ext.XXX` matches the operating system
-2. Check if the version of `log4sp.ext.XXX` matches the version of the sourcemod version
+- Check if the `log4sp.ext.XXX` matches the operating system
+- Check if the version of `log4sp.ext.XXX` matches the version of the sourcemod version
 
-#### bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found
+Error: `bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found`
 
 - Option 1
 
@@ -397,6 +375,30 @@ idk
     # If the operating system has it but the server doesn't, try renaming the server's ./server/bin/libstdc++.so.6 file to use the operating system's version
     mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
     ```
+
+    Also see: [Wiki](https://wiki.alliedmods.net/Installing_Metamod:Source#Normal_Installation)
+
+### Build Dependencies
+
+- [sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
+- [spdlog](https://github.com/gabime/spdlog) (Only requires [include files](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog), already included in [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog))
+
+### Basic Build Steps
+
+##### Linux
+
+```shell
+cd log4sp
+mkdir build && cd build
+# Replace $SOURCEMOD_HOME with your Sourcemod environment variable or path
+# e.g. "~/sourcemod"
+python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME
+ambuild
+```
+
+##### Windows
+
+idk
 
 ## Credits
 

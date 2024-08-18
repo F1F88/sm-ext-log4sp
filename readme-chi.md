@@ -6,30 +6,30 @@
 
 ### 使用
 
-1. 从 [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) 下载最新版压缩包，注意选择与操作系统和 sourcemod 版本匹配的版本
-2. 将压缩包中的 `addons/sourcemod/extension/log4sp.ext.XXX` 上传到服务器的 `game/addons/sourcemod/extension` 文件夹
+1. 从 [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) 里下载最新版压缩包，注意选择与操作系统和 sourcemod 版本匹配的版本
+2. 将压缩包中的 `addons/sourcemod/extension/log4sp.ext.XXX` 上传到 `game/addons/sourcemod/extension` 文件夹内
 
 ### 特点
 
 1. 非常快，比 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
 
-   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp 性能测试](https://github.com/F1F88/sm-ext-log4sp#benchmarks)
+   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp 性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95)
 
-2. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义日志级别
+2. 每个 `Logger` 和 `Sink` 都能够自定义日志级别
 
-3. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义[日志模板](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+3. 每个 `Logger` 和 `Sink` 都能够自定义[日志模板](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-4. 每个 `Logger` (记录器) 和 `Sink` (输出源) 都可以自定义[刷新策略](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+4. 每个 `Logger` 都能够自定义[刷新策略](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
 
-5. 每个 `Logger` 都可以拥有多个 `Sink`
+5. 每个 `Logger` 都能够拥有多个 `Sink`
 
    - 例如： `ServerConsoleSink` + `DailyFileSink` 相当于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-6. 每个 `Logger` (记录器)  都可以动态调整日志级别、模板
+6. 每个 `Logger` 都能够动态调整日志级别、模板
 
-   - 详见指令`"sm log4sp"`
+   - 详见指令 `"sm log4sp"`
 
-7. 支持异步 `Logger` (记录器)
+7. 支持异步 `Logger`
 
 8. 支持格式化可变个数的参数
 
@@ -40,15 +40,17 @@
 
 9. 支持[日志回溯](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
 
+   - 启用后 `Trace` 和 `Debug` 级别的日志消息存储在一个环形缓冲区中, 只在显示调用 `DumpBacktrace()` 后才会输出
+
 10. 支持多种 Sink
 
-   - ServerConsoleSink （类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+   - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
    - ClientConsoleSink （类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
 
-   - BaseFileSink （类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile))
+   - BaseFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
 
-   - DailyFileSink (类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage))
+   - DailyFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
 
    - RotatingFileSink
 
@@ -233,23 +235,23 @@ Action CommandCallback(int client, int args)
 }
 ```
 
-##### 更多示例
+##### 更多使用示例
 
-- [./sourcemod/scripting/log4sp-test.sp](./sourcemod/scripting/log4sp-test.sp)
+- [API 测试](./sourcemod/scripting/log4sp-test.sp)
 
-- [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+- [性能测试](./sourcemod/scripting/log4sp-benchmark.sp)
 
 ### 性能测试
 
-测试平台: Windows 11 23H2 + VMware + Ubuntu 24.04 LTS + NMRIH Dedicated Server v1.13.6 + SM 1.11
+测试平台: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
 
-宿主机硬件配置: AMD Ryzen 7 6800H + 32GB 内存
+宿主机配置: AMD Ryzen 7 6800H + 32 GB 内存
 
-VMware 配置: 1 CPU + 8 核心 + 4GB 内存
+VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 
-#### 单线程(同步)
+测试用例： [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
-[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+##### 单线程(同步)
 
 ```
 sm_log4sp_bench_files_st
@@ -267,9 +269,7 @@ sm_log4sp_bench_server_console_st
 [log4sp-benchmark] server-console-st        Elapsed:  5.60 secs       178455 /sec
 ```
 
-#### 多线程(异步)
-
-[./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+##### 多线程(异步)
 
 ```
 sm_log4sp_bench_files_async
@@ -307,9 +307,9 @@ sm_log4sp_bench_server_console_async
 [log4sp-benchmark] server-console-overrun   Elapsed:  8.19 secs       121953 /sec
 ```
 
-#### Sourcemod logging API
+##### Sourcemod logging
 
-作为参考, 也用 [./sourcemod/scripting/sm-logging-benchmark.sp](./sourcemod/scripting/sm-logging-benchmark.sp) 测试了 Sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
+作为参考, 还测试了 Sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
 
 
 ```
@@ -328,48 +328,23 @@ sm_log4sp_bench_sm_console
 [log4sp-benchmark] PrintToServer            Elapsed:  5.86 secs       170446 /sec
 ```
 
-### 依赖
-
-- [sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
-
-- [spdlog](https://github.com/gabime/spdlog)
-
-  仅需[头文件](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog)，已包含在 [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog)
-
-### 基本编译步骤
-
-##### Linux
-
-```shell
-cd sm-ext-log4sp
-mkdir build && cd build
-# 把 $SOURCEMOD_HOME 替换为你的 sourcemod 环境变量或路径. 如 "~/sourcemod"
-python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME
-ambuild
-```
-
-##### Windows
-
-我不知道
-
 ### 疑难解答
 
-#### 加载插件时报错
+##### 加载插件时报错
 
-##### [SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running
+错误信息：`[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
 
-1. 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions`
+- 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions`
+- 检查日志信息, 查看 log4sp.ext.XXX 加载失败的原因并解决
 
-2. 检查日志信息, 查看 log4sp.ext.XXX 加载失败的原因并解决
+##### 加载拓展时报错
 
-#### 加载拓展时报错
+错误信息：`[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
 
-##### [SM] Unable to load extension "log4sp.ext": Could not find interface: XXX
+- 检查 `log4sp.ext.XXX` 与操作系统是否匹配
+- 检查 `log4sp.ext.XXX` 的版本与 sourcemod 版本是否匹配
 
-1. 检查 `log4sp.ext.XXX` 与操作系统是否匹配
-2. 检查 `log4sp.ext.XXX` 的版本与 sourcemod 版本是否匹配
-
-##### bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found
+错误信息：`bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
 
 - 方案一
 
@@ -390,9 +365,34 @@ ambuild
     strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
     # 再查看服务器是否有需要的 GLIBCXX 版本
     strings ./server/bin/libstdc++.so | grep GLIBCXX
-    # 如果操作系统有，但服务器没有，可以尝试重命名服务器的 ./server/bin/libstdc++.so.6 文件，从而使用操作系统的版本
+    # 如果操作系统有，但服务器没有
+    # 可以删除或者重命名服务器的 ./server/bin/libstdc++.so.6 文件，从而使用操作系统的版本
     mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
     ```
+
+    也可以看看：[wiki](https://wiki.alliedmods.net/Installing_Metamod:Source#Normal_Installation)
+
+### 编译依赖
+
+- [sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
+
+- [spdlog](https://github.com/gabime/spdlog)（仅需[头文件](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog)，已包含在 [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog)）
+
+### 基本编译步骤
+
+##### Linux
+
+```shell
+cd sm-ext-log4sp
+mkdir build && cd build
+# 把 $SOURCEMOD_HOME 替换为你的 sourcemod 环境变量或路径. 如 "~/sourcemod"
+python3 ../configure.py --enable-optimize --sm-path $SOURCEMOD_HOME
+ambuild
+```
+
+##### Windows
+
+我不知道
 
 ## 制作人员
 
@@ -405,21 +405,39 @@ ambuild
 ## 待办
 
 1. 支持通过配置文件配置全局线程池
+
 2. 支持通过配置文件配置默认 Logger
-3. server command 支持修改 flush level
-4. 编译 Windows 系统的 log4sp.ext.dll 并测试
-5. 支持 XXXAmxTpl 格式化的字符串无限长度
-6. 支持参数格式不匹配时不抛出异常
-    - 没记错的话 spdlog 也是这么做的
-    - 目前 XXXAmlTpl 调用 sm 内部的 API，如果格式与参数不匹配会直接抛出异常
+
+3. 编译 Windows 系统的 log4sp.ext.dll 并测试
+
+4. 支持 XXXAmxTpl 格式化的字符串无限长度
+
+    - 目前 log4sp::FormatToAmxTplString 的缓冲区长度是 2048
+
+5. 支持参数格式不匹配时不抛出异常
+
+    - 目前 XXXAmlTpl 调用 sm 的 API - `smutils->FormatString` 来格式化
+
+    - 如果输入的模板与输入的参数类型不匹配，`smutils->FormatString` 会直接抛出异常
+
     - 值得考虑：其他API是否也可需要减少抛出异常？
-7. 支持 fmt 风格的格式化方案
+
+6. 支持 fmt 风格的格式化方案
+
     - 可能需要自定义一个 cell_t 类型来识别参数
+
     - 如何处理参数个数的问题？也许可以参考 flink tuple
-8. 实现更多不同类型的 sink
+
+7. 实现更多的 SPDLOG_API
+
     - 如果有时间的话
-9. 支持纯 sourcepawn 自定义 sink
-    - 使用一个代理 sink，通过 forward 来调用 sp 自定义的 sink_it\_() 和 flush\_()
-    - 自定义构造器、以及如何识别自定义的 sink 类型还需要进一步考虑
-10. 实现更多的 SPDLOG_API
-    - 使用 forward 实现 logger、sinks 的 file_event_handlers
+
+    - 通过 forward 实现 logger、sinks 的 file_event_handlers
+
+    - 实现更多类型 Sink
+
+    - 支持纯 sourcepawn 自定义 sink
+
+      - 使用一个代理 sink，通过 forward 来调用 sp 自定义的 sink_it\_() 和 flush\_()
+
+      - 自定义构造器、以及如何识别自定义的 sink 类型还需要进一步考虑
