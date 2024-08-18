@@ -44,15 +44,15 @@
 
 10. 支持多种 Sink
 
-   - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+    - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
-   - ClientConsoleSink （类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
+    - ClientConsoleSink （类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
 
-   - BaseFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+    - BaseFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
 
-   - DailyFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+    - DailyFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
 
-   - RotatingFileSink
+    - RotatingFileSink
 
 ### 使用示例
 
@@ -251,7 +251,7 @@ VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 
 测试用例： [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
-##### 单线程(同步)
+##### 单线程 （同步）
 
 ```
 sm_log4sp_bench_files_st
@@ -269,7 +269,7 @@ sm_log4sp_bench_server_console_st
 [log4sp-benchmark] server-console-st        Elapsed:  5.60 secs       178455 /sec
 ```
 
-##### 多线程(异步)
+##### 多线程 （异步）
 
 ```
 sm_log4sp_bench_files_async
@@ -309,7 +309,7 @@ sm_log4sp_bench_server_console_async
 
 ##### Sourcemod logging
 
-作为参考, 还测试了 Sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
+作为参考, 还测试了 sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
 
 
 ```
@@ -332,19 +332,19 @@ sm_log4sp_bench_sm_console
 
 ##### 加载插件时报错
 
-错误信息：`[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running` 
+错误信息：`[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
 
-- 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions` 
+- 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions`
 - 检查日志信息, 查看 log4sp.ext.XXX 加载失败的原因并解决
 
 ##### 加载拓展时报错
 
-错误信息：`[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX` 
+错误信息：`[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
 
 - 检查 `log4sp.ext.XXX` 与操作系统是否匹配
 - 检查 `log4sp.ext.XXX` 的版本与 sourcemod 版本是否匹配
 
-错误信息：`bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found` 
+错误信息：`bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
 
 - 方案一
 
@@ -353,7 +353,7 @@ sm_log4sp_bench_sm_console
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt-get update
     sudo apt-get install gcc-4.9
-    
+
     # 如果问题解决，则不需要下面这一步
     # sudo apt-get upgrade libstdc++6
     ```
