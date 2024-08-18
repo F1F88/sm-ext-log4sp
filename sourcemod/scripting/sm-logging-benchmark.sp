@@ -23,8 +23,8 @@ public Plugin myinfo = {
 
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_log4sp_bench_sm_logging",         CMD_BenchSMLogging);
-    RegConsoleCmd("sm_log4sp_bench_sm_console",         CMD_BenchSMConsole);
+    RegConsoleCmd("sm_log4sp_bench_sm_logging", CMD_BenchSMLogging);
+    RegConsoleCmd("sm_log4sp_bench_sm_console", CMD_BenchSMConsole);
 }
 
 
@@ -38,14 +38,14 @@ Action CMD_BenchSMLogging(int client, int args)
 
     ConVar convar = FindConVar("sv_logecho");
     int val = convar.IntValue;
-    convar.SetInt(0);
+    convar.SetInt(0); // 如果为 1, 运行时长会大幅增加
 
     PrintToServer("[log4sp-benchmark] **************************************************************");
     PrintToServer("[log4sp-benchmark] Sourcemod Logging API, %d iterations", iters);
     PrintToServer("[log4sp-benchmark] **************************************************************");
 
     BenchLogMessage(iters);
-    BenchLogToFile(iters, "logs/benchmark/LogToFile.log");
+    BenchLogToFile(iters,   "logs/benchmark/LogToFile.log");
     BenchLogToFileEx(iters, "logs/benchmark/LogToFileEx.log");
 
     convar.SetInt(val);

@@ -47,7 +47,7 @@ Action CMD_BenchLog4spFilesST(int client, int args)
     PrintToServer("[log4sp-benchmark] Log4sp.ext API Single thread, %d iterations", iters);
     PrintToServer("[log4sp-benchmark] **************************************************************");
 
-    Logger baseFileST = Logger.CreateBaseFileLogger("base-file-st          ", "logs/benchmark/base-file-st_______________.log", true);
+    Logger baseFileST = Logger.CreateBaseFileLogger(        "base-file-st          ", "logs/benchmark/base-file-st_______________.log", true);
     BenchLogger(iters, baseFileST);
     delete baseFileST;
 
@@ -55,7 +55,7 @@ Action CMD_BenchLog4spFilesST(int client, int args)
     BenchLogger(iters, rotatingFileST);
     delete rotatingFileST;
 
-    Logger dailyFileST = Logger.CreateDailyFileLogger("daily-file-st         ", "logs/benchmark/daily-file-st_____________.log");
+    Logger dailyFileST = Logger.CreateDailyFileLogger(      "daily-file-st         ", "logs/benchmark/daily-file-st______________.log");
     BenchLogger(iters, dailyFileST);
     delete dailyFileST;
 
@@ -100,15 +100,15 @@ Action CMD_BenchLog4spFilesAsync(int client, int args)
     PrintToServer("[log4sp-benchmark] Queue Overflow Policy: block");
     PrintToServer("[log4sp-benchmark] *********************************");
 
-    Logger baseFileBlock = Logger.CreateBaseFileLogger("base-file-block       ", "logs/benchmark/base-file-block____________.log", true, .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger baseFileBlock = Logger.CreateBaseFileLogger(             "base-file-block       ", "logs/benchmark/base-file-block____________.log", true, true, AsyncOverflowPolicy_Block);
     BenchLogger(iters, baseFileBlock);
     delete baseFileBlock;
 
-    Logger rotatingFileBlock = Logger.CreateRotatingFileLogger("rotating-file-block   ", "logs/benchmark/rotating-file-block________.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger rotatingFileBlock = Logger.CreateRotatingFileLogger(     "rotating-file-block   ", "logs/benchmark/rotating-file-block________.log", g_iFileSize, g_iRotatingFiles, false, true, AsyncOverflowPolicy_Block);
     BenchLogger(iters, rotatingFileBlock);
     delete rotatingFileBlock;
 
-    Logger dailyFileBlock = Logger.CreateDailyFileLogger("daily-file-block      ", "logs/benchmark/daily-file-block___________.log", .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger dailyFileBlock = Logger.CreateDailyFileLogger(           "daily-file-block      ", "logs/benchmark/daily-file-block___________.log", .async=true, .policy=AsyncOverflowPolicy_Block);
     BenchLogger(iters, dailyFileBlock);
     delete dailyFileBlock;
 
@@ -117,15 +117,15 @@ Action CMD_BenchLog4spFilesAsync(int client, int args)
     PrintToServer("[log4sp-benchmark] Queue Overflow Policy: overrun");
     PrintToServer("[log4sp-benchmark] *********************************");
 
-    Logger baseFileOverrun = Logger.CreateBaseFileLogger("base-file-overrun     ", "logs/benchmark/base-file-overrun__________.log", true, .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
+    Logger baseFileOverrun = Logger.CreateBaseFileLogger(           "base-file-overrun     ", "logs/benchmark/base-file-overrun__________.log", true, true, AsyncOverflowPolicy_OverrunOldest);
     BenchLogger(iters, baseFileOverrun);
     delete baseFileOverrun;
 
-    Logger rotatingFileOverrun = Logger.CreateRotatingFileLogger("rotating-file-overrun ", "logs/benchmark/rotating-file-overrun______.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
+    Logger rotatingFileOverrun = Logger.CreateRotatingFileLogger(   "rotating-file-overrun ", "logs/benchmark/rotating-file-overrun______.log", g_iFileSize, g_iRotatingFiles, false, true, AsyncOverflowPolicy_OverrunOldest);
     BenchLogger(iters, rotatingFileOverrun);
     delete rotatingFileOverrun;
 
-    Logger dailyFileOverrun = Logger.CreateDailyFileLogger("daily-file-overrun    ", "logs/benchmark/daily-file-overrun_________.log", .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
+    Logger dailyFileOverrun = Logger.CreateDailyFileLogger(         "daily-file-overrun    ", "logs/benchmark/daily-file-overrun_________.log", .async=true, .policy=AsyncOverflowPolicy_OverrunOldest);
     BenchLogger(iters, dailyFileOverrun);
     delete dailyFileOverrun;
 
@@ -150,7 +150,7 @@ Action CMD_BenchLog4spServerConsoleAsync(int client, int args)
     LogToFileEx(file, "[log4sp-benchmark] Queue Overflow Policy: block");
     LogToFileEx(file, "[log4sp-benchmark] *********************************");
 
-    Logger consoleBlock = Logger.CreateServerConsoleLogger("server-console-block  ", .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger consoleBlock = Logger.CreateServerConsoleLogger(     "server-console-block  ", true, AsyncOverflowPolicy_Block);
     BenchLoggerServerConsole(iters, consoleBlock, file);
     delete consoleBlock;
 
@@ -160,7 +160,7 @@ Action CMD_BenchLog4spServerConsoleAsync(int client, int args)
     LogToFileEx(file, "[log4sp-benchmark] Queue Overflow Policy: overrun");
     LogToFileEx(file, "[log4sp-benchmark] *********************************");
 
-    Logger consoleOverrun = Logger.CreateServerConsoleLogger("server-console-overrun", .async=true, .policy=AsyncOverflowPolicy_Block);
+    Logger consoleOverrun = Logger.CreateServerConsoleLogger(   "server-console-overrun", true, AsyncOverflowPolicy_OverrunOldest);
     BenchLoggerServerConsole(iters, consoleOverrun, file);
     delete consoleOverrun;
 
