@@ -332,19 +332,19 @@ sm_log4sp_bench_sm_console
 
 ##### 加载插件时报错
 
-错误信息：`[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
+错误信息：`[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running` 
 
-- 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions`
+- 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions` 
 - 检查日志信息, 查看 log4sp.ext.XXX 加载失败的原因并解决
 
 ##### 加载拓展时报错
 
-错误信息：`[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
+错误信息：`[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX` 
 
 - 检查 `log4sp.ext.XXX` 与操作系统是否匹配
 - 检查 `log4sp.ext.XXX` 的版本与 sourcemod 版本是否匹配
 
-错误信息：`bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
+错误信息：`bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found` 
 
 - 方案一
 
@@ -353,7 +353,7 @@ sm_log4sp_bench_sm_console
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt-get update
     sudo apt-get install gcc-4.9
-
+    
     # 如果问题解决，则不需要下面这一步
     # sudo apt-get upgrade libstdc++6
     ```
@@ -370,7 +370,7 @@ sm_log4sp_bench_sm_console
     mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
     ```
 
-    也可以看看：[wiki](https://wiki.alliedmods.net/Installing_Metamod:Source#Normal_Installation)
+- 也可以看看：[wiki](https://wiki.alliedmods.net/Installing_Metamod:Source#Normal_Installation)
 
 ### 编译依赖
 
@@ -394,15 +394,15 @@ ambuild
 
 我不知道
 
-## 制作人员
+### 制作人员
 
-- **[gabime](https://github.com/gabime)** 的 **[spdlog](https://github.com/gabime/spdlog)** 库实现了绝大部分功能，拓展将 spdlog API 包装后提供给 SourcePawn 使用
+- **[gabime](https://github.com/gabime)** 的 **[spdlog](https://github.com/gabime/spdlog)** 库实现了绝大部分功能，此拓展将 spdlog API 包装后提供给 SourcePawn 使用
 
 - Fyren, nosoop, Deathreus 为拓展管理 Sink Handle 提供了解决思路
 
 如有遗漏，请联系我
 
-## 待办
+### 待办
 
 1. 支持通过配置文件配置全局线程池
 

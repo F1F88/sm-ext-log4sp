@@ -4,7 +4,7 @@
 
 This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library to enhance SourcePawn logging and debugging.
 
-### Useage
+### Usage
 
 1. Download the latest Zip from [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) that matches your operating system and sourcemod version
 1. Upload the `addons/sourcemod/extension/log4sp.ext.XXX` in the ZIP to the `game/addons/sourcemod/extension` folder
@@ -45,19 +45,15 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
 10. Supports various log targets
 
-       - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
+    - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
 
+    - ClientConsoleSink  (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
 
-       - ClientConsoleSink  (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
+    - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
 
+    - DailyFileSink  (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
 
-       - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
-
-
-       - DailyFileSink  (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
-
-
-       - RotatingFileSink
+    - RotatingFileSink
 
 
 ### Usage Examples
@@ -341,17 +337,17 @@ sm_log4sp_bench_sm_console
 
 Error: `[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
 
-- Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions`
-- Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX`
+- Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions` 
+- Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX` 
 
 ##### Loading the log4sp extension failed
 
-Error: `[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
+Error: `[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX` 
 
 - Check if the `log4sp.ext.XXX` matches the operating system
 - Check if the version of `log4sp.ext.XXX` matches the version of the sourcemod version
 
-Error: `bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found`
+Error: `bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found` 
 
 - Option 1
 
@@ -372,11 +368,12 @@ Error: `bin/libstdc++.so.6: version `GLIBCXX_3.4.20' not found`
     strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
     # Then check if the server has the required GLIBCXX version
     strings ./server/bin/libstdc++.so | grep GLIBCXX
-    # If the operating system has it but the server doesn't, try renaming the server's ./server/bin/libstdc++.so.6 file to use the operating system's version
+    # If the operating system has it but the server doesn't
+    # try renaming the server's ./server/bin/libstdc++.so.6 file to use the operating system's version
     mv ./server/bin/libstdc++.so ./server/bin/libstdc++.so.bk
     ```
-
-    Also see: [Wiki](https://wiki.alliedmods.net/Installing_Metamod:Source#Normal_Installation)
+    
+    Also see: [wiki](https://wiki.alliedmods.net/Installing_Metamod:Source#Normal_Installation)
 
 ### Build Dependencies
 
@@ -400,7 +397,7 @@ ambuild
 
 idk
 
-## Credits
+### Credits
 
 - **[gabime](https://github.com/gabime) [spdlog](https://github.com/gabime/spdlog)** library implements most of the functionality, log4sp.ext wraps the spdlog API for SourcePawn to use
 
