@@ -159,8 +159,99 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
     sharesys->RegisterLibrary(myself, "log4sp");
 
-    spdlog::init_thread_pool(8192, 1);
-    spdlog::set_default_logger(spdlog::stdout_logger_mt<spdlog::async_factory_nonblock>("log4sp"));
+    // Init Global Thread Pool
+    {
+        const char *queueSizeStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolQueueSize");
+        size_t queueSize = queueSizeStr != nullptr ? atoi(queueSizeStr) : 8192;
+
+        const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
+        size_t threadCount = threadCountStr != nullptr ? atoi(threadCountStr) : 1;
+
+        // rootconsole->ConsolePrint("Thread Pool: queue size = %d.", queueSize);
+        // rootconsole->ConsolePrint("Thread Pool: thread count = %d.", threadCount);
+
+        spdlog::init_thread_pool(queueSize, threadCount);
+    }
+
+    // Init Default Logger
+    {
+        // name
+        const char *defaultLoggerName = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerName");
+        defaultLoggerName = defaultLoggerName != nullptr ? defaultLoggerName : SMEXT_CONF_LOGTAG;
+
+        // type
+        // 0 async block | 1 async overrun_oldest | 2 discard_new | orther sync
+        const char *defaultLoggerTypeStr = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerType");
+        int defaultLoggerType = defaultLoggerTypeStr != nullptr ? atoi(defaultLoggerTypeStr) : 1;
+
+        // sinksList
+        // // (1 << 1) server console | (1 << 2) base file | (1 << 3) daily faile | (1 << 4) rotating filr
+        // // const char *defaultLoggerSinksList = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerSinksList");
+        std::vector<spdlog::sink_ptr> sinksList;
+        switch (defaultLoggerType)
+        {
+        case 0:
+        case 1:
+        case 2:
+            sinksList.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
+            break;
+        default:
+            sinksList.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+        }
+
+        // create default logger
+        std::shared_ptr<spdlog::logger> defaultLogger;
+        switch (defaultLoggerType)
+        {
+        case 0:
+        case 1:
+        case 2:
+            defaultLogger = std::make_shared<spdlog::async_logger>(defaultLoggerName, sinksList.begin(), sinksList.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block);
+            break;
+        default:
+            defaultLogger = std::make_shared<spdlog::logger>(defaultLoggerName, sinksList.begin(), sinksList.end());
+        }
+
+        // set level
+        const char *defaultLoggerLevelStr = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerLevel");
+        if (defaultLoggerLevelStr != nullptr)
+        {
+            defaultLogger->set_level(spdlog::level::from_str(defaultLoggerLevelStr));
+        }
+
+        // set pattern
+        const char *defaultLoggerPatternStr = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerPattern");
+        if (defaultLoggerPatternStr != nullptr)
+        {
+            defaultLogger->set_pattern(defaultLoggerPatternStr);
+        }
+
+        // set flushOn
+        const char *defaultLoggerFlushOnStr = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerFlushOn");
+        if (defaultLoggerFlushOnStr != nullptr)
+        {
+            defaultLogger->flush_on(spdlog::level::from_str(defaultLoggerFlushOnStr));
+        }
+
+        // set backtrace
+        const char *dfaultLoggerBacktraceStr = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerBacktrace");
+        size_t dfaultLoggerBacktrace = dfaultLoggerBacktraceStr != nullptr ? atoi(dfaultLoggerBacktraceStr) : 0;
+        if (dfaultLoggerBacktrace > 0)
+        {
+            defaultLogger->enable_backtrace(dfaultLoggerBacktrace);
+        }
+
+        // rootconsole->ConsolePrint("Default Logger name = %s.", defaultLogger->name().c_str());
+        // rootconsole->ConsolePrint("Default Logger type = %d.", defaultLoggerType);
+        // rootconsole->ConsolePrint("Default Logger level = %s.", spdlog::level::to_string_view(defaultLogger->level()));
+        // rootconsole->ConsolePrint("Default Logger pattern = %s.", defaultLoggerPatternStr != nullptr ? defaultLoggerPatternStr : "");
+        // rootconsole->ConsolePrint("Default Logger flush on = %s.", spdlog::level::to_string_view(defaultLogger->flush_level()));
+        // rootconsole->ConsolePrint("Default Logger backtrace = %d-%d.", defaultLogger->should_backtrace(), dfaultLoggerBacktrace);
+
+        // set default logger
+        spdlog::set_default_logger(defaultLogger);
+    }
+
     SPDLOG_INFO("****************** log4sp.ext initialize complete! ******************");
     return true;
 }
