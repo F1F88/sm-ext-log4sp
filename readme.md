@@ -42,18 +42,99 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
     - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
 
-    - ClientConsoleSink  (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
+    - ClientConsoleSink (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
 
     - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
 
-    - DailyFileSink  (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+    - DailyFileSink (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
 
     - RotatingFileSink
 
-### Usage
+### Installation
 
 1. Download the latest Zip from [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) that matches your operating system and sourcemod version
-1. Upload the `addons/sourcemod/extension/log4sp.ext.XXX` in the ZIP to the `game/addons/sourcemod/extension` folder
+
+2. Upload the `"addons/sourcemod/extensions/log4sp.ext.XXX"` in the ZIP to the `"game/addons/sourcemod/extensions"` folder
+
+3. Use `#include <log4sp>` to import header files, and then you can use the `log4sp.ext` API (natives)
+
+### Configuration
+
+Usually `log4sp.ext` is initialized with the default value
+
+You can add key-values in `"game/addons/sourcemod/config/core.cfg"` to change the default settings:
+
+```
+"Log4sp_ThreadPoolQueueSize"	"<Enter the thread pool queue size>"
+"Log4sp_ThreadPoolThreadCount"	"<Enter the number of threads in the thread pool>"
+```
+
+So your `core.cfg` will end up looking like:
+
+```
+"Core"
+{
+	[...]
+
+	"Log4sp_ThreadPoolQueueSize"	"8192"
+	"Log4sp_ThreadPoolThreadCount"	"1"
+}
+```
+
+The full set of available options with their default values and documentation are below, you should only put ones you intend to change into core.cfg:
+
+```
+"Core"
+{
+	/**
+	 * The queue size of the thread pool
+	 */
+	"Log4sp_ThreadPoolQueueSize"	"8192"
+
+	/**
+	 * Number of worker threads in the thread pool
+	 */
+	"Log4sp_ThreadPoolThreadCount"	"1"
+
+	/**
+	 * Default Logger name
+	 */
+	"Log4sp_DefaultLoggerName"		"LOG4SP"
+
+	/**
+	 * Default Logger type
+	 * 0 = Asynchronous, blocking when the queue is full
+	 * 1 = Asynchronous, old messages are overrun when the queue is full
+	 * 2 = Asynchronous, new messages are discard when the queue is full
+	 * Orther = Synchronous
+	 */
+	"Log4sp_DefaultLoggerType"		"1"
+
+	/**
+	 * Default Logger level
+	 * option: "trace", "debug", "info", "warn", "error", "fatal", "off"
+	 */
+	"Log4sp_DefaultLoggerLevel"		"info"
+
+	/**
+	 * Default Logger message pattern
+     * option: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
+	 */
+	"Log4sp_DefaultLoggerPattern"	"[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v"
+
+	/**
+	 * Default Logger flush level
+	 * option: "trace", "debug", "info", "warn", "error", "fatal", "off"
+	 */
+	"Log4sp_DefaultLoggerFlushOn"	"off"
+
+	/**
+	 * Default Logger backtrace message count
+	 * 0 = Disable backtrace
+	 */
+	"Log4sp_DefaultLoggerBacktrace"	"0"
+}
+```
 
 ### Usage Examples
 
@@ -243,6 +324,12 @@ Action CommandCallback(int client, int args)
 
 - [Benchmarks](./sourcemod/scripting/log4sp-benchmark.sp)
 
+### Supported Games
+
+The `Log4sp.ext` should work with all games, but currently only Linux binary files are provided
+
+For the Windows system, what you need to do additionally is to compile this project upload the compiled `log4sp.ext.dll` to `"game/addons/sourcemod/extensions"`
+
 ### Benchmarks
 
 Test platform: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
@@ -334,19 +421,19 @@ sm_log4sp_bench_sm_console
 
 ##### Loading the plugin failed
 
-Error: `[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
+Error: `"[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running"`
 
-- Check if the `log4sp.ext.XXX` file has been uploaded to `addons/sourcemod/extensions`
+- Check if the `log4sp.ext.XXX` file has been uploaded to `"game/addons/sourcemod/extensions"`
 - Check the log message, investigate the reason for the failed loading of `log4sp.ext.XXX`
 
 ##### Loading the log4sp extension failed
 
-Error: `[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
+Error: `"[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX"`
 
 - Check if the `log4sp.ext.XXX` matches the operating system
 - Check if the version of `log4sp.ext.XXX` matches the version of the sourcemod version
 
-Error: `bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
+Error: `"bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found"`
 
 - Option 1
 
@@ -377,7 +464,7 @@ Error: `bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
 ### Build Dependencies
 
 - [sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
-- [spdlog](https://github.com/gabime/spdlog) (Only requires [include files](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog), already included in [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog))
+- [spdlog](https://github.com/gabime/spdlog) (Only requires [include files](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog), already included in ["./extern/spdlog/include/spdlog"](./extern/spdlog/include/spdlog))
 
 ### Basic Build Steps
 

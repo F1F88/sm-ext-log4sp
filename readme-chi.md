@@ -41,20 +41,101 @@
 
     - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
-    - ClientConsoleSink （类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
+    - ClientConsoleSink（类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
 
-    - BaseFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+    - BaseFileSink （类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
 
     - DailyFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
 
     - RotatingFileSink
 
-### 使用
+### 安装
 
 1. 从 [Github Action](https://github.com/F1F88/sm-ext-log4sp/actions) 里下载最新版压缩包，注意选择与操作系统以及 sourcemod 版本匹配的版本
-2. 将压缩包中的 `addons/sourcemod/extension/log4sp.ext.XXX` 上传到 `game/addons/sourcemod/extension` 文件夹内
 
-### 使用示例
+2. 将压缩包中的 `"addons/sourcemod/extensions/log4sp.ext.XXX"` 上传到 `"game/addons/sourcemod/extensions"` 文件夹内
+
+3. 使用 `#include <log4sp>` 引入头文件后，即可使用 log4sp.ext 提供的 API（natives 函数）
+
+### 配置
+
+通常 `log4sp.ext` 使用默认值进行初始化，你也可以在 `"game/addons/sourcemod/configs/core.cfg"` 中添加键值来修改默认设置：
+
+```
+"Log4sp_ThreadPoolQueueSize"	"<输入线程池队列大小>"
+"Log4sp_ThreadPoolThreadCount"	"<输入线程池线程个数>"
+```
+
+修改后的 `core.cfg` 最终看起来像这样：
+
+```
+"Core"
+{
+	[...]
+
+	"Log4sp_ThreadPoolQueueSize"	"8192"
+	"Log4sp_ThreadPoolThreadCount"	"1"
+}
+```
+
+下面是完整的可用键值及其默认值和文档，你应该只添加要修改的项到 `core.cfg` 中：
+
+```
+"Core"
+{
+	[...]
+
+	/**
+	 * 线程池的队列大小
+	 */
+	"Log4sp_ThreadPoolQueueSize"	"8192"
+
+	/**
+	 * 线程池的工作线程个数
+	 */
+	"Log4sp_ThreadPoolThreadCount"	"1"
+
+	/**
+	 * 默认 Logger 的名称
+	 */
+	"Log4sp_DefaultLoggerName"		"LOG4SP"
+
+	/**
+	 * 默认 Logger 的类型
+	 * 0 = 异步，队列已满时阻塞
+	 * 1 = 异步，队列已满时丢弃旧的消息
+	 * 2 = 异步，队列已满时丢弃新的消息
+	 * 其他 = 同步
+	 */
+	"Log4sp_DefaultLoggerType"		"1"
+
+	/**
+	 * 默认 Logger 的日志级别
+	 * 可选项："trace", "debug", "info", "warn", "error", "fatal", "off"
+	 */
+	"Log4sp_DefaultLoggerLevel"		"info"
+
+	/**
+	 * 默认 Logger 的日志消息模板
+     * 可选项：https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
+	 */
+	"Log4sp_DefaultLoggerPattern"	"[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v"
+
+	/**
+	 * 默认 Logger 的刷新级别
+	 * 可选项："trace", "debug", "info", "warn", "error", "fatal", "off"
+	 */
+	"Log4sp_DefaultLoggerFlushOn"	"off"
+
+	/**
+	 * 默认 Logger 的回溯消息条数
+	 * 0 = 关闭回溯
+	 */
+	"Log4sp_DefaultLoggerBacktrace"	"0"
+}
+```
+
+### 使用
 
 ##### 一个简单的示例
 
@@ -241,6 +322,12 @@ Action CommandCallback(int client, int args)
 
 - [性能测试](./sourcemod/scripting/log4sp-benchmark.sp)
 
+### 支持的游戏
+
+`log4sp.ext` 应该适用于所有游戏，但目前只提供了 Linux 二进制文件
+
+对于 Windows 系统你需要额外做的是编译这个项目，然后把编译生成的 `log4sp.ext.dll` 上传到 `"game/addons/sourcemod/extensions"`
+
 ### 性能测试
 
 测试平台: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
@@ -249,7 +336,7 @@ Action CommandCallback(int client, int args)
 
 VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 
-测试用例： [./sourcemod/scripting/log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
+测试用例： [log4sp-benchmark.sp](./sourcemod/scripting/log4sp-benchmark.sp)
 
 ##### 单线程 （同步）
 
@@ -332,19 +419,19 @@ sm_log4sp_bench_sm_console
 
 ##### 加载插件时报错
 
-错误信息：`[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running`
+错误信息：`"[SM] Unable to load plugin "XXX.smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running"`
 
-- 检查是否已将 `log4sp.ext.XXX` 文件上传到 `addons/sourcemod/extensions`
+- 检查是否已将 `log4sp.ext.XXX` 文件上传到 `"game/addons/sourcemod/extensions"`
 - 检查日志信息, 查看 log4sp.ext.XXX 加载失败的原因并解决
 
 ##### 加载拓展时报错
 
-错误信息：`[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX`
+错误信息：`"[SM] Unable to load extension "log4sp.ext": Could not find interface: XXX"`
 
 - 检查 `log4sp.ext.XXX` 与操作系统是否匹配
 - 检查 `log4sp.ext.XXX` 的版本与 sourcemod 版本是否匹配
 
-错误信息：`bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found`
+错误信息：`"bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found"`
 
 - 方案一
 
@@ -376,7 +463,7 @@ sm_log4sp_bench_sm_console
 
 - [sourcemod](https://github.com/alliedmodders/sourcemod/tree/1.11-dev)
 
-- [spdlog](https://github.com/gabime/spdlog)（仅需[头文件](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog)，已包含在 [./extern/spdlog/include/spdlog](./extern/spdlog/include/spdlog)）
+- [spdlog](https://github.com/gabime/spdlog)（仅需[头文件](https://github.com/gabime/spdlog/tree/v1.x/include/spdlog)，已包含在 ["./extern/spdlog/include/spdlog"](./extern/spdlog/include/spdlog)）
 
 ### 基本编译步骤
 
