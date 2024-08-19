@@ -58,7 +58,7 @@ Action CMD_Bench_LogMessage(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark-sm-logging]  Sourcemod logging api %13s  |  Iters %7d  |  Elapsed %6.3f secs  %9d/sec",
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
                   "LogMessage", iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
@@ -95,7 +95,7 @@ Action CMD_Bench_LogToFile(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark-sm-logging]  Sourcemod logging api %13s  |  Iters %7d  |  Elapsed %6.3f secs  %9d/sec",
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
                   "LogToFile", iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
@@ -132,7 +132,7 @@ Action CMD_Bench_LogToFileEx(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark-sm-logging]  Sourcemod logging api %13s  |  Iters %7d  |  Elapsed %6.3f secs  %9d/sec",
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
                   "LogToFileEx", iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
@@ -161,7 +161,7 @@ Action CMD_Bench_PrintToServer(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark-sm-logging]  Sourcemod logging api %13s  |  Iters %7d  |  Elapsed %6.3f secs  %9d/sec",
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
                   "PrintToServer", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
