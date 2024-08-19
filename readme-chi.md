@@ -343,61 +343,61 @@ VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 ##### 单线程 （同步）
 
 ```
-[benchmark-st]         Sink base file      | Iters 1000000 | Elapsed  0.268 secs   3719518/sec
-[benchmark-st]         Sink daily file     | Iters 1000000 | Elapsed  0.278 secs   3589439/sec
-[benchmark-st]         Sink rotating file  | Iters 1000000 | Elapsed  0.279 secs   3578598/sec
-[benchmark-st]         Sink server console | Iters 1000000 | Elapsed  5.609 secs    178255/sec
+[benchmark] base-file-st      | Iters 1000000 | Elapsed  0.268 secs   3719518/sec
+[benchmark] daily-file-st     | Iters 1000000 | Elapsed  0.278 secs   3589439/sec
+[benchmark] rotating-file-st  | Iters 1000000 | Elapsed  0.279 secs   3578598/sec
+[benchmark] server-console-st | Iters 1000000 | Elapsed  5.609 secs    178255/sec
 ```
 
 ##### 多线程 （异步）
 
 ```
-# 队列大小：8192       线程数：1
-[benchmark-mt-block]   Sink base file      | Iters 1000000 | Elapsed  0.479 secs   2084762/sec
-[benchmark-mt-block]   Sink daily file     | Iters 1000000 | Elapsed  0.488 secs   2046592/sec
-[benchmark-mt-block]   Sink rotating file  | Iters 1000000 | Elapsed  0.462 secs   2162868/sec
-[benchmark-mt-block]   Sink server console | Iters 1000000 | Elapsed  8.422 secs    118725/sec
+# 队列大小：8192      线程数：1
+[benchmark] base-file-block        | Iters 1000000 | Elapsed  0.479 secs   2084762/sec
+[benchmark] daily-file-block       | Iters 1000000 | Elapsed  0.488 secs   2046592/sec
+[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  0.462 secs   2162868/sec
+[benchmark] server-console-block   | Iters 1000000 | Elapsed  8.422 secs    118725/sec
 
-[benchmark-mt-overrun] Sink base file      | Iters 1000000 | Elapsed  0.442 secs   2259856/sec
-[benchmark-mt-overrun] Sink daily file     | Iters 1000000 | Elapsed  0.438 secs   2280891/sec
-[benchmark-mt-overrun] Sink rotating file  | Iters 1000000 | Elapsed  0.442 secs   2260684/sec
-[benchmark-mt-overrun] Sink server console | Iters 1000000 | Elapsed  0.379 secs   2632167/sec
-
-
-# 队列大小：8192       线程数：4
-[benchmark-mt-block]   Sink base file      | Iters 1000000 | Elapsed  1.049 secs    952753/sec
-[benchmark-mt-block]   Sink daily file     | Iters 1000000 | Elapsed  1.086 secs    920584/sec
-[benchmark-mt-block]   Sink rotating file  | Iters 1000000 | Elapsed  1.034 secs    967049/sec
-[benchmark-mt-block]   Sink server console | Iters 1000000 | Elapsed 15.784 secs     63354/sec
-
-[benchmark-mt-overrun] Sink base file      | Iters 1000000 | Elapsed  0.439 secs   2273952/sec
-[benchmark-mt-overrun] Sink daily file     | Iters 1000000 | Elapsed  0.451 secs   2212609/sec
-[benchmark-mt-overrun] Sink rotating file  | Iters 1000000 | Elapsed  0.453 secs   2204658/sec
-[benchmark-mt-overrun] Sink server console | Iters 1000000 | Elapsed  0.372 secs   2684282/sec
+[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.442 secs   2259856/sec
+[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.438 secs   2280891/sec
+[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.442 secs   2260684/sec
+[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.379 secs   2632167/sec
 
 
-# 队列大小：131072     线程数：4
-[benchmark-mt-block]   Sink base file      | Iters 1000000 | Elapsed  0.998 secs   1001216/sec
-[benchmark-mt-block]   Sink daily file     | Iters 1000000 | Elapsed  0.973 secs   1027070/sec
-[benchmark-mt-block]   Sink rotating file  | Iters 1000000 | Elapsed  0.956 secs   1045255/sec
-[benchmark-mt-block]   Sink server console | Iters 1000000 | Elapsed 13.952 secs     71671/sec
+# 队列大小：8192      线程数：4
+[benchmark] base-file-block        | Iters 1000000 | Elapsed  1.049 secs    952753/sec
+[benchmark] daily-file-block       | Iters 1000000 | Elapsed  1.086 secs    920584/sec
+[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  1.034 secs    967049/sec
+[benchmark] server-console-block   | Iters 1000000 | Elapsed 15.784 secs     63354/sec
 
-[benchmark-mt-overrun] Sink base file      | Iters 1000000 | Elapsed  0.472 secs   2116635/sec
-[benchmark-mt-overrun] Sink daily file     | Iters 1000000 | Elapsed  0.441 secs   2264892/sec
-[benchmark-mt-overrun] Sink rotating file  | Iters 1000000 | Elapsed  0.478 secs   2091503/sec
-[benchmark-mt-overrun] Sink server console | Iters 1000000 | Elapsed  0.385 secs   2592245/sec
+[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.439 secs   2273952/sec
+[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.451 secs   2212609/sec
+[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.453 secs   2204658/sec
+[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.372 secs   2684282/sec
 
 
-# 队列大小：8192       线程数：8
-[benchmark-mt-block]   Sink base file      | Iters 1000000 | Elapsed  1.135 secs    881010/sec
-[benchmark-mt-block]   Sink daily file     | Iters 1000000 | Elapsed  1.183 secs    845069/sec
-[benchmark-mt-block]   Sink rotating file  | Iters 1000000 | Elapsed  1.193 secs    838199/sec
-[benchmark-mt-block]   Sink server console | Iters 1000000 | Elapsed 14.925 secs     67000/sec
+# 队列大小：131072    线程数：4
+[benchmark] base-file-block        | Iters 1000000 | Elapsed   0.998 secs   1001216/sec
+[benchmark] daily-file-block       | Iters 1000000 | Elapsed   0.973 secs   1027070/sec
+[benchmark] rotating-file-block    | Iters 1000000 | Elapsed   0.956 secs   1045255/sec
+[benchmark] server-console-block   | Iters 1000000 | Elapsed  13.952 secs     71671/sec
 
-[benchmark-mt-overrun] Sink base file      | Iters 1000000 | Elapsed  0.533 secs   1875363/sec
-[benchmark-mt-overrun] Sink daily file     | Iters 1000000 | Elapsed  0.569 secs   1754767/sec
-[benchmark-mt-overrun] Sink rotating file  | Iters 1000000 | Elapsed  0.508 secs   1967969/sec
-[benchmark-mt-overrun] Sink server console | Iters 1000000 | Elapsed  0.394 secs   2532556/sec
+[benchmark] base-file-overrun      | Iters 1000000 | Elapsed   0.472 secs   2116635/sec
+[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed   0.441 secs   2264892/sec
+[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed   0.478 secs   2091503/sec
+[benchmark] server-console-overrun | Iters 1000000 | Elapsed   0.385 secs   2592245/sec
+
+
+# 队列大小：8192      线程数：8
+[benchmark] base-file-block        | Iters 1000000 | Elapsed  1.135 secs    881010/sec
+[benchmark] daily-file-block       | Iters 1000000 | Elapsed  1.183 secs    845069/sec
+[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  1.193 secs    838199/sec
+[benchmark] server-console-block   | Iters 1000000 | Elapsed 14.925 secs     67000/sec
+
+[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.533 secs   1875363/sec
+[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.569 secs   1754767/sec
+[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.508 secs   1967969/sec
+[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.394 secs   2532556/sec
 ```
 
 ##### Sourcemod logging

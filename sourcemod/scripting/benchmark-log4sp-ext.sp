@@ -27,24 +27,24 @@ static const int g_iRotatingFiles = 5;
 
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_log4sp_bench_st_base_files",              Command_Bench_ST_BaseFiles);
-    RegConsoleCmd("sm_log4sp_bench_st_daily_files",             Command_Bench_ST_DailyFiles);
-    RegConsoleCmd("sm_log4sp_bench_st_rotating_files",          Command_Bench_ST_RotatingFiles);
-    RegConsoleCmd("sm_log4sp_bench_st_server_console",          Command_Bench_ST_ServerConsole);
+    RegConsoleCmd("sm_log4sp_bench_base_files_st",          Command_BenchBaseFilesST);
+    RegConsoleCmd("sm_log4sp_bench_daily_files_st",         Command_BenchDailyFilesST);
+    RegConsoleCmd("sm_log4sp_bench_rotating_files_st",      Command_BenchRotatingFilesST);
+    RegConsoleCmd("sm_log4sp_bench_server_console_st",      Command_BenchServerConsoleST);
 
-    RegConsoleCmd("sm_log4sp_bench_mt_block_base_file",         Command_Bench_MT_Block_BaseFile);
-    RegConsoleCmd("sm_log4sp_bench_mt_block_daily_file",        Command_Bench_MT_Block_DailyFile);
-    RegConsoleCmd("sm_log4sp_bench_mt_block_rotating_file",     Command_Bench_MT_Block_RotatingFile);
-    RegConsoleCmd("sm_log4sp_bench_mt_block_server_console",    Command_Bench_MT_Block_ServerConsole);
+    RegConsoleCmd("sm_log4sp_bench_base_file_block",        Command_BenchBaseFileBlock);
+    RegConsoleCmd("sm_log4sp_bench_daily_file_block",       Command_BenchDailyFileBlock);
+    RegConsoleCmd("sm_log4sp_bench_rotating_file_block",    Command_BenchRotatingFileBlock);
+    RegConsoleCmd("sm_log4sp_bench_server_console_block",   Command_BenchServerConsoleBlock);
 
-    RegConsoleCmd("sm_log4sp_bench_mt_overrun_base_file",       Command_Bench_MT_Overrun_BaseFile);
-    RegConsoleCmd("sm_log4sp_bench_mt_overrun_daily_file",      Command_Bench_MT_Overrun_DailyFile);
-    RegConsoleCmd("sm_log4sp_bench_mt_overrun_rotating_file",   Command_Bench_MT_Overrun_RotatingFile);
-    RegConsoleCmd("sm_log4sp_bench_mt_overrun_server_console",  Command_Bench_MT_Overrun_ServerConsole);
+    RegConsoleCmd("sm_log4sp_bench_base_file_overrun",      Command_BenchBaseFileOverrun);
+    RegConsoleCmd("sm_log4sp_bench_daily_file_overrun",     Command_BenchDailyFileOverrun);
+    RegConsoleCmd("sm_log4sp_bench_rotating_file_overrun",  Command_BenchRotatingFileOverrun);
+    RegConsoleCmd("sm_log4sp_bench_server_console_overrun", Command_BenchServerConsoleOverrun);
 }
 
 
-Action Command_Bench_ST_BaseFiles(int client, int args)
+Action Command_BenchBaseFilesST(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -55,12 +55,11 @@ Action Command_Bench_ST_BaseFiles(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateBaseFileLogger("name-A", "logs/benchmark/file-A.log"));
 
     PrintToServer("");
-    PrintToServer("[benchmark-st]         Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "base file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "base-file-st", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_ST_DailyFiles(int client, int args)
+Action Command_BenchDailyFilesST(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -71,12 +70,11 @@ Action Command_Bench_ST_DailyFiles(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateDailyFileLogger("name-B", "logs/benchmark/file-B.log"));
 
     PrintToServer("");
-    PrintToServer("[benchmark-st]         Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "daily file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "daily-file-st", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_ST_RotatingFiles(int client, int args)
+Action Command_BenchRotatingFilesST(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -87,12 +85,11 @@ Action Command_Bench_ST_RotatingFiles(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateRotatingFileLogger("name-C", "logs/benchmark/file-C.log", g_iFileSize, g_iRotatingFiles));
 
     PrintToServer("");
-    PrintToServer("[benchmark-st]         Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "rotating file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "rotating-file-st", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_ST_ServerConsole(int client, int args)
+Action Command_BenchServerConsoleST(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -103,13 +100,12 @@ Action Command_Bench_ST_ServerConsole(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateServerConsoleLogger("name-D"));
 
     PrintToServer("");
-    PrintToServer("[benchmark-st]         Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "server console", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "server-console-st", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
 
-Action Command_Bench_MT_Block_BaseFile(int client, int args)
+Action Command_BenchBaseFileBlock(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -120,12 +116,11 @@ Action Command_Bench_MT_Block_BaseFile(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateBaseFileLogger("name-E", "logs/benchmark/file-E.log", .async=true, .policy=AsyncOverflowPolicy_Block));
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-block]   Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "base file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "base-file-block", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_MT_Block_DailyFile(int client, int args)
+Action Command_BenchDailyFileBlock(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -136,12 +131,11 @@ Action Command_Bench_MT_Block_DailyFile(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateDailyFileLogger("name-F", "logs/benchmark/file-F.log", .async=true, .policy=AsyncOverflowPolicy_Block));
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-block]   Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "daily file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "daily-file-block", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_MT_Block_RotatingFile(int client, int args)
+Action Command_BenchRotatingFileBlock(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -152,12 +146,11 @@ Action Command_Bench_MT_Block_RotatingFile(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateRotatingFileLogger("name-G", "logs/benchmark/file-G.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_Block));
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-block]   Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "rotating file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "rotating-file-block", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_MT_Block_ServerConsole(int client, int args)
+Action Command_BenchServerConsoleBlock(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -171,11 +164,11 @@ Action Command_Bench_MT_Block_ServerConsole(int client, int args)
     DataPack data = new DataPack();
     data.WriteCell(iters);
     data.WriteFloat(delta);
-    CreateTimer(5.0, Timer_Output_MT_Block_ServerConsole, data);
+    CreateTimer(7.0, Timer_OutputServerConsoleBlock, data);
     return Plugin_Handled;
 }
 
-Action Timer_Output_MT_Block_ServerConsole(Handle timer, DataPack data)
+Action Timer_OutputServerConsoleBlock(Handle timer, DataPack data)
 {
     data.Reset();
     int iters = data.ReadCell();
@@ -183,13 +176,12 @@ Action Timer_Output_MT_Block_ServerConsole(Handle timer, DataPack data)
     delete data;
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-block]   Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "server console", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "server-console-overrun", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
 
-Action Command_Bench_MT_Overrun_BaseFile(int client, int args)
+Action Command_BenchBaseFileOverrun(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -200,12 +192,11 @@ Action Command_Bench_MT_Overrun_BaseFile(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateBaseFileLogger("name-I", "logs/benchmark/file-I.log", .async=true, .policy=AsyncOverflowPolicy_OverrunOldest));
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-overrun] Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "base file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "base-file-overrun", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_MT_Overrun_DailyFile(int client, int args)
+Action Command_BenchDailyFileOverrun(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -216,12 +207,11 @@ Action Command_Bench_MT_Overrun_DailyFile(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateDailyFileLogger("name-J", "logs/benchmark/file-J.log", .async=true, .policy=AsyncOverflowPolicy_OverrunOldest));
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-overrun] Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "daily file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "daily-file-overrun", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_MT_Overrun_RotatingFile(int client, int args)
+Action Command_BenchRotatingFileOverrun(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -232,12 +222,11 @@ Action Command_Bench_MT_Overrun_RotatingFile(int client, int args)
     float delta = BenchLogger(iters, Logger.CreateRotatingFileLogger("name-K", "logs/benchmark/file-K.log", g_iFileSize, g_iRotatingFiles, .async=true, .policy=AsyncOverflowPolicy_OverrunOldest));
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-overrun] Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "rotating file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "rotating-file-overrun", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-Action Command_Bench_MT_Overrun_ServerConsole(int client, int args)
+Action Command_BenchServerConsoleOverrun(int client, int args)
 {
     int iters = 1_000_000;
     if (args >= 1)
@@ -251,11 +240,11 @@ Action Command_Bench_MT_Overrun_ServerConsole(int client, int args)
     DataPack data = new DataPack();
     data.WriteCell(iters);
     data.WriteFloat(delta);
-    CreateTimer(1.5, Timer_Output_MT_Overrun_ServerConsole, data);
+    CreateTimer(1.0, Timer_OutputServerConsoleOverrun, data);
     return Plugin_Handled;
 }
 
-Action Timer_Output_MT_Overrun_ServerConsole(Handle timer, DataPack data)
+Action Timer_OutputServerConsoleOverrun(Handle timer, DataPack data)
 {
     data.Reset();
     int iters = data.ReadCell();
@@ -263,8 +252,7 @@ Action Timer_Output_MT_Overrun_ServerConsole(Handle timer, DataPack data)
     delete data;
 
     PrintToServer("");
-    PrintToServer("[benchmark-mt-overrun] Sink %14s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "server console", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %22s | Iters %7d | Elapsed %6.3f secs %9d/sec", "server-console-overrun", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
