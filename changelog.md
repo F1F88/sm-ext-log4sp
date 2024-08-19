@@ -1,3 +1,16 @@
+### 2024/08/19 - v1.3.0
+- feat: support custom configuration
+    - thread pool
+        - queue size
+        - thread count
+    - default logger
+        - name
+        - type (sync or async)
+        - log level
+        - log message pattern
+        - flush level
+        - backtrace number
+
 ### 2024/08/09 - v1.2.2
 - perf: change the default logger to asynchronous
 
