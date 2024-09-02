@@ -1,10 +1,10 @@
 **[English](./readme.md) | [Chinese](./readme-chi.md)**
 
-## Logging for SourcePawn
+# Logging for SourcePawn
 
 This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library to enhance SourcePawn logging and debugging.
 
-### Features
+## Features
 
 1. Very fast, much faster than [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
@@ -50,17 +50,17 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
     - RotatingFileSink
 
-### Documentation
+## Documentation
 
 Documentation can be found in the [wiki](https://github.com/F1F88/sm-ext-log4sp/wiki) pages.
 
-### Supported Games
+## Supported Games
 
 In general, `Log4sp.ext` should work with all games on both Linux and Windows.
 
 But for now, you need to compile the project yourself before using it on Windows.
 
-### Benchmarks
+## Benchmarks
 
 Test platform: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
 
@@ -72,7 +72,7 @@ Test case 1: [benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
 
 Test case 2: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.sp)
 
-##### Single thread (Synchronous)
+#### Single thread (Synchronous)
 
 ```
 [benchmark] base-file-st      | Iters 1000000 | Elapsed  0.268 secs   3719518/sec
@@ -81,7 +81,7 @@ Test case 2: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-loggin
 [benchmark] server-console-st | Iters 1000000 | Elapsed  5.609 secs    178255/sec
 ```
 
-##### Multi thread (Asynchronous)
+#### Multi thread (Asynchronous)
 
 ```
 # Queue size: 8192      Thread count: 1
@@ -132,7 +132,7 @@ Test case 2: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-loggin
 [benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.394 secs   2532556/sec
 ```
 
-##### Sourcemod logging
+#### Sourcemod logging
 
 As a reference, [sourcemod logging API](https://sm.alliedmods.net/new-api/logging) was also tested
 
@@ -144,7 +144,7 @@ As a reference, [sourcemod logging API](https://sm.alliedmods.net/new-api/loggin
 [benchmark] PrintToServer | Iters 1000000 | Elapsed  5.779 secs    173024/sec
 ```
 
-### Credits
+## Credits
 
 - **[gabime](https://github.com/gabime) [spdlog](https://github.com/gabime/spdlog)** library implements most of the functionality, log4sp.ext wraps the spdlog API for SourcePawn to use
 

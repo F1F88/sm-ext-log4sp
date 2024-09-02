@@ -4,7 +4,7 @@
 
 这是一个包装了 [spdlog](https://github.com/gabime/spdlog) 库的 Sourcemod 拓展，用于增强 SourcePawn 记录日志和调试功能。
 
-### 特点
+## 特点
 
 1. 非常快，比 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
 
@@ -49,17 +49,17 @@
 
     - RotatingFileSink
 
-### 文档
+## 文档
 
 详细的使用文档可以在这里查看：[wiki](https://github.com/F1F88/sm-ext-log4sp/wiki)
 
-### 支持的游戏
+## 支持的游戏
 
 正常来说，`log4sp.ext` 应该适用于 Linux 和 Windows 上的所有游戏
 
 但目前，在 Windows 系统使用前需要自行编译这个项目
 
-### 性能测试
+## 性能测试
 
 测试平台: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
 
@@ -71,7 +71,7 @@ VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 
 测试用例2：[benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.sp)
 
-##### 单线程 （同步）
+#### 单线程 （同步）
 
 ```
 [benchmark] base-file-st      | Iters 1000000 | Elapsed  0.268 secs   3719518/sec
@@ -80,7 +80,7 @@ VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 [benchmark] server-console-st | Iters 1000000 | Elapsed  5.609 secs    178255/sec
 ```
 
-##### 多线程 （异步）
+#### 多线程 （异步）
 
 ```
 # 队列大小：8192      线程数：1
@@ -131,7 +131,7 @@ VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 [benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.394 secs   2532556/sec
 ```
 
-##### Sourcemod logging
+#### Sourcemod logging
 
 作为参考, 还测试了 sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
 
@@ -143,7 +143,7 @@ VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
 [benchmark] PrintToServer | Iters 1000000 | Elapsed  5.779 secs    173024/sec
 ```
 
-### 制作人员
+## 制作人员
 
 - **[gabime](https://github.com/gabime)** 的 **[spdlog](https://github.com/gabime/spdlog)** 库实现了绝大部分功能，此拓展将 spdlog API 包装后提供给 SourcePawn 使用
 
