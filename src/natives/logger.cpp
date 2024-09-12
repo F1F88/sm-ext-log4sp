@@ -1026,7 +1026,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Warn",                             Warn},
     {"Logger.WarnAmxTpl",                       WarnAmxTpl},
     {"Logger.Error",                            Error},
-    {"Logger.ErrorAmxTpl",                      Error},
+    {"Logger.ErrorAmxTpl",                      ErrorAmxTpl},
     {"Logger.Fatal",                            Fatal},
     {"Logger.FatalAmxTpl",                      FatalAmxTpl},
 
