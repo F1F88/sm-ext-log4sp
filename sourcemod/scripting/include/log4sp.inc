@@ -43,5 +43,5 @@ public Extension __ext_log4sp =
 #endif
 };
 
-#define LOG4SP_EXT_VERSION "v1.3.1"
+#define LOG4SP_EXT_VERSION "v1.3.2"
 

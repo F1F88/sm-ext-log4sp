@@ -499,7 +499,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
         {
             num = std::stoi(args->Arg(4)); // actually enable_backtrace param type is size_t - unsigned long long
         }
-        catch(const std::exception &ex)
+        catch(const std::exception &)
         {
             rootconsole->ConsolePrint("[SM] Usage: sm log4sp enable_bt <logger_name> <num>");
             return;
