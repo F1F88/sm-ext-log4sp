@@ -56,9 +56,7 @@ Documentation can be found in the [wiki](https://github.com/F1F88/sm-ext-log4sp/
 
 ## Supported Games
 
-In general, `Log4sp.ext` should work with all games on both Linux and Windows.
-
-But for now, you need to compile the project yourself before using it on Windows.
+`log4sp.ext` should work for all games on Linux and Windows.
 
 ## Benchmarks
 

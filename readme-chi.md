@@ -55,9 +55,7 @@
 
 ## 支持的游戏
 
-正常来说，`log4sp.ext` 应该适用于 Linux 和 Windows 上的所有游戏
-
-但目前，在 Windows 系统使用前需要自行编译这个项目
+`log4sp.ext` 应该适用于 Linux 和 Windows 上的所有游戏
 
 ## 性能测试
 
