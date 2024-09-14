@@ -12,31 +12,34 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os:
-          - ubuntu-latest
-          # - windows-latest
-        sm_version:
-          - "1.11"
-          - "latest"
+        os: [ubuntu-latest, windows-latest]
+        sm_version: [latest, "1.11"]
 
         include:
+          - os: ubuntu-latest
+            os_short: linux
+
+          - os: windows-latest
+            os_short: win
+
           - sm_version: latest
             sm_branch: master
 
           - sm_version: "1.11"
             sm_branch: "1.11-dev"
 
-          # - os: windows-latest
-          #   os_short: win
-
-          - os: ubuntu-latest
-            os_short: linux
+    env:
+      # 设置 Windows 系统的 Python 的默认编码为 UTF-8
+      # 以修复 build 时错误: UnicodeDecodeError: 'charmap' codec can't decode byte 0x81 in position 7158: character maps to <undefined>
+      if: runner.os == 'Windows'
+      PYTHONUTF8: "1"
 
     steps:
       - name: Prepare env
         shell: bash
         run: |
           echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Install (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -45,6 +48,40 @@ jobs:
           sudo apt-get install -y clang g++-multilib
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
+
+      - name: Install (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          :: See https://github.com/microsoft/vswhere/wiki/Find-VC
+          for /f "usebackq delims=*" %%i in (`vswhere -latest -property installationPath`) do (
+            call "%%i"\Common7\Tools\vsdevcmd.bat -arch=x86 -host_arch=x64
+          )
+
+          :: Loop over all environment variables and make them global.
+          for /f "delims== tokens=1,2" %%a in ('set') do (
+            echo>>"%GITHUB_ENV%" %%a=%%b
+          )
+
+      - name: Install v143 Toolset
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+          $WorkLoads = '--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
+          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"", $WorkLoads, '--quiet', '--norestart', '--nocache')
+          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
+          if ($process.ExitCode -eq 0) {
+              Write-Host "components have been successfully added"
+          } else {
+              Write-Host "components were not installed"
+          }
+
+      - name: Add msbuild to PATH (Windows)
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
       - name: Getting SourceMod ${{ matrix.sm_version }}
         uses: actions/checkout@v4
         with:
@@ -62,38 +99,18 @@ jobs:
       - name: Setting up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Getting ambuild
         run: |
           python -m pip install wheel
           pip install git+https://github.com/alliedmodders/ambuild
+
       - name: Getting own repository
         uses: actions/checkout@v4
         with:
           path: extension
           submodules: true
-
-      # - name: Install v143 Toolset
-      #   if: runner.os == 'Windows'
-      #   shell: powershell
-      #   run: |
-      #     Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-      #     $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-      #     $WorkLoads = '--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
-      #     $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"", $WorkLoads, '--quiet', '--norestart', '--nocache')
-      #     $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-      #     if ($process.ExitCode -eq 0) {
-      #         Write-Host "components have been successfully added"
-      #     } else {
-      #         Write-Host "components were not installed"
-      #     }
-
-      # - uses: microsoft/setup-msbuild@v2
-      #   if: runner.os == 'Windows'
-      #   with:
-      #       msbuild-architecture: x64
-      #       vs-version: '15'
 
       - name: Compiling ${{ github.event.repository.name }} files
         working-directory: extension

@@ -114,22 +114,21 @@ class ExtensionConfig(object):
       '-msse',
       '-m32',
       '-fvisibility=hidden',
-
-      #*** log4sp addition: 解决 spdlog 编译报错的问题 ***#
-      '-fPIC',        # ref: https://github.com/gabime/spdlog/issues/1405
-      '-fexceptions', # ref: https://github.com/nodejs/node-gyp/issues/17
     ]
     cxx.cxxflags += [
       '-std=c++14',
-      '-fno-exceptions',
+
+      # '-fno-exceptions',
+      #*** log4sp addition: 启用异常控制编译支持, 解决编译时报错: "error: cannot use 'throw' with exceptions disabled" ***#
+      '-fexceptions', # ref: https://github.com/nodejs/node-gyp/issues/17
+
       '-fno-threadsafe-statics',
       '-Wno-non-virtual-dtor',
       '-Wno-overloaded-virtual',
       '-fvisibility-inlines-hidden',
 
-      #*** log4sp addition: 解决 spdlog 编译报错的问题 ***#
-      '-fPIC',        # ref: https://github.com/gabime/spdlog/issues/1405
-      '-fexceptions', # ref: https://github.com/nodejs/node-gyp/issues/17
+      #*** log4sp addition: 启用生成位置无关的代码, 解决编译时警告(不处理可能导致性能下降): "warning: creating DT_TEXTREL in a shared object" ***#
+      '-fPIC',
     ]
     cxx.linkflags += ['-m32']
 
@@ -175,7 +174,11 @@ class ExtensionConfig(object):
     ]
     cxx.cxxflags += [
       '/EHsc',
-      '/GR-',
+
+      # '/GR-',
+      # #*** log4sp addition: 启用 RTTI，解决 windows 下 ClientConsoleSink dynamic_pointer_cast 编译报错的问题 ***#
+      '/GR',
+
       '/TP',
     ]
     cxx.linkflags += [
