@@ -561,7 +561,6 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
 
 /**
  * public native void LogStackTrace(LogLevel lvl, const char[] msg);
- * Logs a stack trace from the current function call. Code execution continues after the call
  */
 static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
 {

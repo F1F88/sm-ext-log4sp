@@ -225,6 +225,17 @@ methodmap Logger < Handle
     public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
     // public native void LogLocFmtTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
 
+    /**
+     * Logs a stack trace from the current function call. Code
+     * execution continues after the call
+     *
+     * @note The native will log a message and:
+     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     *
+     * @param lvl       Logging level enum.
+     * @param msg       Logging message.
+     * @error           Invalid logger handle.
+     */
     public native void LogStackTrace(LogLevel lvl, const char[] msg);
     public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
     // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] msg, any ...);
