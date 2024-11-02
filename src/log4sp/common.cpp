@@ -189,6 +189,51 @@ spdlog::source_loc GetScriptedLoc(IPluginContext *ctx)
     return {};
 }
 
+// ref: sourcemod DebugReport::GetStackTrace
+std::vector<std::string> GetStackTrace(IPluginContext *ctx)
+{
+    IFrameIterator *iter = ctx->CreateFrameIterator();
+
+    std::vector<std::string> trace;
+    iter->Reset();
+
+    if (!iter->Done())
+    {
+        trace.push_back(" Call tack trace:");
+
+        char temp[3072];
+        const char *fn;
+
+        for (int index = 0; !iter->Done(); iter->Next(), ++index)
+        {
+            fn = iter->FunctionName();
+            if (!fn)
+            {
+                fn = "<unknown function>";
+            }
+
+            if (iter->IsNativeFrame())
+            {
+                g_pSM->Format(temp, sizeof(temp), "   [%d] %s", index, fn);
+                trace.push_back(temp);
+                continue;
+            }
+
+            if (iter->IsScriptedFrame())
+            {
+                const char *file = iter->FilePath();
+                if (!file)
+                {
+                    file = "<unknown>";
+                }
+                g_pSM->Format(temp, sizeof(temp), "   [%d] Line %d, %s::%s", index, iter->LineNumber(), file, fn);
+                trace.push_back(temp);
+            }
+        }
+    }
+    return trace;
+}
+
 /**
  * 按 sourcemod format 的风格格式化参数 (https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting))
  * 这个函数的目的主要是为了复用 buffer 以及方便后续改造 smutils->FormatString (TODO: 支持无限长度)

@@ -560,6 +560,71 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
+ * public native void LogStackTrace(LogLevel lvl, const char[] msg);
+ * Logs a stack trace from the current function call. Code execution continues after the call
+ */
+static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
+{
+    spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
+    if (!logger->should_log(lvl))
+    {
+        return 0;
+    }
+
+    char *msg;
+    ctx->LocalToString(params[3], &msg);
+    logger->log(lvl, "Stack trace requested: {}", msg);
+
+    spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+    logger->log(lvl, "Called from: {}", loc.filename);
+
+    std::vector<std::string> arr = log4sp::GetStackTrace(ctx);
+    for (size_t i = 0; i < arr.size(); ++i)
+    {
+        logger->log(lvl, arr[i].c_str());
+    }
+    return 0;
+}
+
+/**
+ * public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
+ * Logs a stack trace from the current function call. Code execution continues after the call
+ */
+static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
+    if (!logger->should_log(lvl))
+    {
+        return 0;
+    }
+
+    char *msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    logger->log(lvl, "Stack trace requested: {}", msg);
+
+    spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+    logger->log(lvl, "Called from: {}", loc.filename);
+
+    std::vector<std::string> arr = log4sp::GetStackTrace(ctx);
+    for (size_t i = 0; i < arr.size(); ++i)
+    {
+        logger->log(lvl, arr[i].c_str());
+    }
+    return 0;
+}
+
+/**
  * public native void Trace(const char[] msg);
  */
 static cell_t Trace(IPluginContext *ctx, const cell_t *params)
@@ -1017,6 +1082,8 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.LogSrcAmxTpl",                     LogSrcAmxTpl},
     {"Logger.LogLoc",                           LogLoc},
     {"Logger.LogLocAmxTpl",                     LogLocAmxTpl},
+    {"Logger.LogStackTrace",                    LogStackTrace},
+    {"Logger.LogStackTraceAmxTpl",              LogStackTraceAmxTpl},
     {"Logger.Trace",                            Trace},
     {"Logger.TraceAmxTpl",                      TraceAmxTpl},
     {"Logger.Debug",                            Debug},

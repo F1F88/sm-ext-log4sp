@@ -225,6 +225,10 @@ methodmap Logger < Handle
     public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
     // public native void LogLocFmtTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
 
+    public native void LogStackTrace(LogLevel lvl, const char[] msg);
+    public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
+    // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] msg, any ...);
+
     public native void Trace(const char[] msg);
     public native void TraceAmxTpl(const char[] fmt, any ...);
     // public native void TraceFmtTpl(const char[] fmt, any ...);

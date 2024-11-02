@@ -38,6 +38,8 @@ spdlog::level::level_enum CellToLevelOrLogWarn(IPluginContext *ctx, cell_t lvl);
 
 spdlog::source_loc GetScriptedLoc(IPluginContext *ctx);
 
+std::vector<std::string> GetStackTrace(IPluginContext *ctx);
+
 char *FormatToAmxTplString(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param);
 
 

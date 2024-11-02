@@ -140,6 +140,9 @@ void TestLoggerLog(Logger logger)
     logger.Fatal("Test log message 17.");
     logger.FatalAmxTpl("Test log message %d.", 18);
 
+    logger.LogStackTrace(LogLevel_Fatal, "Test log message 19.");
+    logger.LogStackTraceAmxTpl(LogLevel_Warn, "Test log message %d.", 20);
+
     PrintToServer("========== Test Logger Log End | name=%s | ==========", name);
 }
 
