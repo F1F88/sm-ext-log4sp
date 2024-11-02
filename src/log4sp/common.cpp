@@ -163,35 +163,6 @@ spdlog::level::level_enum CellToLevelOrLogWarn(IPluginContext *ctx, cell_t lvl)
 }
 
 /**
- * 将 path 路径分隔符全部替换为
- * 与 log4sp extension 编译的平台相同的分隔符
- * 返回替换后的字符串
- */
-char *ReplacePathSep(const char *path)
-{
-    int len = strlen(path);
-    char *result = new char[len + 1];
-
-    // 与 spdlog 源码类似，Win、Linux 双平台分开处理
-    if (sizeof(spdlog::details::os::folder_seps) == 2)
-    {
-        for (int i = 0; i < len; ++i)
-        {
-            result[i] = path[i] == '\\' ? '/' : path[i];
-        }
-    }
-    else
-    {
-        for (int i = 0; i < len; ++i)
-        {
-            result[i] = path[i] == '/' ? '\\' : path[i];
-        }
-    }
-    result[len] = '\0';
-    return result;
-}
-
-/**
  * 返回 Scripted 调用 log4sp extension natives 的代码位置
  * 如果找不到，输出一条警告信息
  * 并返回空
@@ -199,54 +170,68 @@ char *ReplacePathSep(const char *path)
 spdlog::source_loc GetScriptedLoc(IPluginContext *ctx)
 {
     SourcePawn::IFrameIterator *frames = ctx->CreateFrameIterator();
-    for (int i = 1; !frames->Done(); ++i)
+
+    for (; !frames->Done(); frames->Next())
     {
-        if (!frames->IsScriptedFrame() || !strncmp(frames->FilePath(), "log4sp", 6))
+        if (frames->IsScriptedFrame())
         {
-            frames->Next(); // 当前栈帧不是插件调用的栈帧，我们需要继续向下查找
-            // SPDLOG_TRACE("i={} | IsInternal={} | IsNative={} | IsScripted={} | file={} | func={} | line={}",
-            //     ++i,
-            //     frames->IsInternalFrame(),
-            //     frames->IsNativeFrame(),
-            //     frames->IsScriptedFrame(),
-            //     frames->FilePath() == nullptr ? "null": frames->FilePath(),
-            //     frames->FunctionName() == nullptr ? "null": frames->FunctionName(),
-            //     frames->LineNumber()
-            // );
-        }
-        else
-        {
-            break;          // 符合条件, 说明当前栈帧是用户调用 log4sp api 的 frame
+            const char *file = frames->FilePath();
+            const char *func = frames->FunctionName();
+            int line = frames->LineNumber();
+            ctx->DestroyFrameIterator(frames); // 千万不要忘记
+
+            return spdlog::source_loc(file, line, func);
         }
     }
 
-    if (frames->Done())
+    ctx->DestroyFrameIterator(frames); // 千万不要忘记
+    spdlog::warn("Scripted source location not found, fix to empty.");
+    return {};
+}
+
+// ref: sourcemod DebugReport::GetStackTrace
+std::vector<std::string> GetStackTrace(IPluginContext *ctx)
+{
+    IFrameIterator *iter = ctx->CreateFrameIterator();
+
+    std::vector<std::string> trace;
+    iter->Reset();
+
+    if (!iter->Done())
     {
-        ctx->DestroyFrameIterator(frames);
-        spdlog::warn("Scripted source location not found, fix to empty.");
-        // spdlog::dump_backtrace();
-        return {};
+        trace.push_back(" Call tack trace:");
+
+        char temp[3072];
+        const char *fn;
+
+        for (int index = 0; !iter->Done(); iter->Next(), ++index)
+        {
+            fn = iter->FunctionName();
+            if (!fn)
+            {
+                fn = "<unknown function>";
+            }
+
+            if (iter->IsNativeFrame())
+            {
+                g_pSM->Format(temp, sizeof(temp), "   [%d] %s", index, fn);
+                trace.push_back(temp);
+                continue;
+            }
+
+            if (iter->IsScriptedFrame())
+            {
+                const char *file = iter->FilePath();
+                if (!file)
+                {
+                    file = "<unknown>";
+                }
+                g_pSM->Format(temp, sizeof(temp), "   [%d] Line %d, %s::%s", index, iter->LineNumber(), file, fn);
+                trace.push_back(temp);
+            }
+        }
     }
-
-    const char *file = frames->FilePath();
-    const char *func = frames->FunctionName();
-    const int line = frames->LineNumber();
-    ctx->DestroyFrameIterator(frames);
-
-    /**
-     * Bug：
-     *      在 Pattern 中添加 %s 来显示文件名时，日志消息总是附带是完整的 path 而不是仅输出文件名
-     * Description：
-     *      如果 extension 编译时所用的操作系统和 plugin 编译时所用的操作系统不同
-     *      则 pattern 的 %s 只能显示完整的路径名, 而不是只显示文件名
-     * Reason：
-     *      spdlog 中的 short_filename_formatter::basename 通过判断 spdlog::details::os::folder_seps
-     *      来决定从 path 中截取文件名的方案，这导致 spdlog 无法识别其他操作系统的 path 中的分隔符
-     * Slove:
-     *      1. 传递 path 给 spdlog 前，将分隔符替换为 short_filename_formatter::basename 匹配的分隔符
-     *      2. 更新 spdlog 为 v2.x 版本 (不采用！因为 v2.x 似乎不够完善, 并且活跃度较低)
-     */
-    return spdlog::source_loc(ReplacePathSep(file), line, func);
+    return trace;
 }
 
 /**
