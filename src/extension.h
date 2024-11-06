@@ -152,15 +152,10 @@ extern HandleType_t             g_LoggerHandleType;
 
 extern SinkHandler              g_SinkHandler;
 extern HandleType_t             g_ServerConsoleSinkSTHandleType;
-extern HandleType_t             g_ServerConsoleSinkMTHandleType;
 extern HandleType_t             g_BaseFileSinkSTHandleType;
-extern HandleType_t             g_BaseFileSinkMTHandleType;
 extern HandleType_t             g_RotatingFileSinkSTHandleType;
-extern HandleType_t             g_RotatingFileSinkMTHandleType;
 extern HandleType_t             g_DailyFileSinkSTHandleType;
-extern HandleType_t             g_DailyFileSinkMTHandleType;
 extern HandleType_t             g_ClientConsoleSinkSTHandleType;
-extern HandleType_t             g_ClientConsoleSinkMTHandleType;
 
 extern const sp_nativeinfo_t    CommonNatives[];
 extern const sp_nativeinfo_t    LoggerNatives[];

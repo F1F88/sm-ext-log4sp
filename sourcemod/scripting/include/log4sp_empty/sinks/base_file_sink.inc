@@ -15,11 +15,3 @@ methodmap BaseFileSinkST < Sink
 
     public void GetFilename(char[] buffer, int maxlen) {}
 }
-
-
-methodmap BaseFileSinkMT < Sink
-{
-    public BaseFileSinkMT(const char[] file, bool truncate = false) { return view_as<BaseFileSinkMT>(INVALID_HANDLE); }
-
-    public void GetFilename(char[] buffer, int maxlen) {}
-}

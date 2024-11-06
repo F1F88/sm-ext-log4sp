@@ -24,11 +24,3 @@ methodmap ClientConsoleSinkST < Sink
 
     public void SetFilter(ClientConsoleSinkFilter filter) {}
 }
-
-
-methodmap ClientConsoleSinkMT < Sink
-{
-    public ClientConsoleSinkMT() { return view_as<ClientConsoleSinkMT>(INVALID_HANDLE); }
-
-    public void SetFilter(ClientConsoleSinkFilter filter) {}
-}

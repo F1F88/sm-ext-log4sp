@@ -13,9 +13,3 @@ methodmap ServerConsoleSinkST < Sink
 {
     public ServerConsoleSinkST() { return view_as<ServerConsoleSinkST>(INVALID_HANDLE); }
 }
-
-
-methodmap ServerConsoleSinkMT < Sink
-{
-    public ServerConsoleSinkMT() { return view_as<ServerConsoleSinkMT>(INVALID_HANDLE); }
-}

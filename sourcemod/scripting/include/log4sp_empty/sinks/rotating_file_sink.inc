@@ -17,13 +17,3 @@ methodmap RotatingFileSinkST < Sink
 
     public void CalcFilename(const char[] file, int index, char[] buffer, int maxlength) {}
 }
-
-
-methodmap RotatingFileSinkMT < Sink
-{
-    public RotatingFileSinkMT(const char[] file, const int maxFileSize, const int maxFiles, bool rotateOnOpen=false) { return view_as<RotatingFileSinkMT>(INVALID_HANDLE); }
-
-    public void GetFilename(char[] buffer, int maxlength) {}
-
-    public void CalcFilename(const char[] file, int index, char[] buffer, int maxlength) {}
-}

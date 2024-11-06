@@ -50,56 +50,11 @@ static cell_t ClientConsoleSinkST_SetFilter(IPluginContext *ctx, const cell_t *p
 }
 
 
-/**
- * public native ClientConsoleSinkMT();
- */
-static cell_t ClientConsoleSinkMT(IPluginContext *ctx, const cell_t *params)
-{
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_ClientConsoleSinkMTHandleType,
-        std::make_shared<log4sp::sinks::client_console_sink_mt>());
-}
-
-/**
- * public native void SetFilter(ClientConsoleSinkFilter filter);
- */
-static cell_t ClientConsoleSinkMT_SetFilter(IPluginContext *ctx, const cell_t *params)
-{
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
-    if (sink == nullptr)
-    {
-        return false;
-    }
-
-    auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sink);
-    if (clientConsoleSink == nullptr)
-    {
-        ctx->ReportError("Unable to cast sink to client_console_sink_mt.");
-        return false;
-    }
-
-    IPluginFunction *filter = ctx->GetFunctionById(params[2]);
-    if (filter == NULL )
-    {
-        ctx->ReportError("Invalid param filter %d.", params[2]);
-        return false;
-    }
-
-    if (!clientConsoleSink->set_player_filter(filter))
-    {
-        ctx->ReportError("Set filter failed.");
-        return false;
-    }
-    return true;
-}
 
 const sp_nativeinfo_t ClientConsoleSinkNatives[] =
 {
     {"ClientConsoleSinkST.ClientConsoleSinkST",     ClientConsoleSinkST},
     {"ClientConsoleSinkST.SetFilter",               ClientConsoleSinkST_SetFilter},
-    {"ClientConsoleSinkMT.ClientConsoleSinkMT",     ClientConsoleSinkMT},
-    {"ClientConsoleSinkMT.SetFilter",               ClientConsoleSinkMT_SetFilter},
 
     {NULL,                                          NULL}
 };

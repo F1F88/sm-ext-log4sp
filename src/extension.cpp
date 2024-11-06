@@ -32,7 +32,6 @@
 #include "extension.h"
 
 #include "spdlog/spdlog.h"
-#include "spdlog/async.h"
 #include "spdlog/sinks/stdout_sinks.h"
 
 #include <log4sp/common.h>
@@ -45,20 +44,15 @@
 Log4sp g_Log4sp;    /**< Global singleton for extension's main interface */
 SMEXT_LINK(&g_Log4sp);
 
-LoggerHandler                   g_LoggerHandler;
-HandleType_t                    g_LoggerHandleType = 0;
+LoggerHandler       g_LoggerHandler;
+HandleType_t        g_LoggerHandleType = 0;
 
-SinkHandler                     g_SinkHandler;
-HandleType_t                    g_ServerConsoleSinkSTHandleType = 0;
-HandleType_t                    g_ServerConsoleSinkMTHandleType = 0;
-HandleType_t                    g_BaseFileSinkSTHandleType = 0;
-HandleType_t                    g_BaseFileSinkMTHandleType = 0;
-HandleType_t                    g_RotatingFileSinkSTHandleType = 0;
-HandleType_t                    g_RotatingFileSinkMTHandleType = 0;
-HandleType_t                    g_DailyFileSinkSTHandleType = 0;
-HandleType_t                    g_DailyFileSinkMTHandleType = 0;
-HandleType_t                    g_ClientConsoleSinkSTHandleType = 0;
-HandleType_t                    g_ClientConsoleSinkMTHandleType = 0;
+SinkHandler         g_SinkHandler;
+HandleType_t        g_ServerConsoleSinkSTHandleType = 0;
+HandleType_t        g_BaseFileSinkSTHandleType = 0;
+HandleType_t        g_RotatingFileSinkSTHandleType = 0;
+HandleType_t        g_DailyFileSinkSTHandleType = 0;
+HandleType_t        g_ClientConsoleSinkSTHandleType = 0;
 
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
@@ -79,24 +73,10 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         return false;
     }
 
-    g_ServerConsoleSinkMTHandleType = handlesys->CreateType("ServerConsoleSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ServerConsoleSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ServerConsoleSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
     g_BaseFileSinkSTHandleType = handlesys->CreateType("BaseFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
     if (!g_BaseFileSinkSTHandleType)
     {
         snprintf(error, maxlen, "Could not create BaseFileSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_BaseFileSinkMTHandleType = handlesys->CreateType("BaseFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_BaseFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create BaseFileSinkMT handle type (err: %d)", err);
         return false;
     }
 
@@ -107,13 +87,6 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         return false;
     }
 
-    g_RotatingFileSinkMTHandleType = handlesys->CreateType("RotatingFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_RotatingFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create RotatingFileSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
     g_DailyFileSinkSTHandleType = handlesys->CreateType("DailyFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
     if (!g_DailyFileSinkSTHandleType)
     {
@@ -121,24 +94,10 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         return false;
     }
 
-    g_DailyFileSinkMTHandleType = handlesys->CreateType("DailyFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_DailyFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create DailyFileSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
     g_ClientConsoleSinkSTHandleType = handlesys->CreateType("ClientConsoleSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
     if (!g_ClientConsoleSinkSTHandleType)
     {
         snprintf(error, maxlen, "Could not create ClientConsoleSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ClientConsoleSinkMTHandleType = handlesys->CreateType("ClientConsoleSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ClientConsoleSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ClientConsoleSinkMT handle type (err: %d)", err);
         return false;
     }
 
@@ -159,58 +118,13 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
     sharesys->RegisterLibrary(myself, "log4sp");
 
-    // Init Global Thread Pool
-    {
-        const char *queueSizeStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolQueueSize");
-        size_t queueSize = queueSizeStr != nullptr ? atoi(queueSizeStr) : 8192;
-
-        const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
-        size_t threadCount = threadCountStr != nullptr ? atoi(threadCountStr) : 1;
-
-        // rootconsole->ConsolePrint("Thread Pool: queue size = %d.", queueSize);
-        // rootconsole->ConsolePrint("Thread Pool: thread count = %d.", threadCount);
-
-        spdlog::init_thread_pool(queueSize, threadCount);
-    }
-
     // Init Default Logger
     {
         // name
-        const char *defaultLoggerName = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerName");
-        defaultLoggerName = defaultLoggerName != nullptr ? defaultLoggerName : SMEXT_CONF_LOGTAG;
-
-        // type
-        // 0 async block | 1 async overrun_oldest | 2 discard_new | orther sync
-        const char *defaultLoggerTypeStr = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerType");
-        int defaultLoggerType = defaultLoggerTypeStr != nullptr ? atoi(defaultLoggerTypeStr) : 1;
-
-        // sinksList
-        // // (1 << 1) server console | (1 << 2) base file | (1 << 3) daily faile | (1 << 4) rotating filr
-        // // const char *defaultLoggerSinksList = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerSinksList");
-        std::vector<spdlog::sink_ptr> sinksList;
-        switch (defaultLoggerType)
-        {
-        case 0:
-        case 1:
-        case 2:
-            sinksList.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
-            break;
-        default:
-            sinksList.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
-        }
+        const char *name = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerName");
 
         // create default logger
-        std::shared_ptr<spdlog::logger> defaultLogger;
-        switch (defaultLoggerType)
-        {
-        case 0:
-        case 1:
-        case 2:
-            defaultLogger = std::make_shared<spdlog::async_logger>(defaultLoggerName, sinksList.begin(), sinksList.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block);
-            break;
-        default:
-            defaultLogger = std::make_shared<spdlog::logger>(defaultLoggerName, sinksList.begin(), sinksList.end());
-        }
+        auto defaultLogger = spdlog::stdout_logger_st(name != nullptr ? name : SMEXT_CONF_LOGTAG);
 
         // set level
         const char *defaultLoggerLevelStr = smutils->GetCoreConfigValue("Log4sp_DefaultLoggerLevel");
@@ -241,18 +155,11 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
             defaultLogger->enable_backtrace(dfaultLoggerBacktrace);
         }
 
-        // rootconsole->ConsolePrint("Default Logger name = %s.", defaultLogger->name().c_str());
-        // rootconsole->ConsolePrint("Default Logger type = %d.", defaultLoggerType);
-        // rootconsole->ConsolePrint("Default Logger level = %s.", spdlog::level::to_string_view(defaultLogger->level()));
-        // rootconsole->ConsolePrint("Default Logger pattern = %s.", defaultLoggerPatternStr != nullptr ? defaultLoggerPatternStr : "");
-        // rootconsole->ConsolePrint("Default Logger flush on = %s.", spdlog::level::to_string_view(defaultLogger->flush_level()));
-        // rootconsole->ConsolePrint("Default Logger backtrace = %d-%d.", defaultLogger->should_backtrace(), dfaultLoggerBacktrace);
-
         // set default logger
         spdlog::set_default_logger(defaultLogger);
     }
 
-    SPDLOG_INFO("****************** log4sp.ext initialize complete! ******************");
+    SPDLOG_INFO("********** Sourcemod extension {} initialize complete! **********", SMEXT_CONF_LOGTAG);
     return true;
 }
 
@@ -263,13 +170,9 @@ void Log4sp::SDK_OnUnload()
     handlesys->RemoveType(g_LoggerHandleType, myself->GetIdentity());
 
     handlesys->RemoveType(g_ServerConsoleSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_ServerConsoleSinkMTHandleType, myself->GetIdentity());
     handlesys->RemoveType(g_BaseFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_BaseFileSinkMTHandleType, myself->GetIdentity());
     handlesys->RemoveType(g_RotatingFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_RotatingFileSinkMTHandleType, myself->GetIdentity());
     handlesys->RemoveType(g_DailyFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_DailyFileSinkMTHandleType, myself->GetIdentity());
 
     rootconsole->RemoveRootConsoleCommand("log4sp", this);
 

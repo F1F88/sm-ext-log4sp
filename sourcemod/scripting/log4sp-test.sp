@@ -33,7 +33,7 @@ Action CB_CMD(int client, int args)
     TestLoggerLvl(logger1);
     delete logger1;
 
-    Logger logger2 = Logger.CreateServerConsoleLogger("logger-test-2", true);
+    Logger logger2 = Logger.CreateServerConsoleLogger("logger-test-2");
     TestLoggerLog(logger2);
     delete logger2;
 
@@ -41,7 +41,7 @@ Action CB_CMD(int client, int args)
     TestLoggerPattern(logger3);
     delete logger3;
 
-    Logger logger4 = Logger.CreateServerConsoleLogger("logger-test-4", true);
+    Logger logger4 = Logger.CreateServerConsoleLogger("logger-test-4");
     TestLoggerFlush(logger4);
     delete logger4;
 
@@ -49,7 +49,7 @@ Action CB_CMD(int client, int args)
     TestLoggerBacktrace(logger5);
     delete logger5;
 
-    Logger logger6 = Logger.CreateServerConsoleLogger("logger-test-6", true);
+    Logger logger6 = Logger.CreateServerConsoleLogger("logger-test-6");
     TestLoggerSink(logger6);
     delete logger6;
 
@@ -58,7 +58,7 @@ Action CB_CMD(int client, int args)
     TestSinkLvl(sink1);
     delete sink1;
 
-    Sink sink2 = new ServerConsoleSinkMT();
+    Sink sink2 = new ServerConsoleSinkST();
     TestSinkLog(sink2);
     delete sink2;
 
@@ -66,7 +66,7 @@ Action CB_CMD(int client, int args)
     TestSinkPattern(sink3);
     delete sink3;
 
-    ClientConsoleSinkMT sink4 = new ClientConsoleSinkMT();
+    ClientConsoleSinkST sink4 = new ClientConsoleSinkST();
     TestSinkLvl(sink4);
     TestSinkLog(sink4);
     sink4.SetFilter(filter);
@@ -226,18 +226,18 @@ void TestLoggerSink(Logger logger)
     logger.GetName(name, sizeof(name));
     PrintToServer("========== Test Logger Sink Start | name=%s |==========", name);
 
-    logger.Info("Test before add ServerConsoleSinkMT message. 1");
+    logger.Info("Test before add ServerConsoleSinkST message. 1");
 
-    Sink sink1 = new ServerConsoleSinkMT();
+    Sink sink1 = new ServerConsoleSinkST();
     sink1.SetPattern("This is Sink1 %v");
     logger.AddSink(sink1);
 
-    Sink sink2 = new ServerConsoleSinkMT();
+    Sink sink2 = new ServerConsoleSinkST();
     sink1.SetPattern("This is Sink2 %v");
     logger.AddSink(sink2);
 
     // 这个操作至少会在 ServerConsole 输出 2 条 log message
-    logger.Info("Test after add ServerConsoleSinkMT message. 2");
+    logger.Info("Test after add ServerConsoleSinkST message. 2");
 
     // 从 logger 中移除 sink1
     logger.DropSink(sink1);
@@ -252,7 +252,7 @@ void TestLoggerSink(Logger logger)
 
     // 本次输出在 ServerConsole 的 log message 会减少 1 条
     // 因为 sink1 从 logger 中移除了
-    logger.Info("Test after add ServerConsoleSinkMT message. 3");
+    logger.Info("Test after add ServerConsoleSinkST message. 3");
 
     PrintToServer("========== Test Logger Sink End | name=%s | ==========", name);
 }

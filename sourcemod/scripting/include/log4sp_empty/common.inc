@@ -56,16 +56,6 @@ enum PatternTimeType
     PatternTimeType_Utc                 // log utc
 };
 
-/**
- * Async overflow policy - block by default.
- */
-enum AsyncOverflowPolicy
-{
-    AsyncOverflowPolicy_Block,          // Block until message can be enqueued.
-    AsyncOverflowPolicy_OverrunOldest,  // Discard oldest message in the queue if full when trying to add new item.
-    AsyncOverflowPolicy_DiscardNew      // Discard new message if the queue is full when trying to add new item.
-}
-
 
 stock void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen) {}
 

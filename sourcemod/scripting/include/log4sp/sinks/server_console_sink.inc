@@ -19,14 +19,3 @@ methodmap ServerConsoleSinkST < Sink
      */
     public native ServerConsoleSinkST();
 }
-
-methodmap ServerConsoleSinkMT < Sink
-{
-    /**
-     * This sink is output to the server console.
-     *
-     * @return          Handle for a multi-threaded server console sink.
-     * @error           Create sink handle failed.
-     */
-    public native ServerConsoleSinkMT();
-}
