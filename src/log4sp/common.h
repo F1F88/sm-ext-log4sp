@@ -30,8 +30,6 @@ spdlog::sink_ptr ReadHandleOrReportError(IPluginContext *ctx, Handle_t handle);
 
 
 
-// bool StringToInt(const char *str, int &result);
-
 bool CellToLevel(cell_t lvl, spdlog::level::level_enum &result);
 
 spdlog::level::level_enum CellToLevelOrLogWarn(IPluginContext *ctx, cell_t lvl);
