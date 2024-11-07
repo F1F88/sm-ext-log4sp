@@ -580,8 +580,8 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
     ctx->LocalToString(params[3], &msg);
     logger->log(lvl, "Stack trace requested: {}", msg);
 
-    spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
-    logger->log(lvl, "Called from: {}", loc.filename);
+    IPlugin *pPlugin = plsys->FindPluginByContext(ctx->GetContext());
+    logger->log(lvl, "Called from: {}", pPlugin->GetFilename());
 
     std::vector<std::string> arr = log4sp::GetStackTrace(ctx);
     for (size_t i = 0; i < arr.size(); ++i)
@@ -611,8 +611,8 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     char *msg = log4sp::FormatToAmxTplString(ctx, params, 3);
     logger->log(lvl, "Stack trace requested: {}", msg);
 
-    spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
-    logger->log(lvl, "Called from: {}", loc.filename);
+    IPlugin *pPlugin = plsys->FindPluginByContext(ctx->GetContext());
+    logger->log(lvl, "Called from: {}", pPlugin->GetFilename());
 
     std::vector<std::string> arr = log4sp::GetStackTrace(ctx);
     for (size_t i = 0; i < arr.size(); ++i)
