@@ -323,18 +323,26 @@ methodmap Logger < Handle
     /**
      * Add a new sink to sinks.
      *
+     * @note This native has fatal multi-threaded safety issues, which may cause server crashes in high concurrency situations.
+     *       (https://github.com/F1F88/sm-ext-log4sp/issues/4)
+     *
      * @param sink      Handle of sink.
      * @error           Invalid logger handle, invalid sink handle.
      */
+    #pragma deprecated Due to multi-threaded safety issues, expected to be removed in the next version
     public native void AddSink(Sink sink);
 
     /**
      * Drop the reference to the given sink
      *
+     * @note This native has fatal multi-threaded safety issues, which may cause server crashes in high concurrency situations.
+     *       (https://github.com/F1F88/sm-ext-log4sp/issues/4)
+     *
      * @param sink      Handle of Sink.
      * @return          True on success, false if the sink was not found.
      * @error           Invalid logger handle, invalid sink handle.
      */
+    #pragma deprecated Due to multi-threaded safety issues, expected to be removed in the next version
     public native bool DropSink(Sink sink);
 
     /**

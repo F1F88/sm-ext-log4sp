@@ -88,7 +88,9 @@ methodmap Logger < Handle
     public void DisableBacktrace() {}
     public void DumpBacktrace() {}
 
+    #pragma deprecated Due to multi-threaded safety issues, expected to be removed in the next version
     public void AddSink(Sink sink) {}
+    #pragma deprecated Due to multi-threaded safety issues, expected to be removed in the next version
     public bool DropSink(Sink sink) { return false; }
 
     public void SetErrorHandler(Log4spErrorCallback callback) {}
