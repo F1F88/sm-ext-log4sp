@@ -279,7 +279,7 @@ void Log4sp::SDK_OnUnload()
 void LoggerHandler::OnHandleDestroy(HandleType_t type, void *object)
 {
     spdlog::logger *logger = static_cast<spdlog::logger *>(object);
-    SPDLOG_TRACE("Destroy a Logger type({}) object({}) name({}).", type, fmt::ptr(object), logger->name());
+    SPDLOG_TRACE("Destroy a Logger handle. (name={}, ptr={}, type={})", logger->name(), fmt::ptr(object), type);
     spdlog::drop(logger->name());
 }
 
@@ -290,11 +290,11 @@ void SinkHandler::OnHandleDestroy(HandleType_t type, void *object)
     // 所以为什么 OnHandleDestroy 只有 HandleType_t 而没有 Handle？
     if (!log4sp::SinkHandleRegistry::instance().drop(sink)) // O(n)
     {
-        SPDLOG_CRITICAL("Destroy a Sink handle of unknown type (type={}, obj={}).", type, fmt::ptr(object));
+        SPDLOG_ERROR("Destroy a unknown type Sink handle. (ptr={}, type={})", fmt::ptr(object), type);
     }
     else
     {
-        SPDLOG_TRACE("Destroy a Sink handle of a known type (type={}, obj={}).", type, fmt::ptr(object));
+        SPDLOG_TRACE("Destroy a Sink handle. (ptr={}, type={})", fmt::ptr(object), type);
     }
 }
 
@@ -302,9 +302,10 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 {
     // 0-sm  |  1-log4sp  |  2-func  |  3-logger name  |  x-params
     int argCnt = args->ArgC();
-    if (argCnt < 3)
+    if (argCnt <= 3) // 注意是个数, 不是索引
     {
         rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
+        rootconsole->ConsolePrint("Usage: sm log4sp <function> <logger_name> [arguments]");
 
         // rootconsole->DrawGenericOption("list", "Show all loggers name."); // ref: https://github.com/gabime/spdlog/issues/180
         rootconsole->DrawGenericOption("get_lvl", "Get a logger logging level.");
@@ -322,17 +323,11 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
         return;
     }
 
-    if (argCnt < 4)
-    {
-        rootconsole->ConsolePrint("[SM] Usage: sm log4sp <function> <logger_name>");
-        return;
-    }
-
     const char *name = args->Arg(3);
     std::shared_ptr<spdlog::logger> logger = spdlog::get(name);
     if (logger == nullptr)
     {
-        rootconsole->ConsolePrint("[SM] The logger named '%s' does not exist.", name);
+        rootconsole->ConsolePrint("[SM] Logger with name '%s' does not exists.", name);
         return;
     }
 
@@ -340,7 +335,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
     if (!strcmp(func, "get_lvl"))
     {
         spdlog::level::level_enum lvl = logger->level();
-        rootconsole->ConsolePrint("[SM] The level of the logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] The level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl));
         return;
     }
 
@@ -365,7 +360,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
             }
         }
 
-        rootconsole->ConsolePrint("[SM] Set the logger '%s' level to '%s'", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] Setting logger '%s' level to '%s'", name, spdlog::level::to_string_view(lvl));
         logger->set_level(lvl);
         return;
     }
@@ -380,7 +375,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 
         const char *pattern = args->Arg(4);
 
-        rootconsole->ConsolePrint("[SM] Set the logger '%s' pattern to '%s'.", name, pattern);
+        rootconsole->ConsolePrint("[SM] Setting logger '%s' pattern to '%s'.", name, pattern);
         logger->set_pattern(pattern);
         return;
     }
@@ -434,14 +429,14 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 
         const char *msg = args->Arg(5);
 
-        rootconsole->ConsolePrint("[SM] Use logger '%s' log a '%s' level message.", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] Logger '%s' will log message with level '%s': '%s'.", name, spdlog::level::to_string_view(lvl), msg);
         logger->log(lvl, msg);
         return;
     }
 
     if (!strcmp(func, "flush"))
     {
-        rootconsole->ConsolePrint("[SM] Logger '%s' starts flush.", name);
+        rootconsole->ConsolePrint("[SM] Logger '%s' will perform a flush operation.", name);
         logger->flush();
         return;
     }
@@ -449,7 +444,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
     if (!strcmp(func, "get_flush_lvl"))
     {
         spdlog::level::level_enum lvl = logger->flush_level();
-        rootconsole->ConsolePrint("[SM] The flush level of the logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] The flush level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl));
         return;
     }
 
@@ -474,15 +469,14 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
             }
         }
 
-        rootconsole->ConsolePrint("[SM] Set the logger '%s' flush level to '%s'", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] Setting logger '%s' flush level to '%s'", name, spdlog::level::to_string_view(lvl));
         logger->flush_on(lvl);
         return;
     }
 
     if (!strcmp(func, "should_bt"))
     {
-        bool result = logger->should_backtrace();
-        rootconsole->ConsolePrint("[SM] The logger '%s' has %s backtrace.", name, result ? "enabled" : "disabled");
+        rootconsole->ConsolePrint("[SM] Backtrace for logger '%s' is %s.", name, logger->should_backtrace() ? "enabled" : "disabled");
         return;
     }
 
@@ -505,21 +499,21 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
             return;
         }
 
-        rootconsole->ConsolePrint("[SM] Enable logger '%s' backtrace. (stored %d messages)", name, num);
+        rootconsole->ConsolePrint("[SM] Enable backtrace for logger '%s'. (stored %d messages)", name, num);
         logger->enable_backtrace(num);
         return;
     }
 
     if (!strcmp(func, "disable_bt"))
     {
-        rootconsole->ConsolePrint("[SM] Disable logger '%s' backtrace.", name);
+        rootconsole->ConsolePrint("[SM] Disable backtrace for logger '%s'.", name);
         logger->disable_backtrace();
         return;
     }
 
     if (!strcmp(func, "dump_bt"))
     {
-        rootconsole->ConsolePrint("[SM] Dump logger '%s' backtrace messages.", name);
+        rootconsole->ConsolePrint("[SM] Dump backtrace messages for logger '%s'.", name);
         logger->dump_backtrace();
         return;
     }

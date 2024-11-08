@@ -51,7 +51,7 @@ static cell_t NameToLogLevel(IPluginContext *ctx, const cell_t *params)
         return static_cast<cell_t>(spdlog::level::err);
     }
 
-    spdlog::log(log4sp::GetScriptedLoc(ctx), spdlog::level::warn, "Invalid level name '{}', fix to LogLevel_Off.", name);
+    spdlog::log(log4sp::GetScriptedLoc(ctx), spdlog::level::warn, "Invalid level name '{}', return LogLevel_Off.", name);
     return static_cast<cell_t>(spdlog::level::off);;
 }
 

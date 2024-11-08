@@ -24,11 +24,11 @@ Handle_t CreateHandleOrReportError(IPluginContext *ctx, std::shared_ptr<spdlog::
         spdlog::dump_backtrace();       // dump message is used to troubleshoot problems
         spdlog::drop(logger->name());   // Don't forget to drop the Logger you just created
 
-        ctx->ReportError("Allocation of logger handle failed (error %d)", error);
+        ctx->ReportError("Allocation of logger handle failed. (error %d)", error);
         return BAD_HANDLE;
     }
 
-    SPDLOG_TRACE("Create Logger handle({}) succeed (type={}, obj={}, name={}).", handle, g_LoggerHandleType, fmt::ptr(logger.get()), logger->name());
+    SPDLOG_TRACE("Logger handle created successfully. (name={}, ptr={}, type={}, hdl={})", logger->name(), fmt::ptr(logger.get()), g_LoggerHandleType, handle);
     return handle;
 }
 
@@ -39,7 +39,7 @@ spdlog::logger *ReadHandleOrReportError(IPluginContext *ctx, Handle_t handle)
     HandleError error = handlesys->ReadHandle(handle, g_LoggerHandleType, &sec, (void **)&logger);
     if (error != HandleError_None)
     {
-        ctx->ReportError("Logger handle 0x%x is invalid (error %d).", handle, error);
+        ctx->ReportError("Invalid logger handle. (hdl=0x%x, error=%d)", handle, error);
         return nullptr;
     }
     return logger;
@@ -58,29 +58,28 @@ Handle_t CreateHandleOrReportError(IPluginContext *ctx, HandleType_t type, spdlo
     Handle_t handle = handlesys->CreateHandleEx(type, sink.get(), &sec, NULL, &error);
     if (handle == BAD_HANDLE)
     {
-        ctx->ReportError("Allocation of sink handle failed (error %d).", error);
+        ctx->ReportError("Allocation of sink handle failed. (error %d)", error);
         return BAD_HANDLE;
     }
 
     // 多重保护，超级无敌360度托马斯回旋安全
     if (SinkHandleRegistry::instance().hasKey(handle)) // So, 什么情况下会发生这个问题呢？
     {
-        ctx->ReportError("Sink handel 0x%x already exists in the sink registry.", handle);
+        ctx->ReportError("Sink with handle (0x%x) already exists.", handle);
         return BAD_HANDLE;
     }
 
     log4sp::SinkHandleRegistry::instance().registerSink(handle, type, sink);
-    SPDLOG_TRACE("Create Sink handle({}) succeed (type={}, obj={}).", handle, type, fmt::ptr(sink.get()));
+    SPDLOG_TRACE("Sink handle created successfully. (ptr={}, type={}, hdl={})", fmt::ptr(sink.get()), type, handle);
     return handle;
 }
-
 
 spdlog::sink_ptr ReadHandleOrReportError(IPluginContext *ctx, Handle_t handle)
 {
     SinkHandleInfo *info = SinkHandleRegistry::instance().get(handle);
     if (info == nullptr)
     {
-        ctx->ReportError("Sink handle 0x%x not found in sink registry.", handle);
+        ctx->ReportError("The sink handle (0x%x) is not registered.", handle);
         return nullptr;
     }
 
@@ -89,14 +88,15 @@ spdlog::sink_ptr ReadHandleOrReportError(IPluginContext *ctx, Handle_t handle)
     HandleError error = handlesys->ReadHandle(handle, info->type, &sec, (void **)&sink);
     if (error != HandleError_None)
     {
-        ctx->ReportError("Sink handle 0x%x is invalid (error %d).", handle, error);
+        ctx->ReportError("Invalid sink handle. (hdl=0x%x, error=%d)", handle, error);
         return nullptr;
     }
 
     // 多重保护，超级无敌360度托马斯回旋安全
     if (info->sink.get() != sink) // So, 什么情况下会发生这个问题呢？
     {
-        ctx->ReportError("The read handle(0x%x) sink(0x%x) does not match the registered sink(0x%x).", handle, sink, info->sink.get());
+        // 从注册器获取的 sink ptr 与从 handlesys 获取的 sink prt 不匹配
+        ctx->ReportError("The sink of sink handle registry does not match the sink of handlesys. (hdl={}, sinkReg={}, hdlSys={})", handle, info->sink.get(), sink);
         return nullptr;
     }
 
@@ -140,9 +140,7 @@ spdlog::level::level_enum CellToLevelOrLogWarn(IPluginContext *ctx, cell_t lvl)
     spdlog::level::level_enum result;
     if (!CellToLevel(lvl, result))
     {
-        auto loc = log4sp::GetScriptedLoc(ctx);
-        auto lvlName = spdlog::level::to_string_view(result);
-        spdlog::log(loc, spdlog::level::warn, "Level {} out of bounds, fix to {}.", lvl, lvlName);
+        spdlog::log(log4sp::GetScriptedLoc(ctx), spdlog::level::warn, "Invliad level ({}), return '{}'.", lvl, spdlog::level::to_string_view(result));
     }
     return result;
 }
@@ -170,7 +168,7 @@ spdlog::source_loc GetScriptedLoc(IPluginContext *ctx)
     }
 
     ctx->DestroyFrameIterator(frames); // 千万不要忘记
-    spdlog::warn("Scripted source location not found, fix to empty.");
+    SPDLOG_WARN("Scripted source location not found.");
     return {};
 }
 
