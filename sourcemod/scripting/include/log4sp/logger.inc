@@ -213,8 +213,27 @@ methodmap Logger < Handle
      * @error           Invalid logger handle.
      */
     public native void LogStackTrace(LogLevel lvl, const char[] msg);
-    public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
-    // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] msg, any ...);
+    public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] fmt, any ...);
+
+    /**
+     * Aborts the current callback and throws an error.  This function
+     * does not return in that no code is executed following it.
+     *
+     * @note The native will log a message and:
+     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     *
+     * @note The only difference from ThorwError() is that it also log
+     *       the message into the logger's sinks.
+     *
+     * @param lvl       Logging level enum.
+     * @param msg       Logging message.
+     * @noreturn
+     * @error           Always!
+     */
+    public native void ThrowError(LogLevel lvl, const char[] msg);
+    public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    // public native void ThrowErrorFmtTpl(LogLevel lvl, const char[] fmt, any ...);
 
     public native void Trace(const char[] msg);
     public native void TraceAmxTpl(const char[] fmt, any ...);
@@ -299,18 +318,26 @@ methodmap Logger < Handle
     /**
      * Add a new sink to sinks.
      *
+     * @note This native has fatal multi-threaded safety issues, which may cause server crashes in high concurrency situations.
+     *       (https://github.com/F1F88/sm-ext-log4sp/issues/4)
+     *
      * @param sink      Handle of sink.
      * @error           Invalid logger handle, invalid sink handle.
      */
+    #pragma deprecated Due to multi-threaded safety issues, expected to be removed in the next version
     public native void AddSink(Sink sink);
 
     /**
      * Drop the reference to the given sink
      *
+     * @note This native has fatal multi-threaded safety issues, which may cause server crashes in high concurrency situations.
+     *       (https://github.com/F1F88/sm-ext-log4sp/issues/4)
+     *
      * @param sink      Handle of Sink.
      * @return          True on success, false if the sink was not found.
      * @error           Invalid logger handle, invalid sink handle.
      */
+    #pragma deprecated Due to multi-threaded safety issues, expected to be removed in the next version
     public native bool DropSink(Sink sink);
 
     /**

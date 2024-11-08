@@ -107,21 +107,6 @@ spdlog::sink_ptr ReadHandleOrReportError(IPluginContext *ctx, Handle_t handle)
 
 
 
-// bool StringToInt(const char *str, int &result)
-// {
-//     bool flag;
-//     try
-//     {
-//         result = std::stoi(str);
-//         flag = true;
-//     }
-//     catch(const std::exception& e)
-//     {
-//         flag = false;
-//     }
-//     return flag;
-// }
-
 /**
  * 将 cell_t 转换为 level
  * 如果 cell_t 超出 level 边界，将其修正为最近的边界值
