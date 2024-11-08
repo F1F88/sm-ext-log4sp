@@ -52,12 +52,12 @@ methodmap Logger < Handle
     // public void LogLocFmtTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...) {}
 
     public void LogStackTrace(LogLevel lvl, const char[] msg) {}
-    public void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...) {}
-    // public void LogStackTraceFmtTpl(LogLevel lvl, const char[] msg, any ...) {}
+    public void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...) {}
+    // public void LogStackTraceFmtTpl(LogLevel lvl, const char[] fmt, any ...) {}
 
     public void ThrowError(LogLevel lvl, const char[] msg) {}
-    public void ThrowErrorAmxTpl(LogLevel lvl, const char[] msg, any ...) {}
-    // public void ThrowErrorFmtTpl(LogLevel lvl, const char[] msg, any ...) {}
+    public void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...) {}
+    // public void ThrowErrorFmtTpl(LogLevel lvl, const char[] fmt, any ...) {}
 
     public void Trace(const char[] msg) {}
     public void TraceAmxTpl(const char[] fmt, any ...) {}

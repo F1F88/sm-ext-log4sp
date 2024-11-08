@@ -237,8 +237,8 @@ methodmap Logger < Handle
      * @error           Invalid logger handle.
      */
     public native void LogStackTrace(LogLevel lvl, const char[] msg);
-    public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
-    // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] msg, any ...);
+    public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] fmt, any ...);
 
     /**
      * Aborts the current callback and throws an error.  This function
@@ -256,8 +256,8 @@ methodmap Logger < Handle
      * @error           Always!
      */
     public native void ThrowError(LogLevel lvl, const char[] msg);
-    public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] msg, any ...);
-    // public native void ThrowErrorFmtTpl(LogLevel lvl, const char[] msg, any ...);
+    public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    // public native void ThrowErrorFmtTpl(LogLevel lvl, const char[] fmt, any ...);
 
     public native void Trace(const char[] msg);
     public native void TraceAmxTpl(const char[] fmt, any ...);
