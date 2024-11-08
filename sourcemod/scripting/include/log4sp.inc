@@ -9,14 +9,44 @@
 
 
 /**
- * Define LOG4SP_NO_LOG before including this file to replace all log4sp apis with empty statements.
- * This can make the plugin no require log4sp extension
+ * Define the LOG4SP_NO_EXT macro before including this header file to make the
+ * plugin not depend on the log4sp extension.
+ *
+ * This will replace most of the log4sp natives to empty statements or do nothing,
+ * except for the following:
+ *
+ * - Logger.GetLevel()
+ *      Always returns LogLevel_Info.
+ *
+ * - Logger.ShouldLog()
+ *      Returns true when param lvl is equal to or greater than LogLevel_Info.
+ *
+ * - Logger.Log(), Logger.LogAmxTpl(),
+ *   Logger.LogSrc(), Logger.LogSrcAmxTpl(),
+ *   Logger.LogLoc(), Logger.LogLocAmxTpl()
+ *      If param lvl is equal to INFO or WARN, simply use LogMessage() instead;
+ *      If param lvl is equal to ERROR or FATAL, simply use LogError() instead;
+ *      else do nothing.
+ *
+ * - Logger.LogStackTrace(), Logger.LogStackTraceAmxTpl()
+ *      Simply use LogStackTrace() instead.
+ *
+ * - Logger.ThrowError(), Logger.ThrowErrorAmxTpl()
+ *      Simply use ThrowError() instead.
+ *
+ * - Logger.Info(), Logger.InfoAmxTpl(),
+ * - Logger.Warn(), Logger.WarnAmxTpl()
+ *      Simply use LogMessage() instead.
+ *
+ * - Logger.Error(), Logger.ErrorAmxTpl(),
+ * - Logger.Fatal(), Logger.FatalAmxTpl()
+ *      Simply use LogError() instead.
  */
-// #define LOG4SP_NO_LOG
+// #define LOG4SP_NO_EXT
 
 
 
-#if !defined LOG4SP_NO_LOG
+#if !defined LOG4SP_NO_EXT
 
 #include <log4sp/common>
 #include <log4sp/logger>
@@ -54,12 +84,12 @@ public Extension __ext_log4sp =
 {
     name = "Logging for SourcePawn",
     file = "log4sp.ext",
-#if defined AUTOLOAD_EXTENSIONS && !defined LOG4SP_NO_LOG
+#if defined AUTOLOAD_EXTENSIONS && !defined LOG4SP_NO_EXT
     autoload = 1,
 #else
     autoload = 0,
 #endif
-#if defined REQUIRE_EXTENSIONS && !defined LOG4SP_NO_LOG
+#if defined REQUIRE_EXTENSIONS && !defined LOG4SP_NO_EXT
     required = 1,
 #else
     required = 0,
