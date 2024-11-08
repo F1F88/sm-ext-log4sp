@@ -168,7 +168,7 @@ spdlog::source_loc GetScriptedLoc(IPluginContext *ctx)
     }
 
     ctx->DestroyFrameIterator(frames); // 千万不要忘记
-    SPDLOG_WARN("Scripted source location not found.");
+    SPDLOG_TRACE("Scripted source location not found.");
     return {};
 }
 
