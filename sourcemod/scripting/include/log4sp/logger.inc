@@ -240,6 +240,25 @@ methodmap Logger < Handle
     public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
     // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] msg, any ...);
 
+    /**
+     * Aborts the current callback and throws an error.  This function
+     * does not return in that no code is executed following it.
+     *
+     * @note The native will log a message and:
+     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     *
+     * @note The only difference from ThorwError() is that it also log
+     *       the message into the logger's sinks.
+     *
+     * @param lvl       Logging level enum.
+     * @param msg       Logging message.
+     * @noreturn
+     * @error           Always!
+     */
+    public native void ThrowError(LogLevel lvl, const char[] msg);
+    public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] msg, any ...);
+    // public native void ThrowErrorFmtTpl(LogLevel lvl, const char[] msg, any ...);
+
     public native void Trace(const char[] msg);
     public native void TraceAmxTpl(const char[] fmt, any ...);
     // public native void TraceFmtTpl(const char[] fmt, any ...);

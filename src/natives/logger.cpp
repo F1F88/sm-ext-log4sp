@@ -623,6 +623,73 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
+ * public native void ThrowError(LogLevel lvl, const char[] msg);
+ */
+static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
+{
+    spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
+    if (!logger->should_log(lvl))
+    {
+        return 0;
+    }
+
+    char *msg;
+    ctx->LocalToString(params[3], &msg);
+    logger->log(lvl, "Exception reported: {}", msg);
+
+    IPlugin *pPlugin = plsys->FindPluginByContext(ctx->GetContext());
+    logger->log(lvl, "Blaming: {}", pPlugin->GetFilename());
+
+    std::vector<std::string> arr = log4sp::GetStackTrace(ctx);
+    for (size_t i = 0; i < arr.size(); ++i)
+    {
+        logger->log(lvl, arr[i].c_str());
+    }
+
+    ctx->ReportError(msg);
+    return 0;
+}
+
+/**
+ * public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
+ */
+static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
+    if (!logger->should_log(lvl))
+    {
+        return 0;
+    }
+
+    char *msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    logger->log(lvl, "Exception reported: {}", msg);
+
+    IPlugin *pPlugin = plsys->FindPluginByContext(ctx->GetContext());
+    logger->log(lvl, "Blaming: {}", pPlugin->GetFilename());
+
+    std::vector<std::string> arr = log4sp::GetStackTrace(ctx);
+    for (size_t i = 0; i < arr.size(); ++i)
+    {
+        logger->log(lvl, arr[i].c_str());
+    }
+
+    ctx->ReportError(msg);
+    return 0;
+}
+
+/**
  * public native void Trace(const char[] msg);
  */
 static cell_t Trace(IPluginContext *ctx, const cell_t *params)
@@ -1082,6 +1149,9 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.LogLocAmxTpl",                     LogLocAmxTpl},
     {"Logger.LogStackTrace",                    LogStackTrace},
     {"Logger.LogStackTraceAmxTpl",              LogStackTraceAmxTpl},
+    {"Logger.ThrowError",                       ThrowError},
+    {"Logger.ThrowErrorAmxTpl",                 ThrowErrorAmxTpl},
+
     {"Logger.Trace",                            Trace},
     {"Logger.TraceAmxTpl",                      TraceAmxTpl},
     {"Logger.Debug",                            Debug},

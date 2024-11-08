@@ -25,6 +25,9 @@ public void OnPluginStart()
     PrintToServer("****************** Log4sp Test ******************");
 
     RegConsoleCmd("sm_log4sp_test", CB_CMD);
+
+    RegConsoleCmd("sm_log4sp_throw_error1", CB_CMD_ThrowError1);
+    RegConsoleCmd("sm_log4sp_throw_error2", CB_CMD_ThrowError2);
 }
 
 Action CB_CMD(int client, int args)
@@ -311,3 +314,29 @@ void TestSinkPattern(Sink sink)
     PrintToServer("========== Test Sink Pattern End ==========");
 }
 
+
+Action CB_CMD_ThrowError1(int client, int args)
+{
+    // 由于会被中断，所以存在内存泄漏
+    static Logger log;
+    if (log == INVALID_HANDLE)
+        log = Logger.CreateServerConsoleLogger("logger-test-thorw-error-1");
+
+    log.ThrowError(LogLevel_Fatal, "--- 测试 ThrowError 效果 1 ---");
+    PrintToServer("--- 测试是否继续执行 1 ---");
+    delete log;
+    return Plugin_Handled;
+}
+
+Action CB_CMD_ThrowError2(int client, int args)
+{
+    // 由于会被中断，所以存在内存泄漏
+    static Logger log;
+    if (log == INVALID_HANDLE)
+        log = Logger.CreateServerConsoleLogger("logger-test-thorw-error-2");
+
+    log.ThrowErrorAmxTpl(LogLevel_Warn, "--- 测试 ThrowError 效果 %d---", 2);
+    PrintToServer("--- 测试是否继续执行 2 ---");
+    delete log;
+    return Plugin_Handled;
+}

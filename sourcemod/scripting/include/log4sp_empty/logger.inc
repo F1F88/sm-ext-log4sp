@@ -55,6 +55,10 @@ methodmap Logger < Handle
     public void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...) {}
     // public void LogStackTraceFmtTpl(LogLevel lvl, const char[] msg, any ...) {}
 
+    public void ThrowError(LogLevel lvl, const char[] msg) {}
+    public void ThrowErrorAmxTpl(LogLevel lvl, const char[] msg, any ...) {}
+    // public void ThrowErrorFmtTpl(LogLevel lvl, const char[] msg, any ...) {}
+
     public void Trace(const char[] msg) {}
     public void TraceAmxTpl(const char[] fmt, any ...) {}
     // public void TraceFmtTpl(const char[] fmt, any ...) {}
