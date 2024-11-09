@@ -80,6 +80,8 @@
 /**
  * Do not edit below this line!
  */
+#define LOG4SP_EXT_VERSION  "1.4.0"
+
 public Extension __ext_log4sp =
 {
     name = "Logging for SourcePawn",
@@ -95,6 +97,3 @@ public Extension __ext_log4sp =
     required = 0,
 #endif
 };
-
-#define LOG4SP_EXT_VERSION "v1.3.2"
-
