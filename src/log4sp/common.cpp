@@ -224,6 +224,9 @@ std::vector<std::string> GetStackTrace(IPluginContext *ctx)
 char *FormatToAmxTplString(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param)
 {
     static char buffer[2048];
+
+    g_pSM->SetGlobalTarget(SOURCEMOD_SERVER_LANGUAGE);
+
     smutils->FormatString(buffer, sizeof(buffer), ctx, params, param);
     return buffer;
 }
