@@ -264,7 +264,7 @@ class ExtensionConfig(object):
     else:
       compiler.defines += ['COMPILER_GCC']
 
-    #*** log4sp addition: 修复编译后的 so 文件还是加载失败的问题 (https://github.com/F1F88/sm-ext-log4sp/issues/6) ***#
+    #* log4sp addition *#
     # if builder.target_platform == 'linux':
     #   compiler.linkflags += ['-lstdc++']
     # elif builder.target_platform == 'mac':
