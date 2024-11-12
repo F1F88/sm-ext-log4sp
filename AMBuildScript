@@ -177,8 +177,7 @@ class ExtensionConfig(object):
       '/EHsc',
 
       # '/GR-',
-      #*** log4sp addition: 启用 RTTI，解决 windows 下 ClientConsoleSink dynamic_pointer_cast 编译报错的问题 ***#
-      '/GR',
+      '/GR',            #* log4sp addition *#
 
       '/TP',
     ]
