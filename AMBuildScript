@@ -102,6 +102,8 @@ class ExtensionConfig(object):
       '_vsnprintf=vsnprintf',
       'HAVE_STDINT_H',
       'GNUC',
+
+      'HAVE_STRING_H',  #* log4sp addition *#
     ]
     cxx.cflags += [
       '-pipe',
