@@ -84,8 +84,8 @@ class ExtensionConfig(object):
     # Platform-specifics
     if builder.target_platform == 'linux':
       self.configure_linux(cxx)
-    elif builder.target_platform == 'mac':
-      self.configure_mac(cxx)
+    # elif builder.target_platform == 'mac':
+    #   self.configure_mac(cxx)
     elif builder.target_platform == 'windows':
       self.configure_windows(cxx)
 
@@ -217,16 +217,16 @@ class ExtensionConfig(object):
     elif cxx.vendor == 'clang':
       cxx.linkflags += ['-lgcc_eh']
 
-  def configure_mac(self, cxx):
-    cxx.defines += ['OSX', '_OSX', 'POSIX']
-    cxx.cflags += ['-mmacosx-version-min=10.5']
-    cxx.linkflags += [
-      '-mmacosx-version-min=10.5',
-      '-arch', 'i386',
-      '-lstdc++',
-      '-stdlib=libstdc++',
-    ]
-    cxx.cxxflags += ['-stdlib=libstdc++']
+  # def configure_mac(self, cxx):
+  #   cxx.defines += ['OSX', '_OSX', 'POSIX']
+  #   cxx.cflags += ['-mmacosx-version-min=10.5']
+  #   cxx.linkflags += [
+  #     '-mmacosx-version-min=10.5',
+  #     '-arch', 'i386',
+  #     '-lstdc++',
+  #     '-stdlib=libstdc++',
+  #   ]
+  #   cxx.cxxflags += ['-stdlib=libstdc++']
 
   def configure_windows(self, cxx):
     cxx.defines += ['WIN32', '_WINDOWS']
@@ -266,8 +266,8 @@ class ExtensionConfig(object):
 
     # if builder.target_platform == 'linux':
     #   compiler.linkflags += ['-lstdc++']
-    if builder.target_platform == 'mac':
-      compiler.linkflags.append('-liconv')
+    # elif builder.target_platform == 'mac':
+    #   compiler.linkflags.append('-liconv')
 
     return binary
 
