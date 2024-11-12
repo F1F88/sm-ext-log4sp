@@ -13,7 +13,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest]
-        sm_version: [latest, "1.11"]
+        sm_version: [latest, "1.12", "1.11"]
 
         include:
           - os: ubuntu-latest
@@ -24,6 +24,9 @@ jobs:
 
           - sm_version: latest
             sm_branch: master
+
+          - sm_version: "1.12"
+            sm_branch: "1.12-dev"
 
           - sm_version: "1.11"
             sm_branch: "1.11-dev"
