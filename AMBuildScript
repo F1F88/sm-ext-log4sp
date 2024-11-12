@@ -264,9 +264,9 @@ class ExtensionConfig(object):
     else:
       compiler.defines += ['COMPILER_GCC']
 
-    if builder.target_platform == 'linux':
-      compiler.linkflags += ['-lstdc++']
-    elif builder.target_platform == 'mac':
+    # if builder.target_platform == 'linux':
+    #   compiler.linkflags += ['-lstdc++']
+    if builder.target_platform == 'mac':
       compiler.linkflags.append('-liconv')
 
     return binary
