@@ -213,6 +213,7 @@ class ExtensionConfig(object):
     cxx.linkflags += ['-Wl,--exclude-libs,ALL', '-lm']
     if cxx.vendor == 'gcc':
       cxx.linkflags += ['-static-libgcc']
+      cxx.linkflags += ['-static-libstdc++']
     elif cxx.vendor == 'clang':
       cxx.linkflags += ['-lgcc_eh']
 
