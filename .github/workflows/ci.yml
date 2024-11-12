@@ -116,7 +116,7 @@ jobs:
         working-directory: extension
         run: |
           mkdir build && cd build
-          python ../configure.py --enable-optimize --symbol-files --sm-path="${{ github.workspace }}/sourcemod-${{ matrix.sm_version }}"
+          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-${{ matrix.sm_version }}"
           ambuild
 
       - name: Uploading package
