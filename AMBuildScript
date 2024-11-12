@@ -116,7 +116,7 @@ class ExtensionConfig(object):
       '-fvisibility=hidden',
     ]
     cxx.cxxflags += [
-      '-std=c++14',
+      '-std=c++17',
 
       # '-fno-exceptions',
       #*** log4sp addition: 启用异常控制编译支持, 解决编译时报错: "error: cannot use 'throw' with exceptions disabled" ***#
