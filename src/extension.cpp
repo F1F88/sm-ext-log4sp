@@ -262,7 +262,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
     if (!strcmp(func, "get_lvl"))
     {
         spdlog::level::level_enum lvl = logger->level();
-        rootconsole->ConsolePrint("[SM] The level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] The level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl).data());
         return;
     }
 
@@ -287,7 +287,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
             }
         }
 
-        rootconsole->ConsolePrint("[SM] Setting logger '%s' level to '%s'", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] Setting logger '%s' level to '%s'", name, spdlog::level::to_string_view(lvl).data());
         logger->set_level(lvl);
         return;
     }
@@ -329,7 +329,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
         }
 
         bool result = logger->should_log(lvl);
-        rootconsole->ConsolePrint("[SM] The logger '%s' has %s at '%s'.", name, result ? "enabled" : "disabled", spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] The logger '%s' has %s at '%s'.", name, result ? "enabled" : "disabled", spdlog::level::to_string_view(lvl).data());
         return;
     }
 
@@ -356,7 +356,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 
         const char *msg = args->Arg(5);
 
-        rootconsole->ConsolePrint("[SM] Logger '%s' will log message with level '%s': '%s'.", name, spdlog::level::to_string_view(lvl), msg);
+        rootconsole->ConsolePrint("[SM] Logger '%s' will log message with level '%s': '%s'.", name, spdlog::level::to_string_view(lvl).data(), msg);
         logger->log(lvl, msg);
         return;
     }
@@ -371,7 +371,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
     if (!strcmp(func, "get_flush_lvl"))
     {
         spdlog::level::level_enum lvl = logger->flush_level();
-        rootconsole->ConsolePrint("[SM] The flush level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] The flush level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl).data());
         return;
     }
 
@@ -396,7 +396,7 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
             }
         }
 
-        rootconsole->ConsolePrint("[SM] Setting logger '%s' flush level to '%s'", name, spdlog::level::to_string_view(lvl));
+        rootconsole->ConsolePrint("[SM] Setting logger '%s' flush level to '%s'", name, spdlog::level::to_string_view(lvl).data());
         logger->flush_on(lvl);
         return;
     }
