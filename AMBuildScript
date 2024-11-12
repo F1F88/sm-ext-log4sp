@@ -129,9 +129,7 @@ class ExtensionConfig(object):
       '-fvisibility-inlines-hidden',
 
       '-fPIC',          #* log4sp addition *#
-
-      #*** log4sp addition: 不生成调试信息，减小 so 文件大小 (https://www.cnblogs.com/MyOnlyBook/p/9526889.html) ***#
-      '-g0',
+      '-g0',            #* log4sp addition *#
     ]
     cxx.linkflags += ['-m32']
 
