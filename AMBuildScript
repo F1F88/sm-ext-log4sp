@@ -128,8 +128,7 @@ class ExtensionConfig(object):
       '-Wno-overloaded-virtual',
       '-fvisibility-inlines-hidden',
 
-      #*** log4sp addition: 启用生成位置无关的代码, 解决编译时警告(不处理可能导致性能下降): "warning: creating DT_TEXTREL in a shared object" ***#
-      '-fPIC',
+      '-fPIC',          #* log4sp addition *#
 
       #*** log4sp addition: 不生成调试信息，减小 so 文件大小 (https://www.cnblogs.com/MyOnlyBook/p/9526889.html) ***#
       '-g0',
