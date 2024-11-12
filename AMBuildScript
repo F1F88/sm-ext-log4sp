@@ -121,8 +121,7 @@ class ExtensionConfig(object):
       '-std=c++17',
 
       # '-fno-exceptions',
-      #*** log4sp addition: 启用异常控制编译支持, 解决编译时报错: "error: cannot use 'throw' with exceptions disabled" ***#
-      '-fexceptions', # ref: https://github.com/nodejs/node-gyp/issues/17
+      '-fexceptions',   #* log4sp addition *#
 
       '-fno-threadsafe-statics',
       '-Wno-non-virtual-dtor',
