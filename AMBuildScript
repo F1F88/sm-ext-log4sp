@@ -179,7 +179,7 @@ class ExtensionConfig(object):
       '/EHsc',
 
       # '/GR-',
-      # #*** log4sp addition: 启用 RTTI，解决 windows 下 ClientConsoleSink dynamic_pointer_cast 编译报错的问题 ***#
+      #*** log4sp addition: 启用 RTTI，解决 windows 下 ClientConsoleSink dynamic_pointer_cast 编译报错的问题 ***#
       '/GR',
 
       '/TP',
@@ -267,6 +267,7 @@ class ExtensionConfig(object):
     else:
       compiler.defines += ['COMPILER_GCC']
 
+    #*** log4sp addition: 修复编译后的 so 文件还是加载失败的问题 (https://github.com/F1F88/sm-ext-log4sp/issues/6) ***#
     # if builder.target_platform == 'linux':
     #   compiler.linkflags += ['-lstdc++']
     # elif builder.target_platform == 'mac':
