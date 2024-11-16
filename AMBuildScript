@@ -180,6 +180,7 @@ class ExtensionConfig(object):
       '/GR',            #* log4sp addition *#
 
       '/TP',
+      '/utf-8',         #* log4sp addition *#
     ]
     cxx.linkflags += [
       '/MACHINE:X86',
