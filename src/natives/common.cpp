@@ -9,7 +9,7 @@ static cell_t LogLevelToName(IPluginContext *ctx, const cell_t *params)
     const char *name = spdlog::level::to_string_view(lvl).data();
 
     ctx->StringToLocal(params[2], params[3], name);
-    return true;
+    return 0;
 }
 
 /**
@@ -21,7 +21,7 @@ static cell_t LogLevelToShortName(IPluginContext *ctx, const cell_t *params)
     const char *name = spdlog::level::to_short_c_str(lvl);
 
     ctx->StringToLocal(params[2], params[3], name);
-    return true;
+    return 0;
 }
 
 /**

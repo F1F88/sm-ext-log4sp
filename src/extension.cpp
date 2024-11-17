@@ -44,20 +44,20 @@
 Log4sp g_Log4sp;    /**< Global singleton for extension's main interface */
 SMEXT_LINK(&g_Log4sp);
 
-LoggerHandler                   g_LoggerHandler;
-HandleType_t                    g_LoggerHandleType = 0;
+LoggerHandler       g_LoggerHandler;
+HandleType_t        g_LoggerHandleType = 0;
 
-SinkHandler                     g_SinkHandler;
-HandleType_t                    g_ServerConsoleSinkSTHandleType = 0;
-HandleType_t                    g_ServerConsoleSinkMTHandleType = 0;
-HandleType_t                    g_BaseFileSinkSTHandleType = 0;
-HandleType_t                    g_BaseFileSinkMTHandleType = 0;
-HandleType_t                    g_RotatingFileSinkSTHandleType = 0;
-HandleType_t                    g_RotatingFileSinkMTHandleType = 0;
-HandleType_t                    g_DailyFileSinkSTHandleType = 0;
-HandleType_t                    g_DailyFileSinkMTHandleType = 0;
-HandleType_t                    g_ClientConsoleSinkSTHandleType = 0;
-HandleType_t                    g_ClientConsoleSinkMTHandleType = 0;
+SinkHandler         g_SinkHandler;
+HandleType_t        g_ServerConsoleSinkSTHandleType = 0;
+HandleType_t        g_ServerConsoleSinkMTHandleType = 0;
+HandleType_t        g_BaseFileSinkSTHandleType = 0;
+HandleType_t        g_BaseFileSinkMTHandleType = 0;
+HandleType_t        g_RotatingFileSinkSTHandleType = 0;
+HandleType_t        g_RotatingFileSinkMTHandleType = 0;
+HandleType_t        g_DailyFileSinkSTHandleType = 0;
+HandleType_t        g_DailyFileSinkMTHandleType = 0;
+HandleType_t        g_ClientConsoleSinkSTHandleType = 0;
+HandleType_t        g_ClientConsoleSinkMTHandleType = 0;
 
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)

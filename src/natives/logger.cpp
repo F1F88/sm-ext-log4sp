@@ -51,7 +51,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     if (policy < 0 || policy > 2)
     {
         ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
-        return false;
+        return BAD_HANDLE;
     }
 
     std::shared_ptr<spdlog::logger> logger;
@@ -101,7 +101,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     if (policy < 0 || policy > 2)
     {
         ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
-        return false;
+        return BAD_HANDLE;
     }
 
     std::shared_ptr<spdlog::logger> logger;
@@ -157,7 +157,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     if (policy < 0 || policy > 2)
     {
         ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
-        return false;
+        return BAD_HANDLE;
     }
 
     std::shared_ptr<spdlog::logger> logger;
@@ -213,14 +213,14 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     if (maxFileSize <= 0)
     {
         ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
-        return false;
+        return BAD_HANDLE;
     }
 
     size_t maxFiles = params[4];
     if (maxFiles > 200000)
     {
         ctx->ReportError("maxFiles arg cannot exceed 200000.");
-        return false;
+        return BAD_HANDLE;
     }
 
     bool rotateOnOpen = params[5];
@@ -229,7 +229,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     if (policy < 0 || policy > 2)
     {
         ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
-        return false;
+        return BAD_HANDLE;
     }
 
     std::shared_ptr<spdlog::logger> logger;
@@ -287,7 +287,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
     {
         ctx->ReportError("Invalid rotation time in ctor");
-        return false;
+        return BAD_HANDLE;
     }
 
     bool truncate = params[5];
@@ -297,7 +297,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     if (policy < 0 || policy > 2)
     {
         ctx->ReportError("policy arg must be an integer greater than 0 and less than or equal to 2.");
-        return false;
+        return BAD_HANDLE;
     }
 
     std::shared_ptr<spdlog::logger> logger;
@@ -332,11 +332,11 @@ static cell_t GetName(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     ctx->StringToLocal(params[2], params[3], logger->name().c_str());
-    return true;
+    return 0;
 }
 
 /**
@@ -347,7 +347,7 @@ static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     return logger->level();
@@ -361,13 +361,13 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
 
     logger->set_level(lvl);
-    return true;
+    return 0;
 }
 
 /**
@@ -389,7 +389,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *pattern;
@@ -403,7 +403,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
     {
         logger->set_pattern(pattern, spdlog::pattern_time_type::utc);
     }
-    return true;
+    return 0;
 }
 
 /**
@@ -414,7 +414,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
@@ -430,7 +430,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
@@ -438,7 +438,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     ctx->LocalToString(params[3], &msg);
 
     logger->log(lvl, msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -449,13 +449,13 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
     if (!logger->should_log(lvl))
     {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -472,7 +472,7 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->log(lvl, msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -483,7 +483,7 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
@@ -492,7 +492,7 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
 
     spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
     logger->log(loc, lvl, msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -503,13 +503,13 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
     if (!logger->should_log(lvl))
     {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -527,7 +527,7 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->log(loc, lvl, msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -538,7 +538,7 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *file, *func, *msg;
@@ -550,7 +550,7 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
 
     spdlog::source_loc loc = {file, line, func};
     logger->log(loc, lvl, msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -561,7 +561,7 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *file, *func;
@@ -571,7 +571,7 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[5]);
     if (!logger->should_log(lvl))
     {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -589,7 +589,7 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
 
     spdlog::source_loc loc = {file, line, func};
     logger->log(loc, lvl, msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -755,14 +755,14 @@ static cell_t Trace(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
     logger->trace(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -773,12 +773,7 @@ static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
-    }
-
-    if (!logger->should_log(spdlog::level::trace))
-    {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -795,7 +790,7 @@ static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->trace(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -806,14 +801,14 @@ static cell_t Debug(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
     logger->debug(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -824,12 +819,7 @@ static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
-    }
-
-    if (!logger->should_log(spdlog::level::debug))
-    {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -846,7 +836,7 @@ static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->debug(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -857,14 +847,14 @@ static cell_t Info(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
     logger->info(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -875,12 +865,7 @@ static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
-    }
-
-    if (!logger->should_log(spdlog::level::info))
-    {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -897,7 +882,7 @@ static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->info(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -908,14 +893,14 @@ static cell_t Warn(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
     logger->warn(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -926,12 +911,7 @@ static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
-    }
-
-    if (!logger->should_log(spdlog::level::warn))
-    {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -948,7 +928,7 @@ static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->warn(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -959,14 +939,14 @@ static cell_t Error(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
     logger->error(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -977,12 +957,7 @@ static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
-    }
-
-    if (!logger->should_log(spdlog::level::err))
-    {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -999,7 +974,7 @@ static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->error(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -1010,14 +985,14 @@ static cell_t Fatal(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
     logger->critical(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -1028,12 +1003,7 @@ static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
-    }
-
-    if (!logger->should_log(spdlog::level::critical))
-    {
-        return true;
+        return 0;
     }
 
     std::string msg;
@@ -1050,7 +1020,7 @@ static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->critical(msg);
-    return true;
+    return 0;
 }
 
 /**
@@ -1061,11 +1031,11 @@ static cell_t Flush(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     logger->flush();
-    return true;
+    return 0;
 }
 
 /**
@@ -1076,7 +1046,7 @@ static cell_t GetFlushLevel(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     return logger->flush_level();
@@ -1090,13 +1060,13 @@ static cell_t FlushOn(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
 
     logger->flush_on(lvl);
-    return true;
+    return 0;
 }
 
 /**
@@ -1116,7 +1086,7 @@ static cell_t ShouldBacktrace(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     return logger->should_backtrace();
@@ -1130,13 +1100,13 @@ static cell_t EnableBacktrace(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     size_t num = params[2];
 
     logger->enable_backtrace(num);
-    return true;
+    return 0;
 }
 
 /**
@@ -1147,11 +1117,11 @@ static cell_t DisableBacktrace(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     logger->disable_backtrace();
-    return true;
+    return 0;
 }
 
 /**
@@ -1162,11 +1132,11 @@ static cell_t DumpBacktrace(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     logger->dump_backtrace();
-    return true;
+    return 0;
 }
 
 /**
@@ -1177,17 +1147,17 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[2]);
     if (sink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     logger->sinks().push_back(sink);
-    return true;
+    return 0;
 }
 
 /**
@@ -1227,14 +1197,14 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
     spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
     IPluginFunction *callback = ctx->GetFunctionById(params[2]);
     if (callback == NULL )
     {
         ctx->ReportError("Invalid param callback %d.", params[2]);
-        return false;
+        return 0;
     }
 
     // TODO 也许可以优化为不需要每次都重复创建/释放forward
@@ -1248,7 +1218,7 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
         forward->Execute();
         forwards->ReleaseForward(forward);
     });
-    return true;
+    return 0;
 }
 
 const sp_nativeinfo_t LoggerNatives[] =

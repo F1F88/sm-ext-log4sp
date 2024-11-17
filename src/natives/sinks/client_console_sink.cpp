@@ -24,29 +24,29 @@ static cell_t ClientConsoleSinkST_SetFilter(IPluginContext *ctx, const cell_t *p
     spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (sink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_st>(sink);
     if (clientConsoleSink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to client_console_sink_st.");
-        return false;
+        return 0;
     }
 
     IPluginFunction *filter = ctx->GetFunctionById(params[2]);
     if (filter == NULL )
     {
         ctx->ReportError("Invalid param filter %d.", params[2]);
-        return false;
+        return 0;
     }
 
     if (!clientConsoleSink->set_player_filter(filter))
     {
         ctx->ReportError("Set filter failed.");
-        return false;
+        return 0;
     }
-    return true;
+    return 0;
 }
 
 
@@ -69,29 +69,29 @@ static cell_t ClientConsoleSinkMT_SetFilter(IPluginContext *ctx, const cell_t *p
     spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (sink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sink);
     if (clientConsoleSink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to client_console_sink_mt.");
-        return false;
+        return 0;
     }
 
     IPluginFunction *filter = ctx->GetFunctionById(params[2]);
     if (filter == NULL )
     {
         ctx->ReportError("Invalid param filter %d.", params[2]);
-        return false;
+        return 0;
     }
 
     if (!clientConsoleSink->set_player_filter(filter))
     {
         ctx->ReportError("Set filter failed.");
-        return false;
+        return 0;
     }
-    return true;
+    return 0;
 }
 
 const sp_nativeinfo_t ClientConsoleSinkNatives[] =

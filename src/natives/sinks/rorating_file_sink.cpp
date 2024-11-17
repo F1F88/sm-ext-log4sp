@@ -25,14 +25,14 @@ static cell_t RotatingFileSinkST(IPluginContext *ctx, const cell_t *params)
     if (maxFileSize <= 0)
     {
         ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
-        return false;
+        return BAD_HANDLE;
     }
 
     size_t maxFiles = params[3];
     if (maxFiles > 200000)
     {
         ctx->ReportError("maxFiles arg cannot exceed 200000.");
-        return false;
+        return BAD_HANDLE;
     }
 
     bool rotateOnOpen = params[4];
@@ -51,18 +51,18 @@ static cell_t RotatingFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *
     spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (genericSink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(genericSink);
     if (sink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to rotating_file_sink_st.");
-        return false;
+        return 0;
     }
 
     ctx->StringToLocal(params[2], params[3], sink->filename().data());
-    return true;
+    return 0;
 }
 
 /**
@@ -73,21 +73,21 @@ static cell_t RotatingFileSinkST_CalcFilename(IPluginContext *ctx, const cell_t 
     spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (genericSink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(genericSink);
     if (sink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to rotating_file_sink_st.");
-        return false;
+        return 0;
     }
     char *file;
     ctx->LocalToString(params[2], &file);
     int index = params[3];
 
     ctx->StringToLocal(params[4], params[5], sink->calc_filename(file, index).data());
-    return true;
+    return 0;
 }
 
 /**
@@ -109,14 +109,14 @@ static cell_t RotatingFileSinkMT(IPluginContext *ctx, const cell_t *params)
     if (maxFileSize <= 0)
     {
         ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
-        return false;
+        return BAD_HANDLE;
     }
 
     size_t maxFiles = params[3];
     if (maxFiles > 200000)
     {
         ctx->ReportError("maxFiles arg cannot exceed 200000.");
-        return false;
+        return BAD_HANDLE;
     }
 
     bool rotateOnOpen = params[4];
@@ -135,18 +135,18 @@ static cell_t RotatingFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *
     spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (genericSink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(genericSink);
     if (sink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to rotating_file_sink_mt.");
-        return false;
+        return 0;
     }
 
     ctx->StringToLocal(params[2], params[3], sink->filename().data());
-    return true;
+    return 0;
 }
 
 /**
@@ -157,14 +157,14 @@ static cell_t RotatingFileSinkMT_CalcFilename(IPluginContext *ctx, const cell_t 
     spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (genericSink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(genericSink);
     if (sink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to rotating_file_sink_mt.");
-        return false;
+        return 0;
     }
 
     char *file;
@@ -172,7 +172,7 @@ static cell_t RotatingFileSinkMT_CalcFilename(IPluginContext *ctx, const cell_t 
     int index = params[3];
 
     ctx->StringToLocal(params[4], params[5], sink->calc_filename(file, index).data());
-    return true;
+    return 0;
 }
 
 const sp_nativeinfo_t RotatingFileSinkNatives[] =

@@ -32,18 +32,18 @@ static cell_t BaseFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *para
     spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (genericSink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto sink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(genericSink);
     if (sink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to basic_file_sink_st.");
-        return false;
+        return 0;
     }
 
     ctx->StringToLocal(params[2], params[3], sink->filename().data());
-    return true;
+    return 0;
 }
 
 /**
@@ -72,18 +72,18 @@ static cell_t BaseFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *para
     spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (genericSink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto sink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(genericSink);
     if (sink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to basic_file_sink_mt.");
-        return false;
+        return 0;
     }
 
     ctx->StringToLocal(params[2], params[3], sink->filename().data());
-    return true;
+    return 0;
 }
 
 const sp_nativeinfo_t BaseFileSinkNatives[] =

@@ -27,7 +27,7 @@ static cell_t DailyFileSinkST(IPluginContext *ctx, const cell_t *params)
     if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
     {
         ctx->ReportError("Invalid rotation time in ctor");
-        return false;
+        return BAD_HANDLE;
     }
 
     bool truncate = params[4];
@@ -47,18 +47,18 @@ static cell_t DailyFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *par
     spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (sink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
     if (dailySink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to daily_file_sink_st.");
-        return false;
+        return 0;
     }
 
     ctx->StringToLocal(params[2], params[3], dailySink->filename().data());
-    return true;
+    return 0;
 }
 
 /**
@@ -82,7 +82,7 @@ static cell_t DailyFileSinkMT(IPluginContext *ctx, const cell_t *params)
     if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
     {
         ctx->ReportError("Invalid rotation time in ctor");
-        return false;
+        return BAD_HANDLE;
     }
 
     bool truncate = params[4];
@@ -102,18 +102,18 @@ static cell_t DailyFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *par
     spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
     if (sink == nullptr)
     {
-        return false;
+        return 0;
     }
 
     auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sink);
     if (dailySink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to daily_file_sink_mt.");
-        return false;
+        return 0;
     }
 
     ctx->StringToLocal(params[2], params[3], dailySink->filename().data());
-    return true;
+    return 0;
 }
 
 const sp_nativeinfo_t DailyFileSinkNatives[] =
