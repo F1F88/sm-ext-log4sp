@@ -1,9 +1,8 @@
 #ifndef _LOG4SP_COMMON_H_
 #define _LOG4SP_COMMON_H_
 
-#include "spdlog/spdlog.h"
-
 #include "extension.h"
+
 #include <log4sp/sink_registry.h>
 
 

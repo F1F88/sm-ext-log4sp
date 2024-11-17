@@ -3,8 +3,6 @@
 
 #include <log4sp/client_console_sink.h>
 
-#include "spdlog/common.h"
-
 namespace log4sp {
 namespace sinks {
 

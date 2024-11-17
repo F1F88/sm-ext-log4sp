@@ -1,5 +1,3 @@
-#include "spdlog/spdlog.h"
-
 #include <log4sp/common.h>
 
 /**

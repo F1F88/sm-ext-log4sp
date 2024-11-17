@@ -3,8 +3,6 @@
 
 #include <unordered_map>
 
-#include "spdlog/common.h"
-
 #include "extension.h"
 
 

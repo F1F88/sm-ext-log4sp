@@ -31,7 +31,6 @@
 
 #include "extension.h"
 
-#include "spdlog/spdlog.h"
 #include "spdlog/async.h"
 #include "spdlog/sinks/stdout_sinks.h"
 

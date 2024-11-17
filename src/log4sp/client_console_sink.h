@@ -1,12 +1,7 @@
 #ifndef _LOG4SP_CLIENT_CONSOLE_SINK_H_
 #define _LOG4SP_CLIENT_CONSOLE_SINK_H_
 
-#include "spdlog/details/null_mutex.h"
-#include "spdlog/details/synchronous_factory.h"
 #include "spdlog/sinks/base_sink.h"
-
-#include <mutex>
-#include <string>
 
 #include "extension.h"
 
