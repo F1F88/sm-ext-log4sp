@@ -458,7 +458,18 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     logger->log(lvl, msg);
     return true;
@@ -501,9 +512,20 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 3);
-
+    std::string msg;
     spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    }
+    catch(const std::exception& e)
+    {
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
+
     logger->log(loc, lvl, msg);
     return true;
 }
@@ -552,7 +574,18 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 6);
+    std::string msg;
+    try
+    {
+        auto msg = log4sp::FormatToAmxTplString(ctx, params, 6);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     spdlog::source_loc loc = {file, line, func};
     logger->log(loc, lvl, msg);
@@ -608,7 +641,19 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
+
     logger->log(lvl, "Stack trace requested: {}", msg);
 
     IPlugin *pPlugin = plsys->FindPluginByContext(ctx->GetContext());
@@ -673,7 +718,20 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        ctx->ReportError(e.what());
+        return 0;
+    }
+
     logger->log(lvl, "Exception reported: {}", msg);
 
     IPlugin *pPlugin = plsys->FindPluginByContext(ctx->GetContext());
@@ -685,7 +743,7 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
         logger->log(lvl, arr[i].c_str());
     }
 
-    ctx->ReportError(msg);
+    ctx->ReportError(msg.c_str());
     return 0;
 }
 
@@ -723,7 +781,18 @@ static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     logger->trace(msg);
     return true;
@@ -763,7 +832,18 @@ static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     logger->debug(msg);
     return true;
@@ -803,7 +883,18 @@ static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     logger->info(msg);
     return true;
@@ -843,7 +934,18 @@ static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     logger->warn(msg);
     return true;
@@ -883,7 +985,18 @@ static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     logger->error(msg);
     return true;
@@ -923,7 +1036,18 @@ static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
         return true;
     }
 
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        logger->log(loc, spdlog::level::err, e.what());
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     logger->critical(msg);
     return true;

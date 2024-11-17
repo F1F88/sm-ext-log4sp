@@ -125,7 +125,19 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
     char *name;
     ctx->LocalToString(params[2], &name);
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[3]);
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 4);
+
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 4);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        sink->log(spdlog::details::log_msg(loc, name, spdlog::level::err, e.what()));
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     sink->log(spdlog::details::log_msg(name, lvl, msg));
     return true;
@@ -167,7 +179,19 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
     char *name;
     ctx->LocalToString(params[2], &name);
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[3]);
-    char *msg = log4sp::FormatToAmxTplString(ctx, params, 4);
+
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 4);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        sink->log(spdlog::details::log_msg(loc, name, spdlog::level::err, e.what()));
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
     sink->log(spdlog::details::log_msg(loc, name, lvl, msg));
@@ -210,14 +234,26 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
         return false;
     }
 
-    char *file, *func, *msg;
+    char *file, *func;
     ctx->LocalToString(params[2], &file);
     int line = params[3];
     ctx->LocalToString(params[4], &func);
     char *name;
     ctx->LocalToString(params[5], &name);
     spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[6]);
-    msg = log4sp::FormatToAmxTplString(ctx, params, 7);
+
+    std::string msg;
+    try
+    {
+        msg = log4sp::FormatToAmxTplString(ctx, params, 7);
+    }
+    catch(const std::exception& e)
+    {
+        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        sink->log(spdlog::details::log_msg(loc, name, spdlog::level::err, e.what()));
+        spdlog::log(loc, spdlog::level::err, e.what());
+        return 0;
+    }
 
     spdlog::source_loc loc = {file, line, func};
     sink->log(spdlog::details::log_msg(loc, name, lvl, msg));

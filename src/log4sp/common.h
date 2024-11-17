@@ -38,8 +38,9 @@ spdlog::source_loc GetScriptedLoc(IPluginContext *ctx);
 
 std::vector<std::string> GetStackTrace(IPluginContext *ctx);
 
-char *FormatToAmxTplString(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param);
+std::string FormatToAmxTplString(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param);
 
+fmt::memory_buffer FormatParams(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param);
 
 
 } // namespace log4sp
