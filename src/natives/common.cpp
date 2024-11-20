@@ -50,14 +50,14 @@ static cell_t NameToLogLevel(IPluginContext *ctx, const cell_t *params)
     char *name;
     ctx->LocalToString(params[1], &name);
 
-    // ref: spdlog::level::from_str()
+    // ref: <common-inl.h> - spdlog::level::from_str()
     auto it = std::find(std::begin(spdlog::level::level_string_views), std::end(spdlog::level::level_string_views), name);
-    if (it != std::end(spdlog::level::level_string_views) )
+    if (it != std::end(spdlog::level::level_string_views))
     {
         return static_cast<cell_t>(std::distance(std::begin(spdlog::level::level_string_views), it));
     }
 
-    if (!strcmp(name, "warn"))
+    if (!strcmp(name, "warning"))
     {
         return static_cast<cell_t>(spdlog::level::warn);
     }
@@ -67,8 +67,12 @@ static cell_t NameToLogLevel(IPluginContext *ctx, const cell_t *params)
         return static_cast<cell_t>(spdlog::level::err);
     }
 
-    spdlog::log(log4sp::GetScriptedLoc(ctx), spdlog::level::warn, "Invalid level name '{}', return LogLevel_Off.", name);
-    return static_cast<cell_t>(spdlog::level::off);;
+    if (!strcmp(name, "critical"))
+    {
+        return static_cast<cell_t>(spdlog::level::critical);
+    }
+
+    return static_cast<cell_t>(spdlog::level::off);
 }
 
 const sp_nativeinfo_t CommonNatives[] =
