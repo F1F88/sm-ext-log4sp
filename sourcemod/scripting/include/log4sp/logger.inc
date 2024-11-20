@@ -19,274 +19,232 @@ typeset Log4spErrorCallback
 methodmap Logger < Handle
 {
     /**
-     * Creating logger manually.
+     * Creating logger handle manually.
      *
-     * @param name      Name of new logger.
-     * @param sinks     The sinks array of the logger.
-     * @param numSinks  Number of slots in the sinks array.
-     * @param async     If true, cteate an asynchronous logger.
-     * @param policy    Asynchronous queue overflow policy. Only valid when param async = true.
-     * @return          Handle of Logger.
-     * @error           Logger name already exits, param sinks has invalid sink handle, param policy is out of bounds, create logger handle failed.
+     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
+     *
+     * @param name      The name of the new logger.
+     * @param sinks     The sinks array to be added to the new logger.
+     * @param numSinks  The number of slots in the sinks array.
+     * @param async     If true, the sink of the new logger will be multi threaded.
+     * @param policy    Message queue overflow policy. (Only used when async=true)
+     * @return          Logger handle.
+     * @error           Logger name already exits, or the sinks has an invalid handle.
      */
     public native Logger(const char[] name, Sink[] sinks, int numSinks, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
-     * Get a logger by logger name
+     * Get a logger handle by logger name.
      *
-     * @param name      Name of logger.
-     * @return          Handle of Logger.
-     * @error           Logger name does not exits, create logger handle failed.
+     * @param name      The name of the logger.
+     * @return          Return an existing logger handle or INVALID_HANDLE if a logger with such name doesn't exist.
      */
     public static native Logger Get(const char[] name);
 
     /**
-     * Server console sink base on stdout.
+     * Create a logger handle that outputs to the server console.
      *
-     * @param name      Name of new logger.
-     * @param async     If true, cteate an asynchronous logger.
-     *                  And sink run in multi threaded. They might be slower because locking is required.
-     * @param policy    Asynchronous queue overflow policy. Only valid when param async = true.
-     * @return          Handle of Logger.
-     * @error           Logger name already exits, invalid policy, create logger handle failed.
+     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
+     *
+     * @param name      The name of the new logger.
+     * @param async     If true, the sink of the new logger will be multi threaded.
+     * @param policy    Message queue overflow policy. (Only used when async=true)
+     * @return          Logger handle.
+     * @error           Logger name already exits.
      */
     public static native Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
-     * Trivial file sink with single file as target.
+     * Create a logger handle that outputs to a file.
      *
-     * @param name      The name of the logger. This is used to identify the logger instance.
+     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
+     *
+     * @param name      The name of the new logger.
      * @param file      The file path where the log messages will be written.
-     * @param truncate  If truncate != false , the created file will be truncated.
-     * @param async     If true, cteate an asynchronous logger.
-     *                  And sink run in multi threaded. They might be slower because locking is required.
-     * @param policy    Asynchronous queue overflow policy. Only valid when param async = true.
-     * @return          Handle of Logger.
-     * @error           Logger name already exits, invalid policy, create logger handle failed.
+     * @param truncate  If true, the created file will be truncated.
+     * @param async     If true, the sink of the new logger will be multi threaded.
+     * @param policy    Message queue overflow policy. (Only used when async=true)
+     * @return          Logger handle.
+     * @error           Logger name already exits.
      */
-    public static native Logger CreateBaseFileLogger(
-        const char[] name,
-        const char[] file,
-        bool truncate = false,
-        bool async = false,
-        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
-    );
+    public static native Logger CreateBaseFileLogger(const char[] name,
+                                                     const char[] file,
+                                                     bool truncate = false,
+                                                     bool async = false,
+                                                     AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
-     * Rotating file sink based on size.
+     * Create a logger handle that outputs to a file and rotates the file based on size.
+     *
      * Rotate files:
      *      log.txt   -> log.1.txt
      *      log.1.txt -> log.2.txt
      *      log.2.txt -> log.3.txt
      *      log.3.txt -> delete
      *
-     * @param name          The name of the logger. This is used to identify the logger instance.
+     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
+     *
+     * @param name          The name of the logger.
      * @param file          The file path where the log messages will be written.
      * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
      * @param maxFiles      The maximum number of rotated log files to keep.
-     * @param rotateOnOpen  Whether to rotate the log file upon opening.
-     * @param async         If true, cteate an asynchronous logger. And sink run in multi threaded.
-     *                      They might be slower because locking is required.
-     * @param policy        Asynchronous queue overflow policy. Useful only if async = true.
-     * @return              Handle of Logger.
-     * @error               Logger name already exits, param maxFileSize <= 0, param maxFiles > 200000, param policy is out of bounds, create logger handle failed.
+     * @param rotateOnOpen  If true, the log file will be rotated when opened.
+     * @param async         If true, the sink of the new logger will be multi threaded.
+     * @param policy        Message queue overflow policy. (Only used when async=true)
+     * @return              Logger handle.
+     * @error               Logger name already exits, or maxFileSize == 0, or maxFiles > 200000.
      */
-    public static native Logger CreateRotatingFileLogger(
-        const char[] name,
-        const char[] file,
-        int maxFileSize,
-        int maxFiles,
-        bool rotateOnOpen = false,
-        bool async = false,
-        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
-    );
+    public static native Logger CreateRotatingFileLogger(const char[] name,
+                                                         const char[] file,
+                                                         int maxFileSize,
+                                                         int maxFiles,
+                                                         bool rotateOnOpen = false,
+                                                         bool async = false,
+                                                         AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
-     * Rotating file sink based on date.
-     * If truncate != false , the created file will be truncated.
-     * If max_files > 0, retain only the last max_files and delete previous.
+     * Create a logger handle that outputs to a file and rotates the file based on date.
      *
-     * @param name      The name of the logger. This is used to identify the logger instance.
+     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
+     *
+     * @param name      The name of the logger.
      * @param file      The file path where the log messages will be written.
-     * @param hour      The hour of the day when the log file should be rotated (0-23). Default is 0.
-     * @param minute    The minute of the hour when the log file should be rotated (0-59). Default is 0.
-     * @param truncate  If truncate != false , the created file will be truncated.
+     * @param hour      The hour of the day when the log file should be rotated. (0-23)
+     * @param minute    The minute of the hour when the log file should be rotated. (0-59)
+     * @param truncate  If true, the created file will be truncated.
      * @param maxFiles  If max_files > 0, retain only the last max_files and delete previous.
-     * @param async     If true, cteate an asynchronous logger. And sink run in multi threaded.
-     *                  They might be slower because locking is required.
-     * @param policy    Asynchronous queue overflow policy. Useful only if async = true.
-     * @return          Handle of Logger.
-     * @error           Logger name already exits, invalid rotation time in ctor, invalid policy, create logger handle failed.
+     * @param async     If true, the sink of the new logger will be multi threaded.
+     * @param policy    Message queue overflow policy. (Only used when async=true)
+     * @return          Logger handle.
+     * @error           Logger name already exits, or invalid rotation time.
      */
-    public static native Logger CreateDailyFileLogger(
-        const char[] name,
-        const char[] file,
-        int hour = 0,
-        int minute = 0,
-        bool truncate = false,
-        int maxFiles = 0,
-        bool async = false,
-        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
-    );
+    public static native Logger CreateDailyFileLogger(const char[] name,
+                                                      const char[] file,
+                                                      int hour = 0,
+                                                      int minute = 0,
+                                                      bool truncate = false,
+                                                      int maxFiles = 0,
+                                                      bool async = false,
+                                                      AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
-     * Get the current logger name.
+     * Get the logger name.
      *
      * @param buffer    Buffer to store logger name.
-     * @param maxlen    Maximum size of string buffer.
-     * @error           Invalid logger handle.
+     * @param maxlen    Maximum length of the buffer.
      */
     public native void GetName(char[] buffer, int maxlen);
 
     /**
-     * Get the current logging level.
+     * Get the logger log level.
      *
-     * @return          The current logging level.
-     * @error           Invalid logger handle.
+     * @return          The logger log level.
      */
     public native LogLevel GetLevel();
 
     /**
-     * Set the logging level.
+     * Set the logger log level.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     * @note If lvl out of bounds, native will be modified to the nearest boundary.
      *
      * @param lvl       Logging level enum.
-     * @error           Invalid logger handle.
      */
     public native void SetLevel(LogLevel lvl);
 
     /**
-     * Change log pattern.
+     * Set formatting for the sinks in this logger.
      *
+     * @note each sink will get a new instance of a formatter object, replacing the old one.
      * @note pattern flags: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
      *
-     * @param pattern   Logger sinks pattern.
+     * @param pattern   Log message pattern.
      * @param type      Pattern time.
-     * @error           Invalid logger handle.
      */
     public native void SetPattern(const char[] pattern, PatternTimeType type = PatternTimeType_Local);
 
     /**
-     * Return true logging is enabled for the given level.
+     * Gets whether logging at the given log level is enabled.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     * @note If lvl out of bounds, native will be modified to the nearest boundary.
      *
      * @param lvl       Logging level enum.
      * @return          True if logging is enabled for the given level.
-     * @error           Invalid logger handle.
      */
     public native bool ShouldLog(LogLevel lvl);
 
     /**
-     * Logging a Message.
-     *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     * Logs a message.
      *
      * @param lvl       Logging level enum.
      * @param msg       Logging message.
-     * @error           Invalid logger handle.
      */
     public native void Log(LogLevel lvl, const char[] msg);
     public native void LogAmxTpl(LogLevel lvl, const char[] fmt, any ...);
-    // public native void LogFmtTpl(LogLevel lvl, const char[] fmt, any ...);
 
     /**
-     * Logging a Message with scripted source code location.
-     *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     * Logs a message with the sourcepawn source code location.
      *
      * @param lvl       Logging level enum.
      * @param msg       Logging message.
-     * @error           Invalid logger handle.
      */
     public native void LogSrc(LogLevel lvl, const char[] msg);
     public native void LogSrcAmxTpl(LogLevel lvl, const char[] fmt, any ...);
-    // public native void LogSrcFmtTpl(LogLevel lvl, const char[] fmt, any ...);
 
     /**
-     * Logging a Message with code location.
+     * Logs a message with the source code location.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
-     *
-     * @param file      Source code location File name.
-     * @param line      Source code location File line number.
-     * @param func      Source code location Function name.
+     * @param file      The file name of the source code location.
+     * @param line      The line number of the source code location.
+     * @param func      The function name of the source code location.
      * @param lvl       Logging level enum.
      * @param msg       Logging message.
-     * @error           Invalid logger handle.
      */
     public native void LogLoc(const char[] file, int line, const char[] func, LogLevel lvl, const char[] msg);
     public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
-    // public native void LogLocFmtTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
 
     /**
-     * Logs a stack trace from the current function call. Code
-     * execution continues after the call
-     *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     * Logs a stack trace from the current function call.
+     * Code execution continues after the call.
      *
      * @param lvl       Logging level enum.
      * @param msg       Logging message.
-     * @error           Invalid logger handle.
      */
     public native void LogStackTrace(LogLevel lvl, const char[] msg);
     public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...);
-    // public native void LogStackTraceFmtTpl(LogLevel lvl, const char[] fmt, any ...);
 
     /**
-     * Aborts the current callback and throws an error.  This function
-     * does not return in that no code is executed following it.
+     * Aborts the current callback and throws an error.
+     * This function does not return in that no code is executed following it.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
-     *
-     * @note The only difference from ThorwError() is that it also log
-     *       the message into the logger's sinks.
+     * @note The only difference from ThorwError() is that it also log the message into the logger's sinks.
      *
      * @param lvl       Logging level enum.
      * @param msg       Logging message.
-     * @noreturn
      * @error           Always!
      */
     public native void ThrowError(LogLevel lvl, const char[] msg);
     public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...);
-    // public native void ThrowErrorFmtTpl(LogLevel lvl, const char[] fmt, any ...);
 
     public native void Trace(const char[] msg);
     public native void TraceAmxTpl(const char[] fmt, any ...);
-    // public native void TraceFmtTpl(const char[] fmt, any ...);
 
     public native void Debug(const char[] msg);
     public native void DebugAmxTpl(const char[] fmt, any ...);
-    // public native void DebugFmtTpl(const char[] fmt, any ...);
 
     public native void Info(const char[] msg);
     public native void InfoAmxTpl(const char[] fmt, any ...);
-    // public native void InfoFmtTpl(const char[] fmt, any ...);
 
     public native void Warn(const char[] msg);
     public native void WarnAmxTpl(const char[] fmt, any ...);
-    // public native void WarnFmtTpl(const char[] fmt, any ...);
 
     public native void Error(const char[] msg);
     public native void ErrorAmxTpl(const char[] fmt, any ...);
-    // public native void ErrorFmtTpl(const char[] fmt, any ...);
 
     public native void Fatal(const char[] msg);
     public native void FatalAmxTpl(const char[] fmt, any ...);
-    // public native void FatalFmtTpl(const char[] fmt, any ...);
 
     /**
      * Manual flush logger contents.
-     *
-     * @error           Invalid logger handle.
      */
     public native void Flush();
 
@@ -294,70 +252,64 @@ methodmap Logger < Handle
      * Get the minimum log level that will trigger automatic flush.
      *
      * @return          the minimum log level that will trigger automatic flush.
-     * @error           Invalid logger handle.
      */
     public native LogLevel GetFlushLevel();
 
     /**
      * Set the minimum log level that will trigger automatic flush.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
+     * @note If lvl out of bounds, native will be modified to the nearest boundary.
      *
      * @param lvl       Logging level enum.
-     * @error           Invalid logger handle.
      */
     public native void FlushOn(LogLevel lvl);
 
     /**
-     * Return true if backtrace logging is enabled.
+     * Gets whether backtrace logging is enabled.
      *
-     * @return          True if backtrace logging is enabled.
-     * @error           Invalid logger handle.
+     * @return          Return true if backtrace logging is enabled.
      */
     public native bool ShouldBacktrace();
 
     /**
      * Create new backtrace sink and move to it all our child sinks.
      *
-     * @param num       Number of log messages stored. (type - unsigned int)
-     * @error           Invalid logger handle.
+     * @param num       Number of log messages stored.
      */
     public native void EnableBacktrace(int num);
 
     /**
-     * Restore orig sinks and level and delete the backtrace sink.
-     *
-     * @error           Invalid logger handle.
+     * Restore original sinks and level and delete the backtrace sink.
      */
     public native void DisableBacktrace();
 
     /**
-     * Dump the backtrace of logged messages.
-     *
-     * @error           Invalid logger handle.
+     * Dump log messages stored in the backtrace ring buffer.
      */
     public native void DumpBacktrace();
 
     /**
      * Add a new sink to sinks.
      *
-     * @note This native has thread safety issues (will not cause crashes)
-     *       See: https://github.com/F1F88/sm-ext-log4sp/issues/4
+     * @note Do not use a single threaded sink in a multi threaded logger, otherwise unexpected things may happen.
+     * @note This machine is not thread safe.
+     *       Recommend using new Logger() or only using this native during initialization.
+     *       (See: https://github.com/F1F88/sm-ext-log4sp/issues/4)
      *
      * @param sink      Handle of sink.
-     * @error           Invalid logger handle, invalid sink handle.
+     * @error           Invalid sink handle.
      */
-    #pragma deprecated Use new Logger(). (May be removed in the future version)
+    #pragma deprecated If not necessary, recommended to use new Logger(). Or do not log messages while using this native.
     public native void AddSink(Sink sink);
 
     /**
-     * Sets the callback when logging errors occur
+     * Sets the callback when logging errors occur.
      *
-     * @note 还不完善
+     * @note This machine is not thread safe.
+     *       Recommend using this native only during initialization.
      *
-     * @param callback  A function to use as a callback when the logger occur errors.
-     * @error           Invalid logger handle, callback not found.
+     * @param callback  A callback called when an error occurs.
+     * @error           Invalid callback.
      */
     public native void SetErrorHandler(Log4spErrorCallback callback);
 }
