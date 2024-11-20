@@ -1,3 +1,8 @@
+#include "spdlog/sinks/stdout_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/daily_file_sink.h"
+
 #include <log4sp/logger_handle_manager.h>
 
 
@@ -15,11 +20,11 @@ logger_handle_data logger_handle_manager::get_data(const std::string &logger_nam
     return found != logger_datas_.end() ? found->second : logger_handle_data{};
 }
 
-logger_handle_data logger_handle_manager::get_data(IPluginContext *ctx, Handle_t handle)
-{
-    auto logger = read_handle(ctx, handle);
-    return logger != nullptr ? get_data(logger->name()) : logger_handle_data{};
-}
+// logger_handle_data logger_handle_manager::get_data(IPluginContext *ctx, Handle_t handle)
+// {
+//     auto logger = read_handle(ctx, handle);
+//     return logger != nullptr ? get_data(logger->name()) : logger_handle_data{};
+// }
 
 HandleType_t logger_handle_manager::get_handle_type(Handle_t handle)
 {
@@ -57,22 +62,20 @@ void logger_handle_manager::drop(const std::string &logger_name)
     }
 }
 
-void logger_handle_manager::drop(IPluginContext *ctx, Handle_t handle)
-{
-    auto logger = read_handle(ctx, handle);
-    if (logger == nullptr)
-    {
-        SPDLOG_ERROR("The logger data of handle does not exist! (hdl={})", handle);
-        return;
-    }
-
-    drop(logger->name());
-}
+// void logger_handle_manager::drop(IPluginContext *ctx, Handle_t handle)
+// {
+//     auto logger = read_handle(ctx, handle);
+//     if (logger == nullptr)
+//     {
+//         SPDLOG_ERROR("The logger data of handle does not exist! (hdl={})", handle);
+//         return;
+//     }
+//     drop(logger->name());
+// }
 
 void logger_handle_manager::drop_all()
 {
     logger_datas_.clear();
-    spdlog::drop_all();
 }
 
 void logger_handle_manager::shutdown()
@@ -81,7 +84,7 @@ void logger_handle_manager::shutdown()
 }
 
 
-logger_handle_data logger_handle_manager::create_logger_st(IPluginContext *ctx, const char *name, std::vector<spdlog::sink_ptr> sinks)
+logger_handle_data logger_handle_manager::create_logger_st(IPluginContext *ctx, std::string name, std::vector<spdlog::sink_ptr> sinks)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -98,7 +101,7 @@ logger_handle_data logger_handle_manager::create_logger_st(IPluginContext *ctx, 
     HandleError error;
 
     auto handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of single threaded logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -111,7 +114,7 @@ logger_handle_data logger_handle_manager::create_logger_st(IPluginContext *ctx, 
     return data;
 }
 
-logger_handle_data logger_handle_manager::create_logger_mt(IPluginContext *ctx, const char *name, std::vector<spdlog::sink_ptr> sinks, spdlog::async_overflow_policy policy)
+logger_handle_data logger_handle_manager::create_logger_mt(IPluginContext *ctx, std::string name, std::vector<spdlog::sink_ptr> sinks, spdlog::async_overflow_policy policy)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -128,7 +131,7 @@ logger_handle_data logger_handle_manager::create_logger_mt(IPluginContext *ctx, 
     HandleError error;
 
     auto handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of multi threaded logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -142,7 +145,7 @@ logger_handle_data logger_handle_manager::create_logger_mt(IPluginContext *ctx, 
 }
 
 
-logger_handle_data logger_handle_manager::create_server_console_logger_st(IPluginContext *ctx, const char *name)
+logger_handle_data logger_handle_manager::create_server_console_logger_st(IPluginContext *ctx, std::string name)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -159,7 +162,7 @@ logger_handle_data logger_handle_manager::create_server_console_logger_st(IPlugi
     HandleError error;
 
     auto handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of single threaded stdout logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -172,7 +175,7 @@ logger_handle_data logger_handle_manager::create_server_console_logger_st(IPlugi
     return data;
 }
 
-logger_handle_data logger_handle_manager::create_server_console_logger_mt(IPluginContext *ctx, const char *name, spdlog::async_overflow_policy policy)
+logger_handle_data logger_handle_manager::create_server_console_logger_mt(IPluginContext *ctx, std::string name, spdlog::async_overflow_policy policy)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -201,7 +204,7 @@ logger_handle_data logger_handle_manager::create_server_console_logger_mt(IPlugi
     HandleError error;
 
     auto handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of multi threaded stdout logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -215,7 +218,7 @@ logger_handle_data logger_handle_manager::create_server_console_logger_mt(IPlugi
 }
 
 
-logger_handle_data logger_handle_manager::create_base_file_logger_st(IPluginContext *ctx, const char *name, const char *filename, bool truncate)
+logger_handle_data logger_handle_manager::create_base_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, bool truncate)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -232,7 +235,7 @@ logger_handle_data logger_handle_manager::create_base_file_logger_st(IPluginCont
     HandleError error;
 
     Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of single threaded base file logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -245,7 +248,7 @@ logger_handle_data logger_handle_manager::create_base_file_logger_st(IPluginCont
     return data;
 }
 
-logger_handle_data logger_handle_manager::create_base_file_logger_mt(IPluginContext *ctx, const char *name, const char *filename, bool truncate, spdlog::async_overflow_policy policy)
+logger_handle_data logger_handle_manager::create_base_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, bool truncate, spdlog::async_overflow_policy policy)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -274,7 +277,7 @@ logger_handle_data logger_handle_manager::create_base_file_logger_mt(IPluginCont
     HandleError error;
 
     Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of multi threaded base file logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -288,7 +291,7 @@ logger_handle_data logger_handle_manager::create_base_file_logger_mt(IPluginCont
 }
 
 
-logger_handle_data logger_handle_manager::create_rotating_file_logger_st(IPluginContext *ctx, const char *name, const char *filename, size_t max_file_size, size_t max_files, bool rotate_on_open)
+logger_handle_data logger_handle_manager::create_rotating_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, size_t max_file_size, size_t max_files, bool rotate_on_open)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -305,7 +308,7 @@ logger_handle_data logger_handle_manager::create_rotating_file_logger_st(IPlugin
     HandleError error;
 
     Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of single threaded rotating file logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -318,7 +321,7 @@ logger_handle_data logger_handle_manager::create_rotating_file_logger_st(IPlugin
     return data;
 }
 
-logger_handle_data logger_handle_manager::create_rotating_file_logger_mt(IPluginContext *ctx, const char *name, const char *filename, size_t max_file_size, size_t max_files, bool rotate_on_open, spdlog::async_overflow_policy policy)
+logger_handle_data logger_handle_manager::create_rotating_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, size_t max_file_size, size_t max_files, bool rotate_on_open, spdlog::async_overflow_policy policy)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -347,7 +350,7 @@ logger_handle_data logger_handle_manager::create_rotating_file_logger_mt(IPlugin
     HandleError error;
 
     Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of multi threaded rotating file logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -361,7 +364,7 @@ logger_handle_data logger_handle_manager::create_rotating_file_logger_mt(IPlugin
 }
 
 
-logger_handle_data logger_handle_manager::create_daily_file_logger_st(IPluginContext *ctx, const char *name, const char *filename, int hour, int minute, bool truncate, uint16_t max_files)
+logger_handle_data logger_handle_manager::create_daily_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, int hour, int minute, bool truncate, uint16_t max_files)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -378,7 +381,7 @@ logger_handle_data logger_handle_manager::create_daily_file_logger_st(IPluginCon
     HandleError error;
 
     Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of single threaded daily file logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -391,7 +394,7 @@ logger_handle_data logger_handle_manager::create_daily_file_logger_st(IPluginCon
     return data;
 }
 
-logger_handle_data logger_handle_manager::create_daily_file_logger_mt(IPluginContext *ctx, const char *name, const char *filename, int hour, int minute, bool truncate, uint16_t max_files, spdlog::async_overflow_policy policy)
+logger_handle_data logger_handle_manager::create_daily_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, int hour, int minute, bool truncate, uint16_t max_files, spdlog::async_overflow_policy policy)
 {
     // 把基本的检查前置到 native 里以提高性能
     // if (logger_datas_.find(name) != logger_datas_.end())
@@ -420,7 +423,7 @@ logger_handle_data logger_handle_manager::create_daily_file_logger_mt(IPluginCon
     HandleError error;
 
     Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
-    if (handle == BAD_HANDLE)
+    if (error != HandleError_None)
     {
         ctx->ReportError("Allocation of multi threaded daily file logger handle failed. (error %d)", error);
         return logger_handle_data{};
@@ -434,9 +437,18 @@ logger_handle_data logger_handle_manager::create_daily_file_logger_mt(IPluginCon
 }
 
 
-bool logger_handle_manager::register_logger_handle_(const std::string &key, logger_handle_data data)
+void logger_handle_manager::register_logger_handle_(const std::string &key, logger_handle_data data)
 {
-    return logger_datas_.insert({key, data}).second;
+    // if (logger_datas_.find(key) != logger_datas_.end())
+    // {
+    //     SPDLOG_CRITICAL("logger with name '{}' already exists.", key);
+    // }
+    // else if (key == SMEXT_CONF_LOGTAG)
+    // {
+    //     SPDLOG_CRITICAL("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
+    // }
+
+    logger_datas_.insert({key, data});
 }
 
 

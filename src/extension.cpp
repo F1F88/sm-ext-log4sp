@@ -31,10 +31,11 @@
 
 #include "extension.h"
 
-#include "spdlog/async.h"
 #include "spdlog/sinks/stdout_sinks.h"
+#include "spdlog/sinks/daily_file_sink.h"
 
 #include <log4sp/common.h>
+#include <log4sp/logger_handle_manager.h>
 
 /**
  * @file extension.cpp
@@ -161,10 +162,10 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     // Init Global Thread Pool
     {
         const char *queueSizeStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolQueueSize");
-        size_t queueSize = queueSizeStr != nullptr ? atoi(queueSizeStr) : 8192;
+        auto queueSize = queueSizeStr != nullptr ? static_cast<size_t>(atoi(queueSizeStr)) : static_cast<size_t>(8192);
 
         const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
-        size_t threadCount = threadCountStr != nullptr ? atoi(threadCountStr) : 1;
+        auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoi(threadCountStr)) : static_cast<size_t>(1);
 
         // rootconsole->ConsolePrint("Thread Pool: queue size = %d.", queueSize);
         // rootconsole->ConsolePrint("Thread Pool: thread count = %d.", threadCount);
@@ -174,7 +175,17 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
     // Init Default Logger
     {
-        auto logger = spdlog::stdout_logger_st(SMEXT_CONF_LOGTAG);
+        auto consoleSink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        consoleSink->set_pattern("[%H:%M:%S.%e] [%n] [%l] %v");
+
+        char filepath[PLATFORM_MAX_PATH];
+        smutils->BuildPath(Path_SM, filepath, sizeof(filepath), "logs/log4sp.log");
+
+        auto dailyFileSink = std::make_shared<spdlog::sinks::daily_file_sink_st>(filepath, 0, 0);
+
+        auto sinks = spdlog::sinks_init_list{consoleSink, dailyFileSink};
+        auto logger = std::make_shared<spdlog::logger>(SMEXT_CONF_LOGTAG, sinks);
+
         spdlog::set_default_logger(logger);
     }
 
@@ -184,6 +195,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 void Log4sp::SDK_OnUnload()
 {
+    log4sp::logger_handle_manager::instance().shutdown();
     log4sp::SinkHandleRegistry::instance().dropAll();
 
     handlesys->RemoveType(g_LoggerHandleType, myself->GetIdentity());
@@ -204,9 +216,15 @@ void Log4sp::SDK_OnUnload()
 
 void LoggerHandler::OnHandleDestroy(HandleType_t type, void *object)
 {
-    spdlog::logger *logger = static_cast<spdlog::logger *>(object);
-    SPDLOG_TRACE("Destroy a Logger handle. (name={}, ptr={}, type={})", logger->name(), fmt::ptr(object), type);
-    spdlog::drop(logger->name());
+    auto logger = static_cast<spdlog::logger *>(object);
+
+    if (spdlog::should_log(spdlog::level::trace))
+    {
+        auto data = log4sp::logger_handle_manager::instance().get_data(logger->name());
+        SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(data.handle()), fmt::ptr(object));
+    }
+
+    log4sp::logger_handle_manager::instance().drop(logger->name());
 }
 
 void SinkHandler::OnHandleDestroy(HandleType_t type, void *object)
@@ -250,12 +268,14 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
     }
 
     const char *name = args->Arg(3);
-    std::shared_ptr<spdlog::logger> logger = spdlog::get(name);
-    if (logger == nullptr)
+    auto data = log4sp::logger_handle_manager::instance().get_data(name);
+    if (data.empty())
     {
         rootconsole->ConsolePrint("[SM] Logger with name '%s' does not exists.", name);
         return;
     }
+
+    auto logger = data.logger();
 
     const char *func = args->Arg(2);
     if (!strcmp(func, "get_lvl"))

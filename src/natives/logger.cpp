@@ -27,6 +27,12 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
+    if (!strcmp(name, SMEXT_CONF_LOGTAG))
+    {
+        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
+        return BAD_HANDLE;
+    }
+
     if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
@@ -77,6 +83,11 @@ static cell_t Get(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
+    if (!strcmp(name, SMEXT_CONF_LOGTAG))
+    {
+        ctx->ReportError("The logger named '" SMEXT_CONF_LOGTAG "' is reserved dedicated logger.");
+        return BAD_HANDLE;
+    }
 
     auto data = log4sp::logger_handle_manager::instance().get_data(name);
     if (data.empty())
@@ -95,6 +106,12 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
 {
     char *name;
     ctx->LocalToString(params[1], &name);
+    if (!strcmp(name, SMEXT_CONF_LOGTAG))
+    {
+        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
+        return BAD_HANDLE;
+    }
+
     if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
@@ -135,6 +152,12 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
+    if (!strcmp(name, SMEXT_CONF_LOGTAG))
+    {
+        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
+        return BAD_HANDLE;
+    }
+
     if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
@@ -183,6 +206,12 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
 {
     char *name;
     ctx->LocalToString(params[1], &name);
+    if (!strcmp(name, SMEXT_CONF_LOGTAG))
+    {
+        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
+        return BAD_HANDLE;
+    }
+
     if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
@@ -246,6 +275,12 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
+    if (!strcmp(name, SMEXT_CONF_LOGTAG))
+    {
+        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
+        return BAD_HANDLE;
+    }
+
     if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
@@ -1258,9 +1293,17 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto data = log4sp::logger_handle_manager::instance().get_data(ctx, handle);
+    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    auto data = log4sp::logger_handle_manager::instance().get_data(logger->name());
     if (data.empty())
     {
+        // 这代表代码逻辑存在问题
+        ctx->ReportError("Fatal internal error, logger data not found. (name='%s', hdl=%X)", logger->name(), static_cast<int>(handle));
         return 0;
     }
 
