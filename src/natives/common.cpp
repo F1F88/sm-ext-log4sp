@@ -5,8 +5,17 @@
  */
 static cell_t LogLevelToName(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[1]);
-    const char *name = spdlog::level::to_string_view(lvl).data();
+    auto lvl = static_cast<spdlog::level::level_enum>(params[1]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
+
+    auto name = spdlog::level::to_string_view(lvl).data();
 
     ctx->StringToLocal(params[2], params[3], name);
     return 0;
@@ -17,8 +26,17 @@ static cell_t LogLevelToName(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t LogLevelToShortName(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[1]);
-    const char *name = spdlog::level::to_short_c_str(lvl);
+    auto lvl = static_cast<spdlog::level::level_enum>(params[1]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
+
+    auto name = spdlog::level::to_short_c_str(lvl);
 
     ctx->StringToLocal(params[2], params[3], name);
     return 0;
