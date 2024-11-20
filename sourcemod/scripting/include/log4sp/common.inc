@@ -32,7 +32,10 @@
 
 
 /**
- * Log level enum
+ * Log level enum.
+ *
+ * @note If you pass an out-of-bounds value to native,
+ *       native will modify it to the nearest boundary value.
  */
 enum LogLevel
 {
@@ -48,7 +51,10 @@ enum LogLevel
 
 /**
  * Pattern time - specific time getting to use for pattern_formatter.
- * local time by default
+ * local time by default.
+ *
+ * @note If you pass an out-of-bounds value to native,
+ *       native will modify it to the nearest boundary value.
  */
 enum PatternTimeType
 {
@@ -57,7 +63,11 @@ enum PatternTimeType
 };
 
 /**
- * Async overflow policy - block by default.
+ * Async overflow policy.
+ * block by default.
+ *
+ * @note If you pass an out-of-bounds value to native,
+ *       native will modify it to the nearest boundary value.
  */
 enum AsyncOverflowPolicy
 {
@@ -69,34 +79,25 @@ enum AsyncOverflowPolicy
 /**
  * Convert a logging level enum to name.
  *
- * @note The native will log a message and:
- *       warn - If lvl out of bounds - Fix lvl to nearest bounds.
- *
  * @param lvl       Logging level enum.
- * @param buffer    Buffer to store level name.
- * @param maxlen    Maximum size of string buffer.
+ * @param buffer    Buffer to store log level name.
+ * @param maxlen    Maximum length of the buffer.
  */
 native void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
 
 /**
  * Convert a logging level enum to short name.
  *
- * @note The native will log a message and:
- *       warn - If lvl out of bounds - Fix lvl to nearest bounds.
- *
  * @param lvl       Logging level enum.
- * @param buffer    Buffer to store level name.
- * @param maxlen    Maximum size of string buffer.
+ * @param buffer    Buffer to store log level short name.
+ * @param maxlen    Maximum length of the buffer.
  */
 native void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
 
 /**
- * Convert a logging level name to level enum.
- *
- * @note The native will log a message and:
- *       warn - If there is no level with this name - Return LogLevel_Off.
+ * Convert a logging level name to log level enum.
  *
  * @param name      Log level name.
- * @return          Logging level enum.
+ * @return          Logging level enum or LogLevel_Off when the log level name does not exist.
  */
 native LogLevel NameToLogLevel(const char[] name);
