@@ -16,16 +16,62 @@ namespace log4sp {
 
 struct logger_handle_data
 {
-    std::shared_ptr<spdlog::logger> logger;     // 智能指针（管理生命周期）
-    bool isMultiThreaded;
-    Handle_t handle;
-    HandleType_t handleType;
-    IChangeableForward *custom_err_forward_;    // 只有在调用 SetErrorHandler 后才不为 NULL
+public:
+    logger_handle_data() {}
+
+    logger_handle_data(std::shared_ptr<spdlog::logger> logger, bool is_multi_threaded, Handle_t handle, HandleType_t type, IChangeableForward *forward)
+        : logger_(logger), is_multi_threaded_(is_multi_threaded), handle_(handle), handle_type_(type), custom_err_forward_(forward) {}
+
+    ~logger_handle_data()
+    {
+        SPDLOG_TRACE("logger_handle_data 析构函数被调用了, fwd has value = {}.", custom_err_forward_ != NULL);
+        if (custom_err_forward_ != NULL)
+        {
+            forwards->ReleaseForward(custom_err_forward_);
+        }
+    }
 
     constexpr bool empty() const noexcept
     {
-        return logger == nullptr;
+        return logger_ == nullptr;
     }
+
+    const std::shared_ptr<spdlog::logger> &logger() const
+    {
+        return logger_;
+    }
+
+    const bool is_multi_threaded() const noexcept
+    {
+        return is_multi_threaded_;
+    }
+
+    const Handle_t &handle() const noexcept
+    {
+        return handle_;
+    }
+
+    const HandleType_t &handle_type() const noexcept
+    {
+        return handle_type_;
+    }
+
+    bool set_error_handler(IChangeableForward *forward)
+    {
+        if (custom_err_forward_ != NULL)
+        {
+            forwards->ReleaseForward(custom_err_forward_);
+        }
+
+        custom_err_forward_ = std::move(forward);
+    }
+
+private:
+    std::shared_ptr<spdlog::logger> logger_;     // 智能指针（管理生命周期）
+    bool is_multi_threaded_;
+    Handle_t handle_;
+    HandleType_t handle_type_;
+    IChangeableForward *custom_err_forward_;    // 只有在调用 SetErrorHandler 后才不为 NULL
 };
 
 /**

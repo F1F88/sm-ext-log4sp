@@ -53,7 +53,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_logger_st(ctx, name, sinksList);
-        return data.handle;
+        return data.handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[5]);
@@ -67,7 +67,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_logger_mt(ctx, name, sinksList, policy);
-    return data.handle;
+    return data.handle();
 }
 
 /**
@@ -85,7 +85,7 @@ static cell_t Get(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    return data.handle;
+    return data.handle();
 }
 
 /**
@@ -105,7 +105,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_server_console_logger_st(ctx, name);
-        return data.handle;
+        return data.handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[3]);
@@ -119,7 +119,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_server_console_logger_mt(ctx, name, policy);
-    return data.handle;
+    return data.handle();
 }
 
 /**
@@ -151,7 +151,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_base_file_logger_st(ctx, name, path, truncate);
-        return data.handle;
+        return data.handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[5]);
@@ -165,7 +165,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_base_file_logger_mt(ctx, name, path, truncate, policy);
-    return data.handle;
+    return data.handle();
 }
 
 /**
@@ -213,7 +213,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_rotating_file_logger_st(ctx, name, path, maxFileSize, maxFiles, rotateOnOpen);
-        return data.handle;
+        return data.handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[7]);
@@ -227,7 +227,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_rotating_file_logger_mt(ctx, name, path, maxFileSize, maxFiles, rotateOnOpen, policy);
-    return data.handle;
+    return data.handle();
 }
 
 /**
@@ -271,7 +271,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_daily_file_logger_st(ctx, name, path, hour, minute, truncate, maxFiles);
-        return data.handle;
+        return data.handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[8]);
@@ -285,7 +285,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_daily_file_logger_mt(ctx, name, path, hour, minute, truncate, maxFiles, policy);
-    return data.handle;
+    return data.handle();
 }
 
 /**
@@ -1286,14 +1286,9 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    if (data.custom_err_forward_ != NULL)
-    {
-        forwards->ReleaseForward(forward);
-    }
+    data.set_error_handler(forward);
 
-    data.custom_err_forward_ = forward;
-
-    data.logger->set_error_handler([forward](const std::string &msg) {
+    data.logger()->set_error_handler([forward](const std::string &msg) {
         forward->PushString(msg.c_str());
         forward->Execute();
     });

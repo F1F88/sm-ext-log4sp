@@ -50,21 +50,11 @@ spdlog::logger* logger_handle_manager::read_handle(IPluginContext *ctx, Handle_t
 
 void logger_handle_manager::drop(const std::string &logger_name)
 {
-    auto found = logger_datas_.find(logger_name);
-    if (found == logger_datas_.end())
+    if (logger_datas_.erase(logger_name))
     {
         SPDLOG_ERROR("The handle data of logger name does not exist! (name='{}')", logger_name);
         return;
     }
-
-    auto data = found->second;
-    auto forward = data.custom_err_forward_;
-    if (forward != NULL)
-    {
-        forwards->ReleaseForward(forward);
-    }
-
-    logger_datas_.erase(found);
 }
 
 void logger_handle_manager::drop(IPluginContext *ctx, Handle_t handle)
