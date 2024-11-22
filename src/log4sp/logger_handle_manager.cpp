@@ -60,7 +60,11 @@ void logger_handle_manager::drop(const std::string &logger_name)
 
 void logger_handle_manager::drop_all()
 {
-    logger_datas_.clear();
+    for (auto it = logger_datas_.begin(); it != logger_datas_.end(); ++it)
+    {
+        delete it->second;
+        logger_datas_.erase(it);
+    }
 }
 
 void logger_handle_manager::shutdown()
