@@ -1314,26 +1314,49 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
+    auto loggerHandle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, loggerHandle);
     if (logger == nullptr)
     {
-        return false;
+        return 0;
     }
 
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[2]);
+    auto loggerData = log4sp::logger_handle_manager::instance().get_data(logger->name());
+    if (loggerData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, logger data not found. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
+        return 0;
+    }
+
+    // TODO 检查 sink 是否和 logger 一样是 单线程/多线程
+    auto sinkHandle = static_cast<Handle_t>(params[2]);
+    auto sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinkHandle);
     if (sink == nullptr)
     {
-        return false;
+        return 0;
     }
 
-    auto iterator = std::find(logger->sinks().begin(), logger->sinks().end(), sink);
-    if (iterator == logger->sinks().end())
+    if (!loggerData->is_multi_threaded())
     {
-        return false;
+        auto iterator = std::find(logger->sinks().begin(), logger->sinks().end(), sink);
+        if (iterator == logger->sinks().end())
+        {
+            return false;
+        }
+
+        logger->sinks().erase(iterator);
+        return true;
     }
 
-    logger->sinks().erase(iterator);
-    return true;
+    auto dist_sink = std::dynamic_pointer_cast<spdlog::sinks::dist_sink_mt>(logger->sinks().front());
+    if (dist_sink == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, cannot cast sink to dist_sink. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
+        return 0;
+    }
+
+    dist_sink->remove_sink(sink);
+    return 0;
 }
 
 /**
