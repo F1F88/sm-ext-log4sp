@@ -1,6 +1,6 @@
 #include "spdlog/sinks/stdout_sinks.h"
 
-#include <log4sp/common.h>
+#include <log4sp/sink_handle_manager.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11,10 +11,13 @@
  */
 static cell_t ServerConsoleSinkST(IPluginContext *ctx, const cell_t *params)
 {
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_ServerConsoleSinkSTHandleType,
-        std::make_shared<spdlog::sinks::stdout_sink_st>());
+    auto data = log4sp::sink_handle_manager::instance().create_server_console_sink_st(ctx);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 /**
@@ -22,10 +25,13 @@ static cell_t ServerConsoleSinkST(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t ServerConsoleSinkMT(IPluginContext *ctx, const cell_t *params)
 {
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_ServerConsoleSinkSTHandleType,
-        std::make_shared<spdlog::sinks::stdout_sink_mt>());
+    auto data = log4sp::sink_handle_manager::instance().create_server_console_sink_mt(ctx);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 const sp_nativeinfo_t ServerConsoleSinkNatives[] =

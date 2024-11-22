@@ -1,6 +1,6 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 
-#include <log4sp/common.h>
+#include <log4sp/sink_handle_manager.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,26 +21,29 @@ static cell_t RotatingFileSinkST(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    size_t maxFileSize = params[2];
+    auto maxFileSize = static_cast<size_t>(params[2]);
     if (maxFileSize <= 0)
     {
         ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
         return BAD_HANDLE;
     }
 
-    size_t maxFiles = params[3];
+    auto maxFiles = static_cast<size_t>(params[3]);
     if (maxFiles > 200000)
     {
         ctx->ReportError("maxFiles arg cannot exceed 200000.");
         return BAD_HANDLE;
     }
 
-    bool rotateOnOpen = params[4];
+    auto rotateOnOpen = static_cast<bool>(params[4]);
 
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_RotatingFileSinkSTHandleType,
-        std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen));
+    auto data = log4sp::sink_handle_manager::instance().create_rotating_file_sink_st(ctx, path, maxFileSize, maxFiles, rotateOnOpen);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 /**
@@ -48,20 +51,28 @@ static cell_t RotatingFileSinkST(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t RotatingFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
-    if (genericSink == nullptr)
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
+    if (sink == nullptr)
     {
         return 0;
     }
 
-    auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(genericSink);
-    if (sink == nullptr)
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto rotatingFileSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sinkData->sink_ptr());
+    if (rotatingFileSink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to rotating_file_sink_st.");
         return 0;
     }
 
-    ctx->StringToLocal(params[2], params[3], sink->filename().data());
+    ctx->StringToLocal(params[2], params[3], rotatingFileSink->filename().c_str());
     return 0;
 }
 
@@ -70,14 +81,22 @@ static cell_t RotatingFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *
  */
 static cell_t RotatingFileSinkST_CalcFilename(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
-    if (genericSink == nullptr)
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
+    if (sink == nullptr)
     {
         return 0;
     }
 
-    auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(genericSink);
-    if (sink == nullptr)
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto rotatingFileSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sinkData->sink_ptr());
+    if (rotatingFileSink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to rotating_file_sink_st.");
         return 0;
@@ -86,7 +105,7 @@ static cell_t RotatingFileSinkST_CalcFilename(IPluginContext *ctx, const cell_t 
     ctx->LocalToString(params[2], &file);
     int index = params[3];
 
-    ctx->StringToLocal(params[4], params[5], sink->calc_filename(file, index).data());
+    ctx->StringToLocal(params[4], params[5], rotatingFileSink->calc_filename(file, index).c_str());
     return 0;
 }
 
@@ -105,26 +124,29 @@ static cell_t RotatingFileSinkMT(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    size_t maxFileSize = params[2];
+    auto maxFileSize = static_cast<size_t>(params[2]);
     if (maxFileSize <= 0)
     {
         ctx->ReportError("maxFileSize arg must be an integer greater than 0.");
         return BAD_HANDLE;
     }
 
-    size_t maxFiles = params[3];
+    auto maxFiles = static_cast<size_t>(params[3]);
     if (maxFiles > 200000)
     {
         ctx->ReportError("maxFiles arg cannot exceed 200000.");
         return BAD_HANDLE;
     }
 
-    bool rotateOnOpen = params[4];
+    auto rotateOnOpen = static_cast<bool>(params[4]);
 
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_RotatingFileSinkMTHandleType,
-        std::make_shared<spdlog::sinks::rotating_file_sink_mt>(path, maxFileSize, maxFiles, rotateOnOpen));
+    auto data = log4sp::sink_handle_manager::instance().create_rotating_file_sink_mt(ctx, path, maxFileSize, maxFiles, rotateOnOpen);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 /**
@@ -132,20 +154,28 @@ static cell_t RotatingFileSinkMT(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t RotatingFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
-    if (genericSink == nullptr)
-    {
-        return 0;
-    }
-
-    auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(genericSink);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
-        ctx->ReportError("Unable to cast sink to rotating_file_sink_mt.");
         return 0;
     }
 
-    ctx->StringToLocal(params[2], params[3], sink->filename().data());
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto rotatingFileSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(sinkData->sink_ptr());
+    if (rotatingFileSink == nullptr)
+    {
+        ctx->ReportError("Unable to cast sink to rotating_file_sink_st.");
+        return 0;
+    }
+
+    ctx->StringToLocal(params[2], params[3], rotatingFileSink->filename().c_str());
     return 0;
 }
 
@@ -154,24 +184,31 @@ static cell_t RotatingFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *
  */
 static cell_t RotatingFileSinkMT_CalcFilename(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr genericSink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
-    if (genericSink == nullptr)
-    {
-        return 0;
-    }
-
-    auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(genericSink);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
-        ctx->ReportError("Unable to cast sink to rotating_file_sink_mt.");
         return 0;
     }
 
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto rotatingFileSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(sinkData->sink_ptr());
+    if (rotatingFileSink == nullptr)
+    {
+        ctx->ReportError("Unable to cast sink to rotating_file_sink_st.");
+        return 0;
+    }
     char *file;
     ctx->LocalToString(params[2], &file);
     int index = params[3];
 
-    ctx->StringToLocal(params[4], params[5], sink->calc_filename(file, index).data());
+    ctx->StringToLocal(params[4], params[5], rotatingFileSink->calc_filename(file, index).c_str());
     return 0;
 }
 

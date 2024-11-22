@@ -7,6 +7,7 @@
 
 #include <log4sp/common.h>
 #include <log4sp/logger_handle_manager.h>
+#include <log4sp/sink_handle_manager.h>
 
 /**
  * Thread safe logger (except for set_error_handler())
@@ -44,20 +45,34 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     ctx->LocalToPhysAddr(params[2], &sinks);
 
     auto numSinks = static_cast<unsigned int>(params[3]);
+    auto async = static_cast<bool>(params[4]);
 
-    // TODO 检查 sink 是否和 logger 一样是 单线程/多线程
     std::vector<spdlog::sink_ptr> sinksList;
     for (unsigned int i = 0; i < numSinks; ++i)
     {
-        spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinks[i]);
+        auto sinkHandle = static_cast<Handle_t>(sinks[i]);
+        auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, sinkHandle);
         if (sink == nullptr)
         {
             return BAD_HANDLE;
         }
-        sinksList.push_back(sink);
+
+        auto data = log4sp::sink_handle_manager::instance().get_data(sink);
+        if (data == nullptr)
+        {
+            ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(sinkHandle));
+            return BAD_HANDLE;
+        }
+
+        if (data->is_multi_threaded() != async)
+        {
+            ctx->ReportError("You cannot create a %s logger with a %s sink.", async ? "asynchronous" : "synchronous", async ? "synchronous" : "asynchronous");
+            return BAD_HANDLE;
+        }
+
+        sinksList.push_back(data->sink_ptr());
     }
 
-    auto async = static_cast<bool>(params[4]);
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_logger_st(ctx, name, sinksList);
@@ -1284,17 +1299,30 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    // TODO 检查 sink 是否和 logger 一样是 单线程/多线程
     auto sinkHandle = static_cast<Handle_t>(params[2]);
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinkHandle);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, sinkHandle);
     if (sink == nullptr)
     {
         return 0;
     }
 
-    if (!loggerData->is_multi_threaded())
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
     {
-        logger->sinks().push_back(sink);
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(sinkHandle));
+        return 0;
+    }
+
+    bool async = loggerData->is_multi_threaded();
+    if (async != sinkData->is_multi_threaded())
+    {
+        ctx->ReportError("You cannot add a %s sink to a %s logger.", async ? "synchronous" : "asynchronous", async ? "asynchronous" : "synchronous");
+        return 0;
+    }
+
+    if (!async)
+    {
+        logger->sinks().push_back(sinkData->sink_ptr());
         return 0;
     }
 
@@ -1305,12 +1333,12 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    dist_sink->add_sink(sink);
+    dist_sink->add_sink(sinkData->sink_ptr());
     return 0;
 }
 
 /**
- * public native bool DropSink(Sink sink);
+ * public native void DropSink(Sink sink);
  */
 static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
 {
@@ -1328,17 +1356,23 @@ static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    // TODO 检查 sink 是否和 logger 一样是 单线程/多线程
     auto sinkHandle = static_cast<Handle_t>(params[2]);
-    auto sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinkHandle);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, sinkHandle);
     if (sink == nullptr)
     {
         return 0;
     }
 
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(sinkHandle));
+        return 0;
+    }
+
     if (!loggerData->is_multi_threaded())
     {
-        auto iterator = std::find(logger->sinks().begin(), logger->sinks().end(), sink);
+        auto iterator = std::find(logger->sinks().begin(), logger->sinks().end(), sinkData->sink_ptr());
         if (iterator == logger->sinks().end())
         {
             return false;
@@ -1355,8 +1389,8 @@ static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    dist_sink->remove_sink(sink);
-    return 0;
+    dist_sink->remove_sink(sinkData->sink_ptr());
+    return true;
 }
 
 /**

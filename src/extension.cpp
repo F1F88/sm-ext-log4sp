@@ -34,8 +34,8 @@
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include <log4sp/common.h>
 #include <log4sp/logger_handle_manager.h>
+#include <log4sp/sink_handle_manager.h>
 
 /**
  * @file extension.cpp
@@ -196,7 +196,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 void Log4sp::SDK_OnUnload()
 {
     log4sp::logger_handle_manager::instance().shutdown();
-    log4sp::SinkHandleRegistry::instance().dropAll();
+    log4sp::sink_handle_manager::instance().shutdown();
 
     handlesys->RemoveType(g_LoggerHandleType, myself->GetIdentity());
 
@@ -231,15 +231,13 @@ void SinkHandler::OnHandleDestroy(HandleType_t type, void *object)
 {
     spdlog::sinks::sink *sink = static_cast<spdlog::sinks::sink *>(object);
 
-    // 所以为什么 OnHandleDestroy 只有 HandleType_t 而没有 Handle？
-    if (!log4sp::SinkHandleRegistry::instance().drop(sink)) // O(n)
+    if (spdlog::should_log(spdlog::level::trace))
     {
-        SPDLOG_TRACE("Destroy a unknown type Sink handle. (ptr={}, type={})", fmt::ptr(object), type);
+        auto data = log4sp::sink_handle_manager::instance().get_data(sink);
+        SPDLOG_TRACE("Destroy a sink handle. (type={}, hdl={:X}, ptr={})", data->handle_type(), static_cast<int>(data->handle()), fmt::ptr(object));
     }
-    else
-    {
-        SPDLOG_TRACE("Destroy a Sink handle. (ptr={}, type={})", fmt::ptr(object), type);
-    }
+
+    log4sp::sink_handle_manager::instance().drop(sink);
 }
 
 void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)

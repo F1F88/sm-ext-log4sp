@@ -10,6 +10,7 @@ sourceFiles = [
   'src/log4sp/sink_registry.cpp',
   'src/natives/common.cpp',
   'src/log4sp/logger_handle_manager.cpp',
+  'src/log4sp/sink_handle_manager.cpp',
   'src/natives/logger.cpp',
   'src/natives/sinks/sink.cpp',
   'src/natives/sinks/server_console_sink.cpp',

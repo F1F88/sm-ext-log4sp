@@ -1,6 +1,7 @@
 #include "spdlog/sinks/sink.h"
 
 #include <log4sp/common.h>
+#include <log4sp/sink_handle_manager.h>
 
 
 /**
@@ -19,7 +20,8 @@
  */
 static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -33,13 +35,22 @@ static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
     }
 
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
+    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
 
     sink->set_level(lvl);
     return 0;
@@ -62,7 +73,8 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -80,12 +92,22 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
     }
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[2]);
+
+    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
 
     return sink->should_log(lvl);
 }
@@ -95,7 +117,8 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t Log(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -103,7 +126,17 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
 
     char *name;
     ctx->LocalToString(params[2], &name);
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[3]);
+
+    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
+
     char *msg;
     ctx->LocalToString(params[4], &msg);
 
@@ -116,7 +149,8 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -124,7 +158,16 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
 
     char *name;
     ctx->LocalToString(params[2], &name);
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[3]);
+
+    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
 
     std::string msg;
     try
@@ -148,7 +191,8 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -156,7 +200,17 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
 
     char *name;
     ctx->LocalToString(params[2], &name);
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[3]);
+
+    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
+
     char *msg;
     ctx->LocalToString(params[4], &msg);
 
@@ -170,7 +224,8 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -178,7 +233,16 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
 
     char *name;
     ctx->LocalToString(params[2], &name);
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[3]);
+
+    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
 
     std::string msg;
     try
@@ -203,7 +267,8 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -215,7 +280,17 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
     ctx->LocalToString(params[4], &func);
     char *name;
     ctx->LocalToString(params[5], &name);
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[6]);
+
+    auto lvl = static_cast<spdlog::level::level_enum>(params[6]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
+
     ctx->LocalToString(params[7], &msg);
 
     spdlog::source_loc loc = {file, line, func};
@@ -228,7 +303,8 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
@@ -240,7 +316,16 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
     ctx->LocalToString(params[4], &func);
     char *name;
     ctx->LocalToString(params[5], &name);
-    spdlog::level::level_enum lvl = log4sp::CellToLevelOrLogWarn(ctx, params[6]);
+
+    auto lvl = static_cast<spdlog::level::level_enum>(params[6]);
+    if (lvl < static_cast<spdlog::level::level_enum>(0))
+    {
+        lvl = static_cast<spdlog::level::level_enum>(0);
+    }
+    else if (lvl >= spdlog::level::n_levels)
+    {
+        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
+    }
 
     std::string msg;
     try
@@ -265,7 +350,8 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t Flush(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;

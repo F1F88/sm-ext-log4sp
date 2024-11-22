@@ -1,5 +1,5 @@
-#include <log4sp/common.h>
 #include <log4sp/client_console_sink.h>
+#include <log4sp/sink_handle_manager.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -10,10 +10,13 @@
  */
 static cell_t ClientConsoleSinkST(IPluginContext *ctx, const cell_t *params)
 {
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_ClientConsoleSinkSTHandleType,
-        std::make_shared<log4sp::sinks::client_console_sink_st>());
+    auto data = log4sp::sink_handle_manager::instance().create_client_console_sink_st(ctx);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 /**
@@ -21,13 +24,21 @@ static cell_t ClientConsoleSinkST(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t ClientConsoleSinkST_SetFilter(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
     }
 
-    auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_st>(sink);
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_st>(sinkData->sink_ptr());
     if (clientConsoleSink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to client_console_sink_st.");
@@ -55,10 +66,13 @@ static cell_t ClientConsoleSinkST_SetFilter(IPluginContext *ctx, const cell_t *p
  */
 static cell_t ClientConsoleSinkMT(IPluginContext *ctx, const cell_t *params)
 {
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_ClientConsoleSinkMTHandleType,
-        std::make_shared<log4sp::sinks::client_console_sink_mt>());
+    auto data = log4sp::sink_handle_manager::instance().create_client_console_sink_mt(ctx);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 /**
@@ -66,13 +80,21 @@ static cell_t ClientConsoleSinkMT(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t ClientConsoleSinkMT_SetFilter(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
     }
 
-    auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sink);
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sinkData->sink_ptr());
     if (clientConsoleSink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to client_console_sink_mt.");

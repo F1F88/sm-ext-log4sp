@@ -1,6 +1,6 @@
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include <log4sp/common.h>
+#include <log4sp/sink_handle_manager.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,21 +22,24 @@ static cell_t DailyFileSinkST(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    int rotationHour = params[2];
-    int rotationMinute = params[3];
+    auto rotationHour = static_cast<int>(params[2]);
+    auto rotationMinute = static_cast<int>(params[3]);
     if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
     {
         ctx->ReportError("Invalid rotation time in ctor");
         return BAD_HANDLE;
     }
 
-    bool truncate = params[4];
-    uint16_t maxFiles = params[5];
+    auto truncate = static_cast<bool>(params[4]);
+    auto maxFiles = static_cast<uint16_t>(params[5]);
 
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_DailyFileSinkSTHandleType,
-        std::make_shared<spdlog::sinks::daily_file_sink_st>(path, rotationHour, rotationMinute, truncate, maxFiles));
+    auto data = log4sp::sink_handle_manager::instance().create_daily_file_sink_st(ctx, path, rotationHour, rotationMinute, truncate, maxFiles);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 /**
@@ -44,20 +47,28 @@ static cell_t DailyFileSinkST(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t DailyFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
     }
 
-    auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sinkData->sink_ptr());
     if (dailySink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to daily_file_sink_st.");
         return 0;
     }
 
-    ctx->StringToLocal(params[2], params[3], dailySink->filename().data());
+    ctx->StringToLocal(params[2], params[3], dailySink->filename().c_str());
     return 0;
 }
 
@@ -77,21 +88,24 @@ static cell_t DailyFileSinkMT(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    int rotationHour = params[2];
-    int rotationMinute = params[3];
+    auto rotationHour = static_cast<int>(params[2]);
+    auto rotationMinute = static_cast<int>(params[3]);
     if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
     {
         ctx->ReportError("Invalid rotation time in ctor");
         return BAD_HANDLE;
     }
 
-    bool truncate = params[4];
-    uint16_t maxFiles = params[5];
+    auto truncate = static_cast<bool>(params[4]);
+    auto maxFiles = static_cast<uint16_t>(params[5]);
 
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_DailyFileSinkMTHandleType,
-        std::make_shared<spdlog::sinks::daily_file_sink_mt>(path, rotationHour, rotationMinute, truncate, maxFiles));
+    auto data = log4sp::sink_handle_manager::instance().create_daily_file_sink_mt(ctx, path, rotationHour, rotationMinute, truncate, maxFiles);
+    if (data == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return data->handle();
 }
 
 /**
@@ -99,20 +113,28 @@ static cell_t DailyFileSinkMT(IPluginContext *ctx, const cell_t *params)
  */
 static cell_t DailyFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
     if (sink == nullptr)
     {
         return 0;
     }
 
-    auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sink);
+    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
+    if (sinkData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        return 0;
+    }
+
+    auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sinkData->sink_ptr());
     if (dailySink == nullptr)
     {
         ctx->ReportError("Unable to cast sink to daily_file_sink_mt.");
         return 0;
     }
 
-    ctx->StringToLocal(params[2], params[3], dailySink->filename().data());
+    ctx->StringToLocal(params[2], params[3], dailySink->filename().c_str());
     return 0;
 }
 
