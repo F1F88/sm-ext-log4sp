@@ -1,4 +1,5 @@
 #include "spdlog/async.h"
+#include "spdlog/sinks/dist_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/rotating_file_sink.h"
@@ -33,7 +34,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
+    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -44,6 +45,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 
     auto numSinks = static_cast<unsigned int>(params[3]);
 
+    // TODO 检查 sink 是否和 logger 一样是 单线程/多线程
     std::vector<spdlog::sink_ptr> sinksList;
     for (unsigned int i = 0; i < numSinks; ++i)
     {
@@ -59,7 +61,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_logger_st(ctx, name, sinksList);
-        return data.handle();
+        return data->handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[5]);
@@ -73,7 +75,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_logger_mt(ctx, name, sinksList, policy);
-    return data.handle();
+    return data->handle();
 }
 
 /**
@@ -90,13 +92,13 @@ static cell_t Get(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().get_data(name);
-    if (data.empty())
+    if (data == nullptr)
     {
         ctx->ReportError("Logger named '%s' does not exist.", name);
         return BAD_HANDLE;
     }
 
-    return data.handle();
+    return data->handle();
 }
 
 /**
@@ -112,7 +114,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
+    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -122,7 +124,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_server_console_logger_st(ctx, name);
-        return data.handle();
+        return data->handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[3]);
@@ -136,7 +138,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_server_console_logger_mt(ctx, name, policy);
-    return data.handle();
+    return data->handle();
 }
 
 /**
@@ -158,7 +160,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
+    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -174,7 +176,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_base_file_logger_st(ctx, name, path, truncate);
-        return data.handle();
+        return data->handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[5]);
@@ -188,7 +190,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_base_file_logger_mt(ctx, name, path, truncate, policy);
-    return data.handle();
+    return data->handle();
 }
 
 /**
@@ -212,7 +214,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
         return BAD_HANDLE;
     }
 
-    if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
+    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -242,7 +244,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_rotating_file_logger_st(ctx, name, path, maxFileSize, maxFiles, rotateOnOpen);
-        return data.handle();
+        return data->handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[7]);
@@ -256,7 +258,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_rotating_file_logger_mt(ctx, name, path, maxFileSize, maxFiles, rotateOnOpen, policy);
-    return data.handle();
+    return data->handle();
 }
 
 /**
@@ -281,7 +283,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    if (!log4sp::logger_handle_manager::instance().get_data(name).empty())
+    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -306,7 +308,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto data = log4sp::logger_handle_manager::instance().create_daily_file_logger_st(ctx, name, path, hour, minute, truncate, maxFiles);
-        return data.handle();
+        return data->handle();
     }
 
     auto policy = static_cast<spdlog::async_overflow_policy>(params[8]);
@@ -320,7 +322,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().create_daily_file_logger_mt(ctx, name, path, hour, minute, truncate, maxFiles, policy);
-    return data.handle();
+    return data->handle();
 }
 
 /**
@@ -1275,13 +1277,35 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[2]);
+    auto loggerData = log4sp::logger_handle_manager::instance().get_data(logger->name());
+    if (loggerData == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, logger data not found. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
+        return 0;
+    }
+
+    // TODO 检查 sink 是否和 logger 一样是 单线程/多线程
+    auto sinkHandle = static_cast<Handle_t>(params[2]);
+    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, sinkHandle);
     if (sink == nullptr)
     {
         return 0;
     }
 
-    logger->sinks().push_back(sink);
+    if (!loggerData->is_multi_threaded())
+    {
+        logger->sinks().push_back(sink);
+        return 0;
+    }
+
+    auto dist_sink = std::dynamic_pointer_cast<spdlog::sinks::dist_sink_mt>(logger->sinks().front());
+    if (dist_sink == nullptr)
+    {
+        ctx->ReportError("Fatal internal error, cannot cast sink to dist_sink. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
+        return 0;
+    }
+
+    dist_sink->add_sink(sink);
     return 0;
 }
 
@@ -1300,9 +1324,8 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
     }
 
     auto data = log4sp::logger_handle_manager::instance().get_data(logger->name());
-    if (data.empty())
+    if (data == nullptr)
     {
-        // 这代表代码逻辑存在问题
         ctx->ReportError("Fatal internal error, logger data not found. (name='%s', hdl=%X)", logger->name(), static_cast<int>(handle));
         return 0;
     }
@@ -1329,9 +1352,9 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    data.set_error_handler(forward);
+    data->set_error_handler(forward);
 
-    data.logger()->set_error_handler([forward](const std::string &msg) {
+    data->logger()->set_error_handler([forward](const std::string &msg) {
         forward->PushString(msg.c_str());
         forward->Execute();
     });

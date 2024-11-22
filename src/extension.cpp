@@ -221,7 +221,7 @@ void LoggerHandler::OnHandleDestroy(HandleType_t type, void *object)
     if (spdlog::should_log(spdlog::level::trace))
     {
         auto data = log4sp::logger_handle_manager::instance().get_data(logger->name());
-        SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(data.handle()), fmt::ptr(object));
+        SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(data->handle()), fmt::ptr(object));
     }
 
     log4sp::logger_handle_manager::instance().drop(logger->name());
@@ -269,13 +269,13 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
 
     const char *name = args->Arg(3);
     auto data = log4sp::logger_handle_manager::instance().get_data(name);
-    if (data.empty())
+    if (data == nullptr)
     {
         rootconsole->ConsolePrint("[SM] Logger with name '%s' does not exists.", name);
         return;
     }
 
-    auto logger = data.logger();
+    auto logger = data->logger();
 
     const char *func = args->Arg(2);
     if (!strcmp(func, "get_lvl"))
