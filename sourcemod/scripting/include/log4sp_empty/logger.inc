@@ -173,9 +173,7 @@ methodmap Logger < Handle
     public void DisableBacktrace() {}
     public void DumpBacktrace() {}
 
-    #pragma deprecated Use new Logger(). (May be removed in the future)
     public void AddSink(Sink sink) {}
-    #pragma deprecated This native may cause server crashes. (Expected to be removed in the next version)
     public bool DropSink(Sink sink) { return false; }
 
     public void SetErrorHandler(Log4spErrorCallback callback) {}
