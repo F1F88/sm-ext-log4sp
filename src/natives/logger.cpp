@@ -1310,6 +1310,33 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
+ * public native bool DropSink(Sink sink);
+ */
+static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
+{
+    spdlog::logger *logger = log4sp::logger::ReadHandleOrReportError(ctx, params[1]);
+    if (logger == nullptr)
+    {
+        return false;
+    }
+
+    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[2]);
+    if (sink == nullptr)
+    {
+        return false;
+    }
+
+    auto iterator = std::find(logger->sinks().begin(), logger->sinks().end(), sink);
+    if (iterator == logger->sinks().end())
+    {
+        return false;
+    }
+
+    logger->sinks().erase(iterator);
+    return true;
+}
+
+/**
  * public native void SetErrorHandler(Log4spErrorCallback callback);
  *
  * function void (const char[] msg);
@@ -1407,6 +1434,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.DisableBacktrace",                 DisableBacktrace},
     {"Logger.DumpBacktrace",                    DumpBacktrace},
     {"Logger.AddSink",                          AddSink},
+    {"Logger.DropSink",                         DropSink},
     {"Logger.SetErrorHandler",                  SetErrorHandler},
 
     {NULL,                                      NULL}

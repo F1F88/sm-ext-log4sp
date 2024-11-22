@@ -303,6 +303,19 @@ methodmap Logger < Handle
     public native void AddSink(Sink sink);
 
     /**
+     * Drop the reference to the given sink
+     *
+     * @note This native has a fatal thread safety issue (may cause crash)
+     *       See: https://github.com/F1F88/sm-ext-log4sp/issues/4
+     *
+     * @param sink      Handle of Sink.
+     * @return          True on success, false if the sink was not found.
+     * @error           Invalid logger handle, invalid sink handle.
+     */
+    #pragma deprecated This native may cause server crashes. (Expected to be removed in the next version)
+    public native bool DropSink(Sink sink);
+
+    /**
      * Sets the callback when logging errors occur.
      *
      * @note This machine is not thread safe.
