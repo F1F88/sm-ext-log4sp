@@ -3,31 +3,8 @@
 
 #include "extension.h"
 
-#include <log4sp/sink_registry.h>
-
 
 namespace log4sp {
-namespace logger {
-
-bool CheckNameOrReportError(IPluginContext *ctx, const char *name);
-
-Handle_t CreateHandleOrReportError(IPluginContext *ctx, std::shared_ptr<spdlog::logger> logger);
-
-spdlog::logger *ReadHandleOrReportError(IPluginContext *ctx, Handle_t handle);
-
-} // namespace logger
-
-
-
-namespace sinks {
-
-Handle_t CreateHandleOrReportError(IPluginContext *ctx, HandleType_t type, spdlog::sink_ptr sink);
-
-spdlog::sink_ptr ReadHandleOrReportError(IPluginContext *ctx, Handle_t handle);
-
-} // namespace sinks
-
-
 
 bool CellToLevel(cell_t lvl, spdlog::level::level_enum &result);
 

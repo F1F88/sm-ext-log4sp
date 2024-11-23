@@ -145,48 +145,6 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogAmxTpl(const char[] name, LogLevel lvl, const char[] fmt, any ...);
- */
-static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
-{
-    auto handle = static_cast<Handle_t>(params[1]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
-    if (sink == nullptr)
-    {
-        return 0;
-    }
-
-    char *name;
-    ctx->LocalToString(params[2], &name);
-
-    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
-
-    std::string msg;
-    try
-    {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 4);
-    }
-    catch(const std::exception& e)
-    {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
-        sink->log(spdlog::details::log_msg(loc, name, spdlog::level::err, e.what()));
-        spdlog::log(loc, spdlog::level::err, e.what());
-        return 0;
-    }
-
-    sink->log(spdlog::details::log_msg(name, lvl, msg));
-    return 0;
-}
-
-/**
  * public native void LogSrc(const char[] name, LogLevel lvl, const char[] msg);
  */
 static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
@@ -213,49 +171,6 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
 
     char *msg;
     ctx->LocalToString(params[4], &msg);
-
-    spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
-    sink->log(spdlog::details::log_msg(loc, name, lvl, msg));
-    return 0;
-}
-
-/**
- * public native void LogSrcAmxTpl(const char[] name, LogLevel lvl, const char[] fmt, any ...);
- */
-static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
-{
-    auto handle = static_cast<Handle_t>(params[1]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
-    if (sink == nullptr)
-    {
-        return 0;
-    }
-
-    char *name;
-    ctx->LocalToString(params[2], &name);
-
-    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
-
-    std::string msg;
-    try
-    {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 4);
-    }
-    catch(const std::exception& e)
-    {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
-        sink->log(spdlog::details::log_msg(loc, name, spdlog::level::err, e.what()));
-        spdlog::log(loc, spdlog::level::err, e.what());
-        return 0;
-    }
 
     spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
     sink->log(spdlog::details::log_msg(loc, name, lvl, msg));
@@ -299,53 +214,6 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogLocAmxTpl(const char[] file, int line, const char[] func, const char[] name, LogLevel lvl, const char[] fmt, any ...);
- */
-static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
-{
-    auto handle = static_cast<Handle_t>(params[1]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
-    if (sink == nullptr)
-    {
-        return 0;
-    }
-
-    char *file, *func;
-    ctx->LocalToString(params[2], &file);
-    int line = params[3];
-    ctx->LocalToString(params[4], &func);
-    char *name;
-    ctx->LocalToString(params[5], &name);
-
-    auto lvl = static_cast<spdlog::level::level_enum>(params[6]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
-
-    std::string msg;
-    try
-    {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 7);
-    }
-    catch(const std::exception& e)
-    {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
-        sink->log(spdlog::details::log_msg(loc, name, spdlog::level::err, e.what()));
-        spdlog::log(loc, spdlog::level::err, e.what());
-        return 0;
-    }
-
-    spdlog::source_loc loc = {file, line, func};
-    sink->log(spdlog::details::log_msg(loc, name, lvl, msg));
-    return 0;
-}
-
-/**
  * public native void Flush();
  */
 static cell_t Flush(IPluginContext *ctx, const cell_t *params)
@@ -370,11 +238,8 @@ const sp_nativeinfo_t SinkNatives[] =
     {"Sink.ShouldLog",                          ShouldLog},
 
     {"Sink.Log",                                Log},
-    {"Sink.LogAmxTpl",                          LogAmxTpl},
     {"Sink.LogSrc",                             LogSrc},
-    {"Sink.LogSrcAmxTpl",                       LogSrcAmxTpl},
     {"Sink.LogLoc",                             LogLoc},
-    {"Sink.LogLocAmxTpl",                       LogLocAmxTpl},
 
     {"Sink.Flush",                              Flush},
 
