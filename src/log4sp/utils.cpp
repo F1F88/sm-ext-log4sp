@@ -10,7 +10,7 @@ spdlog::level::level_enum cell_to_level(cell_t lvl)
         return static_cast<spdlog::level::level_enum>(0);
     }
 
-    if (lvl >= spdlog::level::n_levels)
+    if (lvl >= static_cast<cell_t>(spdlog::level::n_levels))
     {
         return static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
     }
@@ -18,33 +18,62 @@ spdlog::level::level_enum cell_to_level(cell_t lvl)
     return static_cast<spdlog::level::level_enum>(lvl);
 }
 
-/**
- * 返回 Scripted 调用 log4sp extension natives 的代码位置
- * 如果找不到，输出一条警告信息
- * 并返回空
- */
-spdlog::source_loc get_script_source_loc(SourcePawn::IFrameIterator *iter)
+spdlog::async_overflow_policy cell_to_policy(cell_t policy)
 {
-    for (iter->Reset(); !iter->Done(); iter->Next())
+    if (policy < 0)
+    {
+        return static_cast<spdlog::async_overflow_policy>(0);
+    }
+
+    if (policy >= 3)
+    {
+        return static_cast<spdlog::async_overflow_policy>(2);
+    }
+
+    return static_cast<spdlog::async_overflow_policy>(policy);
+}
+
+spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type)
+{
+    if (type < 0)
+    {
+        return static_cast<spdlog::pattern_time_type>(0);
+    }
+
+    if (type >= 2)
+    {
+        return static_cast<spdlog::pattern_time_type>(1);
+    }
+
+    return static_cast<spdlog::pattern_time_type>(type);
+}
+
+spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx)
+{
+    auto iter = ctx->CreateFrameIterator();
+    spdlog::source_loc loc;
+
+    for (; !iter->Done(); iter->Next())
     {
         if (iter->IsScriptedFrame())
         {
-            auto file = iter->FilePath();
-            auto line = iter->LineNumber();
-            auto func = iter->FunctionName();
-
-            return spdlog::source_loc(file, line, func);
+            loc.funcname = iter->FunctionName();
+            loc.filename = iter->FilePath();
+            loc.line = iter->LineNumber();
+            break;
         }
     }
-    return {};
+
+    ctx->DestroyFrameIterator(iter);
+    return loc;
 }
 
-// ref: sourcemod DebugReport::GetStackTrace
-std::vector<std::string> get_stack_trace(IFrameIterator *iter)
+std::vector<std::string> get_stack_trace(IPluginContext *ctx)
 {
-    iter->Reset();
+    auto iter = ctx->CreateFrameIterator();
     if (!iter->Done())
     {
+        ctx->DestroyFrameIterator(iter);
         return {};
     }
 
@@ -77,6 +106,7 @@ std::vector<std::string> get_stack_trace(IFrameIterator *iter)
         }
     }
 
+    ctx->DestroyFrameIterator(iter);
     return trace;
 }
 

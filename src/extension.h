@@ -38,8 +38,6 @@
  */
 #include "smsdk_ext.h"
 
-#include "spdlog/spdlog.h"
-
 /**
  * @brief Implementation of the logger in SourcePawn Extension.
  * Note: Uncomment one of the pre-defined virtual functions in order to use it.

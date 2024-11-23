@@ -29,6 +29,18 @@ static cell_t BaseFileSink(IPluginContext *ctx, const cell_t *params)
     return data->handle();
 }
 
+template <typename Mutex>
+static void GetFilename(IPluginContext *ctx, const cell_t *params, log4sp::sink_handle_data *data)
+{
+    auto sink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink<Mutex>>(data->sink_ptr());
+    if (sink == nullptr)
+    {
+        ctx->ReportError("Unable to cast sink to basic_file_sink_%ct.", data->is_multi_threaded() ? 'm' : 's');
+        return;
+    }
+    ctx->StringToLocal(params[2], params[3], sink->filename().c_str());
+}
+
 /**
  * public native void GetFilename(char[] buffer, int maxlen);
  */
@@ -56,18 +68,6 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
 
     GetFilename<std::mutex>(ctx, params, data);
     return 0;
-}
-
-template <typename Mutex>
-static cell_t GetFilename(IPluginContext *ctx, const cell_t *params, log4sp::sink_handle_data *data)
-{
-    auto sink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink<Mutex>>(data->sink_ptr());
-    if (sink == nullptr)
-    {
-        ctx->ReportError("Unable to cast sink to basic_file_sink_%ct.", data->is_multi_threaded() ? 'm' : 's');
-        return 0;
-    }
-    ctx->StringToLocal(params[2], params[3], sink->filename().c_str());
 }
 
 const sp_nativeinfo_t BaseFileSinkNatives[] =

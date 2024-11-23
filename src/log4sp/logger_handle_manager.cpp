@@ -93,8 +93,6 @@ logger_handle_data* logger_handle_manager::create_logger_st(IPluginContext *ctx,
 
     auto data = new logger_handle_data{logger, false, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Single threaded logger handle created successfully.");
     return data;
 }
 
@@ -120,8 +118,6 @@ logger_handle_data*  logger_handle_manager::create_logger_mt(IPluginContext *ctx
 
     auto data = new logger_handle_data{logger, true, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Multi threaded logger handle created successfully.");
     return data;
 }
 
@@ -147,8 +143,6 @@ logger_handle_data* logger_handle_manager::create_server_console_logger_st(IPlug
 
     auto data = new logger_handle_data{logger, false, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Single threaded stdout logger handle created successfully.");
     return data;
 }
 
@@ -176,8 +170,6 @@ logger_handle_data* logger_handle_manager::create_server_console_logger_mt(IPlug
 
     auto data = new logger_handle_data{logger, true, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Multi threaded stdout logger handle created successfully.");
     return data;
 }
 
@@ -203,8 +195,6 @@ logger_handle_data* logger_handle_manager::create_base_file_logger_st(IPluginCon
 
     auto data = new logger_handle_data{logger, false, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Single threaded base file logger handle created successfully.");
     return data;
 }
 
@@ -232,8 +222,6 @@ logger_handle_data* logger_handle_manager::create_base_file_logger_mt(IPluginCon
 
     auto data = new logger_handle_data{logger, true, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Multi threaded base file logger handle created successfully.");
     return data;
 }
 
@@ -259,8 +247,6 @@ logger_handle_data* logger_handle_manager::create_rotating_file_logger_st(IPlugi
 
     auto data = new logger_handle_data{logger, false, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Single threaded rotating file logger handle created successfully.");
     return data;
 }
 
@@ -288,8 +274,6 @@ logger_handle_data* logger_handle_manager::create_rotating_file_logger_mt(IPlugi
 
     auto data = new logger_handle_data{logger, true, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Multi threaded rotating file logger handle created successfully.");
     return data;
 }
 
@@ -315,8 +299,6 @@ logger_handle_data* logger_handle_manager::create_daily_file_logger_st(IPluginCo
 
     auto data = new logger_handle_data{logger, false, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Single threaded daily file logger handle created successfully.");
     return data;
 }
 
@@ -344,8 +326,6 @@ logger_handle_data* logger_handle_manager::create_daily_file_logger_mt(IPluginCo
 
     auto data = new logger_handle_data{logger, true, handle, type, nullptr};
     register_logger_handle_(logger->name(), data);
-
-    SPDLOG_TRACE("Multi threaded daily file logger handle created successfully.");
     return data;
 }
 

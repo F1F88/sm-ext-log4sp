@@ -29,10 +29,11 @@
  * Version: $Id$
  */
 
-#include "extension.h"
-
+#include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/daily_file_sink.h"
+
+#include <extension.h>
 
 #include <log4sp/logger_handle_manager.h>
 #include <log4sp/sink_handle_manager.h>

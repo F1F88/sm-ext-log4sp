@@ -42,15 +42,7 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     sink->set_level(lvl);
     return 0;
@@ -99,15 +91,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     return sink->should_log(lvl);
 }
@@ -127,15 +111,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     char *name;
     ctx->LocalToString(params[2], &name);
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[3]);
 
     char *msg;
     ctx->LocalToString(params[4], &msg);
@@ -159,20 +135,12 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
     char *name;
     ctx->LocalToString(params[2], &name);
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[3]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[3]);
 
     char *msg;
     ctx->LocalToString(params[4], &msg);
 
-    spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+    auto loc = log4sp::get_plugin_source_loc(ctx);
     sink->log(spdlog::details::log_msg(loc, name, lvl, msg));
     return 0;
 }
@@ -196,15 +164,7 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
     char *name;
     ctx->LocalToString(params[5], &name);
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[6]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[6]);
 
     ctx->LocalToString(params[7], &msg);
 

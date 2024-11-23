@@ -83,8 +83,6 @@ sink_handle_data* sink_handle_manager::create_server_console_sink_st(IPluginCont
 
     auto data = new sink_handle_data{sink, false, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Single threaded server console sink handle created successfully.");
     return data;
 }
 
@@ -106,8 +104,6 @@ sink_handle_data* sink_handle_manager::create_server_console_sink_mt(IPluginCont
 
     auto data = new sink_handle_data{sink, true, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Multi threaded server console sink handle created successfully.");
     return data;
 }
 
@@ -130,8 +126,6 @@ sink_handle_data* sink_handle_manager::create_base_file_sink_st(IPluginContext *
 
     auto data = new sink_handle_data{sink, false, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Single threaded base file sink handle created successfully.");
     return data;
 }
 
@@ -153,8 +147,6 @@ sink_handle_data* sink_handle_manager::create_base_file_sink_mt(IPluginContext *
 
     auto data = new sink_handle_data{sink, true, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Multi threaded base file sink handle created successfully.");
     return data;
 }
 
@@ -177,8 +169,6 @@ sink_handle_data* sink_handle_manager::create_rotating_file_sink_st(IPluginConte
 
     auto data = new sink_handle_data{sink, false, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Single threaded rotating file sink handle created successfully.");
     return data;
 }
 
@@ -200,8 +190,6 @@ sink_handle_data* sink_handle_manager::create_rotating_file_sink_mt(IPluginConte
 
     auto data = new sink_handle_data{sink, true, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Multi threaded rotating file sink handle created successfully.");
     return data;
 }
 
@@ -224,8 +212,6 @@ sink_handle_data* sink_handle_manager::create_daily_file_sink_st(IPluginContext 
 
     auto data = new sink_handle_data{sink, false, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Single threaded daily file sink handle created successfully.");
     return data;
 }
 
@@ -247,8 +233,6 @@ sink_handle_data* sink_handle_manager::create_daily_file_sink_mt(IPluginContext 
 
     auto data = new sink_handle_data{sink, true, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Multi threaded daily file sink handle created successfully.");
     return data;
 }
 
@@ -270,8 +254,6 @@ sink_handle_data* sink_handle_manager::create_client_console_sink_st(IPluginCont
 
     auto data = new sink_handle_data{sink, false, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Single threaded client console sink handle created successfully.");
     return data;
 }
 
@@ -293,8 +275,6 @@ sink_handle_data* sink_handle_manager::create_client_console_sink_mt(IPluginCont
 
     auto data = new sink_handle_data{sink, true, handle, type};
     register_sink_handle_(obj, data);
-
-    SPDLOG_TRACE("Multi threaded client console sink handle created successfully.");
     return data;
 }
 

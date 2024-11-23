@@ -1,3 +1,4 @@
+#include "spdlog/spdlog.h"
 #include "spdlog/async.h"
 #include "spdlog/sinks/dist_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -79,16 +80,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
         return data->handle();
     }
 
-    auto policy = static_cast<spdlog::async_overflow_policy>(params[5]);
-    if (policy < static_cast<spdlog::async_overflow_policy>(0))
-    {
-        policy = static_cast<spdlog::async_overflow_policy>(0);
-    }
-    else if (policy > spdlog::async_overflow_policy::discard_new)
-    {
-        policy = spdlog::async_overflow_policy::discard_new;
-    }
-
+    auto policy = log4sp::cell_to_policy(params[5]);
     auto data = log4sp::logger_handle_manager::instance().create_logger_mt(ctx, name, sinksList, policy);
     return data->handle();
 }
@@ -142,16 +134,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
         return data->handle();
     }
 
-    auto policy = static_cast<spdlog::async_overflow_policy>(params[3]);
-    if (policy < static_cast<spdlog::async_overflow_policy>(0))
-    {
-        policy = static_cast<spdlog::async_overflow_policy>(0);
-    }
-    else if (policy > spdlog::async_overflow_policy::discard_new)
-    {
-        policy = spdlog::async_overflow_policy::discard_new;
-    }
-
+    auto policy = log4sp::cell_to_policy(params[3]);
     auto data = log4sp::logger_handle_manager::instance().create_server_console_logger_mt(ctx, name, policy);
     return data->handle();
 }
@@ -194,16 +177,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
         return data->handle();
     }
 
-    auto policy = static_cast<spdlog::async_overflow_policy>(params[5]);
-    if (policy < static_cast<spdlog::async_overflow_policy>(0))
-    {
-        policy = static_cast<spdlog::async_overflow_policy>(0);
-    }
-    else if (policy > spdlog::async_overflow_policy::discard_new)
-    {
-        policy = spdlog::async_overflow_policy::discard_new;
-    }
-
+    auto policy = log4sp::cell_to_policy(params[5]);
     auto data = log4sp::logger_handle_manager::instance().create_base_file_logger_mt(ctx, name, path, truncate, policy);
     return data->handle();
 }
@@ -262,16 +236,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
         return data->handle();
     }
 
-    auto policy = static_cast<spdlog::async_overflow_policy>(params[7]);
-    if (policy < static_cast<spdlog::async_overflow_policy>(0))
-    {
-        policy = static_cast<spdlog::async_overflow_policy>(0);
-    }
-    else if (policy > spdlog::async_overflow_policy::discard_new)
-    {
-        policy = spdlog::async_overflow_policy::discard_new;
-    }
-
+    auto policy = log4sp::cell_to_policy(params[7]);
     auto data = log4sp::logger_handle_manager::instance().create_rotating_file_logger_mt(ctx, name, path, maxFileSize, maxFiles, rotateOnOpen, policy);
     return data->handle();
 }
@@ -326,16 +291,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
         return data->handle();
     }
 
-    auto policy = static_cast<spdlog::async_overflow_policy>(params[8]);
-    if (policy < static_cast<spdlog::async_overflow_policy>(0))
-    {
-        policy = static_cast<spdlog::async_overflow_policy>(0);
-    }
-    else if (policy > spdlog::async_overflow_policy::discard_new)
-    {
-        policy = spdlog::async_overflow_policy::discard_new;
-    }
-
+    auto policy = log4sp::cell_to_policy(params[8]);
     auto data = log4sp::logger_handle_manager::instance().create_daily_file_logger_mt(ctx, name, path, hour, minute, truncate, maxFiles, policy);
     return data->handle();
 }
@@ -383,15 +339,7 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     logger->set_level(lvl);
     return 0;
@@ -423,15 +371,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
     char *pattern;
     ctx->LocalToString(params[2], &pattern);
 
-    auto type = static_cast<spdlog::pattern_time_type>(params[3]);
-    if (type < static_cast<spdlog::pattern_time_type>(0))
-    {
-        type = static_cast<spdlog::pattern_time_type>(0);
-    }
-    else if (type > spdlog::pattern_time_type::utc)
-    {
-        type = spdlog::pattern_time_type::utc;
-    }
+    auto type = log4sp::cell_to_pattern_time_type(params[3]);
 
     logger->set_pattern(pattern, type);
     return 0;
@@ -449,15 +389,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     return logger->should_log(lvl);
 }
@@ -474,15 +406,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
@@ -503,15 +427,7 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     std::string msg;
     try
@@ -520,7 +436,7 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -542,20 +458,12 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    auto loc = log4sp::GetScriptedLoc(ctx);
+    auto loc = log4sp::get_plugin_source_loc(ctx);
     logger->log(loc, lvl, msg);
     return 0;
 }
@@ -572,18 +480,10 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     std::string msg;
-    auto loc = log4sp::GetScriptedLoc(ctx);
+    auto loc = log4sp::get_plugin_source_loc(ctx);
 
     try
     {
@@ -620,15 +520,7 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
     char *func;
     ctx->LocalToString(params[4], &func);
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[5]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[5]);
 
     char *msg;
     ctx->LocalToString(params[6], &msg);
@@ -658,15 +550,7 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
     char *func;
     ctx->LocalToString(params[4], &func);
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[5]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[5]);
 
     std::string msg;
     try
@@ -675,7 +559,7 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -698,15 +582,7 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
@@ -715,7 +591,7 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
     auto plugin = plsys->FindPluginByContext(ctx->GetContext());
     logger->log(lvl, "Called from: {}", plugin->GetFilename());
 
-    auto arr = log4sp::GetStackTrace(ctx);
+    auto arr = log4sp::get_stack_trace(ctx);
     for (size_t i = 0; i < arr.size(); ++i)
     {
         logger->log(lvl, arr[i].c_str());
@@ -735,15 +611,7 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     std::string msg;
     try
@@ -752,7 +620,7 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -763,7 +631,7 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     auto plugin = plsys->FindPluginByContext(ctx->GetContext());
     logger->log(lvl, "Called from: {}", plugin->GetFilename());
 
-    auto arr = log4sp::GetStackTrace(ctx);
+    auto arr = log4sp::get_stack_trace(ctx);
     for (size_t i = 0; i < arr.size(); ++i)
     {
         logger->log(lvl, arr[i].c_str());
@@ -783,15 +651,7 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
@@ -800,7 +660,7 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
     auto plugin = plsys->FindPluginByContext(ctx->GetContext());
     logger->log(lvl, "Blaming: {}", plugin->GetFilename());
 
-    auto arr = log4sp::GetStackTrace(ctx);
+    auto arr = log4sp::get_stack_trace(ctx);
     for (size_t i = 0; i < arr.size(); ++i)
     {
         logger->log(lvl, arr[i].c_str());
@@ -822,15 +682,7 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     std::string msg;
     try
@@ -839,7 +691,7 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         ctx->ReportError(e.what());
@@ -851,7 +703,7 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     auto plugin = plsys->FindPluginByContext(ctx->GetContext());
     logger->log(lvl, "Blaming: {}", plugin->GetFilename());
 
-    auto arr = log4sp::GetStackTrace(ctx);
+    auto arr = log4sp::get_stack_trace(ctx);
     for (size_t i = 0; i < arr.size(); ++i)
     {
         logger->log(lvl, arr[i].c_str());
@@ -899,7 +751,7 @@ static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -947,7 +799,7 @@ static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -995,7 +847,7 @@ static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -1043,7 +895,7 @@ static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -1091,7 +943,7 @@ static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -1139,7 +991,7 @@ static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        spdlog::source_loc loc = log4sp::GetScriptedLoc(ctx);
+        auto loc = log4sp::get_plugin_source_loc(ctx);
         logger->log(loc, spdlog::level::err, e.what());
         spdlog::log(loc, spdlog::level::err, e.what());
         return 0;
@@ -1192,15 +1044,7 @@ static cell_t FlushOn(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = static_cast<spdlog::level::level_enum>(params[2]);
-    if (lvl < static_cast<spdlog::level::level_enum>(0))
-    {
-        lvl = static_cast<spdlog::level::level_enum>(0);
-    }
-    else if (lvl >= spdlog::level::n_levels)
-    {
-        lvl = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-    }
+    auto lvl = log4sp::cell_to_level(params[2]);
 
     logger->flush_on(lvl);
     return 0;
