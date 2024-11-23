@@ -111,14 +111,14 @@ std::vector<std::string> get_stack_trace(IPluginContext *ctx)
 }
 
 
-std::string FormatToAmxTplString(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param)
+std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param)
 {
     char *format;
     ctx->LocalToString(params[param], &format);
 
     int lparam = ++param;
 
-    auto out = FormatParams(format, ctx, params, &lparam);
+    auto out = format_cell_to_memory_buf(format, ctx, params, &lparam);
     return fmt::to_string(out);
 }
 
@@ -211,12 +211,12 @@ try_serverlang:
         ReorderTranslationParams(&pTrans, &new_params[*arg]);
 
         // return FormatParams(pTrans.szPhrase, ctx, new_params, arg);
-        return FormatParams(pTrans.szPhrase, ctx, new_params, arg);
+        return format_cell_to_memory_buf(pTrans.szPhrase, ctx, new_params, arg);
     }
     else
     {
         // return FormatParams(pTrans.szPhrase, ctx, params, arg);
-        return FormatParams(pTrans.szPhrase, ctx, params, arg);
+        return format_cell_to_memory_buf(pTrans.szPhrase, ctx, params, arg);
     }
 }
 
@@ -663,7 +663,7 @@ bool DescribePlayer(int index, const char **namep, const char **authp, int *user
     return true;
 }
 
-fmt::memory_buffer FormatParams(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param)
+fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param)
 {
     int arg;                // 用于遍历 params 的指针
     int args = params[0];   // param count

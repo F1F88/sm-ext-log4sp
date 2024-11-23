@@ -432,7 +432,7 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+        msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
     catch(const std::exception& e)
     {
@@ -487,7 +487,7 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
 
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+        msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
     catch(const std::exception& e)
     {
@@ -555,7 +555,7 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 6);
+        msg = log4sp::format_cell_to_string(ctx, params, 6);
     }
     catch(const std::exception& e)
     {
@@ -616,7 +616,7 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+        msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
     catch(const std::exception& e)
     {
@@ -687,7 +687,7 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 3);
+        msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
     catch(const std::exception& e)
     {
@@ -747,7 +747,7 @@ static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+        msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
     catch(const std::exception& e)
     {
@@ -795,7 +795,7 @@ static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+        msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
     catch(const std::exception& e)
     {
@@ -843,7 +843,7 @@ static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+        msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
     catch(const std::exception& e)
     {
@@ -891,7 +891,7 @@ static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+        msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
     catch(const std::exception& e)
     {
@@ -939,7 +939,7 @@ static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+        msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
     catch(const std::exception& e)
     {
@@ -987,7 +987,7 @@ static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
     std::string msg;
     try
     {
-        msg = log4sp::FormatToAmxTplString(ctx, params, 2);
+        msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
     catch(const std::exception& e)
     {
