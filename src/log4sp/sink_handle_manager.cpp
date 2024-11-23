@@ -1,4 +1,11 @@
+#include "spdlog/sinks/stdout_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/daily_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
 #include <log4sp/sink_handle_manager.h>
+#include <log4sp/client_console_sink.h>
+#include <log4sp/client_chat_sink.h>
 
 
 namespace log4sp {
@@ -270,6 +277,48 @@ sink_handle_data* sink_handle_manager::create_client_console_sink_mt(IPluginCont
     if (handle == BAD_HANDLE)
     {
         ctx->ReportError("Allocation of multi threaded client console sink handle failed. (error %d)", error);
+        return nullptr;
+    }
+
+    auto data = new sink_handle_data{sink, true, handle, type};
+    register_sink_handle_(obj, data);
+    return data;
+}
+
+sink_handle_data* sink_handle_manager::create_client_chat_sink_st(IPluginContext *ctx)
+{
+    auto sink = std::make_shared<log4sp::sinks::client_chat_sink_st>();
+
+    auto type = g_ClientChatSinkHandleType;
+    auto obj = sink.get();
+    auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
+    HandleError error;
+
+    Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("Allocation of single threaded client chat sink handle failed. (error %d)", error);
+        return nullptr;
+    }
+
+    auto data = new sink_handle_data{sink, false, handle, type};
+    register_sink_handle_(obj, data);
+    return data;
+}
+
+sink_handle_data* sink_handle_manager::create_client_chat_sink_mt(IPluginContext *ctx)
+{
+    auto sink = std::make_shared<log4sp::sinks::client_chat_sink_mt>();
+
+    auto type = g_ClientChatSinkHandleType;
+    auto obj = sink.get();
+    auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
+    HandleError error;
+
+    Handle_t handle = handlesys->CreateHandleEx(type, obj, &sec, NULL, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("Allocation of multi threaded client chat sink handle failed. (error %d)", error);
         return nullptr;
     }
 

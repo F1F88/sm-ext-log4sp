@@ -3,13 +3,7 @@
 
 #include <unordered_map>
 
-#include "spdlog/sinks/stdout_sinks.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/daily_file_sink.h"
-#include "spdlog/sinks/rotating_file_sink.h"
-
 #include <extension.h>
-#include <log4sp/client_console_sink.h>
 
 
 namespace log4sp {
@@ -111,6 +105,9 @@ public:
 
     sink_handle_data* create_client_console_sink_st(IPluginContext *ctx);
     sink_handle_data* create_client_console_sink_mt(IPluginContext *ctx);
+
+    sink_handle_data* create_client_chat_sink_st(IPluginContext *ctx);
+    sink_handle_data* create_client_chat_sink_mt(IPluginContext *ctx);
 
 private:
     sink_handle_manager() {}

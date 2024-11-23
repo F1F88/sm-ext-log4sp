@@ -47,7 +47,7 @@ Log4sp g_Log4sp;    /**< Global singleton for extension's main interface */
 SMEXT_LINK(&g_Log4sp);
 
 LoggerHandler       g_LoggerHandler;
-HandleType_t        g_LoggerHandleType = 0;
+HandleType_t        g_LoggerHandleType              = 0;
 
 SinkHandler         g_SinkHandler;
 HandleType_t        g_ServerConsoleSinkHandleType   = 0;
@@ -55,6 +55,7 @@ HandleType_t        g_BaseFileSinkHandleType        = 0;
 HandleType_t        g_RotatingFileSinkHandleType    = 0;
 HandleType_t        g_DailyFileSinkHandleType       = 0;
 HandleType_t        g_ClientConsoleSinkHandleType   = 0;
+HandleType_t        g_ClientChatSinkHandleType      = 0;
 
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
@@ -100,6 +101,13 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     if (!g_ClientConsoleSinkHandleType)
     {
         snprintf(error, maxlen, "Could not create ClientConsoleSink handle type (err: %d)", err);
+        return false;
+    }
+
+    g_ClientChatSinkHandleType = handlesys->CreateType("ClientChatSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
+    if (!g_ClientChatSinkHandleType)
+    {
+        snprintf(error, maxlen, "Could not create ClientChatSink handle type (err: %d)", err);
         return false;
     }
 
@@ -165,6 +173,8 @@ void Log4sp::SDK_OnUnload()
     handlesys->RemoveType(g_BaseFileSinkHandleType, myself->GetIdentity());
     handlesys->RemoveType(g_RotatingFileSinkHandleType, myself->GetIdentity());
     handlesys->RemoveType(g_DailyFileSinkHandleType, myself->GetIdentity());
+    handlesys->RemoveType(g_ClientConsoleSinkHandleType, myself->GetIdentity());
+    handlesys->RemoveType(g_ClientChatSinkHandleType, myself->GetIdentity());
 
     rootconsole->RemoveRootConsoleCommand("log4sp", this);
 

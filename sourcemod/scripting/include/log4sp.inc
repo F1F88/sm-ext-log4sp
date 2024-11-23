@@ -56,6 +56,7 @@
 #include <log4sp/sinks/rotating_file_sink>
 #include <log4sp/sinks/daily_file_sink>
 #include <log4sp/sinks/client_console_sink>
+#include <log4sp/sinks/client_chat_sink>
 
 #else
 
@@ -67,6 +68,7 @@
 #include <log4sp_empty/sinks/rotating_file_sink>
 #include <log4sp_empty/sinks/daily_file_sink>
 #include <log4sp_empty/sinks/client_console_sink>
+#include <log4sp_empty/sinks/client_chat_sink>
 
 #endif
 
