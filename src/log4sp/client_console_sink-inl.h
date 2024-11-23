@@ -42,34 +42,43 @@ inline void client_console_sink<Mutex>::sink_it_(const spdlog::details::log_msg 
 {
     spdlog::memory_buf_t formatted;
     spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
+    auto message = fmt::to_string(formatted).c_str();
 
     auto name = msg.logger_name.data();
-    auto lvl = msg.level;
+    auto lvl = static_cast<cell_t>(msg.level);
+    auto payload = msg.payload.data();
 
-    std::string message(formatted.data(), formatted.size());
-    auto logMessage = message.c_str();
-
-    const int maxClients = playerhelpers->GetMaxClients();
-    for (int client = 1; client <= maxClients; ++client)
+    auto max_clients = playerhelpers->GetMaxClients();
+    for (int client = 1; client <= max_clients; ++client)
     {
         auto player = playerhelpers->GetGamePlayer(client);
         if (!player->IsInGame() || player->IsFakeClient())
         {
-            continue; // PrintToConsole 里也做了同样的判断, 这是为了减少 call filter forward 次数
-        }
-
-        cell_t result = player_filter_(client, name, lvl, logMessage);
-        if (result == Pl_Stop)
-        {
-            return;
-        }
-
-        if (result == Pl_Handled || result == Pl_Changed)
-        {
             continue;
         }
 
-        player->PrintToConsole(logMessage);
+        if (player_filter_forward_ != nullptr)
+        {
+            player_filter_forward_->PushCell(client);
+            player_filter_forward_->PushString(name);
+            player_filter_forward_->PushCell(lvl);
+            player_filter_forward_->PushString(payload);
+
+            cell_t result = Pl_Continue;
+            player_filter_forward_->Execute(&result);
+
+            if (result == Pl_Handled || result == Pl_Changed)
+            {
+                continue;
+            }
+
+            if (result == Pl_Stop)
+            {
+                return;
+            }
+        }
+
+        player->PrintToConsole(message);
     }
 }
 
@@ -79,24 +88,8 @@ inline void client_console_sink<Mutex>::flush_()
     // No need to do anything...
 }
 
-template <typename Mutex>
-inline cell_t client_console_sink<Mutex>::player_filter_(const int client, const char *name, const spdlog::level::level_enum lvl, const char *msg)
-{
-    if (player_filter_forward_ == nullptr)
-    {
-        return Pl_Continue;
-    }
-
-    cell_t result = 0;
-    player_filter_forward_->PushCell(client);
-    player_filter_forward_->PushString(name);
-    player_filter_forward_->PushCell(lvl);
-    player_filter_forward_->PushString(msg);
-    player_filter_forward_->Execute(&result);
-    return result;
-}
-
 } // namespace sinks
+
 } // namespace log4sp
 
 

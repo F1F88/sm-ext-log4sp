@@ -23,8 +23,6 @@ protected:
 
     void flush_() override;
 
-    cell_t player_filter_(const int client, const char *name, const spdlog::level::level_enum lvl, const char *msg);
-
     IChangeableForward *player_filter_forward_;
 };
 
