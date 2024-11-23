@@ -9,24 +9,12 @@
 #include <log4sp/sinks/sink>
 
 
-methodmap ServerConsoleSinkST < Sink
+methodmap ServerConsoleSink < Sink
 {
     /**
      * This sink is output to the server console.
      *
-     * @return          Handle for a single-threaded server console sink.
-     * @error           Create sink handle failed.
+     * @return          Handle for a server console sink.
      */
-    public native ServerConsoleSinkST();
-}
-
-methodmap ServerConsoleSinkMT < Sink
-{
-    /**
-     * This sink is output to the server console.
-     *
-     * @return          Handle for a multi-threaded server console sink.
-     * @error           Create sink handle failed.
-     */
-    public native ServerConsoleSinkMT();
+    public native ServerConsoleSink();
 }

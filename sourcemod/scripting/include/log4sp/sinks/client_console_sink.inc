@@ -32,30 +32,20 @@ typeset ClientConsoleSinkFilter
 
 
 
-methodmap ClientConsoleSinkST < Sink
+methodmap ClientConsoleSink < Sink
 {
-    public native ClientConsoleSinkST();
-
     /**
-     * Set the sink filter.
+     * This sink is output to all client console.
      *
-     * @note 重复调用会替换旧的 filter
-     *
-     * @error           Invalid sink handle, invalid filter, set filter failed.
+     * @param async     If true, the sink will be multi threaded.
+     * @return          Handle for a client console sink.
      */
-    public native void SetFilter(ClientConsoleSinkFilter filter);
-}
-
-methodmap ClientConsoleSinkMT < Sink
-{
-    public native ClientConsoleSinkMT();
+    public native ClientConsoleSink(bool async = false);
 
     /**
-     * Set the sink filter.
+     * Set the clint console sink filter.
      *
-     * @note 重复调用会替换旧的 filter
-     *
-     * @error           Invalid sink handle, invalid filter, set filter failed.
+     * @error           Invalid client console sink filter.
      */
     public native void SetFilter(ClientConsoleSinkFilter filter);
 }

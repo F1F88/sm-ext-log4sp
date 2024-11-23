@@ -21,8 +21,6 @@ methodmap Logger < Handle
     /**
      * Creating logger handle manually.
      *
-     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
-     *
      * @param name      The name of the new logger.
      * @param sinks     The sinks array to be added to the new logger.
      * @param numSinks  The number of slots in the sinks array.
@@ -44,8 +42,6 @@ methodmap Logger < Handle
     /**
      * Create a logger handle that outputs to the server console.
      *
-     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
-     *
      * @param name      The name of the new logger.
      * @param async     If true, the sink of the new logger will be multi threaded.
      * @param policy    Message queue overflow policy. (Only used when async=true)
@@ -56,8 +52,6 @@ methodmap Logger < Handle
 
     /**
      * Create a logger handle that outputs to a file.
-     *
-     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
      *
      * @param name      The name of the new logger.
      * @param file      The file path where the log messages will be written.
@@ -82,8 +76,6 @@ methodmap Logger < Handle
      *      log.2.txt -> log.3.txt
      *      log.3.txt -> delete
      *
-     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
-     *
      * @param name          The name of the logger.
      * @param file          The file path where the log messages will be written.
      * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
@@ -104,8 +96,6 @@ methodmap Logger < Handle
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on date.
-     *
-     * @note While single threaded sinks cannot be used from multiple threads simultaneously they might be faster because no locking is employed.
      *
      * @param name      The name of the logger.
      * @param file      The file path where the log messages will be written.
@@ -145,8 +135,6 @@ methodmap Logger < Handle
     /**
      * Set the logger log level.
      *
-     * @note If lvl out of bounds, native will be modified to the nearest boundary.
-     *
      * @param lvl       Logging level enum.
      */
     public native void SetLevel(LogLevel lvl);
@@ -164,8 +152,6 @@ methodmap Logger < Handle
 
     /**
      * Gets whether logging at the given log level is enabled.
-     *
-     * @note If lvl out of bounds, native will be modified to the nearest boundary.
      *
      * @param lvl       Logging level enum.
      * @return          True if logging is enabled for the given level.
@@ -291,11 +277,6 @@ methodmap Logger < Handle
     /**
      * Add a new sink to sinks.
      *
-     * @note Do not use a single threaded sink in a multi threaded logger, otherwise unexpected things may happen.
-     * @note This machine is not thread safe.
-     *       Recommend using new Logger() or only using this native during initialization.
-     *       (See: https://github.com/F1F88/sm-ext-log4sp/issues/4)
-     *
      * @param sink      Handle of sink.
      * @error           Invalid sink handle.
      */
@@ -306,7 +287,7 @@ methodmap Logger < Handle
      *
      * @param sink      Handle of Sink.
      * @return          True on success, false if the sink was not found.
-     * @error           Invalid logger handle, invalid sink handle.
+     * @error           Invalid sink handle.
      */
     public native bool DropSink(Sink sink);
 
@@ -317,7 +298,7 @@ methodmap Logger < Handle
      *       Recommend using this native only during initialization.
      *
      * @param callback  A callback called when an error occurs.
-     * @error           Invalid callback.
+     * @error           Invalid error callback.
      */
     public native void SetErrorHandler(Log4spErrorCallback callback);
 }
