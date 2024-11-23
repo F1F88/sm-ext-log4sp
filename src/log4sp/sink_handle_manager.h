@@ -124,4 +124,6 @@ private:
 
 } // namespace log4sp
 
-#endif  // _LOG4SP_SINK_REGISTRY_H_
+#include "sink_handle_manager-inl.h"
+
+#endif  // _LOG4SP_SINK_HANDLE_MANAGER_H_

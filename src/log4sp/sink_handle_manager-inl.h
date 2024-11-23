@@ -1,3 +1,6 @@
+#ifndef _LOG4SP_SINK_HANDLE_MANAGER_INL_H_
+#define _LOG4SP_SINK_HANDLE_MANAGER_INL_H_
+
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
@@ -10,25 +13,25 @@
 
 namespace log4sp {
 
-sink_handle_manager &sink_handle_manager::instance()
+inline sink_handle_manager &sink_handle_manager::instance()
 {
     static sink_handle_manager singleInstance;
     return singleInstance;
 }
 
-sink_handle_data* sink_handle_manager::get_data(spdlog::sinks::sink *sink)
+inline sink_handle_data* sink_handle_manager::get_data(spdlog::sinks::sink *sink)
 {
     auto found = sink_datas_.find(sink);
     return found != sink_datas_.end() ? found->second : nullptr;
 }
 
-HandleType_t sink_handle_manager::get_handle_type(Handle_t handle)
+inline HandleType_t sink_handle_manager::get_handle_type(Handle_t handle)
 {
     auto found = handle_types_.find(handle);
     return found != handle_types_.end() ? found->second : NO_HANDLE_TYPE;
 }
 
-spdlog::sinks::sink* sink_handle_manager::read_handle(IPluginContext *ctx, Handle_t handle)
+inline spdlog::sinks::sink* sink_handle_manager::read_handle(IPluginContext *ctx, Handle_t handle)
 {
     auto type = get_handle_type(handle);
     if (type == NO_HANDLE_TYPE)
@@ -50,7 +53,7 @@ spdlog::sinks::sink* sink_handle_manager::read_handle(IPluginContext *ctx, Handl
     return sink;
 }
 
-void sink_handle_manager::drop(spdlog::sinks::sink *sink)
+inline void sink_handle_manager::drop(spdlog::sinks::sink *sink)
 {
     auto it = sink_datas_.find(sink);
     if (it != sink_datas_.end())
@@ -60,19 +63,19 @@ void sink_handle_manager::drop(spdlog::sinks::sink *sink)
     }
 }
 
-void sink_handle_manager::drop_all()
+inline void sink_handle_manager::drop_all()
 {
     sink_datas_.clear();
     handle_types_.clear();
 }
 
-void sink_handle_manager::shutdown()
+inline void sink_handle_manager::shutdown()
 {
     drop_all();
 }
 
 
-sink_handle_data* sink_handle_manager::create_server_console_sink_st(IPluginContext *ctx)
+inline sink_handle_data* sink_handle_manager::create_server_console_sink_st(IPluginContext *ctx)
 {
     auto sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
 
@@ -93,7 +96,7 @@ sink_handle_data* sink_handle_manager::create_server_console_sink_st(IPluginCont
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_server_console_sink_mt(IPluginContext *ctx)
+inline sink_handle_data* sink_handle_manager::create_server_console_sink_mt(IPluginContext *ctx)
 {
     auto sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 
@@ -115,7 +118,7 @@ sink_handle_data* sink_handle_manager::create_server_console_sink_mt(IPluginCont
 }
 
 
-sink_handle_data* sink_handle_manager::create_base_file_sink_st(IPluginContext *ctx, const char *filename, bool truncate)
+inline sink_handle_data* sink_handle_manager::create_base_file_sink_st(IPluginContext *ctx, const char *filename, bool truncate)
 {
     auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(filename, truncate);
 
@@ -136,7 +139,7 @@ sink_handle_data* sink_handle_manager::create_base_file_sink_st(IPluginContext *
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_base_file_sink_mt(IPluginContext *ctx, const char *filename, bool truncate)
+inline sink_handle_data* sink_handle_manager::create_base_file_sink_mt(IPluginContext *ctx, const char *filename, bool truncate)
 {
     auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename, truncate);
 
@@ -158,7 +161,7 @@ sink_handle_data* sink_handle_manager::create_base_file_sink_mt(IPluginContext *
 }
 
 
-sink_handle_data* sink_handle_manager::create_rotating_file_sink_st(IPluginContext *ctx, const char *base_filename, size_t max_size, size_t max_files, bool rotate_on_open)
+inline sink_handle_data* sink_handle_manager::create_rotating_file_sink_st(IPluginContext *ctx, const char *base_filename, size_t max_size, size_t max_files, bool rotate_on_open)
 {
     auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(base_filename, max_size, max_files, rotate_on_open);
 
@@ -179,7 +182,7 @@ sink_handle_data* sink_handle_manager::create_rotating_file_sink_st(IPluginConte
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_rotating_file_sink_mt(IPluginContext *ctx, const char *base_filename, size_t max_size, size_t max_files, bool rotate_on_open)
+inline sink_handle_data* sink_handle_manager::create_rotating_file_sink_mt(IPluginContext *ctx, const char *base_filename, size_t max_size, size_t max_files, bool rotate_on_open)
 {
     auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(base_filename, max_size, max_files, rotate_on_open);
 
@@ -201,7 +204,7 @@ sink_handle_data* sink_handle_manager::create_rotating_file_sink_mt(IPluginConte
 }
 
 
-sink_handle_data* sink_handle_manager::create_daily_file_sink_st(IPluginContext *ctx, const char *base_filename, int rotation_hour, int rotation_minute, bool truncate, uint16_t max_files)
+inline sink_handle_data* sink_handle_manager::create_daily_file_sink_st(IPluginContext *ctx, const char *base_filename, int rotation_hour, int rotation_minute, bool truncate, uint16_t max_files)
 {
     auto sink = std::make_shared<spdlog::sinks::daily_file_format_sink_st>(base_filename, rotation_hour, rotation_minute, truncate, max_files);
 
@@ -222,7 +225,7 @@ sink_handle_data* sink_handle_manager::create_daily_file_sink_st(IPluginContext 
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_daily_file_sink_mt(IPluginContext *ctx, const char *base_filename, int rotation_hour, int rotation_minute, bool truncate, uint16_t max_files)
+inline sink_handle_data* sink_handle_manager::create_daily_file_sink_mt(IPluginContext *ctx, const char *base_filename, int rotation_hour, int rotation_minute, bool truncate, uint16_t max_files)
 {
     auto sink = std::make_shared<spdlog::sinks::daily_file_format_sink_mt>(base_filename, rotation_hour, rotation_minute, truncate, max_files);
 
@@ -243,7 +246,7 @@ sink_handle_data* sink_handle_manager::create_daily_file_sink_mt(IPluginContext 
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_client_console_sink_st(IPluginContext *ctx)
+inline sink_handle_data* sink_handle_manager::create_client_console_sink_st(IPluginContext *ctx)
 {
     auto sink = std::make_shared<log4sp::sinks::client_console_sink_st>();
 
@@ -264,7 +267,7 @@ sink_handle_data* sink_handle_manager::create_client_console_sink_st(IPluginCont
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_client_console_sink_mt(IPluginContext *ctx)
+inline sink_handle_data* sink_handle_manager::create_client_console_sink_mt(IPluginContext *ctx)
 {
     auto sink = std::make_shared<log4sp::sinks::client_console_sink_mt>();
 
@@ -285,7 +288,7 @@ sink_handle_data* sink_handle_manager::create_client_console_sink_mt(IPluginCont
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_client_chat_sink_st(IPluginContext *ctx)
+inline sink_handle_data* sink_handle_manager::create_client_chat_sink_st(IPluginContext *ctx)
 {
     auto sink = std::make_shared<log4sp::sinks::client_chat_sink_st>();
 
@@ -306,7 +309,7 @@ sink_handle_data* sink_handle_manager::create_client_chat_sink_st(IPluginContext
     return data;
 }
 
-sink_handle_data* sink_handle_manager::create_client_chat_sink_mt(IPluginContext *ctx)
+inline sink_handle_data* sink_handle_manager::create_client_chat_sink_mt(IPluginContext *ctx)
 {
     auto sink = std::make_shared<log4sp::sinks::client_chat_sink_mt>();
 
@@ -328,7 +331,7 @@ sink_handle_data* sink_handle_manager::create_client_chat_sink_mt(IPluginContext
 }
 
 
-void sink_handle_manager::register_sink_handle_(spdlog::sinks::sink *key, sink_handle_data* data)
+inline void sink_handle_manager::register_sink_handle_(spdlog::sinks::sink *key, sink_handle_data* data)
 {
     sink_datas_.insert(std::pair{key, data});
     handle_types_.insert(std::pair{data->handle(), data->handle_type()});
@@ -336,3 +339,5 @@ void sink_handle_manager::register_sink_handle_(spdlog::sinks::sink *key, sink_h
 
 
 } // namespace log4sp
+
+#endif  // _LOG4SP_SINK_HANDLE_MANAGER_INL_H_

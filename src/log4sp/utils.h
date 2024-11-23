@@ -57,4 +57,6 @@ fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPl
 
 } // namespace log4sp
 
+#include "utils-inl.h"
+
 #endif // _LOG4SP_UTILS_H_

@@ -1,3 +1,6 @@
+#ifndef _LOG4SP_LOGGER_HANDLE_MANAGER_INL_H_
+#define _LOG4SP_LOGGER_HANDLE_MANAGER_INL_H_
+
 #include "spdlog/sinks/dist_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -9,24 +12,24 @@
 
 namespace log4sp {
 
-logger_handle_manager &logger_handle_manager::instance()
+inline logger_handle_manager &logger_handle_manager::instance()
 {
     static logger_handle_manager singleInstance;
     return singleInstance;
 }
 
-logger_handle_data* logger_handle_manager::get_data(const std::string &logger_name)
+inline logger_handle_data* logger_handle_manager::get_data(const std::string &logger_name)
 {
     auto found = logger_datas_.find(logger_name);
     return found != logger_datas_.end() ? found->second : nullptr;
 }
 
-HandleType_t logger_handle_manager::get_handle_type(Handle_t handle)
+inline HandleType_t logger_handle_manager::get_handle_type(Handle_t handle)
 {
     return g_LoggerHandleType;
 }
 
-spdlog::logger* logger_handle_manager::read_handle(IPluginContext *ctx, Handle_t handle)
+inline spdlog::logger* logger_handle_manager::read_handle(IPluginContext *ctx, Handle_t handle)
 {
     auto type = get_handle_type(handle);
     if (type == NO_HANDLE_TYPE)
@@ -48,7 +51,7 @@ spdlog::logger* logger_handle_manager::read_handle(IPluginContext *ctx, Handle_t
     return logger;
 }
 
-void logger_handle_manager::drop(const std::string &logger_name)
+inline void logger_handle_manager::drop(const std::string &logger_name)
 {
     auto found = logger_datas_.find(logger_name);
     if (found != logger_datas_.end())
@@ -58,7 +61,7 @@ void logger_handle_manager::drop(const std::string &logger_name)
     }
 }
 
-void logger_handle_manager::drop_all()
+inline void logger_handle_manager::drop_all()
 {
     for (auto it = logger_datas_.begin(); it != logger_datas_.end(); ++it)
     {
@@ -67,13 +70,13 @@ void logger_handle_manager::drop_all()
     }
 }
 
-void logger_handle_manager::shutdown()
+inline void logger_handle_manager::shutdown()
 {
     drop_all();
 }
 
 
-logger_handle_data* logger_handle_manager::create_logger_st(IPluginContext *ctx, std::string name, std::vector<spdlog::sink_ptr> sinks)
+inline logger_handle_data* logger_handle_manager::create_logger_st(IPluginContext *ctx, std::string name, std::vector<spdlog::sink_ptr> sinks)
 {
     // note: logger name 不可重复
 
@@ -96,7 +99,7 @@ logger_handle_data* logger_handle_manager::create_logger_st(IPluginContext *ctx,
     return data;
 }
 
-logger_handle_data*  logger_handle_manager::create_logger_mt(IPluginContext *ctx, std::string name, std::vector<spdlog::sink_ptr> sinks, spdlog::async_overflow_policy policy)
+inline logger_handle_data*  logger_handle_manager::create_logger_mt(IPluginContext *ctx, std::string name, std::vector<spdlog::sink_ptr> sinks, spdlog::async_overflow_policy policy)
 {
     // note: logger name 不可重复
     // note: policy 越界不会异常，但保证参数合法是应该的
@@ -122,7 +125,7 @@ logger_handle_data*  logger_handle_manager::create_logger_mt(IPluginContext *ctx
 }
 
 
-logger_handle_data* logger_handle_manager::create_server_console_logger_st(IPluginContext *ctx, std::string name)
+inline logger_handle_data* logger_handle_manager::create_server_console_logger_st(IPluginContext *ctx, std::string name)
 {
     // note: logger name 不可重复
 
@@ -146,7 +149,7 @@ logger_handle_data* logger_handle_manager::create_server_console_logger_st(IPlug
     return data;
 }
 
-logger_handle_data* logger_handle_manager::create_server_console_logger_mt(IPluginContext *ctx, std::string name, spdlog::async_overflow_policy policy)
+inline logger_handle_data* logger_handle_manager::create_server_console_logger_mt(IPluginContext *ctx, std::string name, spdlog::async_overflow_policy policy)
 {
     // note: logger name 不可重复
     // note: policy 越界不会异常，但保证参数合法是应该的
@@ -174,7 +177,7 @@ logger_handle_data* logger_handle_manager::create_server_console_logger_mt(IPlug
 }
 
 
-logger_handle_data* logger_handle_manager::create_base_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, bool truncate)
+inline logger_handle_data* logger_handle_manager::create_base_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, bool truncate)
 {
     // note: logger name 不可重复
 
@@ -198,7 +201,7 @@ logger_handle_data* logger_handle_manager::create_base_file_logger_st(IPluginCon
     return data;
 }
 
-logger_handle_data* logger_handle_manager::create_base_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, bool truncate, spdlog::async_overflow_policy policy)
+inline logger_handle_data* logger_handle_manager::create_base_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, bool truncate, spdlog::async_overflow_policy policy)
 {
     // note: logger name 不可重复
     // note: policy 越界不会异常，但保证参数合法是应该的
@@ -226,7 +229,7 @@ logger_handle_data* logger_handle_manager::create_base_file_logger_mt(IPluginCon
 }
 
 
-logger_handle_data* logger_handle_manager::create_rotating_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, size_t max_file_size, size_t max_files, bool rotate_on_open)
+inline logger_handle_data* logger_handle_manager::create_rotating_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, size_t max_file_size, size_t max_files, bool rotate_on_open)
 {
     // note: logger name 不可重复
 
@@ -250,7 +253,7 @@ logger_handle_data* logger_handle_manager::create_rotating_file_logger_st(IPlugi
     return data;
 }
 
-logger_handle_data* logger_handle_manager::create_rotating_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, size_t max_file_size, size_t max_files, bool rotate_on_open, spdlog::async_overflow_policy policy)
+inline logger_handle_data* logger_handle_manager::create_rotating_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, size_t max_file_size, size_t max_files, bool rotate_on_open, spdlog::async_overflow_policy policy)
 {
     // note: logger name 不可重复
     // note: policy 越界不会异常，但保证参数合法是应该的
@@ -278,7 +281,7 @@ logger_handle_data* logger_handle_manager::create_rotating_file_logger_mt(IPlugi
 }
 
 
-logger_handle_data* logger_handle_manager::create_daily_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, int hour, int minute, bool truncate, uint16_t max_files)
+inline logger_handle_data* logger_handle_manager::create_daily_file_logger_st(IPluginContext *ctx, std::string name, std::string filename, int hour, int minute, bool truncate, uint16_t max_files)
 {
     // note: logger name 不可重复
 
@@ -302,7 +305,7 @@ logger_handle_data* logger_handle_manager::create_daily_file_logger_st(IPluginCo
     return data;
 }
 
-logger_handle_data* logger_handle_manager::create_daily_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, int hour, int minute, bool truncate, uint16_t max_files, spdlog::async_overflow_policy policy)
+inline logger_handle_data* logger_handle_manager::create_daily_file_logger_mt(IPluginContext *ctx, std::string name, std::string filename, int hour, int minute, bool truncate, uint16_t max_files, spdlog::async_overflow_policy policy)
 {
     // note: logger name 不可重复
     // note: policy 越界不会异常，但保证参数合法是应该的
@@ -330,10 +333,13 @@ logger_handle_data* logger_handle_manager::create_daily_file_logger_mt(IPluginCo
 }
 
 
-void logger_handle_manager::register_logger_handle_(const std::string &key, log4sp::logger_handle_data *data)
+inline void logger_handle_manager::register_logger_handle_(const std::string &key, log4sp::logger_handle_data *data)
 {
     logger_datas_.insert(std::make_pair(key, data));
 }
 
 
 } // namespace log4sp
+
+
+#endif // _LOG4SP_LOGGER_HANDLE_MANAGER_INL_H_

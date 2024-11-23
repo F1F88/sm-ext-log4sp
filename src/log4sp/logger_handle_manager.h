@@ -144,4 +144,6 @@ private:
 
 } // namespace log4sp
 
+#include "logger_handle_manager-inl.h"
+
 #endif  // _LOG4SP_LOGGER_HANDLE_MANAGER_H_

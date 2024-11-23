@@ -1,9 +1,12 @@
+#ifndef _LOG4SP_UTILS_INL_H_
+#define _LOG4SP_UTILS_INL_H_
+
 #include <log4sp/utils.h>
 
 namespace log4sp {
 
 
-spdlog::level::level_enum cell_to_level(cell_t lvl)
+inline spdlog::level::level_enum cell_to_level(cell_t lvl)
 {
     if (lvl < 0)
     {
@@ -18,7 +21,7 @@ spdlog::level::level_enum cell_to_level(cell_t lvl)
     return static_cast<spdlog::level::level_enum>(lvl);
 }
 
-spdlog::async_overflow_policy cell_to_policy(cell_t policy)
+inline spdlog::async_overflow_policy cell_to_policy(cell_t policy)
 {
     if (policy < 0)
     {
@@ -33,7 +36,7 @@ spdlog::async_overflow_policy cell_to_policy(cell_t policy)
     return static_cast<spdlog::async_overflow_policy>(policy);
 }
 
-spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type)
+inline spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type)
 {
     if (type < 0)
     {
@@ -48,7 +51,7 @@ spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type)
     return static_cast<spdlog::pattern_time_type>(type);
 }
 
-spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx)
+inline spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx)
 {
     auto iter = ctx->CreateFrameIterator();
     spdlog::source_loc loc;
@@ -68,7 +71,7 @@ spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx)
     return loc;
 }
 
-std::vector<std::string> get_stack_trace(IPluginContext *ctx)
+inline std::vector<std::string> get_stack_trace(IPluginContext *ctx)
 {
     auto iter = ctx->CreateFrameIterator();
     if (!iter->Done())
@@ -111,7 +114,7 @@ std::vector<std::string> get_stack_trace(IPluginContext *ctx)
 }
 
 
-std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param)
+inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param)
 {
     char *format;
     ctx->LocalToString(params[param], &format);
@@ -140,7 +143,7 @@ inline void ReorderTranslationParams(const Translation *pTrans, cell_t *params)
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-fmt::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg)
+inline fmt::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg)
 {
     unsigned int langid;
     Translation pTrans;
@@ -220,7 +223,7 @@ try_serverlang:
     }
 }
 
-bool AddString(fmt::memory_buffer &out, const char *string, int width, int prec)
+inline bool AddString(fmt::memory_buffer &out, const char *string, int width, int prec)
 {
     int size = 0;
     static char nlstr[] = {'(','n','u','l','l',')','\0'};
@@ -262,7 +265,7 @@ bool AddString(fmt::memory_buffer &out, const char *string, int width, int prec)
     return true;
 }
 
-void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int flags)
+inline void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int flags)
 {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
@@ -395,7 +398,7 @@ void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int fla
     }
 }
 
-void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags)
+inline void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags)
 {
     char text[32];
     int digits;
@@ -452,7 +455,7 @@ void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags)
     }
 }
 
-void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags)
+inline void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags)
 {
     char text[32];
     int digits;
@@ -509,7 +512,7 @@ void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags)
     }
 }
 
-void AddInt(fmt::memory_buffer &out, int val, int width, int flags)
+inline void AddInt(fmt::memory_buffer &out, int val, int width, int flags)
 {
     char text[32];
     int digits;
@@ -584,7 +587,7 @@ void AddInt(fmt::memory_buffer &out, int val, int width, int flags)
     }
 }
 
-void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags)
+inline void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags)
 {
     static char hexAdjustUppercase[] = "0123456789ABCDEF";
     static char hexAdjustLowercase[] = "0123456789abcdef";
@@ -646,7 +649,7 @@ void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags)
     }
 }
 
-bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp)
+inline bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp)
 {
     auto player = playerhelpers->GetGamePlayer(index);
     if (!player || !player->IsConnected())
@@ -663,7 +666,7 @@ bool DescribePlayer(int index, const char **namep, const char **authp, int *user
     return true;
 }
 
-fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param)
+inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param)
 {
     int arg;                // 用于遍历 params 的指针
     int args = params[0];   // param count
@@ -951,3 +954,5 @@ reswitch:
 }
 
 } // namespace log4sp
+
+#endif // _LOG4SP_UTILS_INL_H_
