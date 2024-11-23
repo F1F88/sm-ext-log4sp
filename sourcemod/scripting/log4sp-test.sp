@@ -236,7 +236,7 @@ void TestLoggerSink(Logger logger)
     logger.AddSink(sink1);
 
     Sink sink2 = new ServerConsoleSinkMT();
-    sink1.SetPattern("This is Sink2 %v");
+    sink2.SetPattern("This is Sink2 %v");
     logger.AddSink(sink2);
 
     // 这个操作至少会在 ServerConsole 输出 2 条 log message
