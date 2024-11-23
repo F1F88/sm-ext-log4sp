@@ -3,42 +3,19 @@
 namespace log4sp {
 
 
-/**
- * 将 cell_t 转换为 level
- * 如果 cell_t 超出 level 边界，将其修正为最近的边界值
- * 并返回 false
- */
-bool CellToLevel(cell_t lvl, spdlog::level::level_enum &result)
+spdlog::level::level_enum cell_to_level(cell_t lvl)
 {
     if (lvl < 0)
     {
-        result = static_cast<spdlog::level::level_enum>(0);
-        return false;
+        return static_cast<spdlog::level::level_enum>(0);
     }
 
     if (lvl >= spdlog::level::n_levels)
     {
-        result = static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
-        return false;
+        return static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
     }
 
-    result = static_cast<spdlog::level::level_enum>(lvl);
-    return true;
-}
-
-/**
- * 将 cell_t 转换为 level
- * 如果 level 超出边界，输出一条警告信息
- * 并返回最近的边界值
- */
-spdlog::level::level_enum CellToLevelOrLogWarn(IPluginContext *ctx, cell_t lvl)
-{
-    spdlog::level::level_enum result;
-    if (!CellToLevel(lvl, result))
-    {
-        spdlog::log(log4sp::GetScriptedLoc(ctx), spdlog::level::warn, "Invliad level ({}), return '{}'.", lvl, spdlog::level::to_string_view(result));
-    }
-    return result;
+    return static_cast<spdlog::level::level_enum>(lvl);
 }
 
 /**

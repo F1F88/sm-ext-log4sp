@@ -6,9 +6,11 @@
 
 namespace log4sp {
 
-bool CellToLevel(cell_t lvl, spdlog::level::level_enum &result);
-
-spdlog::level::level_enum CellToLevelOrLogWarn(IPluginContext *ctx, cell_t lvl);
+/**
+ * 将 cell_t 转为 spdlog::level::level_enum
+ * 如果 cell_t 越界，则返回最近的边界值
+ */
+spdlog::level::level_enum cell_to_level(cell_t lvl);
 
 spdlog::source_loc GetScriptedLoc(IPluginContext *ctx);
 
