@@ -1,4 +1,4 @@
-#include <log4sp/common.h>
+#include <log4sp/utils.h>
 
 /**
  * native void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);

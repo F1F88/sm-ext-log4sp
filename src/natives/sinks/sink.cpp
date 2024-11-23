@@ -1,6 +1,6 @@
 #include "spdlog/sinks/sink.h"
 
-#include <log4sp/common.h>
+#include <log4sp/utils.h>
 #include <log4sp/sink_handle_manager.h>
 
 

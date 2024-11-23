@@ -1,5 +1,5 @@
-#ifndef _LOG4SP_COMMON_H_
-#define _LOG4SP_COMMON_H_
+#ifndef _LOG4SP_UTILS_H_
+#define _LOG4SP_UTILS_H_
 
 #include "extension.h"
 
@@ -21,4 +21,4 @@ fmt::memory_buffer FormatParams(const char *format, SourcePawn::IPluginContext *
 
 } // namespace log4sp
 
-#endif // _LOG4SP_COMMON_H_
+#endif // _LOG4SP_UTILS_H_

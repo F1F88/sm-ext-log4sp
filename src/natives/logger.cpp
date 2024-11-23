@@ -5,7 +5,7 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include <log4sp/common.h>
+#include <log4sp/utils.h>
 #include <log4sp/logger_handle_manager.h>
 #include <log4sp/sink_handle_manager.h>
 

@@ -102,4 +102,4 @@ inline cell_t client_console_sink<Mutex>::player_filter(const int client, const 
 } // namespace log4sp
 
 
-#endif // _LOG4SP_COMMON_CLIENT_CONSOLE_SINK_H_
+#endif // _LOG4SP_CLIENT_CONSOLE_SINK_INL_H_
