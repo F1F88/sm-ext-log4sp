@@ -119,6 +119,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, RotatingFileSinkNatives);
     sharesys->AddNatives(myself, DailyFileSinkNatives);
     sharesys->AddNatives(myself, ClientConsoleSinkNatives);
+    sharesys->AddNatives(myself, ClientChatSinkNatives);
 
     if (!rootconsole->AddRootConsoleCommand3("log4sp", "Manager Logging For SourcePawn", this))
     {

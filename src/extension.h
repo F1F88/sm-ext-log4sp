@@ -166,5 +166,6 @@ extern const sp_nativeinfo_t    BaseFileSinkNatives[];
 extern const sp_nativeinfo_t    RotatingFileSinkNatives[];
 extern const sp_nativeinfo_t    DailyFileSinkNatives[];
 extern const sp_nativeinfo_t    ClientConsoleSinkNatives[];
+extern const sp_nativeinfo_t    ClientChatSinkNatives[];
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_

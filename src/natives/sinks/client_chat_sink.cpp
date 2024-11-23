@@ -76,7 +76,7 @@ static cell_t ClientChatSink_SetFilter(IPluginContext *ctx, const cell_t *params
     return 0;
 }
 
-const sp_nativeinfo_t ClientConsoleSinkNatives[] =
+const sp_nativeinfo_t ClientChatSinkNatives[] =
 {
     {"ClientChatSink.ClientChatSink",               ClientChatSink},
     {"ClientChatSink.SetFilter",                    ClientChatSink_SetFilter},
