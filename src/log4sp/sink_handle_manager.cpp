@@ -69,7 +69,7 @@ sink_handle_data* sink_handle_manager::create_server_console_sink_st(IPluginCont
 {
     auto sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
 
-    auto type = g_ServerConsoleSinkSTHandleType;
+    auto type = g_ServerConsoleSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -90,7 +90,7 @@ sink_handle_data* sink_handle_manager::create_server_console_sink_mt(IPluginCont
 {
     auto sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 
-    auto type = g_ServerConsoleSinkMTHandleType;
+    auto type = g_ServerConsoleSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -112,7 +112,7 @@ sink_handle_data* sink_handle_manager::create_base_file_sink_st(IPluginContext *
 {
     auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(filename, truncate);
 
-    auto type = g_BaseFileSinkSTHandleType;
+    auto type = g_BaseFileSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -133,7 +133,7 @@ sink_handle_data* sink_handle_manager::create_base_file_sink_mt(IPluginContext *
 {
     auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename, truncate);
 
-    auto type = g_BaseFileSinkMTHandleType;
+    auto type = g_BaseFileSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -155,7 +155,7 @@ sink_handle_data* sink_handle_manager::create_rotating_file_sink_st(IPluginConte
 {
     auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(base_filename, max_size, max_files, rotate_on_open);
 
-    auto type = g_RotatingFileSinkSTHandleType;
+    auto type = g_RotatingFileSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -176,7 +176,7 @@ sink_handle_data* sink_handle_manager::create_rotating_file_sink_mt(IPluginConte
 {
     auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(base_filename, max_size, max_files, rotate_on_open);
 
-    auto type = g_RotatingFileSinkMTHandleType;
+    auto type = g_RotatingFileSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -198,7 +198,7 @@ sink_handle_data* sink_handle_manager::create_daily_file_sink_st(IPluginContext 
 {
     auto sink = std::make_shared<spdlog::sinks::daily_file_format_sink_st>(base_filename, rotation_hour, rotation_minute, truncate, max_files);
 
-    auto type = g_DailyFileSinkSTHandleType;
+    auto type = g_DailyFileSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -219,7 +219,7 @@ sink_handle_data* sink_handle_manager::create_daily_file_sink_mt(IPluginContext 
 {
     auto sink = std::make_shared<spdlog::sinks::daily_file_format_sink_mt>(base_filename, rotation_hour, rotation_minute, truncate, max_files);
 
-    auto type = g_DailyFileSinkMTHandleType;
+    auto type = g_DailyFileSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -240,7 +240,7 @@ sink_handle_data* sink_handle_manager::create_client_console_sink_st(IPluginCont
 {
     auto sink = std::make_shared<log4sp::sinks::client_console_sink_st>();
 
-    auto type = g_ClientConsoleSinkSTHandleType;
+    auto type = g_ClientConsoleSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;
@@ -261,7 +261,7 @@ sink_handle_data* sink_handle_manager::create_client_console_sink_mt(IPluginCont
 {
     auto sink = std::make_shared<log4sp::sinks::client_console_sink_mt>();
 
-    auto type = g_ClientConsoleSinkMTHandleType;
+    auto type = g_ClientConsoleSinkHandleType;
     auto obj = sink.get();
     auto sec = HandleSecurity(ctx->GetIdentity(), myself->GetIdentity());
     HandleError error;

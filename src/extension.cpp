@@ -50,16 +50,11 @@ LoggerHandler       g_LoggerHandler;
 HandleType_t        g_LoggerHandleType = 0;
 
 SinkHandler         g_SinkHandler;
-HandleType_t        g_ServerConsoleSinkSTHandleType = 0;
-HandleType_t        g_ServerConsoleSinkMTHandleType = 0;
-HandleType_t        g_BaseFileSinkSTHandleType = 0;
-HandleType_t        g_BaseFileSinkMTHandleType = 0;
-HandleType_t        g_RotatingFileSinkSTHandleType = 0;
-HandleType_t        g_RotatingFileSinkMTHandleType = 0;
-HandleType_t        g_DailyFileSinkSTHandleType = 0;
-HandleType_t        g_DailyFileSinkMTHandleType = 0;
-HandleType_t        g_ClientConsoleSinkSTHandleType = 0;
-HandleType_t        g_ClientConsoleSinkMTHandleType = 0;
+HandleType_t        g_ServerConsoleSinkHandleType   = 0;
+HandleType_t        g_BaseFileSinkHandleType        = 0;
+HandleType_t        g_RotatingFileSinkHandleType    = 0;
+HandleType_t        g_DailyFileSinkHandleType       = 0;
+HandleType_t        g_ClientConsoleSinkHandleType   = 0;
 
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
@@ -73,73 +68,38 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     }
 
     // We don't use inheritance because types only can have up to 15 sub-types.
-    g_ServerConsoleSinkSTHandleType = handlesys->CreateType("ServerConsoleSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ServerConsoleSinkSTHandleType)
+    g_ServerConsoleSinkHandleType = handlesys->CreateType("ServerConsoleSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
+    if (!g_ServerConsoleSinkHandleType)
     {
-        snprintf(error, maxlen, "Could not create ServerConsoleSinkST handle type (err: %d)", err);
+        snprintf(error, maxlen, "Could not create ServerConsoleSink handle type (err: %d)", err);
         return false;
     }
 
-    g_ServerConsoleSinkMTHandleType = handlesys->CreateType("ServerConsoleSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ServerConsoleSinkMTHandleType)
+    g_BaseFileSinkHandleType = handlesys->CreateType("BaseFileSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
+    if (!g_BaseFileSinkHandleType)
     {
-        snprintf(error, maxlen, "Could not create ServerConsoleSinkMT handle type (err: %d)", err);
+        snprintf(error, maxlen, "Could not create BaseFileSink handle type (err: %d)", err);
         return false;
     }
 
-    g_BaseFileSinkSTHandleType = handlesys->CreateType("BaseFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_BaseFileSinkSTHandleType)
+    g_RotatingFileSinkHandleType = handlesys->CreateType("RotatingFileSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
+    if (!g_RotatingFileSinkHandleType)
     {
-        snprintf(error, maxlen, "Could not create BaseFileSinkST handle type (err: %d)", err);
+        snprintf(error, maxlen, "Could not create RotatingFileSink handle type (err: %d)", err);
         return false;
     }
 
-    g_BaseFileSinkMTHandleType = handlesys->CreateType("BaseFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_BaseFileSinkMTHandleType)
+    g_DailyFileSinkHandleType = handlesys->CreateType("DailyFileSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
+    if (!g_DailyFileSinkHandleType)
     {
-        snprintf(error, maxlen, "Could not create BaseFileSinkMT handle type (err: %d)", err);
+        snprintf(error, maxlen, "Could not create DailyFileSink handle type (err: %d)", err);
         return false;
     }
 
-    g_RotatingFileSinkSTHandleType = handlesys->CreateType("RotatingFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_RotatingFileSinkSTHandleType)
+    g_ClientConsoleSinkHandleType = handlesys->CreateType("ClientConsoleSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
+    if (!g_ClientConsoleSinkHandleType)
     {
-        snprintf(error, maxlen, "Could not create RotatingFileSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_RotatingFileSinkMTHandleType = handlesys->CreateType("RotatingFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_RotatingFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create RotatingFileSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
-    g_DailyFileSinkSTHandleType = handlesys->CreateType("DailyFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_DailyFileSinkSTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create DailyFileSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_DailyFileSinkMTHandleType = handlesys->CreateType("DailyFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_DailyFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create DailyFileSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ClientConsoleSinkSTHandleType = handlesys->CreateType("ClientConsoleSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ClientConsoleSinkSTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ClientConsoleSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ClientConsoleSinkMTHandleType = handlesys->CreateType("ClientConsoleSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ClientConsoleSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ClientConsoleSinkMT handle type (err: %d)", err);
+        snprintf(error, maxlen, "Could not create ClientConsoleSink handle type (err: %d)", err);
         return false;
     }
 
@@ -201,14 +161,10 @@ void Log4sp::SDK_OnUnload()
 
     handlesys->RemoveType(g_LoggerHandleType, myself->GetIdentity());
 
-    handlesys->RemoveType(g_ServerConsoleSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_ServerConsoleSinkMTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_BaseFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_BaseFileSinkMTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_RotatingFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_RotatingFileSinkMTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_DailyFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_DailyFileSinkMTHandleType, myself->GetIdentity());
+    handlesys->RemoveType(g_ServerConsoleSinkHandleType, myself->GetIdentity());
+    handlesys->RemoveType(g_BaseFileSinkHandleType, myself->GetIdentity());
+    handlesys->RemoveType(g_RotatingFileSinkHandleType, myself->GetIdentity());
+    handlesys->RemoveType(g_DailyFileSinkHandleType, myself->GetIdentity());
 
     rootconsole->RemoveRootConsoleCommand("log4sp", this);
 
