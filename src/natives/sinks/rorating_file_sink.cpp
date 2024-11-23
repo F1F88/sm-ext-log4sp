@@ -90,49 +90,17 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
     return 0;
 }
 
-template <typename Mutex>
-static void CalcFilename(IPluginContext *ctx, const cell_t *params, log4sp::sink_handle_data *data)
-{
-    auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink<Mutex>>(data->sink_ptr());
-    if (sink == nullptr)
-    {
-        ctx->ReportError("Unable to cast sink to rotating_file_sink_%ct.", data->is_multi_threaded() ? 'm' : 's');
-        return;
-    }
-
-    char *file;
-    ctx->LocalToString(params[2], &file);
-    auto index = static_cast<size_t>(params[3]);
-
-    ctx->StringToLocal(params[4], params[5], sink->calc_filename(file, index).c_str());
-}
-
 /**
  * public native void CalcFilename(const char[] file, int index, char[] buffer, int maxlength);
  */
 static cell_t RotatingFileSink_CalcFilename(IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
-    if (sink == nullptr)
-    {
-        return 0;
-    }
+    char *file;
+    ctx->LocalToString(params[1], &file);
+    auto index = static_cast<size_t>(params[2]);
 
-    auto data = log4sp::sink_handle_manager::instance().get_data(sink);
-    if (data == nullptr)
-    {
-        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
-        return 0;
-    }
-
-    if (!data->is_multi_threaded())
-    {
-        CalcFilename<spdlog::details::null_mutex>(ctx, params, data);
-        return 0;
-    }
-
-    CalcFilename<std::mutex>(ctx, params, data);
+    auto filename = spdlog::sinks::rotating_file_sink<spdlog::details::null_mutex>::calc_filename(file, index);
+    ctx->StringToLocal(params[3], params[4], filename.c_str());
     return 0;
 }
 
