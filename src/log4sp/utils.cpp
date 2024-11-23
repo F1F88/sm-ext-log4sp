@@ -23,70 +23,60 @@ spdlog::level::level_enum cell_to_level(cell_t lvl)
  * 如果找不到，输出一条警告信息
  * 并返回空
  */
-spdlog::source_loc GetScriptedLoc(IPluginContext *ctx)
+spdlog::source_loc get_script_source_loc(SourcePawn::IFrameIterator *iter)
 {
-    SourcePawn::IFrameIterator *frames = ctx->CreateFrameIterator();
-
-    for (; !frames->Done(); frames->Next())
+    for (iter->Reset(); !iter->Done(); iter->Next())
     {
-        if (frames->IsScriptedFrame())
+        if (iter->IsScriptedFrame())
         {
-            const char *file = frames->FilePath();
-            const char *func = frames->FunctionName();
-            int line = frames->LineNumber();
-            ctx->DestroyFrameIterator(frames); // 千万不要忘记
+            auto file = iter->FilePath();
+            auto line = iter->LineNumber();
+            auto func = iter->FunctionName();
 
             return spdlog::source_loc(file, line, func);
         }
     }
-
-    ctx->DestroyFrameIterator(frames); // 千万不要忘记
-    SPDLOG_TRACE("Scripted source location not found.");
     return {};
 }
 
 // ref: sourcemod DebugReport::GetStackTrace
-std::vector<std::string> GetStackTrace(IPluginContext *ctx)
+std::vector<std::string> get_stack_trace(IFrameIterator *iter)
 {
-    IFrameIterator *iter = ctx->CreateFrameIterator();
-
-    std::vector<std::string> trace;
     iter->Reset();
-
     if (!iter->Done())
     {
-        trace.push_back(" Call tack trace:");
+        return {};
+    }
 
-        char temp[3072];
-        const char *fn;
+    std::vector<std::string> trace;
+    trace.push_back(" Call tack trace:");
 
-        for (int index = 0; !iter->Done(); iter->Next(), ++index)
+    const char *func;
+    const char *file;
+
+    for (int index = 0; !iter->Done(); iter->Next(), ++index)
+    {
+        if (iter->IsNativeFrame())
         {
-            fn = iter->FunctionName();
-            if (!fn)
-            {
-                fn = "<unknown function>";
-            }
+            func = iter->FunctionName();
+            func = func != nullptr ? func : "<unknown function>";
 
-            if (iter->IsNativeFrame())
-            {
-                g_pSM->Format(temp, sizeof(temp), "   [%d] %s", index, fn);
-                trace.push_back(temp);
-                continue;
-            }
+            trace.push_back(fmt::format("   [{}] {}", index, func));
+            continue;
+        }
 
-            if (iter->IsScriptedFrame())
-            {
-                const char *file = iter->FilePath();
-                if (!file)
-                {
-                    file = "<unknown>";
-                }
-                g_pSM->Format(temp, sizeof(temp), "   [%d] Line %d, %s::%s", index, iter->LineNumber(), file, fn);
-                trace.push_back(temp);
-            }
+        if (iter->IsScriptedFrame())
+        {
+            func = iter->FunctionName();
+            func = func != nullptr ? func : "<unknown function>";
+
+            file = iter->FilePath();
+            file = file != nullptr ? file : "<unknown>";
+
+            trace.push_back(fmt::format("   [{}] Line {}, {}::{}", index, iter->LineNumber(), file, func));
         }
     }
+
     return trace;
 }
 
