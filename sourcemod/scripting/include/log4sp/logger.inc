@@ -165,7 +165,7 @@ methodmap Logger < Handle
      * @param msg       Logging message.
      */
     public native void Log(LogLevel lvl, const char[] msg);
-    public native void LogAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    public native void LogEx(LogLevel lvl, const char[] fmt, any ...);
 
     /**
      * Logs a message with the sourcepawn source code location.
@@ -174,7 +174,7 @@ methodmap Logger < Handle
      * @param msg       Logging message.
      */
     public native void LogSrc(LogLevel lvl, const char[] msg);
-    public native void LogSrcAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    public native void LogSrcEx(LogLevel lvl, const char[] fmt, any ...);
 
     /**
      * Logs a message with the source code location.
@@ -186,7 +186,7 @@ methodmap Logger < Handle
      * @param msg       Logging message.
      */
     public native void LogLoc(const char[] file, int line, const char[] func, LogLevel lvl, const char[] msg);
-    public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
+    public native void LogLocEx(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
 
     /**
      * Logs a stack trace from the current function call.
@@ -196,7 +196,7 @@ methodmap Logger < Handle
      * @param msg       Logging message.
      */
     public native void LogStackTrace(LogLevel lvl, const char[] msg);
-    public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    public native void LogStackTraceEx(LogLevel lvl, const char[] fmt, any ...);
 
     /**
      * Aborts the current callback and throws an error.
@@ -209,25 +209,25 @@ methodmap Logger < Handle
      * @error           Always!
      */
     public native void ThrowError(LogLevel lvl, const char[] msg);
-    public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+    public native void ThrowErrorEx(LogLevel lvl, const char[] fmt, any ...);
 
     public native void Trace(const char[] msg);
-    public native void TraceAmxTpl(const char[] fmt, any ...);
+    public native void TraceEx(const char[] fmt, any ...);
 
     public native void Debug(const char[] msg);
-    public native void DebugAmxTpl(const char[] fmt, any ...);
+    public native void DebugEx(const char[] fmt, any ...);
 
     public native void Info(const char[] msg);
-    public native void InfoAmxTpl(const char[] fmt, any ...);
+    public native void InfoEx(const char[] fmt, any ...);
 
     public native void Warn(const char[] msg);
-    public native void WarnAmxTpl(const char[] fmt, any ...);
+    public native void WarnEx(const char[] fmt, any ...);
 
     public native void Error(const char[] msg);
-    public native void ErrorAmxTpl(const char[] fmt, any ...);
+    public native void ErrorEx(const char[] fmt, any ...);
 
     public native void Fatal(const char[] msg);
-    public native void FatalAmxTpl(const char[] fmt, any ...);
+    public native void FatalEx(const char[] fmt, any ...);
 
     /**
      * Manual flush logger contents.

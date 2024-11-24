@@ -140,12 +140,11 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
 }
 
 /**
- * public static native Logger CreateBaseFileLogger(
- *     const char[] name,
- *     const char[] file,
- *     bool truncate = false,
- *     bool async = false,
- *     AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
+ * public static native Logger CreateBaseFileLogger(const char[] name,
+ *                                                  const char[] file,
+ *                                                  bool truncate = false,
+ *                                                  bool async = false,
+ *                                                  AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
  * );
  */
 static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
@@ -183,14 +182,13 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public static native Logger CreateRotatingFileLogger(
- *      const char[] name,
- *      const char[] file,
- *      int maxFileSize,
- *      int maxFiles,
- *      bool rotateOnOpen = false,
- *      bool async = false,
- *      AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
+ * public static native Logger CreateRotatingFileLogger(const char[] name,
+ *                                                      const char[] file,
+ *                                                      int maxFileSize,
+ *                                                      int maxFiles,
+ *                                                      bool rotateOnOpen = false,
+ *                                                      bool async = false,
+ *                                                      AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
  * );
  */
 static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params)
@@ -242,15 +240,14 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
 }
 
 /**
- * public static native Logger CreateDailyFileLogger(
- *      const char[] name,
- *      const char[] file,
- *      int hour = 0,
- *      int minute = 0,
- *      bool truncate = false,
- *      int maxFiles = 0,
- *      bool async = false,
- *      AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
+ * public static native Logger CreateDailyFileLogger(const char[] name,
+ *                                                   const char[] file,
+ *                                                   int hour = 0,
+ *                                                   int minute = 0,
+ *                                                   bool truncate = false,
+ *                                                   int maxFiles = 0,
+ *                                                   bool async = false,
+ *                                                   AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block
  * );
  */
 static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
@@ -416,9 +413,9 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+ * public native void LogEx(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -469,9 +466,9 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogSrcAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+ * public native void LogSrcEx(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -531,9 +528,9 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
+ * public native void LogLocEx(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -600,9 +597,9 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
+ * public native void LogStackTraceEx(LogLevel lvl, const char[] msg, any ...);
  */
-static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -671,9 +668,9 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
+ * public native void LogStackTraceEx(LogLevel lvl, const char[] msg, any ...);
  */
-static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -733,9 +730,9 @@ static cell_t Trace(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void TraceAmxTpl(const char[] fmt, any ...);
+ * public native void TraceEx(const char[] fmt, any ...);
  */
-static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -781,9 +778,9 @@ static cell_t Debug(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void DebugAmxTpl(const char[] fmt, any ...);
+ * public native void DebugEx(const char[] fmt, any ...);
  */
-static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -829,9 +826,9 @@ static cell_t Info(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void InfoAmxTpl(const char[] fmt, any ...);
+ * public native void InfoEx(const char[] fmt, any ...);
  */
-static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -877,9 +874,9 @@ static cell_t Warn(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void WarnAmxTpl(const char[] fmt, any ...);
+ * public native void WarnEx(const char[] fmt, any ...);
  */
-static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -925,9 +922,9 @@ static cell_t Error(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void ErrorAmxTpl(const char[] fmt, any ...);
+ * public native void ErrorEx(const char[] fmt, any ...);
  */
-static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -973,9 +970,9 @@ static cell_t Fatal(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void FatalAmxTpl(const char[] fmt, any ...);
+ * public native void FatalEx(const char[] fmt, any ...);
  */
-static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
+static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
     auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
@@ -1304,28 +1301,28 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.ShouldLog",                        ShouldLog},
 
     {"Logger.Log",                              Log},
-    {"Logger.LogAmxTpl",                        LogAmxTpl},
+    {"Logger.LogEx",                            LogEx},
     {"Logger.LogSrc",                           LogSrc},
-    {"Logger.LogSrcAmxTpl",                     LogSrcAmxTpl},
+    {"Logger.LogSrcEx",                         LogSrcEx},
     {"Logger.LogLoc",                           LogLoc},
-    {"Logger.LogLocAmxTpl",                     LogLocAmxTpl},
+    {"Logger.LogLocEx",                         LogLocEx},
     {"Logger.LogStackTrace",                    LogStackTrace},
-    {"Logger.LogStackTraceAmxTpl",              LogStackTraceAmxTpl},
+    {"Logger.LogStackTraceEx",                  LogStackTraceEx},
     {"Logger.ThrowError",                       ThrowError},
-    {"Logger.ThrowErrorAmxTpl",                 ThrowErrorAmxTpl},
+    {"Logger.ThrowErrorEx",                     ThrowErrorEx},
 
     {"Logger.Trace",                            Trace},
-    {"Logger.TraceAmxTpl",                      TraceAmxTpl},
+    {"Logger.TraceEx",                          TraceEx},
     {"Logger.Debug",                            Debug},
-    {"Logger.DebugAmxTpl",                      DebugAmxTpl},
+    {"Logger.DebugEx",                          DebugEx},
     {"Logger.Info",                             Info},
-    {"Logger.InfoAmxTpl",                       InfoAmxTpl},
+    {"Logger.InfoEx",                           InfoEx},
     {"Logger.Warn",                             Warn},
-    {"Logger.WarnAmxTpl",                       WarnAmxTpl},
+    {"Logger.WarnEx",                           WarnEx},
     {"Logger.Error",                            Error},
-    {"Logger.ErrorAmxTpl",                      ErrorAmxTpl},
+    {"Logger.ErrorEx",                          ErrorEx},
     {"Logger.Fatal",                            Fatal},
-    {"Logger.FatalAmxTpl",                      FatalAmxTpl},
+    {"Logger.FatalEx",                          FatalEx},
 
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},
