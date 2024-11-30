@@ -82,7 +82,8 @@
 /**
  * Do not edit below this line!
  */
-#define LOG4SP_EXT_VERSION  "1.4.1"
+#define LOG4SP_EXT_VERSION          "1.4.1"
+#define LOG4SP_DEFAULT_LOGGER_NAME  "log4sp"
 
 public Extension __ext_log4sp =
 {
