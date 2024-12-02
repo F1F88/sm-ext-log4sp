@@ -223,37 +223,58 @@ try_serverlang:
     }
 }
 
-inline static void AddString(fmt::memory_buffer &out, const char *string, int width, int prec)
+inline static void AddString(fmt::memory_buffer &out, const char *string, int width, int prec, int flags)
 {
-    const char nlstr[] = {'(','n','u','l','l',')','\0'};
-
     if (string == nullptr)
     {
-        string = nlstr;
-        prec = -1;
-    }
+        const char nlstr[] = {'(','n','u','l','l',')','\0'};
+        const int size = sizeof(nlstr);
 
-    int size = 0;
-    if (prec >= 0)
-    {
-        while (string[size] && (prec > size++)) ;
+        if (!(flags & LADJUST))
+        {
+            while (size < width--)
+            {
+                out.push_back(' ');
+            }
+
+            out.append(nlstr, nlstr + sizeof(nlstr));
+        }
+        else
+        {
+            out.append(nlstr, nlstr + sizeof(nlstr));
+
+            while (size < width--)
+            {
+                out.push_back(' ');
+            }
+        }
     }
     else
     {
-        while (string[size++]) ;
-        --size;
-    }
+        int size = strlen(string);
+        if (prec >= 0 && prec < size)
+        {
+            size = prec;
+        }
 
-    width -= size;
+        if (!(flags & LADJUST))
+        {
+            while (size < width--)
+            {
+                out.push_back(' ');
+            }
 
-    while (size--)
-    {
-        out.push_back(*string++);
-    }
+            out.append(string, string + size);
+        }
+        else
+        {
+            out.append(string, string + size);
 
-    while (width-- > 0)
-    {
-        out.push_back(' ');
+            while (size < width--)
+            {
+                out.push_back(' ');
+            }
+        }
     }
 }
 
@@ -269,7 +290,7 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
 
     if (std::isnan(fval))
     {
-        AddString(out, "NaN", width, prec);
+        AddString(out, "NaN", width, prec, flags);
         return;
     }
 
@@ -389,53 +410,50 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
 
 inline static void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags)
 {
-    int digits = 32;
-    unsigned int offset = 1 << 31;
-    while ((val & offset) == 0)
+    char text[32];
+
+    int iter = 31;
+    do
     {
-        --digits;
-        offset >>= 1;
-    }
+        text[iter--] = (val & 1) ? '1' : '0';
+    } while (val >>= 1);
+
+    const char *begin = text + iter + 1;
+    int digits = 31 - iter;
 
     if (!(flags & LADJUST))
     {
         if (flags & ZEROPAD)
         {
-            while (digits < width)
+            while (digits < width--)
             {
                 out.push_back('0');
-                --width;
             }
         }
         else
         {
-            while (digits < width)
+            while (digits < width--)
             {
                 out.push_back(' ');
-                --width;
             }
         }
-    }
 
-    width -= digits;
-    while (digits--)
-    {
-        out.push_back(val & offset ? '1' : '0');
-        offset >>= 1;
+        out.append(begin, text + 32);
     }
-
-    if (flags & LADJUST)
+    else
     {
+        out.append(begin, text + 32);
+
         if (flags & ZEROPAD)
         {
-            while (width-- > 0)
+            while (digits < width--)
             {
                 out.push_back('0');
             }
         }
         else
         {
-            while (width-- > 0)
+            while (digits < width--)
             {
                 out.push_back(' ');
             }
@@ -468,16 +486,20 @@ inline static void AddUInt(fmt::memory_buffer &out, unsigned int val, int width,
                 out.push_back(' ');
             }
         }
-    }
 
-    width -= digits;
-    while (digits--)
-    {
-        out.push_back(text[digits]);
+        while (digits--)
+        {
+            out.push_back(text[digits]);
+        }
     }
-
-    if (flags & LADJUST)
+    else
     {
+        width -= digits;
+        while (digits--)
+        {
+            out.push_back(text[digits]);
+        }
+
         if (flags & ZEROPAD)
         {
             while (width-- > 0)
@@ -516,6 +538,7 @@ inline static void AddInt(fmt::memory_buffer &out, int val, int width, int flags
             {
                 out.push_back('-');
             }
+
             while (digits < width--)
             {
                 out.push_back('0');
@@ -527,25 +550,31 @@ inline static void AddInt(fmt::memory_buffer &out, int val, int width, int flags
             {
                 out.push_back(' ');
             }
+
             if (negative)
             {
                 out.push_back('-');
             }
         }
-    }
-    else if (negative)
-    {
-        out.push_back('-');
-    }
 
-    width -= digits;
-    while (digits--)
-    {
-        out.push_back(text[digits]);
+        while (digits--)
+        {
+            out.push_back(text[digits]);
+        }
     }
-
-    if (flags & LADJUST)
+    else
     {
+        if (negative)
+        {
+            out.push_back('-');
+        }
+
+        width -= digits;
+        while (digits--)
+        {
+            out.push_back(text[digits]);
+        }
+
         if (flags & ZEROPAD)
         {
             while (width-- > 0)
@@ -589,30 +618,32 @@ inline static void AddHex(fmt::memory_buffer &out, unsigned int val, int width, 
     {
         if (flags & ZEROPAD)
         {
-            while (digits < width)
+            while (digits < width--)
             {
                 out.push_back('0');
-                --width;
             }
         }
         else
         {
-            while (digits < width)
+            while (digits < width--)
             {
                 out.push_back(' ');
-                --width;
             }
         }
-    }
 
-    width -= digits;
-    while (digits--)
-    {
-        out.push_back(text[digits]);
+        while (digits--)
+        {
+            out.push_back(text[digits]);
+        }
     }
-
-    if (flags & LADJUST)
+    else
     {
+        width -= digits;
+        while (digits--)
+        {
+            out.push_back(text[digits]);
+        }
+
         if (flags & ZEROPAD)
         {
             while (width-- > 0)
@@ -659,30 +690,30 @@ inline static bool DescribePlayer(int index, const char **namep, const char **au
 
 inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param)
 {
-    int arg;                // 用于遍历 params 的指针
-    int args = params[0];   // param count
     auto out = fmt::memory_buffer();
-    char ch;
-    int flags;
-    int width;
-    int prec;
-    int n;
-    char sign;
-    const char *fmt;
 
-    arg = *param;
-    fmt = format;
+    int args = params[0];       // params count
+    int arg  = *param;          // 用于遍历 params 的指针
+    const char *fmt = format;   // 用于遍历 format 的指针
+    int flags;                  // 对齐 (左 / 右) | 填充符 ('0' / ' ')
+    int width;                  // 宽度
+    int prec;                   // 精度
 
     while (true)
     {
+        const char *begin = fmt;
+
         // run through the format string until we hit a '%' or '\0'
-        for (ch = *fmt; ((ch = *fmt) != '%') && (ch != '\0'); ++fmt)
+        while (*fmt != '%' && *fmt != '\0')
         {
-            out.push_back(ch);
+            ++fmt;
         }
 
-        if (ch == '\0')
+        out.append(begin, fmt);
+
+        if (*fmt == '\0')
         {
+            *param = arg;
             return out;
         }
 
@@ -695,7 +726,7 @@ inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePa
         prec = -1;
 
 rflag:
-		ch = *fmt++;
+		char ch = *fmt++;
 reswitch:
         switch(ch)
         {
@@ -706,7 +737,7 @@ reswitch:
             }
         case '.':
             {
-                n = 0;
+                int n = 0;
                 ch = *fmt++;
                 while (ch >= '0' && ch <= '9')
                 {
@@ -731,7 +762,7 @@ reswitch:
         case '8':
         case '9':
             {
-                n = 0;
+                int n = 0;
                 do
                 {
                     n = 10 * n + (ch - '0');
@@ -831,7 +862,7 @@ reswitch:
                 {
                     ke::SafeStrcpy(buffer, sizeof(buffer), "Console<0><Console><Console>");
                 }
-                AddString(out, buffer, width, prec);
+                AddString(out, buffer, width, prec, flags);
                 ++arg;
                 break;
             }
@@ -851,7 +882,7 @@ reswitch:
                         throw std::runtime_error(
                             fmt::format("Client index {} is invalid (arg {})", static_cast<int>(*value), arg));
                 }
-                AddString(out, name, width, prec);
+                AddString(out, name, width, prec, flags);
                 ++arg;
                 break;
             }
@@ -864,7 +895,7 @@ reswitch:
 
                 char *str;
                 ctx->LocalToString(params[arg], &str);
-                AddString(out, str, width, prec);
+                AddString(out, str, width, prec, flags);
                 ++arg;
                 break;
             }
@@ -879,7 +910,8 @@ reswitch:
                 cell_t *target;
                 ctx->LocalToString(params[arg++], &key);
                 ctx->LocalToPhysAddr(params[arg++], &target);
-                out.append(Translate(ctx, key, *target, params, &arg));
+                fmt::memory_buffer phrase = Translate(ctx, key, *target, params, &arg);
+                out.append(phrase.begin(), phrase.end());
                 break;
             }
         case 't':
@@ -892,7 +924,8 @@ reswitch:
                 char *key;
                 cell_t target = translator->GetGlobalTarget();
                 ctx->LocalToString(params[arg++], &key);
-                out.append(Translate(ctx, key, target, params, &arg));
+                fmt::memory_buffer phrase = Translate(ctx, key, target, params, &arg);
+                out.append(phrase.begin(), phrase.end());
                 break;
             }
         case 'X':
@@ -930,6 +963,7 @@ reswitch:
         case '\0':
             {
                 out.push_back('%');
+                *param = arg;
                 return out;
             }
         default:
@@ -939,6 +973,8 @@ reswitch:
             }
         }
     }
+
+    *param = arg;
     return out;
 }
 
