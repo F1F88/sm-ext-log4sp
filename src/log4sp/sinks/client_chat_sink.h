@@ -1,5 +1,5 @@
-#ifndef _LOG4SP_CLIENT_CHAT_SINK_H_
-#define _LOG4SP_CLIENT_CHAT_SINK_H_
+#ifndef _LOG4SP_SINKS_CLIENT_CHAT_SINK_H_
+#define _LOG4SP_SINKS_CLIENT_CHAT_SINK_H_
 
 #include "spdlog/details/synchronous_factory.h"
 #include "spdlog/sinks/base_sink.h"
@@ -14,7 +14,6 @@ template<typename Mutex>
 class client_chat_sink : public spdlog::sinks::base_sink<Mutex>
 {
 public:
-    client_chat_sink();
     ~client_chat_sink();
 
     bool set_player_filter(IPluginFunction *filter);
@@ -47,8 +46,7 @@ inline std::shared_ptr<spdlog::logger> client_chat_sink_st()
     return Factory::template create<log4sp::sinks::client_chat_sink_st>();
 }
 
-} // namespace log4sp
 
-#include "client_chat_sink-inl.h"
-
-#endif // _LOG4SP_CLIENT_CHAT_SINK_H_
+}       // namespace log4sp
+#include "log4sp/sinks/client_chat_sink-inl.h"
+#endif  // _LOG4SP_SINKS_CLIENT_CHAT_SINK_H_

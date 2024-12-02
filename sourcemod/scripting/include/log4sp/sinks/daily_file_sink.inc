@@ -9,10 +9,8 @@
 #include <log4sp/sinks/sink>
 
 
-/*
+/**
  * Rotating file sink based on date.
- * If truncate != false , the created file will be truncated.
- * If max_files > 0, retain only the last max_files and delete previous.
  */
 methodmap DailyFileSink < Sink
 {
@@ -24,8 +22,8 @@ methodmap DailyFileSink < Sink
      * @param rotationMinute The minute of the hour when the log file should be rotated. (0-59)
      * @param truncate      If true, the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
-     * @param async         If true, the sink will be multi threaded.
-     * @return              Handle for a daily file sink.
+     * @param multiThread   If true, the created sink will be multi threaded and thread safe.
+     * @return              DailyFileSink handle.
      * @error               Invalid rotation time in ctor.
      */
     public native DailyFileSink(const char[] file,
@@ -33,7 +31,7 @@ methodmap DailyFileSink < Sink
                                 int rotationMinute = 0,
                                 bool truncate = false,
                                 int maxFiles = 0,
-                                bool async = false);
+                                bool multiThread = false);
 
     /**
      * Get the current filename being used by the file sink.

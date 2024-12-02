@@ -1,12 +1,12 @@
 #ifndef _LOG4SP_UTILS_INL_H_
 #define _LOG4SP_UTILS_INL_H_
 
-#include <log4sp/utils.h>
+#include "log4sp/utils.h"
 
 namespace log4sp {
 
 
-inline spdlog::level::level_enum cell_to_level(cell_t lvl)
+inline spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept
 {
     if (lvl < 0)
     {
@@ -21,7 +21,7 @@ inline spdlog::level::level_enum cell_to_level(cell_t lvl)
     return static_cast<spdlog::level::level_enum>(lvl);
 }
 
-inline spdlog::async_overflow_policy cell_to_policy(cell_t policy)
+inline spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept
 {
     if (policy < 0)
     {
@@ -36,7 +36,7 @@ inline spdlog::async_overflow_policy cell_to_policy(cell_t policy)
     return static_cast<spdlog::async_overflow_policy>(policy);
 }
 
-inline spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type)
+inline spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept
 {
     if (type < 0)
     {
@@ -133,7 +133,7 @@ inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const 
 #define ZEROPAD         0x00000002      /* zero (as opposed to blank) pad */
 #define UPPERDIGITS     0x00000004      /* make alpha digits uppercase */
 
-inline void ReorderTranslationParams(const Translation *pTrans, cell_t *params)
+inline static void ReorderTranslationParams(const Translation *pTrans, cell_t *params)
 {
     cell_t new_params[MAX_TRANSLATE_PARAMS];
     for (unsigned int i = 0; i < pTrans->fmt_count; i++)
@@ -143,7 +143,7 @@ inline void ReorderTranslationParams(const Translation *pTrans, cell_t *params)
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-inline fmt::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg)
+inline static fmt::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg)
 {
     unsigned int langid;
     Translation pTrans;
@@ -223,31 +223,25 @@ try_serverlang:
     }
 }
 
-inline bool AddString(fmt::memory_buffer &out, const char *string, int width, int prec)
+inline static void AddString(fmt::memory_buffer &out, const char *string, int width, int prec)
 {
-    int size = 0;
-    static char nlstr[] = {'(','n','u','l','l',')','\0'};
+    const char nlstr[] = {'(','n','u','l','l',')','\0'};
 
-    if (string == NULL)
+    if (string == nullptr)
     {
         string = nlstr;
         prec = -1;
     }
 
+    int size = 0;
     if (prec >= 0)
     {
-        for (size = 0; size < prec; ++size)
-        {
-            if (string[size] == '\0')
-            {
-                break;
-            }
-        }
+        while (string[size] && (prec > size++)) ;
     }
     else
     {
-        while (string[size++]);
-        size--;
+        while (string[size++]) ;
+        --size;
     }
 
     width -= size;
@@ -261,11 +255,9 @@ inline bool AddString(fmt::memory_buffer &out, const char *string, int width, in
     {
         out.push_back(' ');
     }
-
-    return true;
 }
 
-inline void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int flags)
+inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int flags)
 {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
@@ -317,18 +309,16 @@ inline void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, 
     {
         if (flags & ZEROPAD)
         {
-            while ((fieldlength < width))
+            while (fieldlength < width--)
             {
                 out.push_back('0');
-                width--;
             }
         }
         else
         {
-            while ((fieldlength < width))
+            while (fieldlength < width--)
             {
                 out.push_back(' ');
-                width--;
             }
         }
     }
@@ -343,14 +333,14 @@ inline void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, 
     tmp = std::pow(10.0, digits - 1);
     if (++significant_digits > MAX_SIGNIFICANT_DIGITS)
     {
-        while ((digits--))
+        while (digits--)
         {
             out.push_back('0');
         }
     }
     else
     {
-        while ((digits--))
+        while (digits--)
         {
             val = (int)(fval / tmp);
             out.push_back('0' + val);
@@ -389,26 +379,23 @@ inline void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, 
     // left justify if required
     if (flags & LADJUST)
     {
-        while ((fieldlength < width))
+        while (fieldlength < width--)
         {
             // right-padding only with spaces, ZEROPAD is ignored
             out.push_back(' ');
-            width--;
         }
     }
 }
 
-inline void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags)
+inline static void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags)
 {
-    char text[32];
-    int digits;
-
-    digits = 0;
-    do
+    int digits = 32;
+    unsigned int offset = 1 << 31;
+    while ((val & offset) == 0)
     {
-        text[digits++] = (val & 1) ? '1' : '0';
-        val >>= 1;
-    } while (val);
+        --digits;
+        offset >>= 1;
+    }
 
     if (!(flags & LADJUST))
     {
@@ -417,7 +404,7 @@ inline void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int 
             while (digits < width)
             {
                 out.push_back('0');
-                width--;
+                --width;
             }
         }
         else
@@ -425,7 +412,7 @@ inline void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int 
             while (digits < width)
             {
                 out.push_back(' ');
-                width--;
+                --width;
             }
         }
     }
@@ -433,7 +420,8 @@ inline void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int 
     width -= digits;
     while (digits--)
     {
-        out.push_back(text[digits]);
+        out.push_back(val & offset ? '1' : '0');
+        offset >>= 1;
     }
 
     if (flags & LADJUST)
@@ -455,34 +443,29 @@ inline void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int 
     }
 }
 
-inline void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags)
+inline static void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags)
 {
-    char text[32];
-    int digits;
-
-    digits = 0;
+    char text[10];
+    int digits = 0;
     do
     {
         text[digits++] = '0' + val % 10;
-        val /= 10;
-    } while (val);
+    } while (val /= 10);
 
     if (!(flags & LADJUST))
     {
         if (flags & ZEROPAD)
         {
-            while (digits < width)
+            while (digits < width--)
             {
                 out.push_back('0');
-                width--;
             }
         }
         else
         {
-            while ((digits < width))
+            while (digits < width--)
             {
                 out.push_back(' ');
-                width--;
             }
         }
     }
@@ -512,54 +495,47 @@ inline void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int fl
     }
 }
 
-inline void AddInt(fmt::memory_buffer &out, int val, int width, int flags)
+inline static void AddInt(fmt::memory_buffer &out, int val, int width, int flags)
 {
-    char text[32];
-    int digits;
-    int signedVal;
-    unsigned int unsignedVal;
+    char text[10];
+    int digits = 0;
 
-    digits = 0;
-    signedVal = val;
-    if (val < 0)
-    {
-        /* we want the unsigned version */
-        unsignedVal = abs(val);
-    }
-    else
-    {
-        unsignedVal = val;
-    }
+    bool negative = val < 0;
+    unsigned int unsignedVal = negative ? abs(val) : val;
 
     do
     {
         text[digits++] = '0' + unsignedVal % 10;
-        unsignedVal /= 10;
-    } while (unsignedVal);
-
-    if (signedVal < 0)
-    {
-        text[digits++] = '-';
-    }
+    } while (unsignedVal /= 10);
 
     if (!(flags & LADJUST))
     {
         if (flags & ZEROPAD)
         {
-            while ((digits < width))
+            if (negative)
+            {
+                out.push_back('-');
+            }
+            while (digits < width--)
             {
                 out.push_back('0');
-                width--;
             }
         }
         else
         {
-            while ((digits < width))
+            while (digits < width--)
             {
                 out.push_back(' ');
-                width--;
+            }
+            if (negative)
+            {
+                out.push_back('-');
             }
         }
+    }
+    else if (negative)
+    {
+        out.push_back('-');
     }
 
     width -= digits;
@@ -587,22 +563,27 @@ inline void AddInt(fmt::memory_buffer &out, int val, int width, int flags)
     }
 }
 
-inline void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags)
+inline static void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags)
 {
-    static char hexAdjustUppercase[] = "0123456789ABCDEF";
-    static char hexAdjustLowercase[] = "0123456789abcdef";
-    char text[32];
-    int digits;
-    const char *hexadjust;
+    char text[8];
+    int digits = 0;
 
-    hexadjust = (flags & UPPERDIGITS) ? hexAdjustUppercase : hexAdjustLowercase;
-
-    digits = 0;
-    do
+    if (flags & UPPERDIGITS)
     {
-        text[digits++] = hexadjust[val % 16];
-        val /= 16;
-    } while(val);
+        const char hexAdjust[] = "0123456789ABCDEF";
+        do
+        {
+            text[digits++] = hexAdjust[val & 0xF];
+        } while(val >>= 4);
+    }
+    else
+    {
+        const char hexAdjust[] = "0123456789abcdef";
+        do
+        {
+            text[digits++] = hexAdjust[val & 0xF];
+        } while(val >>= 4);
+    }
 
     if (!(flags & LADJUST))
     {
@@ -611,7 +592,7 @@ inline void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int fla
             while (digits < width)
             {
                 out.push_back('0');
-                width--;
+                --width;
             }
         }
         else
@@ -619,7 +600,7 @@ inline void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int fla
             while (digits < width)
             {
                 out.push_back(' ');
-                width--;
+                --width;
             }
         }
     }
@@ -649,20 +630,30 @@ inline void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int fla
     }
 }
 
-inline bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp)
+inline static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp)
 {
     auto player = playerhelpers->GetGamePlayer(index);
     if (!player || !player->IsConnected())
+    {
         return false;
+    }
 
-    if (namep)
+    if (namep != nullptr)
+    {
         *namep = player->GetName();
-    if (authp) {
+    }
+
+    if (authp != nullptr)
+    {
         const char *auth = player->GetAuthString();
         *authp = (auth && *auth) ? auth : "STEAM_ID_PENDING";
     }
-    if (useridp)
+
+    if (useridp != nullptr)
+    {
         *useridp = player->GetUserId();
+    }
+
     return true;
 }
 
@@ -713,16 +704,14 @@ reswitch:
                 flags |= LADJUST;
                 goto rflag;
             }
-        case '!':
-            {
-                goto rflag;
-            }
         case '.':
             {
                 n = 0;
-                while(std::isdigit((ch = *fmt++)))
+                ch = *fmt++;
+                while (ch >= '0' && ch <= '9')
                 {
                     n = 10 * n + (ch - '0');
+                    ch = *fmt++;
                 }
                 prec = (n < 0) ? -1 : n;
                 goto reswitch;
@@ -747,7 +736,7 @@ reswitch:
                 {
                     n = 10 * n + (ch - '0');
                     ch = *fmt++;
-                } while(std::isdigit(ch));
+                } while(ch >= '0' && ch <= '9');
                 width = n;
                 goto reswitch;
             }

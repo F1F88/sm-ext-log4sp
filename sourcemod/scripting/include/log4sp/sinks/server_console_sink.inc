@@ -14,7 +14,8 @@ methodmap ServerConsoleSink < Sink
     /**
      * This sink is output to the server console.
      *
-     * @return          Handle for a server console sink.
+     * @param multiThread   If true, the created sink will be multi threaded and thread safe.
+     * @return              ServerConsoleSink handle.
      */
-    public native ServerConsoleSink();
+    public native ServerConsoleSink(bool multiThread = false);
 }

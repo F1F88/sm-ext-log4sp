@@ -9,17 +9,11 @@
 #include <log4sp_empty/sinks/sink>
 
 
-methodmap BaseFileSinkST < Sink
+methodmap BaseFileSink < Sink
 {
-    public BaseFileSinkST(const char[] file, bool truncate = false) { return view_as<BaseFileSinkST>(INVALID_HANDLE); }
-
-    public void GetFilename(char[] buffer, int maxlen) {}
-}
-
-
-methodmap BaseFileSinkMT < Sink
-{
-    public BaseFileSinkMT(const char[] file, bool truncate = false) { return view_as<BaseFileSinkMT>(INVALID_HANDLE); }
+    public BaseFileSink(const char[] file, bool truncate = false, bool multiThread = false) {
+        return view_as<BaseFileSink>(INVALID_HANDLE);
+    }
 
     public void GetFilename(char[] buffer, int maxlen) {}
 }

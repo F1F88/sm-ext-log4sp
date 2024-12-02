@@ -1,7 +1,7 @@
-#ifndef _LOG4SP_CLIENT_CONSOLE_SINK_INL_H_
-#define _LOG4SP_CLIENT_CONSOLE_SINK_INL_H_
+#ifndef _LOG4SP_SINKS_CLIENT_CONSOLE_SINK_INL_H_
+#define _LOG4SP_SINKS_CLIENT_CONSOLE_SINK_INL_H_
 
-#include <log4sp/client_console_sink.h>
+#include "log4sp/sinks/client_console_sink.h"
 
 namespace log4sp {
 namespace sinks {
@@ -28,7 +28,7 @@ inline bool client_console_sink<Mutex>::set_player_filter(IPluginFunction *filte
         forwards->ReleaseForward(player_filter_forward_); // 清空 forward function
     }
 
-    player_filter_forward_ = forwards->CreateForwardEx(NULL, ET_Ignore, 4, NULL, Param_Cell, Param_String, Param_Cell, Param_String);
+    player_filter_forward_ = forwards->CreateForwardEx(nullptr, ET_Ignore, 4, nullptr, Param_Cell, Param_String, Param_Cell, Param_String);
     if (player_filter_forward_ == nullptr)
     {
         return false;
@@ -88,9 +88,7 @@ inline void client_console_sink<Mutex>::flush_()
     // No need to do anything...
 }
 
-} // namespace sinks
 
-} // namespace log4sp
-
-
-#endif // _LOG4SP_CLIENT_CONSOLE_SINK_INL_H_
+}       // namespace sinks
+}       // namespace log4sp
+#endif  // _LOG4SP_SINKS_CLIENT_CONSOLE_SINK_INL_H_

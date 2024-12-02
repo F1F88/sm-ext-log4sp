@@ -14,12 +14,12 @@ methodmap BaseFileSink < Sink
     /**
      * Trivial file sink with single file as target.
      *
-     * @param file      The file path where the log messages will be written.
-     * @param truncate  If true, the created file will be truncated.
-     * @param async     If true, the sink will be multi threaded.
-     * @return          Handle for a base file sink.
+     * @param file          The file path where the log messages will be written.
+     * @param truncate      If true, the created file will be truncated.
+     * @param multiThread   If true, the created sink will be multi threaded and thread safe.
+     * @return              BaseFileSink handle.
      */
-    public native BaseFileSink(const char[] file, bool truncate = false, bool aysnc = false);
+    public native BaseFileSink(const char[] file, bool truncate = false, bool multiThread = false);
 
     /**
      * Get the current filename being used by the file sink.

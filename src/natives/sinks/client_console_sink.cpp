@@ -1,50 +1,38 @@
-#include <log4sp/client_console_sink.h>
-#include <log4sp/sink_handle_manager.h>
+#include "log4sp/sinks/client_console_sink.h"
+
+#include "log4sp/sink_register.h"
+#include "log4sp/adapter/single_thread_sink.h"
+#include "log4sp/adapter/multi_thread_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                 ClientConsoleSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native ClientConsoleSink(bool async = false);
+ * public native ClientConsoleSink(bool multiThread = false);
  */
 static cell_t ClientConsoleSink(IPluginContext *ctx, const cell_t *params)
 {
-    bool async = static_cast<bool>(params[1]);
-    auto data = async ? log4sp::sink_handle_manager::instance().create_client_console_sink_st(ctx) :
-                        log4sp::sink_handle_manager::instance().create_client_console_sink_mt(ctx);
+    std::shared_ptr<log4sp::base_sink> sinkAdapter;
 
-    if (data == nullptr)
+    bool multiThread = static_cast<bool>(params[1]);
+    if (!multiThread)
+    {
+        auto sink   = std::make_shared<log4sp::sinks::client_console_sink_st>();
+        sinkAdapter = log4sp::single_thread_sink::create(sink, ctx);
+    }
+    else
+    {
+        auto sink   = std::make_shared<log4sp::sinks::client_console_sink_mt>();
+        sinkAdapter = log4sp::multi_thread_sink::create(sink, ctx);
+    }
+
+    if (sinkAdapter == nullptr)
     {
         return BAD_HANDLE;
     }
 
-    return data->handle();
-}
-
-template <typename Mutex>
-static void SetFilter(IPluginContext *ctx, const cell_t *params, log4sp::sink_handle_data *data)
-{
-    auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink<Mutex>>(data->sink_ptr());
-    if (sink == nullptr)
-    {
-        ctx->ReportError("Unable to cast sink to client_console_sink_%ct.", data->is_multi_threaded() ? 'm' : 's');
-        return;
-    }
-
-    auto funcId = static_cast<funcid_t>(params[2]);
-    auto filter = ctx->GetFunctionById(funcId);
-    if (filter == NULL)
-    {
-        ctx->ReportError("Invalid client console sink filter. (%d)", funcId);
-        return;
-    }
-
-    if (!sink->set_player_filter(filter))
-    {
-        ctx->ReportError("Sets client console sink filter failed. (%d)", funcId);
-        return;
-    }
+    return sinkAdapter->handle();
 }
 
 /**
@@ -53,26 +41,52 @@ static void SetFilter(IPluginContext *ctx, const cell_t *params, log4sp::sink_ha
 static cell_t ClientConsoleSink_SetFilter(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
-    if (sink == nullptr)
+
+    auto sinkAdapterRaw = log4sp::base_sink::read(handle, ctx);
+    if (sinkAdapterRaw == nullptr)
     {
         return 0;
     }
 
-    auto data = log4sp::sink_handle_manager::instance().get_data(sink);
-    if (data == nullptr)
+    auto funcId   = static_cast<funcid_t>(params[2]);
+    auto function = ctx->GetFunctionById(funcId);
+    if (function == nullptr)
     {
-        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
+        ctx->ReportError("Invalid client console sink filter function. (funcId=%d)", funcId);
         return 0;
     }
 
-    if (!data->is_multi_threaded())
+    if (!sinkAdapterRaw->is_multi_thread())
     {
-        SetFilter<spdlog::details::null_mutex>(ctx, params, data);
-        return 0;
+        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_st>(sinkAdapterRaw->raw());
+        if (sink == nullptr)
+        {
+            ctx->ReportError("Unable to cast sink to single thread client_console_sink.");
+            return 0;
+        }
+
+        if (!sink->set_player_filter(function))
+        {
+            ctx->ReportError("SM error! Adding client chat sink filter function failed.");
+            return 0;
+        }
+    }
+    else
+    {
+        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sinkAdapterRaw->raw());
+        if (sink == nullptr)
+        {
+            ctx->ReportError("Unable to cast sink to multi thread client_console_sink.");
+            return 0;
+        }
+
+        if (!sink->set_player_filter(function))
+        {
+            ctx->ReportError("SM error! Adding client chat sink filter function failed.");
+            return 0;
+        }
     }
 
-    SetFilter<std::mutex>(ctx, params, data);
     return 0;
 }
 
@@ -81,5 +95,5 @@ const sp_nativeinfo_t ClientConsoleSinkNatives[] =
     {"ClientConsoleSink.ClientConsoleSink",         ClientConsoleSink},
     {"ClientConsoleSink.SetFilter",                 ClientConsoleSink_SetFilter},
 
-    {NULL,                                          NULL}
+    {nullptr,                                       nullptr}
 };

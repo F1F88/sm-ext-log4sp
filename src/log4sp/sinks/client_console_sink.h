@@ -46,8 +46,7 @@ inline std::shared_ptr<spdlog::logger> client_console_logger_st()
     return Factory::template create<log4sp::sinks::client_console_sink_st>();
 }
 
-} // namespace log4sp
 
-#include "client_console_sink-inl.h"
-
-#endif // _LOG4SP_CLIENT_CONSOLE_SINK_H_
+}       // namespace log4sp
+#include "log4sp/sinks/client_console_sink-inl.h"
+#endif  // _LOG4SP_CLIENT_CONSOLE_SINK_H_

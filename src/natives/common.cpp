@@ -1,4 +1,4 @@
-#include <log4sp/utils.h>
+#include "log4sp/utils.h"
 
 /**
  * native void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
@@ -62,5 +62,5 @@ const sp_nativeinfo_t CommonNatives[] =
     {"LogLevelToName",              LogLevelToName},
     {"LogLevelToShortName",         LogLevelToShortName},
     {"NameToLogLevel",              NameToLogLevel},
-    {NULL,                          NULL}
+    {nullptr,                       nullptr}
 };

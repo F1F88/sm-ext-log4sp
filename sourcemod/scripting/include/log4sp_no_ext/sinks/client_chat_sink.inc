@@ -9,18 +9,11 @@
 #include <log4sp_empty/sinks/sink>
 
 
-typeset ClientChatSinkFilter
-{
-    function Action (int client);
-    function Action (int client, const char[] name, LogLevel lvl);
-    function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
-};
-
-
-
 methodmap ClientChatSink < Sink
 {
-    public ClientchatSinkST() { return view_as<ClientChatSink>(INVALID_HANDLE); }
+    public ClientChatSink(bool multiThread = false) {
+        return view_as<ClientChatSink>(INVALID_HANDLE);
+    }
 
-    public void SetFilter(ClientChatSinkFilter filter) {}
+    public void SetFilter(SinkClientFilter filter) {}
 }

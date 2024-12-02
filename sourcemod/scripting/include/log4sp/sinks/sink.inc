@@ -15,16 +15,16 @@
 methodmap Sink < Handle
 {
     /**
-     * Get the current logging level.
+     * Gets the sink log level.
      *
-     * @return          The current logging level.
+     * @return          The sink log level.
      */
     public native LogLevel GetLevel();
 
     /**
-     * Set the logging level.
+     * Sets the sink log level.
      *
-     * @param lvl       Logging level enum.
+     * @param lvl       Log level enum.
      */
     public native void SetLevel(LogLevel lvl);
 
@@ -39,45 +39,46 @@ methodmap Sink < Handle
     public native void SetPattern(const char[] pattern);
 
     /**
-     * Gets whether logging at the given log level is enabled.
+     * Gets whether logging is enabled for the given log level.
      *
-     * @param lvl       Logging level enum.
-     * @return          True if logging is enabled for the given level.
+     * @param lvl       Log level enum.
+     * @return          True if logging is enabled for the given log level.
      */
     public native bool ShouldLog(LogLevel lvl);
 
     /**
-     * Logging a Message.
+     * Logs a message.
      *
-     * @param name      The name of the logger.
-     * @param lvl       Logging level enum.
-     * @param msg       Logging message.
+     * @param name      The name of a logger.
+     * @param lvl       Log level enum.
+     * @param msg       Log message.
      */
     public native void Log(const char[] name, LogLevel lvl, const char[] msg);
-
-    /**
-     * Logging a message with the sourcepawn source code location.
-     *
-     * @param name      The name of the logger.
-     * @param lvl       Logging level enum.
-     * @param msg       Logging message.
-     */
-    public native void LogSrc(const char[] name, LogLevel lvl, const char[] msg);
-
-    /**
-     * Logging a message with the source code location.
-     *
-     * @param file      Source code location File name.
-     * @param line      Source code location File line number.
-     * @param func      Source code location Function name.
-     * @param name      The name of the logger.
-     * @param lvl       Logging level enum.
-     * @param msg       Logging message.
-     */
-    public native void LogLoc(const char[] file, int line, const char[] func, const char[] name, LogLevel lvl, const char[] msg);
 
     /**
      * Manual flush logger contents.
      */
     public native void Flush();
 }
+
+
+/**
+ * The filter is called at sink::sink_it_.
+ * filter return Plugin_Continue to allow sink it, others skip sink it to this client.
+ *
+ * extension only call filter when the client in game, so you don't need this code: "if (IsClientInGame(client)) ".
+ * By default (no filter is set), the sink will sink to all in game clients.
+ *
+ * Param msg is a message that has been formatted but not yet formatted by a pattern.
+ *
+ * For example, only sink to alive client
+ *      Action FilterAlivePlayer(int client) {
+ *          return IsPlayerAlive(client) ? Plugin_Continue : Plugin_Handled;
+ *      }
+ */
+typeset SinkClientFilter
+{
+    function Action (int client);
+    function Action (int client, const char[] name, LogLevel lvl);
+    function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
+};

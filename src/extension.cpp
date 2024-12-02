@@ -29,14 +29,16 @@
  * Version: $Id$
  */
 
+#include "spdlog/async.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
-#include "spdlog/sinks/daily_file_sink.h"
 
-#include <extension.h>
+#include "extension.h"
 
-#include <log4sp/logger_handle_manager.h>
-#include <log4sp/sink_handle_manager.h>
+#include "log4sp/adapter/sync_logger.h"
+#include "log4sp/logger_register.h"
+#include "log4sp/sink_register.h"
+
 
 /**
  * @file extension.cpp
@@ -46,88 +48,41 @@
 Log4sp g_Log4sp;    /**< Global singleton for extension's main interface */
 SMEXT_LINK(&g_Log4sp);
 
-LoggerHandler       g_LoggerHandler;
-HandleType_t        g_LoggerHandleType              = 0;
-
-SinkHandler         g_SinkHandler;
-HandleType_t        g_ServerConsoleSinkHandleType   = 0;
-HandleType_t        g_BaseFileSinkHandleType        = 0;
-HandleType_t        g_RotatingFileSinkHandleType    = 0;
-HandleType_t        g_DailyFileSinkHandleType       = 0;
-HandleType_t        g_ClientConsoleSinkHandleType   = 0;
-HandleType_t        g_ClientChatSinkHandleType      = 0;
+HandleType_t        g_LoggerHandleType = 0;
+HandleType_t        g_SinkHandleType   = 0;
 
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
-    HandleError err;
-    g_LoggerHandleType = handlesys->CreateType("Logger", &g_LoggerHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_LoggerHandleType)
+    // Init handle type
     {
-        snprintf(error, maxlen, "Could not create Logger handle type (err: %d)", err);
-        return false;
+        HandleAccess access;
+        handlesys->InitAccessDefaults(nullptr, &access);
+        access.access[HandleAccess_Delete] = 0;
+
+        HandleError err;
+
+        g_LoggerHandleType = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &err);
+        if (!g_LoggerHandleType)
+        {
+            snprintf(error, maxlen, "Could not create Logger handle type (err: %d)", err);
+            return false;
+        }
+
+        g_SinkHandleType = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &err);
+        if (!g_SinkHandleType)
+        {
+            snprintf(error, maxlen, "Could not create Sink handle type (err: %d)", err);
+            return false;
+        }
     }
 
-    // We don't use inheritance because types only can have up to 15 sub-types.
-    g_ServerConsoleSinkHandleType = handlesys->CreateType("ServerConsoleSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ServerConsoleSinkHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ServerConsoleSink handle type (err: %d)", err);
-        return false;
-    }
-
-    g_BaseFileSinkHandleType = handlesys->CreateType("BaseFileSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_BaseFileSinkHandleType)
-    {
-        snprintf(error, maxlen, "Could not create BaseFileSink handle type (err: %d)", err);
-        return false;
-    }
-
-    g_RotatingFileSinkHandleType = handlesys->CreateType("RotatingFileSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_RotatingFileSinkHandleType)
-    {
-        snprintf(error, maxlen, "Could not create RotatingFileSink handle type (err: %d)", err);
-        return false;
-    }
-
-    g_DailyFileSinkHandleType = handlesys->CreateType("DailyFileSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_DailyFileSinkHandleType)
-    {
-        snprintf(error, maxlen, "Could not create DailyFileSink handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ClientConsoleSinkHandleType = handlesys->CreateType("ClientConsoleSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ClientConsoleSinkHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ClientConsoleSink handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ClientChatSinkHandleType = handlesys->CreateType("ClientChatSink", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ClientChatSinkHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ClientChatSink handle type (err: %d)", err);
-        return false;
-    }
-
-    sharesys->AddNatives(myself, CommonNatives);
-    sharesys->AddNatives(myself, LoggerNatives);
-    sharesys->AddNatives(myself, SinkNatives);
-    sharesys->AddNatives(myself, ServerConsoleSinkNatives);
-    sharesys->AddNatives(myself, BaseFileSinkNatives);
-    sharesys->AddNatives(myself, RotatingFileSinkNatives);
-    sharesys->AddNatives(myself, DailyFileSinkNatives);
-    sharesys->AddNatives(myself, ClientConsoleSinkNatives);
-    sharesys->AddNatives(myself, ClientChatSinkNatives);
-
-    if (!rootconsole->AddRootConsoleCommand3("log4sp", "Manager Logging For SourcePawn", this))
+    // Init console command
+    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Logging For SourcePawn command menu", this))
     {
         snprintf(error, maxlen, "Could not add root console commmand 'log4sp'.");
         return false;
     }
-
-    sharesys->RegisterLibrary(myself, "log4sp");
 
     // Init Global Thread Pool
     {
@@ -137,27 +92,46 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
         auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoi(threadCountStr)) : static_cast<size_t>(1);
 
-        // rootconsole->ConsolePrint("Thread Pool: queue size = %d.", queueSize);
-        // rootconsole->ConsolePrint("Thread Pool: thread count = %d.", threadCount);
-
         spdlog::init_thread_pool(queueSize, threadCount);
     }
 
     // Init Default Logger
     {
-        auto consoleSink = std::make_shared<spdlog::sinks::stdout_sink_st>();
-        consoleSink->set_pattern("[%H:%M:%S.%e] [%n] [%l] %v");
+        auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        auto logger = std::make_shared<spdlog::logger>(SMEXT_CONF_LOGTAG, sink);
 
-        char filepath[PLATFORM_MAX_PATH];
-        smutils->BuildPath(Path_SM, filepath, sizeof(filepath), "logs/log4sp.log");
-
-        auto dailyFileSink = std::make_shared<spdlog::sinks::daily_file_sink_st>(filepath, 0, 0);
-
-        auto sinks = spdlog::sinks_init_list{consoleSink, dailyFileSink};
-        auto logger = std::make_shared<spdlog::logger>(SMEXT_CONF_LOGTAG, sinks);
-
+        sink->set_pattern("[%H:%M:%S.%e] [%n] [%l] %v");
         spdlog::set_default_logger(logger);
+
+        HandleSecurity sec = {nullptr, myself->GetIdentity()};
+
+        HandleAccess access;
+        handlesys->InitAccessDefaults(nullptr, &access);
+        access.access[HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
+
+        HandleError err;
+
+        auto loggerAdapter = log4sp::sync_logger::create(logger, &sec, &access, &err);
+        if (loggerAdapter == nullptr)
+        {
+            snprintf(error, maxlen, "Could not create default logger handle. (err=%d)", err);
+            return false;
+        }
+
+        logger->set_level(spdlog::level::trace);
     }
+
+    sharesys->AddNatives(myself, CommonNatives);
+    sharesys->AddNatives(myself, LoggerNatives);
+    sharesys->AddNatives(myself, SinkNatives);
+    sharesys->AddNatives(myself, BaseFileSinkNatives);
+    sharesys->AddNatives(myself, ClientChatSinkNatives);
+    sharesys->AddNatives(myself, ClientConsoleSinkNatives);
+    sharesys->AddNatives(myself, DailyFileSinkNatives);
+    sharesys->AddNatives(myself, RotatingFileSinkNatives);
+    sharesys->AddNatives(myself, ServerConsoleSinkNatives);
+
+    sharesys->RegisterLibrary(myself, SMEXT_CONF_LOGTAG);
 
     rootconsole->ConsolePrint("****************** log4sp.ext initialize complete! ******************");
     return true;
@@ -165,47 +139,45 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 void Log4sp::SDK_OnUnload()
 {
-    log4sp::logger_handle_manager::instance().shutdown();
-    log4sp::sink_handle_manager::instance().shutdown();
+    log4sp::logger_register::instance().shutdown();
+    log4sp::sink_register::instance().shutdown();
 
     handlesys->RemoveType(g_LoggerHandleType, myself->GetIdentity());
+    handlesys->RemoveType(g_SinkHandleType, myself->GetIdentity());
 
-    handlesys->RemoveType(g_ServerConsoleSinkHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_BaseFileSinkHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_RotatingFileSinkHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_DailyFileSinkHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_ClientConsoleSinkHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_ClientChatSinkHandleType, myself->GetIdentity());
-
-    rootconsole->RemoveRootConsoleCommand("log4sp", this);
+    rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, this);
 
     spdlog::shutdown();
 }
 
-void LoggerHandler::OnHandleDestroy(HandleType_t type, void *object)
+void Log4sp::OnHandleDestroy(HandleType_t type, void *object)
 {
-    auto logger = static_cast<spdlog::logger *>(object);
-
-    if (spdlog::should_log(spdlog::level::trace))
+    if (type == g_LoggerHandleType)
     {
-        auto data = log4sp::logger_handle_manager::instance().get_data(logger->name());
-        SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(data->handle()), fmt::ptr(object));
+        auto loggerAdapterRaw = static_cast<log4sp::base_logger *>(object);
+
+        if (spdlog::should_log(spdlog::level::trace))
+        {
+            auto logger = loggerAdapterRaw->raw();
+            SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(loggerAdapterRaw->handle()), fmt::ptr(object));
+        }
+
+        log4sp::logger_register::instance().drop(loggerAdapterRaw->raw()->name());
+        return;
     }
 
-    log4sp::logger_handle_manager::instance().drop(logger->name());
-}
-
-void SinkHandler::OnHandleDestroy(HandleType_t type, void *object)
-{
-    spdlog::sinks::sink *sink = static_cast<spdlog::sinks::sink *>(object);
-
-    if (spdlog::should_log(spdlog::level::trace))
+    if (type == g_SinkHandleType)
     {
-        auto data = log4sp::sink_handle_manager::instance().get_data(sink);
-        SPDLOG_TRACE("Destroy a sink handle. (type={}, hdl={:X}, ptr={})", data->handle_type(), static_cast<int>(data->handle()), fmt::ptr(object));
-    }
+        auto sinkAdapterRaw = static_cast<log4sp::base_sink *>(object);
 
-    log4sp::sink_handle_manager::instance().drop(sink);
+        if (spdlog::should_log(spdlog::level::trace))
+        {
+            SPDLOG_TRACE("Destroy a sink handle. (hdl={:X}, ptr={})", static_cast<int>(sinkAdapterRaw->handle()), fmt::ptr(object));
+        }
+
+        log4sp::sink_register::instance().drop(sinkAdapterRaw);
+        return;
+    }
 }
 
 void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
@@ -218,30 +190,30 @@ void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
         rootconsole->ConsolePrint("Usage: sm log4sp <function> <logger_name> [arguments]");
 
         // rootconsole->DrawGenericOption("list", "Show all loggers name."); // ref: https://github.com/gabime/spdlog/issues/180
-        rootconsole->DrawGenericOption("get_lvl", "Get a logger logging level.");
-        rootconsole->DrawGenericOption("set_lvl", "Set a logger logging level. [trace, debug, info, warn, error, fatal, off]");
-        rootconsole->DrawGenericOption("set_pattern", "Change a logger log pattern.");
-        rootconsole->DrawGenericOption("should_log", "Get whether logger is enabled at the given level.");
-        rootconsole->DrawGenericOption("log", "Logging a Message.");
-        rootconsole->DrawGenericOption("flush", "Manual flush logger contents.");
-        rootconsole->DrawGenericOption("get_flush_lvl", "Get the minimum log level that will trigger automatic flush.");
-        rootconsole->DrawGenericOption("set_flush_lvl", "Set the minimum log level that will trigger automatic flush. [trace, debug, info, warn, error, fatal, off]");
-        rootconsole->DrawGenericOption("should_bt", "Create new backtrace sink and move to it all our child sinks.");
-        rootconsole->DrawGenericOption("enable_bt", "Create new backtrace sink and move to it all our child sinks.");
-        rootconsole->DrawGenericOption("disable_bt", "Restore orig sinks and level and delete the backtrace sink.");
-        rootconsole->DrawGenericOption("dump_bt", "Dump the backtrace of logged messages in the logger.");
+        rootconsole->DrawGenericOption("get_lvl",       "Gets a logger log level.");
+        rootconsole->DrawGenericOption("set_lvl",       "Sets a logger log level. [trace, debug, info, warn, error, fatal, off]");
+        rootconsole->DrawGenericOption("set_pattern",   "Sets formatting for the sinks in a logger.");
+        rootconsole->DrawGenericOption("should_log",    "Gets a logger whether logging is enabled for the given log level.");
+        rootconsole->DrawGenericOption("log",           "Use a logger to log a message.");
+        rootconsole->DrawGenericOption("flush",         "Manual flush a logger contents.");
+        rootconsole->DrawGenericOption("get_flush_lvl", "Gets the minimum log level that will trigger automatic flush.");
+        rootconsole->DrawGenericOption("set_flush_lvl", "Sets the minimum log level that will trigger automatic flush. [trace, debug, info, warn, error, fatal, off]");
+        rootconsole->DrawGenericOption("should_bt",     "Gets whether backtrace logging is enabled.");
+        rootconsole->DrawGenericOption("enable_bt",     "Create new backtrace sink and move to it all our child sinks.");
+        rootconsole->DrawGenericOption("disable_bt",    "Restore original sinks and level and delete the backtrace sink.");
+        rootconsole->DrawGenericOption("dump_bt",       "Dump log messages stored in the backtrace ring buffer.");
         return;
     }
 
     const char *name = args->Arg(3);
-    auto data = log4sp::logger_handle_manager::instance().get_data(name);
-    if (data == nullptr)
+    auto loggerAdapter = log4sp::logger_register::instance().get(name);
+    if (loggerAdapter == nullptr)
     {
         rootconsole->ConsolePrint("[SM] Logger with name '%s' does not exists.", name);
         return;
     }
 
-    auto logger = data->logger();
+    auto logger = loggerAdapter->raw();
 
     const char *func = args->Arg(2);
     if (!strcmp(func, "get_lvl"))

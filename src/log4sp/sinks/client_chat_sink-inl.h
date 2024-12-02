@@ -1,7 +1,7 @@
-#ifndef _LOG4SP_CLIENT_CHAT_SINK_INL_H_
-#define _LOG4SP_CLIENT_CHAT_SINK_INL_H_
+#ifndef _LOG4SP_SINKS_CLIENT_CHAT_SINK_INL_H_
+#define _LOG4SP_SINKS_CLIENT_CHAT_SINK_INL_H_
 
-#include <log4sp/client_chat_sink.h>
+#include "log4sp/sinks/client_chat_sink.h"
 
 namespace log4sp {
 namespace sinks {
@@ -28,7 +28,7 @@ inline bool client_chat_sink<Mutex>::set_player_filter(IPluginFunction *filter)
         forwards->ReleaseForward(player_filter_forward_);
     }
 
-    player_filter_forward_ = forwards->CreateForwardEx(NULL, ET_Ignore, 4, NULL, Param_Cell, Param_String, Param_Cell, Param_String);
+    player_filter_forward_ = forwards->CreateForwardEx(nullptr, ET_Ignore, 4, nullptr, Param_Cell, Param_String, Param_Cell, Param_String);
     if (player_filter_forward_ == nullptr)
     {
         return false;
@@ -82,9 +82,7 @@ inline void client_chat_sink<Mutex>::sink_it_(const spdlog::details::log_msg &ms
     }
 }
 
-} // namespace sinks
 
-} // namespace log4sp
-
-
-#endif // _LOG4SP_CLIENT_CHAT_SINK_INL_H_
+}       // namespace sinks
+}       // namespace log4sp
+#endif  // _LOG4SP_SINKS_CLIENT_CHAT_SINK_INL_H_

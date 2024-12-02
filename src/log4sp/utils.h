@@ -13,19 +13,19 @@ namespace log4sp {
  * 将 cell_t 转为 spdlog::level::level_enum
  * 如果 cell_t 越界，则返回最近的边界值
  */
-spdlog::level::level_enum cell_to_level(cell_t lvl);
+spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept;
 
 /**
  * 将 cell_t 转为 spdlog::async_overflow_policy
  * 如果 cell_t 越界，则返回最近的边界值
  */
-spdlog::async_overflow_policy cell_to_policy(cell_t policy);
+spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept;
 
 /**
  * 将 cell_t 转为 spdlog::pattern_time_type
  * 如果 cell_t 越界，则返回最近的边界值
  */
-spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type);
+spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept;
 
 /**
  * 获取插件调用 native 的源代码位置

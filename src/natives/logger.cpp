@@ -6,22 +6,13 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include <log4sp/utils.h>
-#include <log4sp/logger_handle_manager.h>
-#include <log4sp/sink_handle_manager.h>
+#include "log4sp/utils.h"
+#include "log4sp/sink_register.h"
+#include "log4sp/logger_register.h"
+#include "log4sp/adapter/base_sink.h"
+#include "log4sp/adapter/sync_logger.h"
+#include "log4sp/adapter/async_logger.h"
 
-/**
- * Thread safe logger (except for set_error_handler())
- * Has name, log level, vector of std::shared sink pointers and formatter
- * Upon each log write the logger:
- * 1. Checks if its log level is enough to log the message and if yes:
- * 2. Call the underlying sinks to do the job.
- * 3. Each sink use its own private copy of a formatter to format the message
- * and send to its destination.
- *
- * The use of private formatter per sink provides the opportunity to cache some
- * formatted data, and support for different format per sink.
- */
 
 /**
  * public native Logger(const char[] name, Sink[] sinks, int numSinks, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
@@ -30,13 +21,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (!strcmp(name, SMEXT_CONF_LOGTAG))
-    {
-        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
-        return BAD_HANDLE;
-    }
-
-    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
+    if (log4sp::logger_register::instance().get(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -46,43 +31,44 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     ctx->LocalToPhysAddr(params[2], &sinks);
 
     auto numSinks = static_cast<unsigned int>(params[3]);
-    auto async = static_cast<bool>(params[4]);
 
     std::vector<spdlog::sink_ptr> sinksList;
+    sinksList.reserve(numSinks);
+
     for (unsigned int i = 0; i < numSinks; ++i)
     {
-        auto sinkHandle = static_cast<Handle_t>(sinks[i]);
-        auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, sinkHandle);
-        if (sink == nullptr)
+        auto sinkHandle     = static_cast<Handle_t>(sinks[i]);
+        auto sinkAdapterRaw = log4sp::base_sink::read(sinkHandle, ctx);
+        if (sinkAdapterRaw == nullptr)
         {
             return BAD_HANDLE;
         }
 
-        auto data = log4sp::sink_handle_manager::instance().get_data(sink);
-        if (data == nullptr)
-        {
-            ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(sinkHandle));
-            return BAD_HANDLE;
-        }
-
-        if (data->is_multi_threaded() != async)
-        {
-            ctx->ReportError("You cannot create a %s logger with a %s sink.", async ? "asynchronous" : "synchronous", async ? "synchronous" : "asynchronous");
-            return BAD_HANDLE;
-        }
-
-        sinksList.push_back(data->sink_ptr());
+        sinksList.push_back(sinkAdapterRaw->raw());
     }
 
+    std::shared_ptr<log4sp::base_logger> loggerAdapter;
+
+    auto async = static_cast<bool>(params[4]);
     if (!async)
     {
-        auto data = log4sp::logger_handle_manager::instance().create_logger_st(ctx, name, sinksList);
-        return data->handle();
+        auto logger   = std::make_shared<spdlog::logger>(name, sinksList.begin(), sinksList.end());
+        loggerAdapter = log4sp::sync_logger::create(logger, ctx);
+    }
+    else
+    {
+        auto policy   = log4sp::cell_to_policy(params[5]);
+        auto distSink = std::make_shared<spdlog::sinks::dist_sink_mt>(sinksList);
+        auto logger   = std::make_shared<spdlog::async_logger>(name, distSink, spdlog::thread_pool(), policy);
+        loggerAdapter = log4sp::async_logger::create(logger, ctx);
     }
 
-    auto policy = log4sp::cell_to_policy(params[5]);
-    auto data = log4sp::logger_handle_manager::instance().create_logger_mt(ctx, name, sinksList, policy);
-    return data->handle();
+    if (loggerAdapter == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return loggerAdapter->handle();
 }
 
 /**
@@ -92,51 +78,50 @@ static cell_t Get(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (!strcmp(name, SMEXT_CONF_LOGTAG))
-    {
-        ctx->ReportError("The logger named '" SMEXT_CONF_LOGTAG "' is reserved dedicated logger.");
-        return BAD_HANDLE;
-    }
 
-    auto data = log4sp::logger_handle_manager::instance().get_data(name);
-    if (data == nullptr)
-    {
-        ctx->ReportError("Logger named '%s' does not exist.", name);
-        return BAD_HANDLE;
-    }
-
-    return data->handle();
+    auto loggerAdapter = log4sp::logger_register::instance().get(name);
+    return loggerAdapter == nullptr ? BAD_HANDLE : loggerAdapter->handle();
 }
 
 /**
- * public static native Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ * public static native Logger CreateServerConsoleLogger(const char[] name,
+ *                                                       bool async = false,
+ *                                                       AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
  */
 static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (!strcmp(name, SMEXT_CONF_LOGTAG))
-    {
-        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
-        return BAD_HANDLE;
-    }
-
-    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
+    if (log4sp::logger_register::instance().get(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
     }
 
+    std::shared_ptr<log4sp::base_logger> loggerAdapter;
+
     auto async = static_cast<bool>(params[2]);
     if (!async)
     {
-        auto data = log4sp::logger_handle_manager::instance().create_server_console_logger_st(ctx, name);
-        return data->handle();
+        auto sink     = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        auto logger   = std::make_shared<spdlog::logger>(name, sink);
+        loggerAdapter = log4sp::sync_logger::create(logger, ctx);
+    }
+    else
+    {
+        auto policy   = log4sp::cell_to_policy(params[3]);
+        auto sink     = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        auto distSink = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr> {sink});
+        auto logger   = std::make_shared<spdlog::async_logger>(name, distSink, spdlog::thread_pool(), policy);
+        loggerAdapter = log4sp::async_logger::create(logger, ctx);
     }
 
-    auto policy = log4sp::cell_to_policy(params[3]);
-    auto data = log4sp::logger_handle_manager::instance().create_server_console_logger_mt(ctx, name, policy);
-    return data->handle();
+    if (loggerAdapter == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return loggerAdapter->handle();
 }
 
 /**
@@ -151,13 +136,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (!strcmp(name, SMEXT_CONF_LOGTAG))
-    {
-        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
-        return BAD_HANDLE;
-    }
-
-    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
+    if (log4sp::logger_register::instance().get(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -165,20 +144,35 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
 
     char *file;
     ctx->LocalToString(params[2], &file);
+
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
+    std::shared_ptr<log4sp::base_logger> loggerAdapter;
+
     auto truncate = static_cast<bool>(params[3]);
-    auto async = static_cast<bool>(params[4]);
+    auto async    = static_cast<bool>(params[4]);
     if (!async)
     {
-        auto data = log4sp::logger_handle_manager::instance().create_base_file_logger_st(ctx, name, path, truncate);
-        return data->handle();
+        auto sink     = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        auto logger   = std::make_shared<spdlog::logger>(name, sink);
+        loggerAdapter = log4sp::sync_logger::create(logger, ctx);
+    }
+    else
+    {
+        auto policy   = log4sp::cell_to_policy(params[5]);
+        auto sink     = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        auto distSink = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr> {sink});
+        auto logger   = std::make_shared<spdlog::async_logger>(name, distSink, spdlog::thread_pool(), policy);
+        loggerAdapter = log4sp::async_logger::create(logger, ctx);
     }
 
-    auto policy = log4sp::cell_to_policy(params[5]);
-    auto data = log4sp::logger_handle_manager::instance().create_base_file_logger_mt(ctx, name, path, truncate, policy);
-    return data->handle();
+    if (loggerAdapter == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return loggerAdapter->handle();
 }
 
 /**
@@ -195,13 +189,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (!strcmp(name, SMEXT_CONF_LOGTAG))
-    {
-        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
-        return BAD_HANDLE;
-    }
-
-    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
+    if (log4sp::logger_register::instance().get(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -209,6 +197,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
 
     char *file;
     ctx->LocalToString(params[2], &file);
+
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
@@ -226,17 +215,31 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
         return BAD_HANDLE;
     }
 
+    std::shared_ptr<log4sp::base_logger> loggerAdapter;
+
     auto rotateOnOpen = static_cast<bool>(params[5]);
-    auto async = static_cast<bool>(params[6]);
+    auto async        = static_cast<bool>(params[6]);
     if (!async)
     {
-        auto data = log4sp::logger_handle_manager::instance().create_rotating_file_logger_st(ctx, name, path, maxFileSize, maxFiles, rotateOnOpen);
-        return data->handle();
+        auto sink     = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        auto logger   = std::make_shared<spdlog::logger>(name, sink);
+        loggerAdapter = log4sp::sync_logger::create(logger, ctx);
+    }
+    else
+    {
+        auto policy   = log4sp::cell_to_policy(params[7]);
+        auto sink     = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        auto distSink = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr> {sink});
+        auto logger   = std::make_shared<spdlog::async_logger>(name, distSink, spdlog::thread_pool(), policy);
+        loggerAdapter = log4sp::async_logger::create(logger, ctx);
     }
 
-    auto policy = log4sp::cell_to_policy(params[7]);
-    auto data = log4sp::logger_handle_manager::instance().create_rotating_file_logger_mt(ctx, name, path, maxFileSize, maxFiles, rotateOnOpen, policy);
-    return data->handle();
+    if (loggerAdapter == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return loggerAdapter->handle();
 }
 
 /**
@@ -254,13 +257,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (!strcmp(name, SMEXT_CONF_LOGTAG))
-    {
-        ctx->ReportError("'" SMEXT_CONF_LOGTAG "' is a reserved dedicated logger name.");
-        return BAD_HANDLE;
-    }
-
-    if (log4sp::logger_handle_manager::instance().get_data(name) != nullptr)
+    if (log4sp::logger_register::instance().get(name) != nullptr)
     {
         ctx->ReportError("Logger with name '%s' already exists.", name);
         return BAD_HANDLE;
@@ -268,10 +265,11 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 
     char *file;
     ctx->LocalToString(params[2], &file);
+
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    auto hour = static_cast<int>(params[3]);
+    auto hour   = static_cast<int>(params[3]);
     auto minute = static_cast<int>(params[4]);
     if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
     {
@@ -279,18 +277,32 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
+    std::shared_ptr<log4sp::base_logger> loggerAdapter;
+
     auto truncate = static_cast<bool>(params[5]);
     auto maxFiles = static_cast<uint16_t>(params[6]);
-    auto async = static_cast<bool>(params[7]);
+    auto async    = static_cast<bool>(params[7]);
     if (!async)
     {
-        auto data = log4sp::logger_handle_manager::instance().create_daily_file_logger_st(ctx, name, path, hour, minute, truncate, maxFiles);
-        return data->handle();
+        auto sink     = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
+        auto logger   = std::make_shared<spdlog::logger>(name, sink);
+        loggerAdapter = log4sp::sync_logger::create(logger, ctx);
+    }
+    else
+    {
+        auto policy   = log4sp::cell_to_policy(params[8]);
+        auto sink     = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
+        auto distSink = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr> {sink});
+        auto logger   = std::make_shared<spdlog::async_logger>(name, distSink, spdlog::thread_pool(), policy);
+        loggerAdapter = log4sp::async_logger::create(logger, ctx);
     }
 
-    auto policy = log4sp::cell_to_policy(params[8]);
-    auto data = log4sp::logger_handle_manager::instance().create_daily_file_logger_mt(ctx, name, path, hour, minute, truncate, maxFiles, policy);
-    return data->handle();
+    if (loggerAdapter == nullptr)
+    {
+        return BAD_HANDLE;
+    }
+
+    return loggerAdapter->handle();
 }
 
 /**
@@ -299,13 +311,13 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 static cell_t GetName(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    ctx->StringToLocal(params[2], params[3], logger->name().c_str());
+    ctx->StringToLocal(params[2], params[3], logger->raw()->name().c_str());
     return 0;
 }
 
@@ -315,13 +327,13 @@ static cell_t GetName(IPluginContext *ctx, const cell_t *params)
 static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    return logger->level();
+    return static_cast<cell_t>(logger->raw()->level());
 }
 
 /**
@@ -330,7 +342,7 @@ static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
 static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -338,28 +350,17 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
 
     auto lvl = log4sp::cell_to_level(params[2]);
 
-    logger->set_level(lvl);
+    logger->raw()->set_level(lvl);
     return 0;
 }
 
-/**
- * set formatting for the sinks in this logger.
- * each sink will get a separate instance of the formatter object.
- *
- * set formatting for the sinks in this logger.
- * equivalent to
- *     set_formatter(make_unique<pattern_formatter>(pattern, time_type))
- * Note: each sink will get a new instance of a formatter object, replacing the old one.
- *
- * pattern flags (https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
- */
 /**
  * public native void SetPattern(const char[] pattern, PatternTimeType type = PatternTimeType_local);
  */
 static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -370,7 +371,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
 
     auto type = log4sp::cell_to_pattern_time_type(params[3]);
 
-    logger->set_pattern(pattern, type);
+    logger->raw()->set_pattern(pattern, type);
     return 0;
 }
 
@@ -380,7 +381,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
 static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -388,7 +389,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
 
     auto lvl = log4sp::cell_to_level(params[2]);
 
-    return logger->should_log(lvl);
+    return logger->raw()->should_log(lvl);
 }
 
 /**
@@ -397,7 +398,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
 static cell_t Log(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -408,7 +409,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    logger->log(lvl, msg);
+    logger->raw()->log(lvl, msg);
     return 0;
 }
 
@@ -418,13 +419,11 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
 static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
-
-    auto lvl = log4sp::cell_to_level(params[2]);
 
     std::string msg;
     try
@@ -433,13 +432,39 @@ static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->log(lvl, msg);
+    auto lvl = log4sp::cell_to_level(params[2]);
+
+    logger->raw()->log(lvl, msg);
+    return 0;
+}
+
+/**
+ * public native void LogAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+ */
+static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 3);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    auto lvl = log4sp::cell_to_level(params[2]);
+
+    logger->raw()->log(lvl, msg);
     return 0;
 }
 
@@ -449,19 +474,19 @@ static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
 static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
     auto lvl = log4sp::cell_to_level(params[2]);
+    auto loc = log4sp::get_plugin_source_loc(ctx);
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    auto loc = log4sp::get_plugin_source_loc(ctx);
-    logger->log(loc, lvl, msg);
+    logger->raw()->log(loc, lvl, msg);
     return 0;
 }
 
@@ -471,29 +496,54 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
 static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
-
     std::string msg;
-    auto loc = log4sp::get_plugin_source_loc(ctx);
-
     try
     {
         msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
     catch(const std::exception& e)
     {
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->log(loc, lvl, msg);
+    auto lvl = log4sp::cell_to_level(params[2]);
+    auto loc = log4sp::get_plugin_source_loc(ctx);
+
+    logger->raw()->log(loc, lvl, msg);
+    return 0;
+}
+
+/**
+ * public native void LogSrcAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+ */
+static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 3);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    auto lvl = log4sp::cell_to_level(params[2]);
+    auto loc = log4sp::get_plugin_source_loc(ctx);
+
+    logger->raw()->log(loc, lvl, msg);
     return 0;
 }
 
@@ -503,7 +553,7 @@ static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
 static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -512,18 +562,17 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
     char *file;
     ctx->LocalToString(params[2], &file);
 
-    auto line = static_cast<int>(params[3]);
-
     char *func;
     ctx->LocalToString(params[4], &func);
-
-    auto lvl = log4sp::cell_to_level(params[5]);
 
     char *msg;
     ctx->LocalToString(params[6], &msg);
 
-    auto loc = spdlog::source_loc{file, line, func};
-    logger->log(loc, lvl, msg);
+    auto line = static_cast<int>(params[3]);
+    auto lvl  = log4sp::cell_to_level(params[5]);
+    auto loc  = spdlog::source_loc {file, line, func};
+
+    logger->raw()->log(loc, lvl, msg);
     return 0;
 }
 
@@ -533,21 +582,11 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
 static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
-
-    char *file;
-    ctx->LocalToString(params[2], &file);
-
-    auto line = static_cast<int>(params[3]);
-
-    char *func;
-    ctx->LocalToString(params[4], &func);
-
-    auto lvl = log4sp::cell_to_level(params[5]);
 
     std::string msg;
     try
@@ -556,14 +595,55 @@ static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    auto loc = spdlog::source_loc{file, line, func};
-    logger->log(loc, lvl, msg);
+    char *file;
+    ctx->LocalToString(params[2], &file);
+
+    char *func;
+    ctx->LocalToString(params[4], &func);
+
+    auto line = static_cast<int>(params[3]);
+    auto lvl  = log4sp::cell_to_level(params[5]);
+    auto loc  = spdlog::source_loc {file, line, func};
+
+    logger->raw()->log(loc, lvl, msg);
+    return 0;
+}
+
+/**
+ * public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
+ */
+static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 6);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    char *file;
+    ctx->LocalToString(params[2], &file);
+
+    char *func;
+    ctx->LocalToString(params[4], &func);
+
+    auto line = static_cast<int>(params[3]);
+    auto lvl  = log4sp::cell_to_level(params[5]);
+    auto loc  = spdlog::source_loc {file, line, func};
+
+    logger->raw()->log(loc, lvl, msg);
     return 0;
 }
 
@@ -573,7 +653,7 @@ static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
 static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -583,15 +663,15 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
-    logger->log(lvl, "Stack trace requested: {}", msg);
+    logger->raw()->log(lvl, "Stack trace requested: {}", msg);
 
-    auto plugin = plsys->FindPluginByContext(ctx->GetContext());
-    logger->log(lvl, "Called from: {}", plugin->GetFilename());
+    auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
+    logger->raw()->log(lvl, "Called from: {}", plugin);
 
-    auto arr = log4sp::get_stack_trace(ctx);
-    for (size_t i = 0; i < arr.size(); ++i)
+    auto stackTrace = log4sp::get_stack_trace(ctx);
+    for (auto iter  : stackTrace)
     {
-        logger->log(lvl, arr[i].c_str());
+        logger->raw()->log(lvl, iter.c_str());
     }
     return 0;
 }
@@ -602,13 +682,11 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
 static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
-
-    auto lvl = log4sp::cell_to_level(params[2]);
 
     std::string msg;
     try
@@ -617,21 +695,54 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->log(lvl, "Stack trace requested: {}", msg);
+    auto lvl = log4sp::cell_to_level(params[2]);
+    logger->raw()->log(lvl, "Stack trace requested: {}", msg);
 
-    auto plugin = plsys->FindPluginByContext(ctx->GetContext());
-    logger->log(lvl, "Called from: {}", plugin->GetFilename());
+    auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
+    logger->raw()->log(lvl, "Called from: {}", plugin);
 
-    auto arr = log4sp::get_stack_trace(ctx);
-    for (size_t i = 0; i < arr.size(); ++i)
+    auto stackTrace = log4sp::get_stack_trace(ctx);
+    for (auto iter  : stackTrace)
     {
-        logger->log(lvl, arr[i].c_str());
+        logger->raw()->log(lvl, iter.c_str());
+    }
+    return 0;
+}
+
+/**
+ * public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] msg, any ...);
+ */
+static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 3);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    auto lvl = log4sp::cell_to_level(params[2]);
+    logger->raw()->log(lvl, "Stack trace requested: {}", msg);
+
+    auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
+    logger->raw()->log(lvl, "Called from: {}", plugin);
+
+    auto stackTrace = log4sp::get_stack_trace(ctx);
+    for (auto iter  : stackTrace)
+    {
+        logger->raw()->log(lvl, iter.c_str());
     }
     return 0;
 }
@@ -642,7 +753,7 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
 static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -652,15 +763,15 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
-    logger->log(lvl, "Exception reported: {}", msg);
+    logger->raw()->log(lvl, "Exception reported: {}", msg);
 
-    auto plugin = plsys->FindPluginByContext(ctx->GetContext());
-    logger->log(lvl, "Blaming: {}", plugin->GetFilename());
+    auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
+    logger->raw()->log(lvl, "Blaming: {}", plugin);
 
-    auto arr = log4sp::get_stack_trace(ctx);
-    for (size_t i = 0; i < arr.size(); ++i)
+    auto stackTrace = log4sp::get_stack_trace(ctx);
+    for (auto iter  : stackTrace)
     {
-        logger->log(lvl, arr[i].c_str());
+        logger->raw()->log(lvl, iter.c_str());
     }
 
     ctx->ReportError(msg);
@@ -673,13 +784,11 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
 static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
-
-    auto lvl = log4sp::cell_to_level(params[2]);
 
     std::string msg;
     try
@@ -688,25 +797,60 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         ctx->ReportError(e.what());
         return 0;
     }
 
-    logger->log(lvl, "Exception reported: {}", msg);
+    auto lvl = log4sp::cell_to_level(params[2]);
+    logger->raw()->log(lvl, "Exception reported: {}", msg);
 
-    auto plugin = plsys->FindPluginByContext(ctx->GetContext());
-    logger->log(lvl, "Blaming: {}", plugin->GetFilename());
+    auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
+    logger->raw()->log(lvl, "Blaming: {}", plugin);
 
-    auto arr = log4sp::get_stack_trace(ctx);
-    for (size_t i = 0; i < arr.size(); ++i)
+    auto stackTrace = log4sp::get_stack_trace(ctx);
+    for (auto iter  : stackTrace)
     {
-        logger->log(lvl, arr[i].c_str());
+        logger->raw()->log(lvl, iter.c_str());
     }
 
     ctx->ReportError(msg.c_str());
+    return 0;
+}
+
+/**
+ * public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] msg, any ...);
+ */
+static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 3);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    auto lvl = log4sp::cell_to_level(params[2]);
+    logger->raw()->log(lvl, "Exception reported: {}", msg);
+
+    auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
+    logger->raw()->log(lvl, "Blaming: {}", plugin);
+
+    auto stackTrace = log4sp::get_stack_trace(ctx);
+    for (auto iter  : stackTrace)
+    {
+        logger->raw()->log(lvl, iter.c_str());
+    }
+
+    ctx->ReportError(msg);
     return 0;
 }
 
@@ -716,7 +860,7 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
 static cell_t Trace(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -725,7 +869,7 @@ static cell_t Trace(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->trace(msg);
+    logger->raw()->trace(msg);
     return 0;
 }
 
@@ -735,7 +879,7 @@ static cell_t Trace(IPluginContext *ctx, const cell_t *params)
 static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -748,13 +892,35 @@ static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->trace(msg);
+    logger->raw()->trace(msg);
+    return 0;
+}
+
+/**
+ * public native void TraceAmxTpl(const char[] fmt, any ...);
+ */
+static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 2);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    logger->raw()->trace(msg);
     return 0;
 }
 
@@ -764,7 +930,7 @@ static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
 static cell_t Debug(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -773,7 +939,7 @@ static cell_t Debug(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->debug(msg);
+    logger->raw()->debug(msg);
     return 0;
 }
 
@@ -783,7 +949,7 @@ static cell_t Debug(IPluginContext *ctx, const cell_t *params)
 static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -796,13 +962,35 @@ static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->debug(msg);
+    logger->raw()->debug(msg);
+    return 0;
+}
+
+/**
+ * public native void DebugAmxTpl(const char[] fmt, any ...);
+ */
+static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 2);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    logger->raw()->debug(msg);
     return 0;
 }
 
@@ -812,7 +1000,7 @@ static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
 static cell_t Info(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -821,7 +1009,7 @@ static cell_t Info(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->info(msg);
+    logger->raw()->info(msg);
     return 0;
 }
 
@@ -831,7 +1019,7 @@ static cell_t Info(IPluginContext *ctx, const cell_t *params)
 static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -844,13 +1032,35 @@ static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->info(msg);
+    logger->raw()->info(msg);
+    return 0;
+}
+
+/**
+ * public native void InfoAmxTpl(const char[] fmt, any ...);
+ */
+static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 2);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    logger->raw()->info(msg);
     return 0;
 }
 
@@ -860,7 +1070,7 @@ static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
 static cell_t Warn(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -869,7 +1079,7 @@ static cell_t Warn(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->warn(msg);
+    logger->raw()->warn(msg);
     return 0;
 }
 
@@ -879,7 +1089,7 @@ static cell_t Warn(IPluginContext *ctx, const cell_t *params)
 static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -892,13 +1102,35 @@ static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->warn(msg);
+    logger->raw()->warn(msg);
+    return 0;
+}
+
+/**
+ * public native void WarnAmxTpl(const char[] fmt, any ...);
+ */
+static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 2);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    logger->raw()->warn(msg);
     return 0;
 }
 
@@ -908,7 +1140,7 @@ static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
 static cell_t Error(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -917,7 +1149,7 @@ static cell_t Error(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->error(msg);
+    logger->raw()->error(msg);
     return 0;
 }
 
@@ -927,7 +1159,7 @@ static cell_t Error(IPluginContext *ctx, const cell_t *params)
 static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -940,13 +1172,35 @@ static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->error(msg);
+    logger->raw()->error(msg);
+    return 0;
+}
+
+/**
+ * public native void ErrorAmxTpl(const char[] fmt, any ...);
+ */
+static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 2);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    logger->raw()->error(msg);
     return 0;
 }
 
@@ -956,7 +1210,7 @@ static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
 static cell_t Fatal(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -965,7 +1219,7 @@ static cell_t Fatal(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->critical(msg);
+    logger->raw()->critical(msg);
     return 0;
 }
 
@@ -975,7 +1229,7 @@ static cell_t Fatal(IPluginContext *ctx, const cell_t *params)
 static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -988,13 +1242,35 @@ static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& e)
     {
-        auto loc = log4sp::get_plugin_source_loc(ctx);
-        logger->log(loc, spdlog::level::err, e.what());
-        spdlog::log(loc, spdlog::level::err, e.what());
+        logger->error_handler(e.what());
         return 0;
     }
 
-    logger->critical(msg);
+    logger->raw()->critical(msg);
+    return 0;
+}
+
+/**
+ * public native void FatalAmxTpl(const char[] fmt, any ...);
+ */
+static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+    auto logger = log4sp::base_logger::read(handle, ctx);
+    if (logger == nullptr)
+    {
+        return 0;
+    }
+
+    char msg[2048];
+    DetectExceptions eh(ctx);
+    smutils->FormatString(msg, sizeof(msg), ctx, params, 2);
+    if (eh.HasException())
+    {
+        return 0;
+    }
+
+    logger->raw()->critical(msg);
     return 0;
 }
 
@@ -1004,13 +1280,13 @@ static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
 static cell_t Flush(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    logger->flush();
+    logger->raw()->flush();
     return 0;
 }
 
@@ -1020,13 +1296,13 @@ static cell_t Flush(IPluginContext *ctx, const cell_t *params)
 static cell_t GetFlushLevel(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    return logger->flush_level();
+    return static_cast<cell_t>(logger->raw()->flush_level());
 }
 
 /**
@@ -1035,7 +1311,7 @@ static cell_t GetFlushLevel(IPluginContext *ctx, const cell_t *params)
 static cell_t FlushOn(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -1043,32 +1319,23 @@ static cell_t FlushOn(IPluginContext *ctx, const cell_t *params)
 
     auto lvl = log4sp::cell_to_level(params[2]);
 
-    logger->flush_on(lvl);
+    logger->raw()->flush_on(lvl);
     return 0;
 }
 
-/**
- * Backtrace support: https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support
- *
- * efficiently store all debug/trace messages in a circular buffer until needed for debugging.
- *
- * Debug messages can be stored in a ring buffer instead of being logged immediately.
- * This is useful to display debug logs only when needed (e.g. when an error happens).
- * When needed, call dump_backtrace() to dump them to your log.
- */
 /**
  * public native bool ShouldBacktrace();
  */
 static cell_t ShouldBacktrace(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    return logger->should_backtrace();
+    return static_cast<cell_t>(logger->raw()->should_backtrace());
 }
 
 /**
@@ -1077,7 +1344,7 @@ static cell_t ShouldBacktrace(IPluginContext *ctx, const cell_t *params)
 static cell_t EnableBacktrace(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
@@ -1085,7 +1352,7 @@ static cell_t EnableBacktrace(IPluginContext *ctx, const cell_t *params)
 
     auto num = static_cast<size_t>(params[2]);
 
-    logger->enable_backtrace(num);
+    logger->raw()->enable_backtrace(num);
     return 0;
 }
 
@@ -1095,13 +1362,13 @@ static cell_t EnableBacktrace(IPluginContext *ctx, const cell_t *params)
 static cell_t DisableBacktrace(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    logger->disable_backtrace();
+    logger->raw()->disable_backtrace();
     return 0;
 }
 
@@ -1111,13 +1378,13 @@ static cell_t DisableBacktrace(IPluginContext *ctx, const cell_t *params)
 static cell_t DumpBacktrace(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    logger->dump_backtrace();
+    logger->raw()->dump_backtrace();
     return 0;
 }
 
@@ -1127,54 +1394,20 @@ static cell_t DumpBacktrace(IPluginContext *ctx, const cell_t *params)
 static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 {
     auto loggerHandle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, loggerHandle);
-    if (logger == nullptr)
+    auto loggerAdapterRaw = log4sp::base_logger::read(loggerHandle, ctx);
+    if (loggerAdapterRaw == nullptr)
     {
-        return 0;
-    }
-
-    auto loggerData = log4sp::logger_handle_manager::instance().get_data(logger->name());
-    if (loggerData == nullptr)
-    {
-        ctx->ReportError("Fatal internal error, logger data not found. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
         return 0;
     }
 
     auto sinkHandle = static_cast<Handle_t>(params[2]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, sinkHandle);
-    if (sink == nullptr)
+    auto sinkAdapterRaw = log4sp::base_sink::read(sinkHandle, ctx);
+    if (sinkAdapterRaw == nullptr)
     {
         return 0;
     }
 
-    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
-    if (sinkData == nullptr)
-    {
-        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(sinkHandle));
-        return 0;
-    }
-
-    bool async = loggerData->is_multi_threaded();
-    if (async != sinkData->is_multi_threaded())
-    {
-        ctx->ReportError("You cannot add a %s sink to a %s logger.", async ? "synchronous" : "asynchronous", async ? "asynchronous" : "synchronous");
-        return 0;
-    }
-
-    if (!async)
-    {
-        logger->sinks().push_back(sinkData->sink_ptr());
-        return 0;
-    }
-
-    auto dist_sink = std::dynamic_pointer_cast<spdlog::sinks::dist_sink_mt>(logger->sinks().front());
-    if (dist_sink == nullptr)
-    {
-        ctx->ReportError("Fatal internal error, cannot cast sink to dist_sink. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
-        return 0;
-    }
-
-    dist_sink->add_sink(sinkData->sink_ptr());
+    loggerAdapterRaw->add_sink(sinkAdapterRaw->raw());
     return 0;
 }
 
@@ -1184,105 +1417,60 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
 {
     auto loggerHandle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, loggerHandle);
-    if (logger == nullptr)
+    auto loggerAdapterRaw = log4sp::base_logger::read(loggerHandle, ctx);
+    if (loggerAdapterRaw == nullptr)
     {
-        return 0;
-    }
-
-    auto loggerData = log4sp::logger_handle_manager::instance().get_data(logger->name());
-    if (loggerData == nullptr)
-    {
-        ctx->ReportError("Fatal internal error, logger data not found. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
         return 0;
     }
 
     auto sinkHandle = static_cast<Handle_t>(params[2]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, sinkHandle);
-    if (sink == nullptr)
+    auto sinkAdapterRaw = log4sp::base_sink::read(sinkHandle, ctx);
+    if (sinkAdapterRaw == nullptr)
     {
         return 0;
     }
 
-    auto sinkData = log4sp::sink_handle_manager::instance().get_data(sink);
-    if (sinkData == nullptr)
-    {
-        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(sinkHandle));
-        return 0;
-    }
-
-    if (!loggerData->is_multi_threaded())
-    {
-        auto iterator = std::find(logger->sinks().begin(), logger->sinks().end(), sinkData->sink_ptr());
-        if (iterator == logger->sinks().end())
-        {
-            return false;
-        }
-
-        logger->sinks().erase(iterator);
-        return true;
-    }
-
-    auto dist_sink = std::dynamic_pointer_cast<spdlog::sinks::dist_sink_mt>(logger->sinks().front());
-    if (dist_sink == nullptr)
-    {
-        ctx->ReportError("Fatal internal error, cannot cast sink to dist_sink. (name='%s', hdl=%X)", logger->name(), static_cast<int>(loggerHandle));
-        return 0;
-    }
-
-    dist_sink->remove_sink(sinkData->sink_ptr());
-    return true;
+    loggerAdapterRaw->remove_sink(sinkAdapterRaw->raw());
+    return 0;
 }
 
 /**
- * public native void SetErrorHandler(Log4spErrorCallback callback);
+ * public native void SetErrorHandler(LoggerErrorHandler handler);
  *
  * function void (const char[] msg);
  */
 static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto logger = log4sp::logger_handle_manager::instance().read_handle(ctx, handle);
+    auto logger = log4sp::base_logger::read(handle, ctx);
     if (logger == nullptr)
     {
         return 0;
     }
 
-    auto data = log4sp::logger_handle_manager::instance().get_data(logger->name());
-    if (data == nullptr)
+    auto funcId   = static_cast<funcid_t>(params[2]);
+    auto function = ctx->GetFunctionById(funcId);
+    if (function == nullptr)
     {
-        ctx->ReportError("Fatal internal error, logger data not found. (name='%s', hdl=%X)", logger->name(), static_cast<int>(handle));
+        ctx->ReportError("Invalid error handler function. (funcId=%d)", static_cast<int>(funcId));
         return 0;
     }
 
-    auto funcId = static_cast<funcid_t>(params[2]);
-    auto callback = ctx->GetFunctionById(funcId);
-    if (callback == NULL)
+    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+    if (forward == nullptr)
     {
-        ctx->ReportError("Invalid function id (%X)", static_cast<int>(funcId));
+        ctx->ReportError("SM error! Create error handler forward failure.");
         return 0;
     }
 
-    auto forward = forwards->CreateForwardEx(NULL, ET_Ignore, 1, NULL, Param_String);
-    if (forward == NULL)
-    {
-        ctx->ReportError("Could not create forward.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(callback))
+    if (!forward->AddFunction(function))
     {
         forwards->ReleaseForward(forward);
-        ctx->ReportError("Could not add callback.");
+        ctx->ReportError("SM error! Adding error handler function failed.");
         return 0;
     }
 
-    data->set_error_handler(forward);
-
-    data->logger()->set_error_handler([forward](const std::string &msg) {
-        forward->PushString(msg.c_str());
-        forward->Execute();
-    });
+    logger->set_error_forward(forward);
     return 0;
 }
 
@@ -1302,27 +1490,38 @@ const sp_nativeinfo_t LoggerNatives[] =
 
     {"Logger.Log",                              Log},
     {"Logger.LogEx",                            LogEx},
+    {"Logger.LogAmxTpl",                        LogAmxTpl},
     {"Logger.LogSrc",                           LogSrc},
     {"Logger.LogSrcEx",                         LogSrcEx},
+    {"Logger.LogSrcAmxTpl",                     LogSrcAmxTpl},
     {"Logger.LogLoc",                           LogLoc},
     {"Logger.LogLocEx",                         LogLocEx},
+    {"Logger.LogLocAmxTpl",                     LogLocAmxTpl},
     {"Logger.LogStackTrace",                    LogStackTrace},
     {"Logger.LogStackTraceEx",                  LogStackTraceEx},
+    {"Logger.LogStackTraceAmxTpl",              LogStackTraceAmxTpl},
     {"Logger.ThrowError",                       ThrowError},
     {"Logger.ThrowErrorEx",                     ThrowErrorEx},
+    {"Logger.ThrowErrorAmxTpl",                 ThrowErrorAmxTpl},
 
     {"Logger.Trace",                            Trace},
     {"Logger.TraceEx",                          TraceEx},
+    {"Logger.TraceAmxTpl",                      TraceAmxTpl},
     {"Logger.Debug",                            Debug},
     {"Logger.DebugEx",                          DebugEx},
+    {"Logger.DebugAmxTpl",                      DebugAmxTpl},
     {"Logger.Info",                             Info},
     {"Logger.InfoEx",                           InfoEx},
+    {"Logger.InfoAmxTpl",                       InfoAmxTpl},
     {"Logger.Warn",                             Warn},
     {"Logger.WarnEx",                           WarnEx},
+    {"Logger.WarnAmxTpl",                       WarnAmxTpl},
     {"Logger.Error",                            Error},
     {"Logger.ErrorEx",                          ErrorEx},
+    {"Logger.ErrorAmxTpl",                      ErrorAmxTpl},
     {"Logger.Fatal",                            Fatal},
     {"Logger.FatalEx",                          FatalEx},
+    {"Logger.FatalAmxTpl",                      FatalAmxTpl},
 
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},
@@ -1335,6 +1534,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.DropSink",                         DropSink},
     {"Logger.SetErrorHandler",                  SetErrorHandler},
 
-    {NULL,                                      NULL}
+    {nullptr,                                   nullptr}
 };
 

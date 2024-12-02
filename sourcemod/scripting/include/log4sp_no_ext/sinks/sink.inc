@@ -19,17 +19,21 @@ methodmap Sink < Handle
 
     public bool ShouldLog(LogLevel lvl) { return false; }
 
-    public void Log(const char[] name, LogLevel lvl, const char[] msg) {}
-    public void LogAmxTpl(const char[] name, LogLevel lvl, const char[] fmt, any ...) {}
-    // public void LogFmtTpl(LogLevel lvl, const char[] fmt, any ...) {}
-
-    public void LogSrc(const char[] name, LogLevel lvl, const char[] msg) {}
-    public void LogSrcAmxTpl(const char[] name, LogLevel lvl, const char[] fmt, any ...) {}
-    // public void LogSrcFmtTpl(LogLevel lvl, const char[] fmt, any ...) {}
-
-    public void LogLoc(const char[] file, int line, const char[] func, const char[] name, LogLevel lvl, const char[] msg) {}
-    public void LogLocAmxTpl(const char[] file, int line, const char[] func, const char[] name, LogLevel lvl, const char[] fmt, any ...) {}
-    // public void LogLocFmtTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...) {}
+    public void Log(const char[] name, LogLevel lvl, const char[] msg) {
+        switch (lvl) {
+            case LogLevel_Info:     LogMessage("["... LOG4SP_LEVEL_NAME_INFO ..."] [%s] %s", name, msg);
+            case LogLevel_Warn:     LogMessage("["... LOG4SP_LEVEL_NAME_WARN ..."] [%s] %s", name, msg);
+            case LogLevel_Error:    LogError("["... LOG4SP_LEVEL_NAME_ERROR ..."] [%s] %s", name, msg);
+            case LogLevel_Fatal:    LogError("["... LOG4SP_LEVEL_NAME_FATAL ..."] [%s] %s", name, msg);
+        }
+    }
 
     public void Flush() {}
 }
+
+typeset SinkClientFilter
+{
+    function Action (int client);
+    function Action (int client, const char[] name, LogLevel lvl);
+    function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
+};

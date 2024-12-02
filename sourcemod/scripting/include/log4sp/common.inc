@@ -98,6 +98,6 @@ native void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
  * Convert a logging level name to log level enum.
  *
  * @param name      Log level name.
- * @return          Logging level enum or LogLevel_Off when the log level name does not exist.
+ * @return          Logging level enum or LogLevel_Off when the logging level name does not exist.
  */
 native LogLevel NameToLogLevel(const char[] name);

@@ -9,26 +9,11 @@
 #include <log4sp_empty/sinks/sink>
 
 
-typeset ClientConsoleSinkFilter
+methodmap ClientConsoleSink < Sink
 {
-    function Action (int client);
-    function Action (int client, const char[] name, LogLevel lvl);
-    function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
-};
+    public ClientConsoleSink(bool multiThread = false) {
+        return view_as<ClientConsoleSink>(INVALID_HANDLE);
+    }
 
-
-
-methodmap ClientConsoleSinkST < Sink
-{
-    public ClientConsoleSinkST() { return view_as<ClientConsoleSinkST>(INVALID_HANDLE); }
-
-    public void SetFilter(ClientConsoleSinkFilter filter) {}
-}
-
-
-methodmap ClientConsoleSinkMT < Sink
-{
-    public ClientConsoleSinkMT() { return view_as<ClientConsoleSinkMT>(INVALID_HANDLE); }
-
-    public void SetFilter(ClientConsoleSinkFilter filter) {}
+    public void SetFilter(SinkClientFilter filter) {}
 }

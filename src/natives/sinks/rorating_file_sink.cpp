@@ -1,6 +1,8 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 
-#include <log4sp/sink_handle_manager.h>
+#include "log4sp/sink_register.h"
+#include "log4sp/adapter/single_thread_sink.h"
+#include "log4sp/adapter/multi_thread_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -12,7 +14,7 @@
  *     const int maxFileSize,
  *     const int maxFiles,
  *     bool rotateOnOpen = false,
- *     bool async = false
+ *     bool multiThread = false
  * );
  */
 static cell_t RotatingFileSink(IPluginContext *ctx, const cell_t *params)
@@ -36,29 +38,27 @@ static cell_t RotatingFileSink(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    auto rotateOnOpen = static_cast<bool>(params[4]);
-    bool async = static_cast<bool>(params[5]);
-    auto data = async ? log4sp::sink_handle_manager::instance().create_rotating_file_sink_st(ctx, path, maxFileSize, maxFiles, rotateOnOpen) :
-                        log4sp::sink_handle_manager::instance().create_rotating_file_sink_mt(ctx, path, maxFileSize, maxFiles, rotateOnOpen);
+    std::shared_ptr<log4sp::base_sink> sinkAdapter;
 
-    if (data == nullptr)
+    auto rotateOnOpen = static_cast<bool>(params[4]);
+    bool multiThread  = static_cast<bool>(params[5]);
+    if (!multiThread)
+    {
+        auto sink     = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sinkAdapter   = log4sp::single_thread_sink::create(sink, ctx);
+    }
+    else
+    {
+        auto sink     = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sinkAdapter   = log4sp::multi_thread_sink::create(sink, ctx);
+    }
+
+    if (sinkAdapter == nullptr)
     {
         return BAD_HANDLE;
     }
 
-    return data->handle();
-}
-
-template <typename Mutex>
-static void GetFilename(IPluginContext *ctx, const cell_t *params, log4sp::sink_handle_data *data)
-{
-    auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink<Mutex>>(data->sink_ptr());
-    if (sink == nullptr)
-    {
-        ctx->ReportError("Unable to cast sink to rotating_file_sink_%ct.", data->is_multi_threaded() ? 'm' : 's');
-        return;
-    }
-    ctx->StringToLocal(params[2], params[3], sink->filename().c_str());
+    return sinkAdapter->handle();
 }
 
 /**
@@ -67,26 +67,34 @@ static void GetFilename(IPluginContext *ctx, const cell_t *params, log4sp::sink_
 static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
-    auto sink = log4sp::sink_handle_manager::instance().read_handle(ctx, handle);
-    if (sink == nullptr)
+
+    auto sinkAdapterRaw = log4sp::base_sink::read(handle, ctx);
+    if (sinkAdapterRaw == nullptr)
     {
         return 0;
     }
 
-    auto data = log4sp::sink_handle_manager::instance().get_data(sink);
-    if (data == nullptr)
+    if (!sinkAdapterRaw->is_multi_thread())
     {
-        ctx->ReportError("Fatal internal error, sink data not found. (hdl=%X)", static_cast<int>(handle));
-        return 0;
+        auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sinkAdapterRaw->raw());
+        if (sink == nullptr)
+        {
+            ctx->ReportError("Unable to cast sink to single threaded rotating_file_sink.");
+            return 0;
+        }
+        ctx->StringToLocal(params[2], params[3], sink->filename().c_str());
+    }
+    else
+    {
+        auto sink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(sinkAdapterRaw->raw());
+        if (sink == nullptr)
+        {
+            ctx->ReportError("Unable to cast sink to multi threaded rotating_file_sink.");
+            return 0;
+        }
+        ctx->StringToLocal(params[2], params[3], sink->filename().c_str());
     }
 
-    if (!data->is_multi_threaded())
-    {
-        GetFilename<spdlog::details::null_mutex>(ctx, params, data);
-        return 0;
-    }
-
-    GetFilename<std::mutex>(ctx, params, data);
     return 0;
 }
 
@@ -99,7 +107,7 @@ static cell_t RotatingFileSink_CalcFilename(IPluginContext *ctx, const cell_t *p
     ctx->LocalToString(params[1], &file);
     auto index = static_cast<size_t>(params[2]);
 
-    auto filename = spdlog::sinks::rotating_file_sink<spdlog::details::null_mutex>::calc_filename(file, index);
+    auto filename = spdlog::sinks::rotating_file_sink_st::calc_filename(file, index);
     ctx->StringToLocal(params[3], params[4], filename.c_str());
     return 0;
 }
@@ -110,5 +118,5 @@ const sp_nativeinfo_t RotatingFileSinkNatives[] =
     {"RotatingFileSink.GetFilename",            RotatingFileSink_GetFilename},
     {"RotatingFileSink.CalcFilename",           RotatingFileSink_CalcFilename},
 
-    {NULL,                                      NULL}
+    {nullptr,                                   nullptr}
 };

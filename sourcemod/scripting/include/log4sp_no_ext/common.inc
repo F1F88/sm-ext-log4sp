@@ -31,9 +31,6 @@
 #define LOG4SP_LEVEL_SHORT_NAME_OFF     "O"
 
 
-/**
- * Log level enum
- */
 enum LogLevel
 {
     LogLevel_Trace = LOG4SP_LEVEL_TRACE,
@@ -46,29 +43,50 @@ enum LogLevel
     LogLevel_Total
 }
 
-/**
- * Pattern time - specific time getting to use for pattern_formatter.
- * local time by default
- */
 enum PatternTimeType
 {
-    PatternTimeType_Local,              // log localtime
-    PatternTimeType_Utc                 // log utc
+    PatternTimeType_Local,
+    PatternTimeType_Utc
 };
 
-/**
- * Async overflow policy - block by default.
- */
 enum AsyncOverflowPolicy
 {
-    AsyncOverflowPolicy_Block,          // Block until message can be enqueued.
-    AsyncOverflowPolicy_OverrunOldest,  // Discard oldest message in the queue if full when trying to add new item.
-    AsyncOverflowPolicy_DiscardNew      // Discard new message if the queue is full when trying to add new item.
+    AsyncOverflowPolicy_Block,
+    AsyncOverflowPolicy_OverrunOldest,
+    AsyncOverflowPolicy_DiscardNew
 }
 
 
-stock void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen) {}
+stock void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen) {
+    switch (lvl) {
+        case LogLevel_Trace:    strcpy(buffer, LOG4SP_LEVEL_NAME_TRACE);
+        case LogLevel_Debug:    strcpy(buffer, LOG4SP_LEVEL_NAME_DEBUG);
+        case LogLevel_Info:     strcpy(buffer, LOG4SP_LEVEL_NAME_INFO);
+        case LogLevel_Warn:     strcpy(buffer, LOG4SP_LEVEL_NAME_WARN);
+        case LogLevel_Error:    strcpy(buffer, LOG4SP_LEVEL_NAME_ERROR);
+        case LogLevel_Fatal:    strcpy(buffer, LOG4SP_LEVEL_NAME_FATAL);
+        case LogLevel_Off:      strcpy(buffer, LOG4SP_LEVEL_NAME_OFF);
+    }
+}
 
-stock void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen) {}
+stock void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen) {
+    switch (lvl) {
+        case LogLevel_Trace:    strcpy(buffer, LOG4SP_LEVEL_SHORT_NAME_TRACE);
+        case LogLevel_Debug:    strcpy(buffer, LOG4SP_LEVEL_SHORT_NAME_DEBUG);
+        case LogLevel_Info:     strcpy(buffer, LOG4SP_LEVEL_SHORT_NAME_INFO);
+        case LogLevel_Warn:     strcpy(buffer, LOG4SP_LEVEL_SHORT_NAME_WARN);
+        case LogLevel_Error:    strcpy(buffer, LOG4SP_LEVEL_SHORT_NAME_ERROR);
+        case LogLevel_Fatal:    strcpy(buffer, LOG4SP_LEVEL_SHORT_NAME_FATAL);
+        case LogLevel_Off:      strcpy(buffer, LOG4SP_LEVEL_SHORT_NAME_OFF);
+    }
+}
 
-stock LogLevel NameToLogLevel(const char[] name) { return LogLevel_Off; }
+stock LogLevel NameToLogLevel(const char[] name) {
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_TRACE))    return LogLevel_Trace;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_DEBUG))    return LogLevel_Debug;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_INFO))     return LogLevel_Info;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_WARN)  || StrEqual(name, "warning"))   return LogLevel_Warn;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_ERROR) || StrEqual(name, "err"))       return LogLevel_Error;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_FATAL) || StrEqual(name, "critical"))  return LogLevel_Fatal;
+    return LogLevel_Off;
+}
