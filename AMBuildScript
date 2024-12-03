@@ -130,6 +130,10 @@ class ExtensionConfig(object):
 
       '-fPIC',          #* log4sp addition *#
       '-g0',            #* log4sp addition *#
+      '-flto=auto',         #* log4sp addition *#
+      '-funroll-loops',     #* log4sp addition *#
+      '-floop-interchange', #* log4sp addition *#
+      '-finline-functions'  #* log4sp addition *#
     ]
     cxx.linkflags += ['-m32']
 
@@ -181,6 +185,7 @@ class ExtensionConfig(object):
 
       '/TP',
       '/utf-8',         #* log4sp addition *#
+      '/GL',            #* log4sp addition *#
     ]
     cxx.linkflags += [
       '/MACHINE:X86',
