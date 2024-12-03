@@ -57,19 +57,19 @@ Action CB_CMD(int client, int args)
     delete logger6;
 
 
-    Sink sink1 = new ServerConsoleSinkST();
+    Sink sink1 = new ServerConsoleSink();
     TestSinkLvl(sink1);
     delete sink1;
 
-    Sink sink2 = new ServerConsoleSinkMT();
+    Sink sink2 = new ServerConsoleSink(true);
     TestSinkLog(sink2);
     delete sink2;
 
-    Sink sink3 = new ServerConsoleSinkST();
+    Sink sink3 = new ServerConsoleSink();
     TestSinkPattern(sink3);
     delete sink3;
 
-    ClientConsoleSinkMT sink4 = new ClientConsoleSinkMT();
+    ClientConsoleSink sink4 = new ClientConsoleSink(true);
     TestSinkLvl(sink4);
     TestSinkLog(sink4);
     sink4.SetFilter(filter);
@@ -231,11 +231,11 @@ void TestLoggerSink(Logger logger)
 
     logger.Info("Test before add ServerConsoleSinkMT message. 1");
 
-    Sink sink1 = new ServerConsoleSinkMT();
+    Sink sink1 = new ServerConsoleSink(true);
     sink1.SetPattern("This is Sink1 %v");
     logger.AddSink(sink1);
 
-    Sink sink2 = new ServerConsoleSinkMT();
+    Sink sink2 = new ServerConsoleSink(true);
     sink2.SetPattern("This is Sink2 %v");
     logger.AddSink(sink2);
 
@@ -291,13 +291,6 @@ void TestSinkLog(Sink sink)
     PrintToServer("========== Test Sink Log Start ==========");
 
     sink.Log("name1", LogLevel_Trace, "Test log message 1.");
-    sink.LogAmxTpl("name2", LogLevel_Trace, "Test log message %d.", 2);
-
-    sink.LogSrc("name3", LogLevel_Trace, "Test log message 3.");
-    sink.LogSrcAmxTpl("name4", LogLevel_Trace, "Test log message %d.", 4);
-
-    sink.LogLoc("testFile5.log", 5, "testFunc5", "name2", LogLevel_Trace, "Test log message 5.");
-    sink.LogLocAmxTpl("testFile6.log", 6, "testFunc6", "name2", LogLevel_Trace, "Test log message %d.", 6);
 
     PrintToServer("========== Test Sink Log End ==========");
 }
