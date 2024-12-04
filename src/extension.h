@@ -42,7 +42,7 @@
  * @brief Implementation of the logger in SourcePawn Extension.
  * Note: Uncomment one of the pre-defined virtual functions in order to use it.
  */
-class Log4sp : public SDKExtension, public IHandleTypeDispatch, public IRootConsoleCommand
+class Log4sp : public SDKExtension, public IHandleTypeDispatch
 {
 public:
     /**
@@ -121,11 +121,6 @@ public:
      * @param object    Handle internal object.
      */
     void OnHandleDestroy(HandleType_t type, void *object);
-
-    /**
-     * @brief Handles a root console menu action.
-     */
-    void OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args);
 };
 
 extern Log4sp                   g_Log4sp;
