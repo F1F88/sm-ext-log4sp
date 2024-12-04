@@ -35,14 +35,12 @@ using client_chat_sink_st = client_chat_sink<spdlog::details::null_mutex>;
 // factory functions
 //
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<spdlog::logger> client_chat_sink_mt()
-{
+inline std::shared_ptr<spdlog::logger> client_chat_sink_mt() {
     return Factory::template create<log4sp::sinks::client_chat_sink_mt>();
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<spdlog::logger> client_chat_sink_st()
-{
+inline std::shared_ptr<spdlog::logger> client_chat_sink_st() {
     return Factory::template create<log4sp::sinks::client_chat_sink_st>();
 }
 

@@ -6,60 +6,48 @@
 namespace log4sp {
 
 
-inline spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept
-{
-    if (lvl < 0)
-    {
+inline spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept {
+    if (lvl < 0) {
         return static_cast<spdlog::level::level_enum>(0);
     }
 
-    if (lvl >= static_cast<cell_t>(spdlog::level::n_levels))
-    {
+    if (lvl >= static_cast<cell_t>(spdlog::level::n_levels)) {
         return static_cast<spdlog::level::level_enum>(spdlog::level::n_levels - 1);
     }
 
     return static_cast<spdlog::level::level_enum>(lvl);
 }
 
-inline spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept
-{
-    if (policy < 0)
-    {
+inline spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept {
+    if (policy < 0) {
         return static_cast<spdlog::async_overflow_policy>(0);
     }
 
-    if (policy >= 3)
-    {
+    if (policy >= 3) {
         return static_cast<spdlog::async_overflow_policy>(2);
     }
 
     return static_cast<spdlog::async_overflow_policy>(policy);
 }
 
-inline spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept
-{
-    if (type < 0)
-    {
+inline spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept {
+    if (type < 0) {
         return static_cast<spdlog::pattern_time_type>(0);
     }
 
-    if (type >= 2)
-    {
+    if (type >= 2) {
         return static_cast<spdlog::pattern_time_type>(1);
     }
 
     return static_cast<spdlog::pattern_time_type>(type);
 }
 
-inline spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx)
-{
+inline spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx) {
     auto iter = ctx->CreateFrameIterator();
     spdlog::source_loc loc;
 
-    for (; !iter->Done(); iter->Next())
-    {
-        if (iter->IsScriptedFrame())
-        {
+    for (; !iter->Done(); iter->Next()) {
+        if (iter->IsScriptedFrame()) {
             loc.funcname = iter->FunctionName();
             loc.filename = iter->FilePath();
             loc.line = iter->LineNumber();
@@ -71,11 +59,9 @@ inline spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx)
     return loc;
 }
 
-inline std::vector<std::string> get_stack_trace(IPluginContext *ctx)
-{
+inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
     auto iter = ctx->CreateFrameIterator();
-    if (!iter->Done())
-    {
+    if (!iter->Done()) {
         ctx->DestroyFrameIterator(iter);
         return {};
     }
@@ -86,10 +72,8 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx)
     const char *func;
     const char *file;
 
-    for (int index = 0; !iter->Done(); iter->Next(), ++index)
-    {
-        if (iter->IsNativeFrame())
-        {
+    for (int index = 0; !iter->Done(); iter->Next(), ++index) {
+        if (iter->IsNativeFrame()) {
             func = iter->FunctionName();
             func = func != nullptr ? func : "<unknown function>";
 
@@ -97,8 +81,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx)
             continue;
         }
 
-        if (iter->IsScriptedFrame())
-        {
+        if (iter->IsScriptedFrame()) {
             func = iter->FunctionName();
             func = func != nullptr ? func : "<unknown function>";
 
@@ -114,8 +97,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx)
 }
 
 
-inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param)
-{
+inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param) {
     char *format;
     ctx->LocalToString(params[param], &format);
 
@@ -133,18 +115,15 @@ inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const 
 #define ZEROPAD         0x00000002      /* zero (as opposed to blank) pad */
 #define UPPERDIGITS     0x00000004      /* make alpha digits uppercase */
 
-inline static void ReorderTranslationParams(const Translation *pTrans, cell_t *params)
-{
+inline static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) {
     cell_t new_params[MAX_TRANSLATE_PARAMS];
-    for (unsigned int i = 0; i < pTrans->fmt_count; i++)
-    {
+    for (unsigned int i = 0; i < pTrans->fmt_count; i++) {
         new_params[i] = params[pTrans->fmt_order[i]];
     }
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-inline static fmt::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg)
-{
+inline static fmt::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg) {
     unsigned int langid;
     Translation pTrans;
     IPlugin *pl = plsys->FindPluginByContext(ctx->GetContext());
@@ -154,56 +133,35 @@ inline static fmt::memory_buffer Translate(IPluginContext *ctx, const char *key,
     pPhrases = pl->GetPhrases();
 
 try_serverlang:
-    if (target == SOURCEMOD_SERVER_LANGUAGE)
-    {
+    if (target == SOURCEMOD_SERVER_LANGUAGE) {
         langid = translator->GetServerLanguage();
-    }
-    else if ((target >= 1) && (target <= playerhelpers->GetMaxClients()))
-    {
+    } else if ((target >= 1) && (target <= playerhelpers->GetMaxClients())) {
         langid = translator->GetClientLanguage(target);
-    }
-    else
-    {
-        throw std::runtime_error(
-            fmt::format("Translation failed: invalid client index {} (arg {})", target, *arg));
+    } else {
+        throw std::runtime_error(fmt::format("Translation failed: invalid client index {} (arg {})", target, *arg));
     }
 
-    if (pPhrases->FindTranslation(key, langid, &pTrans) != Trans_Okay)
-    {
-        if (target != SOURCEMOD_SERVER_LANGUAGE && langid != translator->GetServerLanguage())
-        {
+    if (pPhrases->FindTranslation(key, langid, &pTrans) != Trans_Okay) {
+        if (target != SOURCEMOD_SERVER_LANGUAGE && langid != translator->GetServerLanguage()) {
             target = SOURCEMOD_SERVER_LANGUAGE;
             goto try_serverlang;
-        }
-        else if (langid != SOURCEMOD_LANGUAGE_ENGLISH)
-        {
-            if (pPhrases->FindTranslation(key, SOURCEMOD_LANGUAGE_ENGLISH, &pTrans) != Trans_Okay)
-            {
-                throw std::runtime_error(
-                    fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg));
+        } else if (langid != SOURCEMOD_LANGUAGE_ENGLISH) {
+            if (pPhrases->FindTranslation(key, SOURCEMOD_LANGUAGE_ENGLISH, &pTrans) != Trans_Okay) {
+                throw std::runtime_error(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg));
             }
-        }
-        else
-        {
-            throw std::runtime_error(
-                fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg));
+        } else {
+            throw std::runtime_error(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg));
         }
     }
 
     max_params = pTrans.fmt_count;
 
-    if (max_params)
-    {
+    if (max_params) {
         cell_t new_params[MAX_TRANSLATE_PARAMS];
 
         /* Check if we're going to over the limit */
-        if ((*arg) + (max_params - 1) > (size_t)params[0])
-        {
-            throw std::runtime_error(
-                fmt::format(
-                    "Translation string formatted incorrectly - missing at least {} parameters (arg {})",
-                    ((*arg + (max_params - 1)) - params[0]),
-                    *arg));
+        if ((*arg) + (max_params - 1) > (size_t)params[0]) {
+            throw std::runtime_error(fmt::format("Translation string formatted incorrectly - missing at least {} parameters (arg {})", ((*arg + (max_params - 1)) - params[0]), *arg));
         }
 
         /**
@@ -213,73 +171,54 @@ try_serverlang:
         memcpy(new_params, params, sizeof(cell_t) * (params[0] + 1));
         ReorderTranslationParams(&pTrans, &new_params[*arg]);
 
-        // return FormatParams(pTrans.szPhrase, ctx, new_params, arg);
         return format_cell_to_memory_buf(pTrans.szPhrase, ctx, new_params, arg);
     }
-    else
-    {
-        // return FormatParams(pTrans.szPhrase, ctx, params, arg);
+    else {
         return format_cell_to_memory_buf(pTrans.szPhrase, ctx, params, arg);
     }
 }
 
-inline static void AddString(fmt::memory_buffer &out, const char *string, int width, int prec, int flags)
-{
-    if (string == nullptr)
-    {
+inline static void AddString(fmt::memory_buffer &out, const char *string, int width, int prec, int flags) {
+    if (string == nullptr) {
         const char nlstr[] = {'(','n','u','l','l',')','\0'};
         const int size = sizeof(nlstr);
 
-        if (!(flags & LADJUST))
-        {
-            while (size < width--)
-            {
+        if (!(flags & LADJUST)) {
+            while (size < width--) {
                 out.push_back(' ');
             }
 
             out.append(nlstr, nlstr + sizeof(nlstr));
-        }
-        else
-        {
+        } else {
             out.append(nlstr, nlstr + sizeof(nlstr));
 
-            while (size < width--)
-            {
+            while (size < width--) {
                 out.push_back(' ');
             }
         }
-    }
-    else
-    {
+    } else {
         int size = strlen(string);
-        if (prec >= 0 && prec < size)
-        {
+        if (prec >= 0 && prec < size) {
             size = prec;
         }
 
-        if (!(flags & LADJUST))
-        {
-            while (size < width--)
-            {
+        if (!(flags & LADJUST)) {
+            while (size < width--) {
                 out.push_back(' ');
             }
 
             out.append(string, string + size);
-        }
-        else
-        {
+        } else {
             out.append(string, string + size);
 
-            while (size < width--)
-            {
+            while (size < width--) {
                 out.push_back(' ');
             }
         }
     }
 }
 
-inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int flags)
-{
+inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int flags) {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
@@ -288,21 +227,18 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
     int significant_digits = 0; // number of significant digits written
     const int MAX_SIGNIFICANT_DIGITS = 16;
 
-    if (std::isnan(fval))
-    {
+    if (std::isnan(fval)) {
         AddString(out, "NaN", width, prec, flags);
         return;
     }
 
     // default precision
-    if (prec < 0)
-    {
+    if (prec < 0) {
         prec = 6;
     }
 
     // get the sign
-    if (fval < 0)
-    {
+    if (fval < 0) {
         fval = -fval;
         sign = 1;
     }
@@ -311,8 +247,7 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
     digits = (int)std::log10(fval) + 1;
 
     // Only print 0.something if 0 < fval < 1
-    if (digits < 1)
-    {
+    if (digits < 1) {
         digits = 1;
     }
 
@@ -320,49 +255,36 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
     fieldlength = digits + prec + ((prec > 0) ? 1 : 0) + sign;
 
     // minus sign BEFORE left padding if padding with zeros
-    if (sign && (flags & ZEROPAD))
-    {
+    if (sign && (flags & ZEROPAD)) {
         out.push_back('-');
     }
 
     // right justify if required
-    if ((flags & LADJUST) == 0)
-    {
-        if (flags & ZEROPAD)
-        {
-            while (fieldlength < width--)
-            {
+    if ((flags & LADJUST) == 0) {
+        if (flags & ZEROPAD) {
+            while (fieldlength < width--) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (fieldlength < width--)
-            {
+        } else {
+            while (fieldlength < width--) {
                 out.push_back(' ');
             }
         }
     }
 
     // minus sign AFTER left padding if padding with spaces
-    if (sign && !(flags & ZEROPAD))
-    {
+    if (sign && !(flags & ZEROPAD)) {
         out.push_back('-');
     }
 
     // write the whole part
     tmp = std::pow(10.0, digits - 1);
-    if (++significant_digits > MAX_SIGNIFICANT_DIGITS)
-    {
-        while (digits--)
-        {
+    if (++significant_digits > MAX_SIGNIFICANT_DIGITS) {
+        while (digits--) {
             out.push_back('0');
         }
-    }
-    else
-    {
-        while (digits--)
-        {
+    } else {
+        while (digits--) {
             val = (int)(fval / tmp);
             out.push_back('0' + val);
             fval -= val * tmp;
@@ -371,25 +293,19 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
     }
 
     // write the fraction part
-    if (prec)
-    {
+    if (prec) {
         out.push_back('.');
     }
 
     tmp = std::pow(10.0, prec);
 
     fval *= tmp;
-    if (++significant_digits > MAX_SIGNIFICANT_DIGITS)
-    {
-        while (prec--)
-        {
+    if (++significant_digits > MAX_SIGNIFICANT_DIGITS) {
+        while (prec--) {
             out.push_back('0');
         }
-    }
-    else
-    {
-        while (prec--)
-        {
+    } else {
+        while (prec--) {
             tmp *= 0.1;
             val = (int)(fval / tmp);
             out.push_back('0' + val);
@@ -398,298 +314,217 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
     }
 
     // left justify if required
-    if (flags & LADJUST)
-    {
-        while (fieldlength < width--)
-        {
+    if (flags & LADJUST) {
+        while (fieldlength < width--) {
             // right-padding only with spaces, ZEROPAD is ignored
             out.push_back(' ');
         }
     }
 }
 
-inline static void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags)
-{
+inline static void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[32];
 
     int iter = 31;
-    do
-    {
+    do {
         text[iter--] = (val & 1) ? '1' : '0';
     } while (val >>= 1);
 
     const char *begin = text + iter + 1;
     int digits = 31 - iter;
 
-    if (!(flags & LADJUST))
-    {
-        if (flags & ZEROPAD)
-        {
-            while (digits < width--)
-            {
+    if (!(flags & LADJUST)) {
+        if (flags & ZEROPAD) {
+            while (digits < width--) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (digits < width--)
-            {
+        } else {
+            while (digits < width--) {
                 out.push_back(' ');
             }
         }
 
         out.append(begin, text + 32);
-    }
-    else
-    {
+    } else {
         out.append(begin, text + 32);
 
-        if (flags & ZEROPAD)
-        {
-            while (digits < width--)
-            {
+        if (flags & ZEROPAD) {
+            while (digits < width--) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (digits < width--)
-            {
+        } else {
+            while (digits < width--) {
                 out.push_back(' ');
             }
         }
     }
 }
 
-inline static void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags)
-{
+inline static void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[10];
     int digits = 0;
-    do
-    {
+    do {
         text[digits++] = '0' + val % 10;
     } while (val /= 10);
 
-    if (!(flags & LADJUST))
-    {
-        if (flags & ZEROPAD)
-        {
-            while (digits < width--)
-            {
+    if (!(flags & LADJUST)) {
+        if (flags & ZEROPAD) {
+            while (digits < width--) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (digits < width--)
-            {
+        } else {
+            while (digits < width--) {
                 out.push_back(' ');
             }
         }
 
-        while (digits--)
-        {
+        while (digits--) {
             out.push_back(text[digits]);
         }
-    }
-    else
-    {
+    } else {
         width -= digits;
-        while (digits--)
-        {
+        while (digits--) {
             out.push_back(text[digits]);
         }
 
-        if (flags & ZEROPAD)
-        {
-            while (width-- > 0)
-            {
+        if (flags & ZEROPAD) {
+            while (width-- > 0) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (width-- > 0)
-            {
+        } else {
+            while (width-- > 0) {
                 out.push_back(' ');
             }
         }
     }
 }
 
-inline static void AddInt(fmt::memory_buffer &out, int val, int width, int flags)
-{
+inline static void AddInt(fmt::memory_buffer &out, int val, int width, int flags) {
     char text[10];
     int digits = 0;
 
     bool negative = val < 0;
     unsigned int unsignedVal = negative ? abs(val) : val;
 
-    do
-    {
+    do {
         text[digits++] = '0' + unsignedVal % 10;
     } while (unsignedVal /= 10);
 
-    if (!(flags & LADJUST))
-    {
-        if (flags & ZEROPAD)
-        {
-            if (negative)
-            {
+    if (!(flags & LADJUST)) {
+        if (flags & ZEROPAD) {
+            if (negative) {
                 out.push_back('-');
             }
 
-            while (digits < width--)
-            {
+            while (digits < width--) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (digits < width--)
-            {
+        } else {
+            while (digits < width--) {
                 out.push_back(' ');
             }
 
-            if (negative)
-            {
+            if (negative) {
                 out.push_back('-');
             }
         }
 
-        while (digits--)
-        {
+        while (digits--) {
             out.push_back(text[digits]);
         }
-    }
-    else
-    {
-        if (negative)
-        {
+    } else {
+        if (negative) {
             out.push_back('-');
         }
 
         width -= digits;
-        while (digits--)
-        {
+        while (digits--) {
             out.push_back(text[digits]);
         }
 
-        if (flags & ZEROPAD)
-        {
-            while (width-- > 0)
-            {
+        if (flags & ZEROPAD) {
+            while (width-- > 0) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (width-- > 0)
-            {
+        } else {
+            while (width-- > 0) {
                 out.push_back(' ');
             }
         }
     }
 }
 
-inline static void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags)
-{
+inline static void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[8];
     int digits = 0;
 
-    if (flags & UPPERDIGITS)
-    {
+    if (flags & UPPERDIGITS) {
         const char hexAdjust[] = "0123456789ABCDEF";
-        do
-        {
+        do {
             text[digits++] = hexAdjust[val & 0xF];
         } while(val >>= 4);
-    }
-    else
-    {
+    } else {
         const char hexAdjust[] = "0123456789abcdef";
-        do
-        {
+        do {
             text[digits++] = hexAdjust[val & 0xF];
         } while(val >>= 4);
     }
 
-    if (!(flags & LADJUST))
-    {
-        if (flags & ZEROPAD)
-        {
-            while (digits < width--)
-            {
+    if (!(flags & LADJUST)) {
+        if (flags & ZEROPAD) {
+            while (digits < width--) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (digits < width--)
-            {
+        } else {
+            while (digits < width--) {
                 out.push_back(' ');
             }
         }
 
-        while (digits--)
-        {
+        while (digits--) {
             out.push_back(text[digits]);
         }
-    }
-    else
-    {
+    } else {
         width -= digits;
-        while (digits--)
-        {
+        while (digits--) {
             out.push_back(text[digits]);
         }
 
-        if (flags & ZEROPAD)
-        {
-            while (width-- > 0)
-            {
+        if (flags & ZEROPAD) {
+            while (width-- > 0) {
                 out.push_back('0');
             }
-        }
-        else
-        {
-            while (width-- > 0)
-            {
+        } else {
+            while (width-- > 0) {
                 out.push_back(' ');
             }
         }
     }
 }
 
-inline static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp)
-{
+inline static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp) {
     auto player = playerhelpers->GetGamePlayer(index);
-    if (!player || !player->IsConnected())
-    {
+    if (!player || !player->IsConnected()) {
         return false;
     }
 
-    if (namep != nullptr)
-    {
+    if (namep != nullptr) {
         *namep = player->GetName();
     }
 
-    if (authp != nullptr)
-    {
+    if (authp != nullptr) {
         const char *auth = player->GetAuthString();
         *authp = (auth && *auth) ? auth : "STEAM_ID_PENDING";
     }
 
-    if (useridp != nullptr)
-    {
+    if (useridp != nullptr) {
         *useridp = player->GetUserId();
     }
 
     return true;
 }
 
-inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param)
-{
+inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param) {
     auto out = fmt::memory_buffer();
 
     int args = params[0];       // params count
@@ -699,20 +534,17 @@ inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePa
     int width;                  // 宽度
     int prec;                   // 精度
 
-    while (true)
-    {
+    while (true) {
         const char *begin = fmt;
 
         // run through the format string until we hit a '%' or '\0'
-        while (*fmt != '%' && *fmt != '\0')
-        {
+        while (*fmt != '%' && *fmt != '\0') {
             ++fmt;
         }
 
         out.append(begin, fmt);
 
-        if (*fmt == '\0')
-        {
+        if (*fmt == '\0') {
             *param = arg;
             return out;
         }
@@ -728,27 +560,22 @@ inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePa
 rflag:
 		char ch = *fmt++;
 reswitch:
-        switch(ch)
-        {
-        case '-':
-            {
+        switch(ch) {
+        case '-': {
                 flags |= LADJUST;
                 goto rflag;
             }
-        case '.':
-            {
+        case '.': {
                 int n = 0;
                 ch = *fmt++;
-                while (ch >= '0' && ch <= '9')
-                {
+                while (ch >= '0' && ch <= '9') {
                     n = 10 * n + (ch - '0');
                     ch = *fmt++;
                 }
                 prec = (n < 0) ? -1 : n;
                 goto reswitch;
             }
-        case '0':
-            {
+        case '0': {
                 flags |= ZEROPAD;
                 goto rflag;
             }
@@ -760,22 +587,18 @@ reswitch:
         case '6':
         case '7':
         case '8':
-        case '9':
-            {
+        case '9': {
                 int n = 0;
-                do
-                {
+                do {
                     n = 10 * n + (ch - '0');
                     ch = *fmt++;
                 } while(ch >= '0' && ch <= '9');
                 width = n;
                 goto reswitch;
             }
-        case 'c':
-            {
+        case 'c': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 char *c;
@@ -784,11 +607,9 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'b':
-            {
+        case 'b': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
@@ -798,11 +619,9 @@ reswitch:
                 break;
             }
         case 'd':
-        case 'i':
-            {
+        case 'i': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
@@ -811,11 +630,9 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'u':
-            {
+        case 'u': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
@@ -824,11 +641,9 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'f':
-            {
+        case 'f': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
@@ -837,40 +652,33 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'L':
-            {
+        case 'L': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
                 ctx->LocalToPhysAddr(params[arg], &value);
                 char buffer[255];
-                if (*value)
-                {
+                if (*value) {
                     const char *name;
                     const char *auth;
                     int userid;
-                    if (!DescribePlayer(*value, &name, &auth, &userid))
-                        throw std::runtime_error(
-                            fmt::format("Client index {} is invalid (arg {})", static_cast<int>(*value), arg));
+                    if (!DescribePlayer(*value, &name, &auth, &userid)) {
+                        throw std::runtime_error(fmt::format("Client index {} is invalid (arg {})", static_cast<int>(*value), arg));
+                    }
 
                     ke::SafeSprintf(buffer, sizeof(buffer), "%s<%d><%s><>", name, userid, auth);
-                }
-                else
-                {
+                } else {
                     ke::SafeStrcpy(buffer, sizeof(buffer), "Console<0><Console><Console>");
                 }
                 AddString(out, buffer, width, prec, flags);
                 ++arg;
                 break;
             }
-        case 'N':
-            {
+        case 'N': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
@@ -878,19 +686,17 @@ reswitch:
 
                 const char *name = "Console";
                 if (*value) {
-                    if (!DescribePlayer(*value, &name, nullptr, nullptr))
-                        throw std::runtime_error(
-                            fmt::format("Client index {} is invalid (arg {})", static_cast<int>(*value), arg));
+                    if (!DescribePlayer(*value, &name, nullptr, nullptr)) {
+                        throw std::runtime_error(fmt::format("Client index {} is invalid (arg {})", static_cast<int>(*value), arg));
+                    }
                 }
                 AddString(out, name, width, prec, flags);
                 ++arg;
                 break;
             }
-        case 's':
-            {
+        case 's': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 char *str;
@@ -899,11 +705,9 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'T':
-            {
+        case 'T': {
                 if (arg + 1 > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 char *key;
@@ -914,11 +718,9 @@ reswitch:
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
-        case 't':
-            {
+        case 't': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 char *key;
@@ -928,11 +730,9 @@ reswitch:
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
-        case 'X':
-            {
+        case 'X': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
@@ -942,11 +742,9 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'x':
-            {
+        case 'x': {
                 if (arg > args) {
-                    throw std::runtime_error(
-                        fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                 }
 
                 cell_t *value;
@@ -955,19 +753,16 @@ reswitch:
                 ++arg;
                 break;
             }
-        case '%':
-            {
+        case '%': {
                 out.push_back(ch);
                 break;
             }
-        case '\0':
-            {
+        case '\0': {
                 out.push_back('%');
                 *param = arg;
                 return out;
             }
-        default:
-            {
+        default: {
                 out.push_back(ch);
                 break;
             }
@@ -978,6 +773,6 @@ reswitch:
     return out;
 }
 
-} // namespace log4sp
 
-#endif // _LOG4SP_UTILS_INL_H_
+}       // namespace log4sp
+#endif  // _LOG4SP_UTILS_INL_H_

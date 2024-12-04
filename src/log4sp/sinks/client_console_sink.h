@@ -21,7 +21,7 @@ public:
 protected:
     void sink_it_(const spdlog::details::log_msg &msg) override;
 
-    void flush_() override;
+    void flush_() override {}
 
     IChangeableForward *player_filter_forward_;
 };
@@ -35,14 +35,12 @@ using client_console_sink_st = client_console_sink<spdlog::details::null_mutex>;
 // factory functions
 //
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<spdlog::logger> client_console_logger_mt()
-{
+inline std::shared_ptr<spdlog::logger> client_console_logger_mt() {
     return Factory::template create<log4sp::sinks::client_console_sink_mt>();
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<spdlog::logger> client_console_logger_st()
-{
+inline std::shared_ptr<spdlog::logger> client_console_logger_st() {
     return Factory::template create<log4sp::sinks::client_console_sink_st>();
 }
 
