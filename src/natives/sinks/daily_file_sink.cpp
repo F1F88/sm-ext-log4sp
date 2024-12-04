@@ -64,15 +64,15 @@ static cell_t DailyFileSink_GetFilename(IPluginContext *ctx, const cell_t *param
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
-    auto sinkAdapterRaw = log4sp::base_sink::read(handle, ctx);
-    if (sinkAdapterRaw == nullptr)
+    auto sinkAdapterPtr = log4sp::base_sink::read(handle, ctx);
+    if (sinkAdapterPtr == nullptr)
     {
         return 0;
     }
 
-    if (!sinkAdapterRaw->is_multi_thread())
+    if (!sinkAdapterPtr->is_multi_thread())
     {
-        auto sink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sinkAdapterRaw->raw());
+        auto sink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sinkAdapterPtr->raw());
         if (sink == nullptr)
         {
             ctx->ReportError("Unable to cast sink to single thread daily_file_sink.");
@@ -82,7 +82,7 @@ static cell_t DailyFileSink_GetFilename(IPluginContext *ctx, const cell_t *param
     }
     else
     {
-        auto sink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sinkAdapterRaw->raw());
+        auto sink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sinkAdapterPtr->raw());
         if (sink == nullptr)
         {
             ctx->ReportError("Unable to cast sink to multi thread daily_file_sink.");

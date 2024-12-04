@@ -42,8 +42,8 @@ static cell_t ClientChatSink_SetFilter(IPluginContext *ctx, const cell_t *params
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
-    auto sinkAdapterRaw = log4sp::base_sink::read(handle, ctx);
-    if (sinkAdapterRaw == nullptr)
+    auto sinkAdapterPtr = log4sp::base_sink::read(handle, ctx);
+    if (sinkAdapterPtr == nullptr)
     {
         return 0;
     }
@@ -56,9 +56,9 @@ static cell_t ClientChatSink_SetFilter(IPluginContext *ctx, const cell_t *params
         return 0;
     }
 
-    if (!sinkAdapterRaw->is_multi_thread())
+    if (!sinkAdapterPtr->is_multi_thread())
     {
-        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_st>(sinkAdapterRaw->raw());
+        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_st>(sinkAdapterPtr->raw());
         if (sink == nullptr)
         {
             ctx->ReportError("Unable to cast sink to single thread client_chat_sink.");
@@ -73,7 +73,7 @@ static cell_t ClientChatSink_SetFilter(IPluginContext *ctx, const cell_t *params
     }
     else
     {
-        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_mt>(sinkAdapterRaw->raw());
+        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_mt>(sinkAdapterPtr->raw());
         if (sink == nullptr)
         {
             ctx->ReportError("Unable to cast sink to multi thread client_chat_sink.");

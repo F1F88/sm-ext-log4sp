@@ -38,13 +38,13 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     for (unsigned int i = 0; i < numSinks; ++i)
     {
         auto sinkHandle     = static_cast<Handle_t>(sinks[i]);
-        auto sinkAdapterRaw = log4sp::base_sink::read(sinkHandle, ctx);
-        if (sinkAdapterRaw == nullptr)
+        auto sinkAdapterPtr = log4sp::base_sink::read(sinkHandle, ctx);
+        if (sinkAdapterPtr == nullptr)
         {
             return BAD_HANDLE;
         }
 
-        sinksList.push_back(sinkAdapterRaw->raw());
+        sinksList.push_back(sinkAdapterPtr->raw());
     }
 
     std::shared_ptr<log4sp::base_logger> loggerAdapter;
@@ -1394,20 +1394,20 @@ static cell_t DumpBacktrace(IPluginContext *ctx, const cell_t *params)
 static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 {
     auto loggerHandle = static_cast<Handle_t>(params[1]);
-    auto loggerAdapterRaw = log4sp::base_logger::read(loggerHandle, ctx);
-    if (loggerAdapterRaw == nullptr)
+    auto loggerAdapterPtr = log4sp::base_logger::read(loggerHandle, ctx);
+    if (loggerAdapterPtr == nullptr)
     {
         return 0;
     }
 
     auto sinkHandle = static_cast<Handle_t>(params[2]);
-    auto sinkAdapterRaw = log4sp::base_sink::read(sinkHandle, ctx);
-    if (sinkAdapterRaw == nullptr)
+    auto sinkAdapterPtr = log4sp::base_sink::read(sinkHandle, ctx);
+    if (sinkAdapterPtr == nullptr)
     {
         return 0;
     }
 
-    loggerAdapterRaw->add_sink(sinkAdapterRaw->raw());
+    loggerAdapterPtr->add_sink(sinkAdapterPtr->raw());
     return 0;
 }
 
@@ -1417,20 +1417,20 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
 {
     auto loggerHandle = static_cast<Handle_t>(params[1]);
-    auto loggerAdapterRaw = log4sp::base_logger::read(loggerHandle, ctx);
-    if (loggerAdapterRaw == nullptr)
+    auto loggerAdapterPtr = log4sp::base_logger::read(loggerHandle, ctx);
+    if (loggerAdapterPtr == nullptr)
     {
         return 0;
     }
 
     auto sinkHandle = static_cast<Handle_t>(params[2]);
-    auto sinkAdapterRaw = log4sp::base_sink::read(sinkHandle, ctx);
-    if (sinkAdapterRaw == nullptr)
+    auto sinkAdapterPtr = log4sp::base_sink::read(sinkHandle, ctx);
+    if (sinkAdapterPtr == nullptr)
     {
         return 0;
     }
 
-    loggerAdapterRaw->remove_sink(sinkAdapterRaw->raw());
+    loggerAdapterPtr->remove_sink(sinkAdapterPtr->raw());
     return 0;
 }
 

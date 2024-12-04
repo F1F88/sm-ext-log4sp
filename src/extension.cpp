@@ -154,28 +154,28 @@ void Log4sp::OnHandleDestroy(HandleType_t type, void *object)
 {
     if (type == g_LoggerHandleType)
     {
-        auto loggerAdapterRaw = static_cast<log4sp::base_logger *>(object);
+        auto loggerAdapterPtr = static_cast<log4sp::base_logger *>(object);
 
         if (spdlog::should_log(spdlog::level::trace))
         {
-            auto logger = loggerAdapterRaw->raw();
-            SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(loggerAdapterRaw->handle()), fmt::ptr(object));
+            auto logger = loggerAdapterPtr->raw();
+            SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(loggerAdapterPtr->handle()), fmt::ptr(object));
         }
 
-        log4sp::logger_register::instance().drop(loggerAdapterRaw->raw()->name());
+        log4sp::logger_register::instance().drop(loggerAdapterPtr->raw()->name());
         return;
     }
 
     if (type == g_SinkHandleType)
     {
-        auto sinkAdapterRaw = static_cast<log4sp::base_sink *>(object);
+        auto sinkAdapterPtr = static_cast<log4sp::base_sink *>(object);
 
         if (spdlog::should_log(spdlog::level::trace))
         {
-            SPDLOG_TRACE("Destroy a sink handle. (hdl={:X}, ptr={})", static_cast<int>(sinkAdapterRaw->handle()), fmt::ptr(object));
+            SPDLOG_TRACE("Destroy a sink handle. (hdl={:X}, ptr={})", static_cast<int>(sinkAdapterPtr->handle()), fmt::ptr(object));
         }
 
-        log4sp::sink_register::instance().drop(sinkAdapterRaw);
+        log4sp::sink_register::instance().drop(sinkAdapterPtr);
         return;
     }
 }
