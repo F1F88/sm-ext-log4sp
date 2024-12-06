@@ -30,13 +30,13 @@ inline root_console_command_handler &root_console_command_handler::instance() {
 }
 
 
-inline void root_console_command_handler::list_menu() {
+inline void root_console_command_handler::draw_menu() {
     rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
     rootconsole->ConsolePrint("Usage: sm log4sp <function_name> <logger_name> [arguments]");
 
     // rootconsole->DrawGenericOption("list_logger", "Show all loggers name."); // ref: https://github.com/gabime/spdlog/issues/180
-    rootconsole->DrawGenericOption("get_lvl",       "Gets a logger log level.");
-    rootconsole->DrawGenericOption("set_lvl",       fmt::format("Sets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, ", ")).c_str());
+    rootconsole->DrawGenericOption("get_lvl",       fmt::format("Gets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
+    rootconsole->DrawGenericOption("set_lvl",       fmt::format("Sets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_pattern",   "Sets a logger log pattern.");
     rootconsole->DrawGenericOption("should_log",    "Gets a logger whether logging is enabled for the given log level.");
     rootconsole->DrawGenericOption("log",           "Use a logger to log a message.");
@@ -54,7 +54,7 @@ inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdna
     // 0-sm  |  1-log4sp  |  2-function name  |  3-logger name  |  x-params
     int argCnt = args->ArgC();
     if (argCnt <= 2) {
-        list_menu();
+        draw_menu();
         return;
     }
 
@@ -66,7 +66,7 @@ inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdna
     } else {
         rootconsole->ConsolePrint("[SM] The function name '%s' does not exist.", function_name);
         rootconsole->ConsolePrint("-------------------------------------------");
-        list_menu();
+        draw_menu();
     }
 }
 

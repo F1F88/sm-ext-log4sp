@@ -10,9 +10,15 @@ namespace command {
 
 class root_console_command_handler final : public IRootConsoleCommand {
 public:
+    /**
+     * @brief 全局单例对象
+     */
     static root_console_command_handler &instance();
 
-    void list_menu();
+    /**
+     * @brief 绘制 log4sp 指令菜单
+     */
+    void draw_menu();
 
     /**
      * @brief Handles a root console menu action.
