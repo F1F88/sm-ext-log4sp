@@ -1,6 +1,8 @@
 #ifndef _LOG4SP_SINKS_CLIENT_CHAT_SINK_INL_H_
 #define _LOG4SP_SINKS_CLIENT_CHAT_SINK_INL_H_
 
+#include <mutex>
+
 #include "log4sp/sinks/client_chat_sink.h"
 
 namespace log4sp {
@@ -15,6 +17,7 @@ client_chat_sink<Mutex>::~client_chat_sink() {
 
 template <typename Mutex>
 inline bool client_chat_sink<Mutex>::set_player_filter(IPluginFunction *filter) {
+    std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
     if (filter == nullptr) {
         return false;
     }
