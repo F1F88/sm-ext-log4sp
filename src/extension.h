@@ -42,7 +42,7 @@
  * @brief Implementation of the logger in SourcePawn Extension.
  * Note: Uncomment one of the pre-defined virtual functions in order to use it.
  */
-class Log4sp : public SDKExtension, public IRootConsoleCommand
+class Log4sp : public SDKExtension
 {
 public:
     /**
@@ -111,64 +111,19 @@ public:
      * @return              True to succeed, false to fail.
      */
     //virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlen);
-#endif
-
-public:
-    /**
-     * @brief Handles a root console menu action.
-     */
-    void OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args);
-};
-
-
-class LoggerHandler : public IHandleTypeDispatch
-{
-public:
-    /**
-     * @brief Called when destroying a handle.  Must be implemented.
-     *
-     * @param type      Handle type.
-     * @param object    Handle internal object.
-     */
-    void OnHandleDestroy(HandleType_t type, void *object);
-};
-
-class SinkHandler : public IHandleTypeDispatch
-{
-public:
-    /**
-     * @brief Called when destroying a handle.  Must be implemented.
-     *
-     * @param type      Handle type.
-     * @param object    Handle internal object.
-     */
-    void OnHandleDestroy(HandleType_t type, void *object);
+    #endif
 };
 
 extern Log4sp                   g_Log4sp;
 
-extern LoggerHandler            g_LoggerHandler;
-extern HandleType_t             g_LoggerHandleType;
-
-extern SinkHandler              g_SinkHandler;
-extern HandleType_t             g_ServerConsoleSinkSTHandleType;
-extern HandleType_t             g_ServerConsoleSinkMTHandleType;
-extern HandleType_t             g_BaseFileSinkSTHandleType;
-extern HandleType_t             g_BaseFileSinkMTHandleType;
-extern HandleType_t             g_RotatingFileSinkSTHandleType;
-extern HandleType_t             g_RotatingFileSinkMTHandleType;
-extern HandleType_t             g_DailyFileSinkSTHandleType;
-extern HandleType_t             g_DailyFileSinkMTHandleType;
-extern HandleType_t             g_ClientConsoleSinkSTHandleType;
-extern HandleType_t             g_ClientConsoleSinkMTHandleType;
-
 extern const sp_nativeinfo_t    CommonNatives[];
 extern const sp_nativeinfo_t    LoggerNatives[];
 extern const sp_nativeinfo_t    SinkNatives[];
-extern const sp_nativeinfo_t    ServerConsoleSinkNatives[];
 extern const sp_nativeinfo_t    BaseFileSinkNatives[];
-extern const sp_nativeinfo_t    RotatingFileSinkNatives[];
-extern const sp_nativeinfo_t    DailyFileSinkNatives[];
+extern const sp_nativeinfo_t    ClientChatSinkNatives[];
 extern const sp_nativeinfo_t    ClientConsoleSinkNatives[];
+extern const sp_nativeinfo_t    DailyFileSinkNatives[];
+extern const sp_nativeinfo_t    RotatingFileSinkNatives[];
+extern const sp_nativeinfo_t    ServerConsoleSinkNatives[];
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_

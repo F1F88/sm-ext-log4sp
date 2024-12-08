@@ -29,13 +29,16 @@
  * Version: $Id$
  */
 
-#include "extension.h"
-
-#include "spdlog/spdlog.h"
 #include "spdlog/async.h"
+#include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
 
-#include <log4sp/common.h>
+#include "extension.h"
+
+#include "log4sp/adapter/logger_handler.h"
+#include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/command/root_console_command_handler.h"
+
 
 /**
  * @file extension.cpp
@@ -45,139 +48,84 @@
 Log4sp g_Log4sp;    /**< Global singleton for extension's main interface */
 SMEXT_LINK(&g_Log4sp);
 
-LoggerHandler                   g_LoggerHandler;
-HandleType_t                    g_LoggerHandleType = 0;
-
-SinkHandler                     g_SinkHandler;
-HandleType_t                    g_ServerConsoleSinkSTHandleType = 0;
-HandleType_t                    g_ServerConsoleSinkMTHandleType = 0;
-HandleType_t                    g_BaseFileSinkSTHandleType = 0;
-HandleType_t                    g_BaseFileSinkMTHandleType = 0;
-HandleType_t                    g_RotatingFileSinkSTHandleType = 0;
-HandleType_t                    g_RotatingFileSinkMTHandleType = 0;
-HandleType_t                    g_DailyFileSinkSTHandleType = 0;
-HandleType_t                    g_DailyFileSinkMTHandleType = 0;
-HandleType_t                    g_ClientConsoleSinkSTHandleType = 0;
-HandleType_t                    g_ClientConsoleSinkMTHandleType = 0;
-
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
-    HandleError err;
-    g_LoggerHandleType = handlesys->CreateType("Logger", &g_LoggerHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_LoggerHandleType)
+    // Init handle type
     {
-        snprintf(error, maxlen, "Could not create Logger handle type (err: %d)", err);
-        return false;
+        HandleError err = log4sp::logger_handler::instance().create_handle_type();
+        if (err != HandleError_None)
+        {
+            snprintf(error, maxlen, "Could not create Logger handle type. (err: %d)", err);
+            return false;
+        }
+
+        err = log4sp::sink_handler::instance().create_handle_type();
+        if (err != HandleError_None)
+        {
+            snprintf(error, maxlen, "Could not create Sink handle type (err: %d)", err);
+            return false;
+        }
     }
 
-    // We don't use inheritance because types only can have up to 15 sub-types.
-    g_ServerConsoleSinkSTHandleType = handlesys->CreateType("ServerConsoleSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ServerConsoleSinkSTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ServerConsoleSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ServerConsoleSinkMTHandleType = handlesys->CreateType("ServerConsoleSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ServerConsoleSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ServerConsoleSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
-    g_BaseFileSinkSTHandleType = handlesys->CreateType("BaseFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_BaseFileSinkSTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create BaseFileSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_BaseFileSinkMTHandleType = handlesys->CreateType("BaseFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_BaseFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create BaseFileSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
-    g_RotatingFileSinkSTHandleType = handlesys->CreateType("RotatingFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_RotatingFileSinkSTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create RotatingFileSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_RotatingFileSinkMTHandleType = handlesys->CreateType("RotatingFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_RotatingFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create RotatingFileSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
-    g_DailyFileSinkSTHandleType = handlesys->CreateType("DailyFileSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_DailyFileSinkSTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create DailyFileSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_DailyFileSinkMTHandleType = handlesys->CreateType("DailyFileSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_DailyFileSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create DailyFileSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ClientConsoleSinkSTHandleType = handlesys->CreateType("ClientConsoleSinkST", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ClientConsoleSinkSTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ClientConsoleSinkST handle type (err: %d)", err);
-        return false;
-    }
-
-    g_ClientConsoleSinkMTHandleType = handlesys->CreateType("ClientConsoleSinkMT", &g_SinkHandler, 0, NULL, NULL, myself->GetIdentity(), &err);
-    if (!g_ClientConsoleSinkMTHandleType)
-    {
-        snprintf(error, maxlen, "Could not create ClientConsoleSinkMT handle type (err: %d)", err);
-        return false;
-    }
-
-    sharesys->AddNatives(myself, CommonNatives);
-    sharesys->AddNatives(myself, LoggerNatives);
-    sharesys->AddNatives(myself, SinkNatives);
-    sharesys->AddNatives(myself, ServerConsoleSinkNatives);
-    sharesys->AddNatives(myself, BaseFileSinkNatives);
-    sharesys->AddNatives(myself, RotatingFileSinkNatives);
-    sharesys->AddNatives(myself, DailyFileSinkNatives);
-    sharesys->AddNatives(myself, ClientConsoleSinkNatives);
-
-    if (!rootconsole->AddRootConsoleCommand3("log4sp", "Manager Logging For SourcePawn", this))
+    // Init console command
+    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Logging For SourcePawn command menu", &log4sp::root_console_command_handler::instance()))
     {
         snprintf(error, maxlen, "Could not add root console commmand 'log4sp'.");
         return false;
     }
 
-    sharesys->RegisterLibrary(myself, "log4sp");
-
     // Init Global Thread Pool
     {
         const char *queueSizeStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolQueueSize");
-        size_t queueSize = queueSizeStr != nullptr ? atoi(queueSizeStr) : 8192;
+        auto queueSize = queueSizeStr != nullptr ? static_cast<size_t>(atoi(queueSizeStr)) : static_cast<size_t>(8192);
 
         const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
-        size_t threadCount = threadCountStr != nullptr ? atoi(threadCountStr) : 1;
+        auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoi(threadCountStr)) : static_cast<size_t>(1);
 
-        // rootconsole->ConsolePrint("Thread Pool: queue size = %d.", queueSize);
-        // rootconsole->ConsolePrint("Thread Pool: thread count = %d.", threadCount);
+        if (threadCount == 0 || threadCount > 1000)
+        {
+            snprintf(error, maxlen, "Invalid thread count config (%s), valid range is 1-1000.", threadCountStr);
+            return false;
+        }
 
         spdlog::init_thread_pool(queueSize, threadCount);
     }
 
     // Init Default Logger
     {
-        auto logger = spdlog::stdout_logger_st(SMEXT_CONF_LOGTAG);
+        auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        auto logger = std::make_shared<log4sp::logger_proxy>(SMEXT_CONF_LOGTAG, sink);
         spdlog::set_default_logger(logger);
+
+        // 默认 logger 属于拓展，不应该被任何插件释放
+        HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
+
+        HandleAccess access;
+        handlesys->InitAccessDefaults(nullptr, &access);
+        access.access[HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
+
+        HandleError err;
+
+        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &err);
+        if (handle == BAD_HANDLE)
+        {
+            snprintf(error, maxlen, "Could not create default logger handle. (err: %d)", err);
+            return false;
+        }
     }
+
+    sharesys->AddNatives(myself, CommonNatives);
+    sharesys->AddNatives(myself, LoggerNatives);
+    sharesys->AddNatives(myself, SinkNatives);
+    sharesys->AddNatives(myself, BaseFileSinkNatives);
+    sharesys->AddNatives(myself, ClientChatSinkNatives);
+    sharesys->AddNatives(myself, ClientConsoleSinkNatives);
+    sharesys->AddNatives(myself, DailyFileSinkNatives);
+    sharesys->AddNatives(myself, RotatingFileSinkNatives);
+    sharesys->AddNatives(myself, ServerConsoleSinkNatives);
+
+    sharesys->RegisterLibrary(myself, SMEXT_CONF_LOGTAG);
 
     rootconsole->ConsolePrint("****************** log4sp.ext initialize complete! ******************");
     return true;
@@ -185,266 +133,10 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 void Log4sp::SDK_OnUnload()
 {
-    log4sp::SinkHandleRegistry::instance().dropAll();
+    rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, &log4sp::root_console_command_handler::instance());
 
-    handlesys->RemoveType(g_LoggerHandleType, myself->GetIdentity());
-
-    handlesys->RemoveType(g_ServerConsoleSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_ServerConsoleSinkMTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_BaseFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_BaseFileSinkMTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_RotatingFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_RotatingFileSinkMTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_DailyFileSinkSTHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_DailyFileSinkMTHandleType, myself->GetIdentity());
-
-    rootconsole->RemoveRootConsoleCommand("log4sp", this);
+    log4sp::sink_handler::instance().remove_handle_type();
+    log4sp::logger_handler::instance().remove_handle_type();
 
     spdlog::shutdown();
-}
-
-void LoggerHandler::OnHandleDestroy(HandleType_t type, void *object)
-{
-    spdlog::logger *logger = static_cast<spdlog::logger *>(object);
-    SPDLOG_TRACE("Destroy a Logger handle. (name={}, ptr={}, type={})", logger->name(), fmt::ptr(object), type);
-    spdlog::drop(logger->name());
-}
-
-void SinkHandler::OnHandleDestroy(HandleType_t type, void *object)
-{
-    spdlog::sinks::sink *sink = static_cast<spdlog::sinks::sink *>(object);
-
-    // 所以为什么 OnHandleDestroy 只有 HandleType_t 而没有 Handle？
-    if (!log4sp::SinkHandleRegistry::instance().drop(sink)) // O(n)
-    {
-        SPDLOG_TRACE("Destroy a unknown type Sink handle. (ptr={}, type={})", fmt::ptr(object), type);
-    }
-    else
-    {
-        SPDLOG_TRACE("Destroy a Sink handle. (ptr={}, type={})", fmt::ptr(object), type);
-    }
-}
-
-void Log4sp::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args)
-{
-    // 0-sm  |  1-log4sp  |  2-func  |  3-logger name  |  x-params
-    int argCnt = args->ArgC();
-    if (argCnt <= 3) // 注意是个数, 不是索引
-    {
-        rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
-        rootconsole->ConsolePrint("Usage: sm log4sp <function> <logger_name> [arguments]");
-
-        // rootconsole->DrawGenericOption("list", "Show all loggers name."); // ref: https://github.com/gabime/spdlog/issues/180
-        rootconsole->DrawGenericOption("get_lvl", "Get a logger logging level.");
-        rootconsole->DrawGenericOption("set_lvl", "Set a logger logging level. [trace, debug, info, warn, error, fatal, off]");
-        rootconsole->DrawGenericOption("set_pattern", "Change a logger log pattern.");
-        rootconsole->DrawGenericOption("should_log", "Get whether logger is enabled at the given level.");
-        rootconsole->DrawGenericOption("log", "Logging a Message.");
-        rootconsole->DrawGenericOption("flush", "Manual flush logger contents.");
-        rootconsole->DrawGenericOption("get_flush_lvl", "Get the minimum log level that will trigger automatic flush.");
-        rootconsole->DrawGenericOption("set_flush_lvl", "Set the minimum log level that will trigger automatic flush. [trace, debug, info, warn, error, fatal, off]");
-        rootconsole->DrawGenericOption("should_bt", "Create new backtrace sink and move to it all our child sinks.");
-        rootconsole->DrawGenericOption("enable_bt", "Create new backtrace sink and move to it all our child sinks.");
-        rootconsole->DrawGenericOption("disable_bt", "Restore orig sinks and level and delete the backtrace sink.");
-        rootconsole->DrawGenericOption("dump_bt", "Dump the backtrace of logged messages in the logger.");
-        return;
-    }
-
-    const char *name = args->Arg(3);
-    std::shared_ptr<spdlog::logger> logger = spdlog::get(name);
-    if (logger == nullptr)
-    {
-        rootconsole->ConsolePrint("[SM] Logger with name '%s' does not exists.", name);
-        return;
-    }
-
-    const char *func = args->Arg(2);
-    if (!strcmp(func, "get_lvl"))
-    {
-        spdlog::level::level_enum lvl = logger->level();
-        rootconsole->ConsolePrint("[SM] The level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl).data());
-        return;
-    }
-
-    if (!strcmp(func, "set_lvl"))
-    {
-        if (argCnt < 5)
-        {
-            rootconsole->ConsolePrint("[SM] Usage: sm log4sp set_lvl <logger_name> <level>");
-            return;
-        }
-
-        spdlog::level::level_enum lvl;
-        {
-            const char *str = args->Arg(4);
-            if (strlen(str) == 1 && str[0] < '0' + spdlog::level::n_levels && str[0] >= '0')
-            {
-                lvl = static_cast<spdlog::level::level_enum>(str[0] - '0');
-            }
-            else
-            {
-                lvl = spdlog::level::from_str(str); // If name does not exist, return LogLevel_Off
-            }
-        }
-
-        rootconsole->ConsolePrint("[SM] Setting logger '%s' level to '%s'", name, spdlog::level::to_string_view(lvl).data());
-        logger->set_level(lvl);
-        return;
-    }
-
-    if (!strcmp(func, "set_pattern"))
-    {
-        if (argCnt < 5)
-        {
-            rootconsole->ConsolePrint("[SM] Usage: sm log4sp set_pattern <logger_name> <pattern>");
-            return;
-        }
-
-        const char *pattern = args->Arg(4);
-
-        rootconsole->ConsolePrint("[SM] Setting logger '%s' pattern to '%s'.", name, pattern);
-        logger->set_pattern(pattern);
-        return;
-    }
-
-    if (!strcmp(func, "should_log"))
-    {
-        if (argCnt < 5)
-        {
-            rootconsole->ConsolePrint("[SM] Usage: sm log4sp should_log <logger_name> <level>");
-            return;
-        }
-
-        spdlog::level::level_enum lvl;
-        {
-            const char *str = args->Arg(4);
-            if (strlen(str) == 1 && str[0] < '0' + spdlog::level::n_levels && str[0] >= '0')
-            {
-                lvl = static_cast<spdlog::level::level_enum>(str[0] - '0');
-            }
-            else
-            {
-                lvl = spdlog::level::from_str(str); // If name does not exist, return LogLevel_Off
-            }
-        }
-
-        bool result = logger->should_log(lvl);
-        rootconsole->ConsolePrint("[SM] The logger '%s' has %s at '%s'.", name, result ? "enabled" : "disabled", spdlog::level::to_string_view(lvl).data());
-        return;
-    }
-
-    if (!strcmp(func, "log"))
-    {
-        if (argCnt < 6)
-        {
-            rootconsole->ConsolePrint("[SM] Usage: sm log4sp log <logger_name> <level> <message>");
-            return;
-        }
-
-        spdlog::level::level_enum lvl;
-        {
-            const char *str = args->Arg(4);
-            if (strlen(str) == 1 && str[0] < '0' + spdlog::level::n_levels && str[0] >= '0')
-            {
-                lvl = static_cast<spdlog::level::level_enum>(str[0] - '0');
-            }
-            else
-            {
-                lvl = spdlog::level::from_str(str); // If name does not exist, return LogLevel_Off
-            }
-        }
-
-        const char *msg = args->Arg(5);
-
-        rootconsole->ConsolePrint("[SM] Logger '%s' will log message with level '%s': '%s'.", name, spdlog::level::to_string_view(lvl).data(), msg);
-        logger->log(lvl, msg);
-        return;
-    }
-
-    if (!strcmp(func, "flush"))
-    {
-        rootconsole->ConsolePrint("[SM] Logger '%s' will perform a flush operation.", name);
-        logger->flush();
-        return;
-    }
-
-    if (!strcmp(func, "get_flush_lvl"))
-    {
-        spdlog::level::level_enum lvl = logger->flush_level();
-        rootconsole->ConsolePrint("[SM] The flush level of logger '%s' is '%s'.", name, spdlog::level::to_string_view(lvl).data());
-        return;
-    }
-
-    if (!strcmp(func, "set_flush_lvl"))
-    {
-        if (argCnt < 5)
-        {
-            rootconsole->ConsolePrint("[SM] Usage: sm log4sp set_flush_lvl <logger_name> <level>");
-            return;
-        }
-
-        spdlog::level::level_enum lvl;
-        {
-            const char *str = args->Arg(4);
-            if (strlen(str) == 1 && str[0] < '0' + spdlog::level::n_levels && str[0] >= '0')
-            {
-                lvl = static_cast<spdlog::level::level_enum>(str[0] - '0');
-            }
-            else
-            {
-                lvl = spdlog::level::from_str(str); // If name does not exist, return LogLevel_Off
-            }
-        }
-
-        rootconsole->ConsolePrint("[SM] Setting logger '%s' flush level to '%s'", name, spdlog::level::to_string_view(lvl).data());
-        logger->flush_on(lvl);
-        return;
-    }
-
-    if (!strcmp(func, "should_bt"))
-    {
-        rootconsole->ConsolePrint("[SM] Backtrace for logger '%s' is %s.", name, logger->should_backtrace() ? "enabled" : "disabled");
-        return;
-    }
-
-    if (!strcmp(func, "enable_bt"))
-    {
-        if (argCnt < 5)
-        {
-            rootconsole->ConsolePrint("[SM] Usage: sm log4sp enable_bt <logger_name> <num>");
-            return;
-        }
-
-        int num;
-        try
-        {
-            num = std::stoi(args->Arg(4)); // actually enable_backtrace param type is size_t - unsigned long long
-        }
-        catch(const std::exception &)
-        {
-            rootconsole->ConsolePrint("[SM] Usage: sm log4sp enable_bt <logger_name> <num>");
-            return;
-        }
-
-        rootconsole->ConsolePrint("[SM] Enable backtrace for logger '%s'. (stored %d messages)", name, num);
-        logger->enable_backtrace(num);
-        return;
-    }
-
-    if (!strcmp(func, "disable_bt"))
-    {
-        rootconsole->ConsolePrint("[SM] Disable backtrace for logger '%s'.", name);
-        logger->disable_backtrace();
-        return;
-    }
-
-    if (!strcmp(func, "dump_bt"))
-    {
-        rootconsole->ConsolePrint("[SM] Dump backtrace messages for logger '%s'.", name);
-        logger->dump_backtrace();
-        return;
-    }
-
-    // 所有的 function 都不匹配
-    rootconsole->ConsolePrint("[SM] The function '%s' does not exist.", func);
 }

@@ -1,4 +1,4 @@
-**[英语](./readme.md) | [中文](./readme-chi.md)**
+**[English](./readme.md) | [中文](./readme-chi.md)**
 
 # Logging for SourcePawn
 
@@ -6,48 +6,81 @@
 
 ## 特点
 
-1. 非常快，比 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
+1. 非常快，比 [SourceMod API - Logging](https://sm.alliedmods.net/new-api/logging) 快得多
 
-   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp 性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95)
+   - spdlog [性能测试](https://github.com/gabime/spdlog#benchmarks)
 
-2. 每个 `Logger` 和 `Sink` 都能够自定义日志级别
+   - log4sp [性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95)
 
-3. 每个 `Logger` 和 `Sink` 都能够自定义[日志模板](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+   - SourceMod API - Logging [性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#sourcemod-logging)
 
-4. 每个 `Logger` 都能够自定义[刷新策略](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+2. 支持自定义日志级别
 
-5. 每个 `Logger` 都能够拥有多个 `Sink`
+   - 对于测试环境，可以使用低日志级别（如：`trace`、`debug`） 增加日志输出，从而发现问题
 
-   - 例如： `ServerConsoleSink` + `DailyFileSink` 相当于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+   - 对于线上环境，可以使用高日志级别（如：`warn`、`error`）减少日志输出，从而提高性能
 
-6. 每个 `Logger` 都能够动态调整日志级别、模板
+3. 支持自定义日志消息模板
 
-   - 详见指令 `"sm log4sp"`
+   - 可以附加自定义信息到日志消息（如：时间、日志级别、源代码位置等）
 
-7. 支持异步 `Logger`
+   - 默认的日志模板格式：
 
-8. 支持格式化可变个数的参数
+      > [%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%s:%#] %v
+      >
+      > [2024-08-01 12:34:56:789] [log4sp] [info] [example.sp:123] message
 
-   - [参数格式化用法](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 与 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 相同
+   - 支持的日志模板格式：[spdlog wiki](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-   - 可变参数的字符串最大长度为 **2048**，超过这个长度的字符会被截断
-     如需要记录更长的日志消息，可以使用非 `AmxTpl` 的方法, 例如: `void Info(const char[] msg)`
+4. 支持自定义日志消息刷新级别
 
-9. 支持[日志回溯](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
+   - 默认情况下，spdlog 会让底层 libc 在适当的时候刷新，以实现更高的性能
 
-   - 启用后 `Trace` 和 `Debug` 级别的日志消息存储在一个环形缓冲区中, 只在显示调用 `DumpBacktrace()` 后才会输出
+   - 你可以使用 `Logger.Flush()` 手动刷新，也可以使用 `Logger.FlushOn()` 自定义触发自动刷新的最低日志级别
 
-10. 支持多种 Sink
+5. 支持 "回溯" 日志消息
 
-    - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+   - 可以将 `trace`、`debug` 日志消息存储在环形缓冲区中，后续按需输出
+
+6. 支持服务器控制台菜单
+
+   - 服务器控制台指令 "sm log4sp" 可以动态的修改 日志级别、刷新级别、日志模板、"回溯" 等
+
+7. 支持异步记录日志消息
+
+   - 不会阻塞服务器的主线程
+
+8. 支持 "无限长度" 的日志消息
+
+   - 对于 `Logger.***AmxTpl()` 的记录日志方法，输出的日志消息最大长度为 2048 字符，超出的部分会被截断
+
+   - 对于非 `Logger.***AmxTpl()` 的记录日志方法，输出的日志消息长度不受限制（理论上取决于可用内存）
+
+9. 支持一次日志操作写入多个输出源
+
+   - 每一个记录器 (Logger) 都可以拥有多个输出源 (Sink)
+
+   - 每一个输出源 (Sink) 都可以自定义不同的日志级别、日志模板
+
+      例如：当 Logger 拥有 `ServerConsoleSink`、`DailyFileSink` 时，相当于 `sv_logecho 1` 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+
+10. 支持多种输出源
+
+    - BaseFileSink （类似于 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+
+    - ClientChatSink（类似于 [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
 
     - ClientConsoleSink（类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
 
-    - BaseFileSink （类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+    - DailyFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
 
-    - DailyFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+      基于日期更替日志文件
 
-    - RotatingFileSink
+    - RotatingFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+
+      基于文件大小更替日志文件
+
+    - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
 ## 文档
 
@@ -59,86 +92,61 @@
 
 ## 性能测试
 
-测试平台: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
+测试平台: Windows 11 + VMware + Ubuntu 24.04 LTS + SourceMod 1.13.0.7178
 
-宿主机配置: AMD Ryzen 7 6800H + 32 GB 内存
+宿主机配置: AMD Ryzen 7 7840HS + 32 GB 内存
 
-VMware 配置: 1 CPU + 8 核心 + 4 GB 内存
+VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 
-测试用例1：[benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
+测试用例：[benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
 
-测试用例2：[benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.sp)
-
-#### 单线程 （同步）
+#### 同步
 
 ```
-[benchmark] base-file-st      | Iters 1000000 | Elapsed  0.268 secs   3719518/sec
-[benchmark] daily-file-st     | Iters 1000000 | Elapsed  0.278 secs   3589439/sec
-[benchmark] rotating-file-st  | Iters 1000000 | Elapsed  0.279 secs   3578598/sec
-[benchmark] server-console-st | Iters 1000000 | Elapsed  5.609 secs    178255/sec
+[benchmark] base-file         | Iters 1000000 | Elapsed  0.465 secs   2150463/sec
+[benchmark] daily-file        | Iters 1000000 | Elapsed  0.471 secs   2118729/sec
+[benchmark] rotating-file     | Iters 1000000 | Elapsed  0.482 secs   2073553/sec
+[benchmark] server-console    | Iters 1000000 | Elapsed  4.847 secs    206288/sec
 ```
 
-#### 多线程 （异步）
+#### 异步 Logger
 
 ```
 # 队列大小：8192      线程数：1
-[benchmark] base-file-block        | Iters 1000000 | Elapsed  0.479 secs   2084762/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed  0.488 secs   2046592/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  0.462 secs   2162868/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed  8.422 secs    118725/sec
+[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.549 secs   1818902/sec
+[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.539 secs   1853506/sec
+[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.547 secs   1827278/sec
+[benchmark] server-console-async-block     | Iters 1000000 | Elapsed  6.559 secs    152456/sec
 
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.442 secs   2259856/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.438 secs   2280891/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.442 secs   2260684/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.379 secs   2632167/sec
-
-
-# 队列大小：8192      线程数：4
-[benchmark] base-file-block        | Iters 1000000 | Elapsed  1.049 secs    952753/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed  1.086 secs    920584/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  1.034 secs    967049/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed 15.784 secs     63354/sec
-
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.439 secs   2273952/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.451 secs   2212609/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.453 secs   2204658/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.372 secs   2684282/sec
-
-
-# 队列大小：131072    线程数：4
-[benchmark] base-file-block        | Iters 1000000 | Elapsed   0.998 secs   1001216/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed   0.973 secs   1027070/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed   0.956 secs   1045255/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed  13.952 secs     71671/sec
-
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed   0.472 secs   2116635/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed   0.441 secs   2264892/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed   0.478 secs   2091503/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed   0.385 secs   2592245/sec
+[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.558 secs   1790712/sec
+[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.553 secs   1807344/sec
+[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.541 secs   1846255/sec
+[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.391 secs   2555140/sec
 
 
 # 队列大小：8192      线程数：8
-[benchmark] base-file-block        | Iters 1000000 | Elapsed  1.135 secs    881010/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed  1.183 secs    845069/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  1.193 secs    838199/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed 14.925 secs     67000/sec
+[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.717 secs   1393237/sec
+[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.715 secs   1398374/sec
+[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.778 secs   1285284/sec
+[benchmark] server-console-async-block     | Iters 1000000 | Elapsed 12.136 secs     82395/sec
 
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.533 secs   1875363/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.569 secs   1754767/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.508 secs   1967969/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.394 secs   2532556/sec
+[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.524 secs   1906501/sec
+[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.663 secs   1508213/sec
+[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.609 secs   1639347/sec
+[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.504 secs   1980939/sec
 ```
 
 #### Sourcemod logging
 
 作为参考, 还测试了 sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
 
+测试用例：[benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.sp)
 
 ```
-[benchmark] LogMessage    | Iters 1000000 | Elapsed 10.740 secs     93108/sec
-[benchmark] LogToFile     | Iters 1000000 | Elapsed  9.091 secs    109989/sec
-[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  8.823 secs    113336/sec
-[benchmark] PrintToServer | Iters 1000000 | Elapsed  5.779 secs    173024/sec
+[benchmark] LogMessage    | Iters 1000000 | Elapsed  9.657 secs    103548/sec
+[benchmark] LogToFile     | Iters 1000000 | Elapsed  8.070 secs    123903/sec
+[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.959 secs    125637/sec
+[benchmark] PrintToServer | Iters 1000000 | Elapsed  5.157 secs    193884/sec
 ```
 
 ## 制作人员
