@@ -30,6 +30,8 @@
 #define LOG4SP_LEVEL_SHORT_NAME_FATAL   "F"
 #define LOG4SP_LEVEL_SHORT_NAME_OFF     "O"
 
+#define LOG4SP_DEFAULT_LOGGER_NAME      "log4sp"
+
 
 /**
  * Log level enum.

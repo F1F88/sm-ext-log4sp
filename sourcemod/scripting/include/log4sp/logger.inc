@@ -64,20 +64,15 @@ methodmap Logger < Handle
      * @return          Logger handle.
      * @error           Logger name already exits.
      */
-    public static native Logger CreateBaseFileLogger(const char[] name,
-                                                     const char[] file,
-                                                     bool truncate = false,
-                                                     bool async = false,
-                                                     AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public static native Logger CreateBaseFileLogger(
+        const char[] name,
+        const char[] file,
+        bool truncate = false,
+        bool async = false,
+        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on size.
-     *
-     * Rotate files:
-     *      log.txt   -> log.1.txt
-     *      log.1.txt -> log.2.txt
-     *      log.2.txt -> log.3.txt
-     *      log.3.txt -> delete
      *
      * @param name          The name of the logger.
      * @param file          The file path where the log messages will be written.
@@ -90,13 +85,14 @@ methodmap Logger < Handle
      * @return              Logger handle.
      * @error               Logger name already exits, or maxFileSize == 0, or maxFiles > 200000.
      */
-    public static native Logger CreateRotatingFileLogger(const char[] name,
-                                                         const char[] file,
-                                                         int maxFileSize,
-                                                         int maxFiles,
-                                                         bool rotateOnOpen = false,
-                                                         bool async = false,
-                                                         AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public static native Logger CreateRotatingFileLogger(
+        const char[] name,
+        const char[] file,
+        int maxFileSize,
+        int maxFiles,
+        bool rotateOnOpen = false,
+        bool async = false,
+        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on date.
@@ -113,14 +109,15 @@ methodmap Logger < Handle
      * @return          Logger handle.
      * @error           Logger name already exits, or invalid rotation time.
      */
-    public static native Logger CreateDailyFileLogger(const char[] name,
-                                                      const char[] file,
-                                                      int hour = 0,
-                                                      int minute = 0,
-                                                      bool truncate = false,
-                                                      int maxFiles = 0,
-                                                      bool async = false,
-                                                      AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public static native Logger CreateDailyFileLogger(
+        const char[] name,
+        const char[] file,
+        int hour = 0,
+        int minute = 0,
+        bool truncate = false,
+        int maxFiles = 0,
+        bool async = false,
+        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
      * Gets the logger name.
