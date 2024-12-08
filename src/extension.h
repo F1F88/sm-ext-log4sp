@@ -42,7 +42,7 @@
  * @brief Implementation of the logger in SourcePawn Extension.
  * Note: Uncomment one of the pre-defined virtual functions in order to use it.
  */
-class Log4sp : public SDKExtension, public IHandleTypeDispatch
+class Log4sp : public SDKExtension
 {
 public:
     /**
@@ -111,22 +111,10 @@ public:
      * @return              True to succeed, false to fail.
      */
     //virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlen);
-#endif
-
-public:
-    /**
-     * @brief Called when destroying a handle.  Must be implemented.
-     *
-     * @param type      Handle type.
-     * @param object    Handle internal object.
-     */
-    void OnHandleDestroy(HandleType_t type, void *object);
+    #endif
 };
 
 extern Log4sp                   g_Log4sp;
-
-extern HandleType_t             g_LoggerHandleType;
-extern HandleType_t             g_SinkHandleType;
 
 extern const sp_nativeinfo_t    CommonNatives[];
 extern const sp_nativeinfo_t    LoggerNatives[];

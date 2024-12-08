@@ -3,10 +3,10 @@
 
 #include "extension.h"
 
-#include "log4sp/command/root_console_command.h"
 
 namespace log4sp {
-namespace command {
+
+class command;
 
 class root_console_command_handler final : public IRootConsoleCommand {
 public:
@@ -32,7 +32,6 @@ private:
     std::unordered_map<std::string, std::unique_ptr<command>> commands_;
 };
 
-}       // namespace command
 }       // namespace log4sp
 #include "log4sp/command/root_console_command_handler-inl.h"
 #endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_H_

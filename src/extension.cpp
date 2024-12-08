@@ -35,9 +35,8 @@
 
 #include "extension.h"
 
-#include "log4sp/adapter/sync_logger.h"
-#include "log4sp/logger_register.h"
-#include "log4sp/sink_register.h"
+#include "log4sp/adapter/logger_handler.h"
+#include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/command/root_console_command_handler.h"
 
 
@@ -49,29 +48,20 @@
 Log4sp g_Log4sp;    /**< Global singleton for extension's main interface */
 SMEXT_LINK(&g_Log4sp);
 
-HandleType_t        g_LoggerHandleType = 0;
-HandleType_t        g_SinkHandleType   = 0;
-
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
     // Init handle type
     {
-        HandleAccess access;
-        handlesys->InitAccessDefaults(nullptr, &access);
-        access.access[HandleAccess_Delete] = 0;
-
-        HandleError err;
-
-        g_LoggerHandleType = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &err);
-        if (!g_LoggerHandleType)
+        HandleError err = log4sp::logger_handler::instance().create_handle_type();
+        if (err != HandleError_None)
         {
-            snprintf(error, maxlen, "Could not create Logger handle type (err: %d)", err);
+            snprintf(error, maxlen, "Could not create Logger handle type. (err: %d)", err);
             return false;
         }
 
-        g_SinkHandleType = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &err);
-        if (!g_SinkHandleType)
+        err = log4sp::sink_handler::instance().create_handle_type();
+        if (err != HandleError_None)
         {
             snprintf(error, maxlen, "Could not create Sink handle type (err: %d)", err);
             return false;
@@ -79,7 +69,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     }
 
     // Init console command
-    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Logging For SourcePawn command menu", &log4sp::command::root_console_command_handler::instance()))
+    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Logging For SourcePawn command menu", &log4sp::root_console_command_handler::instance()))
     {
         snprintf(error, maxlen, "Could not add root console commmand 'log4sp'.");
         return false;
@@ -93,18 +83,23 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
         auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoi(threadCountStr)) : static_cast<size_t>(1);
 
+        if (threadCount == 0 || threadCount > 1000)
+        {
+            snprintf(error, maxlen, "Invalid thread count config (%s), valid range is 1-1000.", threadCountStr);
+            return false;
+        }
+
         spdlog::init_thread_pool(queueSize, threadCount);
     }
 
     // Init Default Logger
     {
         auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
-        auto logger = std::make_shared<spdlog::logger>(SMEXT_CONF_LOGTAG, sink);
-
-        sink->set_pattern("[%H:%M:%S.%e] [%n] [%l] %v");
+        auto logger = std::make_shared<log4sp::logger_proxy>(SMEXT_CONF_LOGTAG, sink);
         spdlog::set_default_logger(logger);
 
-        HandleSecurity sec = {nullptr, myself->GetIdentity()};
+        // 默认 logger 属于拓展，不应该被任何插件释放
+        HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
 
         HandleAccess access;
         handlesys->InitAccessDefaults(nullptr, &access);
@@ -112,14 +107,12 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
         HandleError err;
 
-        auto loggerAdapter = log4sp::sync_logger::create(logger, &sec, &access, &err);
-        if (loggerAdapter == nullptr)
+        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &err);
+        if (handle == BAD_HANDLE)
         {
-            snprintf(error, maxlen, "Could not create default logger handle. (err=%d)", err);
+            snprintf(error, maxlen, "Could not create default logger handle. (err: %d)", err);
             return false;
         }
-
-        logger->set_level(spdlog::level::trace);
     }
 
     sharesys->AddNatives(myself, CommonNatives);
@@ -140,43 +133,10 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 void Log4sp::SDK_OnUnload()
 {
-    log4sp::logger_register::instance().shutdown();
-    log4sp::sink_register::instance().shutdown();
+    rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, &log4sp::root_console_command_handler::instance());
 
-    rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, &log4sp::command::root_console_command_handler::instance());
-
-    handlesys->RemoveType(g_LoggerHandleType, myself->GetIdentity());
-    handlesys->RemoveType(g_SinkHandleType, myself->GetIdentity());
+    log4sp::sink_handler::instance().remove_handle_type();
+    log4sp::logger_handler::instance().remove_handle_type();
 
     spdlog::shutdown();
-}
-
-void Log4sp::OnHandleDestroy(HandleType_t type, void *object)
-{
-    if (type == g_LoggerHandleType)
-    {
-        auto loggerAdapterPtr = static_cast<log4sp::base_logger *>(object);
-
-        if (spdlog::should_log(spdlog::level::trace))
-        {
-            auto logger = loggerAdapterPtr->raw();
-            SPDLOG_TRACE("Destroy a logger handle. (name='{}', hdl={:X}, ptr={})", logger->name(), static_cast<int>(loggerAdapterPtr->handle()), fmt::ptr(object));
-        }
-
-        log4sp::logger_register::instance().drop(loggerAdapterPtr->raw()->name());
-        return;
-    }
-
-    if (type == g_SinkHandleType)
-    {
-        auto sinkAdapterPtr = static_cast<log4sp::base_sink *>(object);
-
-        if (spdlog::should_log(spdlog::level::trace))
-        {
-            SPDLOG_TRACE("Destroy a sink handle. (hdl={:X}, ptr={})", static_cast<int>(sinkAdapterPtr->handle()), fmt::ptr(object));
-        }
-
-        log4sp::sink_register::instance().drop(sinkAdapterPtr);
-        return;
-    }
 }

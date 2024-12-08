@@ -1,8 +1,6 @@
 #include "log4sp/sinks/client_chat_sink.h"
 
-#include "log4sp/sink_register.h"
-#include "log4sp/adapter/single_thread_sink.h"
-#include "log4sp/adapter/multi_thread_sink.h"
+#include "log4sp/adapter/sink_hanlder.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -13,38 +11,52 @@
  */
 static cell_t ClientChatSink(IPluginContext *ctx, const cell_t *params)
 {
-    std::shared_ptr<log4sp::base_sink> sinkAdapter;
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
 
     bool multiThread = static_cast<bool>(params[1]);
     if (!multiThread)
     {
         auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_st>();
-        sinkAdapter = log4sp::single_thread_sink::create(sink, ctx);
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of ClientChatSink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
     }
     else
     {
         auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_mt>();
-        sinkAdapter = log4sp::multi_thread_sink::create(sink, ctx);
-    }
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of multi thread ClientChatSink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
 
-    if (sinkAdapter == nullptr)
-    {
-        return BAD_HANDLE;
+        return handle;
     }
-
-    return sinkAdapter->handle();
 }
 
 /**
- * public native void SetFilter(ClientChatSinkFilter filter);
+ * public native void SetFilter(SinkClientFilter filter);
+ *
+ * function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
  */
 static cell_t ClientChatSink_SetFilter(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
-    auto sinkAdapterPtr = log4sp::base_sink::read(handle, ctx);
-    if (sinkAdapterPtr == nullptr)
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (sink == nullptr)
     {
+        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
         return 0;
     }
 
@@ -52,37 +64,37 @@ static cell_t ClientChatSink_SetFilter(IPluginContext *ctx, const cell_t *params
     auto function = ctx->GetFunctionById(funcId);
     if (function == nullptr)
     {
-        ctx->ReportError("Invalid client chat sink filter function. (funcId=%d)", funcId);
+        ctx->ReportError("Invalid SinkClientFilter function. (funcId: %d)", funcId);
         return 0;
     }
 
-    if (!sinkAdapterPtr->is_multi_thread())
+    if (typeid(sink.get()) == typeid(log4sp::sinks::client_chat_sink_st))
     {
-        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_st>(sinkAdapterPtr->raw());
-        if (sink == nullptr)
+        auto chatSink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_st>(sink);
+        if (chatSink == nullptr)
         {
-            ctx->ReportError("Unable to cast sink to single thread client_chat_sink.");
+            ctx->ReportError("Unable to cast sink to single thread client_chat_sink_st.");
             return 0;
         }
 
-        if (!sink->set_player_filter(function))
+        if (!chatSink->set_player_filter(function))
         {
-            ctx->ReportError("SM error! Adding client chat sink filter function failed.");
+            ctx->ReportError("SM error! Adding filter to ClientChatSink failed.");
             return 0;
         }
     }
     else
     {
-        auto sink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_mt>(sinkAdapterPtr->raw());
-        if (sink == nullptr)
+        auto chatSink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_mt>(sink);
+        if (chatSink == nullptr)
         {
             ctx->ReportError("Unable to cast sink to multi thread client_chat_sink.");
             return 0;
         }
 
-        if (!sink->set_player_filter(function))
+        if (!chatSink->set_player_filter(function))
         {
-            ctx->ReportError("SM error! Adding client chat sink filter function failed.");
+            ctx->ReportError("SM error! Adding filter to multi thread ClientChatSink failed.");
             return 0;
         }
     }

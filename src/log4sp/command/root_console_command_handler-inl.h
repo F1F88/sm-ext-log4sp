@@ -1,12 +1,13 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_
 
-#include "log4sp/command/root_console_command_handler.h"
-
 #include "spdlog/fmt/xchar.h"
 
+#include "log4sp/command/root_console_command.h"
+
+#include "log4sp/command/root_console_command_handler.h"
+
 namespace log4sp {
-namespace command {
 
 inline root_console_command_handler &root_console_command_handler::instance() {
     static root_console_command_handler singleInstance;
@@ -71,6 +72,5 @@ inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdna
 }
 
 
-}       // namespace command
 }       // namespace log4sp
 #endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_

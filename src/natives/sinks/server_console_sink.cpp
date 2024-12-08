@@ -1,8 +1,6 @@
 #include "spdlog/sinks/stdout_sinks.h"
 
-#include "log4sp/sink_register.h"
-#include "log4sp/adapter/single_thread_sink.h"
-#include "log4sp/adapter/multi_thread_sink.h"
+#include "log4sp/adapter/sink_hanlder.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -13,26 +11,34 @@
  */
 static cell_t ServerConsoleSink(IPluginContext *ctx, const cell_t *params)
 {
-    std::shared_ptr<log4sp::base_sink> sinkAdapter;
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
 
     bool multiThread = static_cast<bool>(params[1]);
     if (!multiThread)
     {
-        auto sink    = std::make_shared<spdlog::sinks::stdout_sink_st>();
-        sinkAdapter  = log4sp::single_thread_sink::create(sink, ctx);
+        auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of ServerConsoleSink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
     }
     else
     {
-        auto sink    = std::make_shared<spdlog::sinks::stdout_sink_mt>();
-        sinkAdapter  = log4sp::multi_thread_sink::create(sink, ctx);
-    }
+        auto sink   = std::make_shared<spdlog::sinks::stdout_sink_mt>();
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of multi thread ServerConsoleSink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
 
-    if (sinkAdapter == nullptr)
-    {
-        return BAD_HANDLE;
+        return handle;
     }
-
-    return sinkAdapter->handle();
 }
 
 const sp_nativeinfo_t ServerConsoleSinkNatives[] =

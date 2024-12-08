@@ -2,20 +2,19 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_
 
-#include "spdlog/logger.h"
-
 #include "extension.h"
 
 
 namespace log4sp {
-namespace command {
+
+class logger_proxy;
 
 class command {
 public:
     virtual void execute(const ICommandArgs *args) = 0;
 
 protected:
-    std::shared_ptr<spdlog::logger> arg_to_logger(const ICommandArgs *args, int num);
+    std::shared_ptr<logger_proxy> arg_to_logger(const ICommandArgs *args, int num);
 
     spdlog::level::level_enum arg_to_level(const ICommandArgs *args, int num);
 };
@@ -93,7 +92,6 @@ public:
 };
 
 
-}       // namespace command
 }       // namespace log4sp
 #include "log4sp/command/root_console_command-inl.h"
 #endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_

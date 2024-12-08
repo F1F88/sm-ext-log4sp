@@ -2,25 +2,33 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
 
-#include "log4sp/command/root_console_command.h"
-
-#include "log4sp/logger_register.h"
 #include "log4sp/utils.h"
+#include "log4sp/adapter/logger_handler.h"
+#include "log4sp/proxy/logger_proxy.h"
+
+#include "log4sp/command/root_console_command.h"
 
 
 namespace log4sp {
-namespace command {
 
-inline std::shared_ptr<spdlog::logger> command::arg_to_logger(const ICommandArgs *args, int num) {
+inline std::shared_ptr<logger_proxy> command::arg_to_logger(const ICommandArgs *args, int num) {
     const char *logger_name = args->Arg(num);
 
-    auto loggerAdapter = log4sp::logger_register::instance().get(logger_name);
-    if (loggerAdapter == nullptr) {
+    Handle_t handle = logger_handler::instance().find_handle(logger_name);
+    if (handle == BAD_HANDLE) {
         rootconsole->ConsolePrint("[SM] Logger with name '%s' does not exists.", logger_name);
         return nullptr;
     }
 
-    return loggerAdapter->raw();
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    std::shared_ptr<logger_proxy> logger = logger_handler::instance().read_handle(handle, &security, &error);
+    if (logger == nullptr) {
+        SPDLOG_CRITICAL("[SM] Internal Error! Logger with name '{}' does not exists. (err: {})", logger_name, static_cast<int>(error));
+        return nullptr;
+    }
+    return logger;
 }
 
 inline spdlog::level::level_enum command::arg_to_level(const ICommandArgs *args, int num) {
@@ -33,7 +41,7 @@ inline spdlog::level::level_enum command::arg_to_level(const ICommandArgs *args,
     if (level == spdlog::level::off) {
         try {
             int number = std::stoi(level_str);
-            level = log4sp::cell_to_level(static_cast<cell_t>(number));
+            level = cell_to_level(static_cast<cell_t>(number));
         } catch (const std::exception &) {
             level = spdlog::level::off;
         }
@@ -49,7 +57,7 @@ inline void get_lvl_command::execute(const ICommandArgs *args) {
         return;
     }
 
-    std::shared_ptr<spdlog::logger> logger = arg_to_logger(args, 3);
+    std::shared_ptr<logger_proxy> logger = arg_to_logger(args, 3);
     if (logger == nullptr) {
         return;
     }
@@ -138,7 +146,7 @@ inline void flush_command::execute(const ICommandArgs *args) {
         return;
     }
 
-    std::shared_ptr<spdlog::logger> logger = arg_to_logger(args, 3);
+    std::shared_ptr<logger_proxy> logger = arg_to_logger(args, 3);
     if (logger == nullptr) {
         return;
     }
@@ -154,7 +162,7 @@ inline void get_flush_lvl_command::execute(const ICommandArgs *args) {
         return;
     }
 
-    std::shared_ptr<spdlog::logger> logger = arg_to_logger(args, 3);
+    std::shared_ptr<logger_proxy> logger = arg_to_logger(args, 3);
     if (logger == nullptr) {
         return;
     }
@@ -270,6 +278,5 @@ inline void dump_bt_command::execute(const ICommandArgs *args) {
 }
 
 
-}       // namespace command
 }       // namespace log4sp
 #endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
