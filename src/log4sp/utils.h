@@ -1,10 +1,17 @@
 #ifndef _LOG4SP_UTILS_H_
 #define _LOG4SP_UTILS_H_
 
+#include "spdlog/common.h"
+
 #include "extension.h"
 
-#include "spdlog/common.h"
-#include "spdlog/async_logger.h"
+
+namespace spdlog {
+
+enum class async_overflow_policy;
+
+} // namespace spdlog
+
 
 
 namespace log4sp {
@@ -45,18 +52,16 @@ std::vector<std::string> get_stack_trace(IPluginContext *ctx);
  * 当格式与参数不匹配时抛出异常
  * 这是 format_cell_to_memory_buf 的包装器
  */
-std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param);
+std::string format_cell_to_string(IPluginContext *ctx, const cell_t *params, unsigned int param);
 
 /**
  * 格式化 params 数组，风格与 AMXTpl 一致，但是格式化长度不受限制
  * param 指向的参数是可变参数
  * 当格式与参数不匹配时抛出异常
  */
-fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param);
+fmt::memory_buffer format_cell_to_memory_buf(const char *format, IPluginContext *ctx, const cell_t *params, int *param);
 
 
-} // namespace log4sp
-
+}       // namespace log4sp
 #include "utils-inl.h"
-
-#endif // _LOG4SP_UTILS_H_
+#endif  // _LOG4SP_UTILS_H_
