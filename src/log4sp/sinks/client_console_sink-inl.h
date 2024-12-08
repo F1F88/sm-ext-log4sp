@@ -38,7 +38,7 @@ template <typename Mutex>
 inline void client_console_sink<Mutex>::sink_it_(const spdlog::details::log_msg &msg) {
     spdlog::memory_buf_t formatted;
     spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
-    auto message = fmt::to_string(formatted).c_str();
+    std::string message = fmt::to_string(formatted);
 
     auto name = msg.logger_name.data();
     auto lvl = static_cast<cell_t>(msg.level);
@@ -69,7 +69,7 @@ inline void client_console_sink<Mutex>::sink_it_(const spdlog::details::log_msg 
             }
         }
 
-        player->PrintToConsole(message);
+        player->PrintToConsole(message.c_str());
     }
 }
 
