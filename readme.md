@@ -1,4 +1,4 @@
-**[English](./readme.md) | [Chinese](./readme-chi.md)**
+**[English](./readme.md) | [中文](./readme-chi.md)**
 
 # Logging for SourcePawn
 
@@ -6,49 +6,81 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
 ## Features
 
-1. Very fast, much faster than [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+1. Very fast, much faster than [SourceMod API - Logging](https://sm.alliedmods.net/new-api/logging)
 
-   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp benchmarks](https://github.com/F1F88/sm-ext-log4sp#benchmarks)
+   - spdlog [benchmarks](https://github.com/gabime/spdlog#benchmarks)
 
-2. Each `Logger` and `Sink` can customize the log level
+   - log4sp [benchmarks](https://github.com/F1F88/sm-ext-log4sp#benchmarks)
 
-3. Each `Logger` and `Sink` can customize the [log message pattern](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+   - SourceMod API - Logging [benchmarks](https://github.com/F1F88/sm-ext-log4sp#sourcemod-logging)
 
-4. Each `Logger` can customize the [flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+2. Support custom log filtering.
 
-5. Each `Logger` can have multiple `Sink`
+   - For test environments, you can use low log level (such as `trace`, `debug`) to increase log message and find bugs.
 
-   - For example: A `Logger` that has both `ServerConsoleSink` and `DailyFileSink` is similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+   - For online environments, you can use high log level (such as: `warn`, `error`) to reduce log message and improve performance.
 
-6. Each `Logger` can dynamic change the log level and pattern
+3. Support custom log message pattern.
 
-   - see server command `"sm log4sp"`
+   - Custom information can be appended to log messages. (such as time, log level, source code location, etc.)
 
-7. Supports asynchronous `Logger`
+   - Default log message pattern is:
 
-8. Supports format parameters with variable numbers
+      > [%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%s:%#] %v
 
-   - [Parameter formatting](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) usage is consistent with [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+      > [2024-08-01 12:34:56:789] [log4sp] [info] [example.sp:123] message
 
-   - The maximum length of a variable parameter string is **2048** characters
-     If characters exceeding this length will be truncated
-     If longer message need to be log, non `AmxTpl` API can be used, e.g. `void Info(const char [] msg)`
+   - All pattern flags see: [spdlog wiki](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-9. Supports [backtrace](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
+4. Support custom log message flush level.
 
-   - When enabled, `Trace` and `Debug` level log message are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`
+   - By default spdlog lets the underlying libc flush whenever it sees fit in order to [achieve good performance](https://github.com/gabime/spdlog/wiki/7.-Flush-policy).
 
-10. Supports various log targets
+   - You can use `Logger.Flush()` to manually flush, or use `Logger.FlushOn()` set the minimum log level that will trigger automatic flush.
 
-    - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
+5. Support "backtrace" log messages.
 
-    - ClientConsoleSink (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
+   - store debug messages in a ring buffer and display them later on demand.
 
-    - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+6. Support server console commands.
 
-    - DailyFileSink (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+   - The server console command "sm log4sp" can dynamically modify the log level, flush level, log pattern, backtrace, etc.
 
-    - RotatingFileSink
+7. Support for asynchronous logging messages.
+
+   - Does not block the server's main thread.
+
+8. Support for "infinite length" logging messages.
+
+   - For logging methods called `Logger.***AmxTpl()`, the maximum length of the log message is 2048 characters, and any excess will be truncated.
+
+   - For logging methods other than `Logger.***AmxTpl()`, the maximum length of the log message is unlimited. (theoretically, it depends on available memory)
+
+9. Supports logging to multiple sinks at once.
+
+   - Each Logger can have multiple Sinks.
+
+   - Each Sink can customize different log level and log pattern.
+
+      For example: When the Logger has `ServerConsoleSink` and `DailyFileSink`, it is equivalent to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when `sv_Logecho 1`.
+
+10. Various log targets
+
+    - BaseFileSink （Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+
+    - ClientChatSink（Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
+
+    - ClientConsoleSink（Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
+
+    - DailyFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+
+      Rotate log files based on date.
+
+    - RotatingFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+
+      Rotate log files based on file size.
+
+    - ServerConsoleSink（Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
 ## Documentation
 

@@ -1,4 +1,4 @@
-**[英语](./readme.md) | [中文](./readme-chi.md)**
+**[English](./readme.md) | [中文](./readme-chi.md)**
 
 # Logging for SourcePawn
 
@@ -6,48 +6,81 @@
 
 ## 特点
 
-1. 非常快，比 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 快得多
+1. 非常快，比 [SourceMod API - Logging](https://sm.alliedmods.net/new-api/logging) 快得多
 
-   - [spdlog 性能测试](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp 性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95)
+   - spdlog [性能测试](https://github.com/gabime/spdlog#benchmarks)
 
-2. 每个 `Logger` 和 `Sink` 都能够自定义日志级别
+   - log4sp [性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95)
 
-3. 每个 `Logger` 和 `Sink` 都能够自定义[日志模板](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+   - SourceMod API - Logging [性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#sourcemod-logging)
 
-4. 每个 `Logger` 都能够自定义[刷新策略](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+2. 支持自定义日志级别
 
-5. 每个 `Logger` 都能够拥有多个 `Sink`
+   - 对于测试环境，可以使用低日志级别（如：`trace`、`debug`） 增加日志输出，从而发现问题
 
-   - 例如： `ServerConsoleSink` + `DailyFileSink` 相当于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+   - 对于线上环境，可以使用高日志级别（如：`warn`、`error`）减少日志输出，从而提高性能
 
-6. 每个 `Logger` 都能够动态调整日志级别、模板
+3. 支持自定义日志消息模板
 
-   - 详见指令 `"sm log4sp"`
+   - 可以附加自定义信息到日志消息（如：时间、日志级别、源代码位置等）
 
-7. 支持异步 `Logger`
+   - 默认的日志模板格式：
 
-8. 支持格式化可变个数的参数
+      > [%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%s:%#] %v
+      >
+      > [2024-08-01 12:34:56:789] [log4sp] [info] [example.sp:123] message
 
-   - [参数格式化用法](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 与 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) 相同
+   - 支持的日志模板格式：[spdlog wiki](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-   - 可变参数的字符串最大长度为 **2048**，超过这个长度的字符会被截断
-     如需要记录更长的日志消息，可以使用非 `AmxTpl` 的方法, 例如: `void Info(const char[] msg)`
+4. 支持自定义日志消息刷新级别
 
-9. 支持[日志回溯](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
+   - 默认情况下，spdlog 会让底层 libc 在适当的时候刷新，以实现更高的性能
 
-   - 启用后 `Trace` 和 `Debug` 级别的日志消息存储在一个环形缓冲区中, 只在显示调用 `DumpBacktrace()` 后才会输出
+   - 你可以使用 `Logger.Flush()` 手动刷新，也可以使用 `Logger.FlushOn()` 自定义触发自动刷新的最低日志级别
 
-10. 支持多种 Sink
+5. 支持 "回溯" 日志消息
 
-    - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+   - 可以将 `trace`、`debug` 日志消息存储在环形缓冲区中，后续按需输出
+
+6. 支持服务器控制台菜单
+
+   - 服务器控制台指令 "sm log4sp" 可以动态的修改 日志级别、刷新级别、日志模板、"回溯" 等
+
+7. 支持异步记录日志消息
+
+   - 不会阻塞服务器的主线程
+
+8. 支持 "无限长度" 的日志消息
+
+   - 对于 `Logger.***AmxTpl()` 的记录日志方法，输出的日志消息最大长度为 2048 字符，超出的部分会被截断
+
+   - 对于非 `Logger.***AmxTpl()` 的记录日志方法，输出的日志消息长度不受限制（理论上取决于可用内存）
+
+9. 支持一次日志操作写入多个输出源
+
+   - 每一个记录器 (Logger) 都可以拥有多个输出源 (Sink)
+
+   - 每一个输出源 (Sink) 都可以自定义不同的日志级别、日志模板
+
+      例如：当 Logger 拥有 `ServerConsoleSink`、`DailyFileSink` 时，相当于 `sv_logecho 1` 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+
+10. 支持多种输出源
+
+    - BaseFileSink （类似于 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+
+    - ClientChatSink（类似于 [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
 
     - ClientConsoleSink（类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
 
-    - BaseFileSink （类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+    - DailyFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
 
-    - DailyFileSink（类似于 [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) 为 0 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+      基于日期更替日志文件
 
-    - RotatingFileSink
+    - RotatingFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+
+      基于文件大小更替日志文件
+
+    - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
 ## 文档
 
