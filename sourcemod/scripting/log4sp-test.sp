@@ -122,8 +122,8 @@ void TestLoggerLog(Logger logger)
     logger.LogSrc(LogLevel_Debug, "Test log message 3.");
     logger.LogSrcAmxTpl(LogLevel_Info, "Test log message %d.", 4);
 
-    logger.LogLoc("/home/sm-ext-log4sp/Linux-testFile5.log", 5, "testFunc5", LogLevel_Warn, "Test log message 5.");
-    logger.LogLocAmxTpl("C:\\user\\sm-ext-log4sp\\Win-testFile6.log", 6, "testFunc6", LogLevel_Fatal, "Test log message %d.", 6);
+    logger.LogLoc("testFile5.log", 5, "testFunc5", LogLevel_Warn, "Test log message 5.");
+    logger.LogLocAmxTpl("testFile6.log", 6, "testFunc6", LogLevel_Fatal, "Test log message %d.", 6);
 
     logger.Trace("Test log message 7.");
     logger.TraceAmxTpl("Test log message %d.", 8);

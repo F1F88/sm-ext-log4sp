@@ -697,15 +697,18 @@ public:
     #pragma warning(disable : 4127)  // consider using 'if constexpr' instead
 #endif                               // _MSC_VER
     static const char *basename(const char *filename) {
-        //* Log4sp customization *//
-        // 先后顺序很重要，即使大部分插件是在 windows 下编译的
-        // 原因: '/' 是 Win 的特殊字符 , 但 '\' 不是 Linux 的特殊字符
-        const char *rv = std::strrchr(filename, '/');
-        if (rv != nullptr) {
-            return rv + 1;
-        } else {
-            const char *rv = std::strrchr(filename, '\\');
+        // if the size is 2 (1 character + null terminator) we can use the more efficient strrchr
+        // the branch will be elided by optimizations
+        if (sizeof(os::folder_seps) == 2) {
+            const char *rv = std::strrchr(filename, os::folder_seps[0]);
             return rv != nullptr ? rv + 1 : filename;
+        } else {
+            const std::reverse_iterator<const char *> begin(filename + std::strlen(filename));
+            const std::reverse_iterator<const char *> end(filename);
+
+            const auto it = std::find_first_of(begin, end, std::begin(os::folder_seps),
+                                               std::end(os::folder_seps) - 1);
+            return it != end ? it.base() : filename;
         }
     }
 #ifdef _MSC_VER
