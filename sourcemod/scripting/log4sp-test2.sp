@@ -6,10 +6,10 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_NAME             "Log4sp Test"
+#define PLUGIN_NAME             "Log4sp Test2"
 #define PLUGIN_AUTHOR           "F1F88"
 #define PLUGIN_VERSION          LOG4SP_EXT_VERSION
-#define PLUGIN_DESCRIPTION      "Logging for SourcePawn test"
+#define PLUGIN_DESCRIPTION      "Logging for SourcePawn test2"
 #define PLUGIN_URL              "https://github.com/F1F88/sm-ext-log4sp"
 
 public Plugin myinfo = {
@@ -34,41 +34,21 @@ Action CB_CMD(int client, int args)
 {
     SetTestContext("Log4sp Test");
 
+    Test_DefaultLogger();
 
-    benchFmt1__(Logger.Get(LOG4SP_DEFAULT_LOGGER_NAME), 0);
+    Test_ServerConsoleLogger();
 
-    // Test_DefaultLogger();
+    Test_RotatingFileLogger();
 
-    // Test_ServerConsoleLogger();
+    Test_DailyFileLogger();
+
+    Test_ClientConsoleLogger();
+
+    Test_ClientChatLogger();
+
+    Test_BaseFileLogger();
 
     return Plugin_Handled;
-}
-
-void benchFmt1__(Logger log, int client)
-{
-    log.InfoEx("--- 测试 char 效果 %% %% |%c| |%-c| |%7c| |%.3c| |%-7c| |%07c| |%-07c|---", 'a', 'b', 'c', 'D', 'E', 'F', 'G');
-
-    // PrintToServer("--- 测试 bin 效果   |%b| |%9b| |%09b| |%-9b| |%-09b|---", 23, 23, 23, 23, 23);
-    // PrintToServer("--- 测试 bin 效果   |%b| |%9b| |%09b| |%-9b| |%-09b|---", -8192, -8192, -8192, -8192, -8192);
-
-    log.InfoEx("--- 测试 bin 效果   |%b| |%9b| |%09b| |%-9b| |%-09b|---", 23, 23, 23, 23, 23);
-    log.InfoEx("--- 测试 bin 效果   |%b| |%9b| |%09b| |%-9b| |%-09b|---", -8192, -8192, -8192, -8192, -8192);
-    log.InfoEx("--- 测试 int-d 效果 |%d| |%9d| |%09d| |%-9d| |%-09d|---", 79247, 79247, 79247, 79247, 79247);
-    log.InfoEx("--- 测试 int-i 效果 |%i| |%9i| |%09i| |%-9i| |%-09i|---", -1234, -1234, -1234, -1234, -1234);
-    log.InfoEx("--- 测试 int-u 效果 |%u| |%9u| |%09u| |%-9u| |%-09u|---", 1<<31, 1<<31, 1<<31, 1<<31, 1<<31);
-    log.InfoEx("--- 测试 int-X 效果 |%X| |%9X| |%09X| |%-9X| |%-09X|---", 61944, 61944, 61944, 61944, 61944);
-    log.InfoEx("--- 测试 int-x 效果 |%x| |%9x| |%09x| |%-9x| |%-09x|---", -3871, -3871, -3871, -3871, -3871);
-    log.InfoEx("--- 测试 float 效果 |%f| |%9f| |%09f| |%-9f| |%-09f| |%09.2f| |%-09.2f|---", FLOAT_PI, FLOAT_PI, FLOAT_PI, FLOAT_PI, FLOAT_PI, FLOAT_PI, FLOAT_PI);
-    log.InfoEx("--- 测试 float 效果 |%f| |%20f| |%020f| |%-9f| |%-09f| |%09.2f| |%-09.2f|---", -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0);
-
-    log.InfoEx("--- 测试 L 效果 |%L| |%9L| |%09L| |%-9L| |%-09L| |%09.2L| |%-09.2L|---", client, client, client, client, client, client, client);
-
-    log.InfoEx("--- 测试 N 效果 |%N| |%9N| |%09N| |%-9N| |%-09N| |%09.2N| |%-09.2N|---", client, client, client, client, client, client, client);
-
-    log.InfoEx("--- 测试 s 效果 |%s| |%9s| |%09s| |%-9s| |%-09s| |%09.2s| |%-09.2s|---", "str-111", "str-222", "str-333", "str-444", "str-555", "str-666", "str-777");
-
-    log.InfoEx("ttt - %t", "Changing map", "nmo_chinatown");
-    log.InfoEx("TTT - %T", "Changing map", LANG_SERVER, "nmo_chinatown");
 }
 
 void Test_DefaultLogger()
@@ -97,20 +77,139 @@ void Test_ServerConsoleLogger()
 
     Logger log;
 
-    log = Logger.Get("test-sync-server-console-logger");
-    if (log != INVALID_HANDLE)
-        delete log;
-
-    log = Logger.Get("test-async-server-console-logger");
-    if (log != INVALID_HANDLE)
-        delete log;
-
-    log = Logger.CreateServerConsoleLogger("test-sync-server-console-logger");
-    Test_Logger(log, "test-sync-server-console-logger", false);
+    log = Logger.CreateServerConsoleLogger("test-server-console-logger");
+    Test_Logger(log, "test-server-console-logger", false);
     delete log;
 
-    log = Logger.CreateServerConsoleLogger("test-async-server-console-logger");
+    log = Logger.CreateServerConsoleLogger("test-async-server-console-logger", .async=true);
     Test_Logger(log, "test-async-server-console-logger", true);
+    delete log;
+}
+
+void Test_RotatingFileLogger()
+{
+    SetTestContext("Log4sp Test rotating file logger");
+
+    Logger log;
+
+    log = Logger.Get("test-rotate-file-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.Get("test-async-rotate-file-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.CreateRotatingFileLogger("test-rotate-file-logger", "logs/test/rotate.log", 1024 * 1024, 3);
+    Test_Logger(log, "test-rotate-file-logger", false);
+    delete log;
+
+    log = Logger.CreateRotatingFileLogger("test-async-rotate-file-logger", "logs/test/rotate-async.log", 1024 * 1024, 3, .async=true);
+    Test_Logger(log, "test-async-rotate-file-logger", true);
+    delete log;
+}
+
+void Test_DailyFileLogger()
+{
+    SetTestContext("Log4sp Test daily file logger");
+
+    Logger log;
+
+    log = Logger.Get("test-daily-file-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.Get("test-async-daily-file-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.CreateDailyFileLogger("test-daily-file-logger", "logs/test/daily.log", .truncate=true);
+    Test_Logger(log, "test-daily-file-logger", false);
+    delete log;
+
+    log = Logger.CreateDailyFileLogger("test-async-daily-file-logger", "logs/test/daily-async.log", .truncate=true, .async=true);
+    Test_Logger(log, "test-async-daily-file-logger", true);
+    delete log;
+}
+
+void Test_ClientConsoleLogger()
+{
+    SetTestContext("Log4sp Test client console logger");
+
+    Logger log;
+
+    log = Logger.Get("test-client-console-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.Get("test-async-client-console-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    Sink sinks[1];
+
+    sinks[0] = new ClientConsoleSink();
+    log = new Logger("test-client-console-logger", sinks, sizeof(sinks));
+    Test_Logger(log, "test-client-console-logger", false);
+    delete log;
+    delete sinks[0];
+
+    sinks[0] = new ClientConsoleSink(true);
+    log = new Logger("test-async-client-console-logger", sinks, sizeof(sinks), true);
+    Test_Logger(log, "test-async-client-console-logger", true);
+    delete log;
+    delete sinks[0];
+}
+
+void Test_ClientChatLogger()
+{
+    SetTestContext("Log4sp Test client chat logger");
+
+    Logger log;
+
+    log = Logger.Get("test-client-chat-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.Get("test-async-client-chat-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    Sink sinks[1];
+
+    sinks[0] = new ClientChatSink();
+    log = new Logger("test-client-chat-logger", sinks, sizeof(sinks));
+    Test_Logger(log, "test-client-chat-logger", false);
+    delete log;
+    delete sinks[0];
+
+    sinks[0] = new ClientChatSink(true);
+    log = new Logger("test-async-client-chat-logger", sinks, sizeof(sinks), true);
+    Test_Logger(log, "test-async-client-chat-logger", true);
+    delete log;
+    delete sinks[0];
+}
+
+void Test_BaseFileLogger()
+{
+    SetTestContext("Log4sp Test base file logger");
+
+    Logger log;
+
+    log = Logger.Get("test-base-file-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.Get("test-async-base-file-logger");
+    if (log != INVALID_HANDLE)
+        delete log;
+
+    log = Logger.CreateBaseFileLogger("test-base-file-logger", "logs/test/base.log", .truncate=true);
+    Test_Logger(log, "test-base-file-logger", false);
+    delete log;
+
+    log = Logger.CreateBaseFileLogger("test-async-base-file-logger", "logs/test/base-async.log", .truncate=true, .async=true);
+    Test_Logger(log, "test-async-base-file-logger", true);
     delete log;
 }
 
@@ -288,5 +387,7 @@ void Test_Logger_Error_Handler(Logger logger)
 void ErrorHandler(Logger logger, const char[] msg)
 {
     static int cnt = 0;
-    PrintToServer("detect an error: %d | hdl=%s | msg=%s |", ++cnt, logger, msg);
+    char name[256];
+    logger.GetName(name, sizeof(name));
+    PrintToServer("custom error handler: %d | hdl=%d | name=%s | msg=%s |", ++cnt, logger, name, msg);
 }
