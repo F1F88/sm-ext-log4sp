@@ -30,9 +30,8 @@ namespace details {
 class thread_pool;
 }
 
-//* Log4sp customization *//
-class SPDLOG_API async_logger : public std::enable_shared_from_this<async_logger>,
-                                virtual public logger {
+class SPDLOG_API async_logger final : public std::enable_shared_from_this<async_logger>,
+                                      public logger {
     friend class details::thread_pool;
 
 public:
@@ -61,12 +60,10 @@ public:
 protected:
     void sink_it_(const details::log_msg &msg) override;
     void flush_() override;
+    void backend_sink_it_(const details::log_msg &incoming_log_msg);
+    void backend_flush_();
 
-    //* Log4sp customization *//
-    virtual void backend_sink_it_(const details::log_msg &incoming_log_msg);
-    virtual void backend_flush_();
-
-// private:
+private:
     std::weak_ptr<details::thread_pool> thread_pool_;
     async_overflow_policy overflow_policy_;
 };
