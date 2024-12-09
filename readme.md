@@ -2,8 +2,6 @@
 
 # Logging for SourcePawn
 
-This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library to enhance SourcePawn logging and debugging.
-
 Log4sp is a powerful [SourceMod](https://www.sourcemod.net/about.php) extension that provides SourceMod plugin developers with a powerful, high-performance, and easy-to-use [logging API](./sourcemod/scripting/include/).
 
 With Log4sp, plugin developers no longer need to write complex logging code, so they can focus more on the core function development of the plugin.
