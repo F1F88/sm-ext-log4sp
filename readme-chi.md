@@ -2,7 +2,9 @@
 
 # Logging for SourcePawn
 
-这是一个包装了 [spdlog](https://github.com/gabime/spdlog) 库的 Sourcemod 拓展，用于增强 SourcePawn 记录日志和调试功能。
+Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓展，为 SourceMod 插件开发者提供了一套功能强大、高性能、简单易用的[日志记录 API](./sourcemod/scripting/include/)。
+
+借助 Log4sp，插件开发者无需再编写复杂的日志记录代码，从而更专注于插件的核心功能开发。
 
 ## 特点
 
@@ -14,7 +16,7 @@
 
    - SourceMod API - Logging [性能测试](https://github.com/F1F88/sm-ext-log4sp/blob/main/readme-chi.md#sourcemod-logging)
 
-2. 支持自定义日志级别
+2. 支持自定义日志过滤
 
    - 对于测试环境，可以使用低日志级别（如：`trace`、`debug`） 增加日志输出，从而发现问题
 
@@ -22,7 +24,7 @@
 
 3. 支持自定义日志消息模板
 
-   - 可以附加自定义信息到日志消息（如：时间、日志级别、源代码位置等）
+   - 可以附加自定义信息到日志消息（如：时间、日志级别、源代码位置 等）
 
    - 默认的日志模板格式：
 
@@ -34,13 +36,13 @@
 
 4. 支持自定义日志消息刷新级别
 
-   - 默认情况下，spdlog 会让底层 libc 在适当的时候刷新，以实现更高的性能
+   - 默认情况下，Log4sp 拓展会在[认为合适的时候](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)刷新日志缓冲区，以实现更高的性能
 
    - 你可以使用 `Logger.Flush()` 手动刷新，也可以使用 `Logger.FlushOn()` 自定义触发自动刷新的最低日志级别
 
 5. 支持 "回溯" 日志消息
 
-   - 可以将 `trace`、`debug` 日志消息存储在环形缓冲区中，后续按需输出
+   - 可以将 `trace` 和 `debug` 日志消息存储在环形缓冲区中，后续按需输出
 
 6. 支持服务器控制台菜单
 

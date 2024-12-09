@@ -4,6 +4,10 @@
 
 This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library to enhance SourcePawn logging and debugging.
 
+Log4sp is a powerful [SourceMod](https://www.sourcemod.net/about.php) extension that provides SourceMod plugin developers with a powerful, high-performance, and easy-to-use [logging API](./sourcemod/scripting/include/).
+
+With Log4sp, plugin developers no longer need to write complex logging code, so they can focus more on the core function development of the plugin.
+
 ## Features
 
 1. Very fast, much faster than [SourceMod API - Logging](https://sm.alliedmods.net/new-api/logging)
@@ -34,13 +38,13 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
 4. Support custom log message flush level.
 
-   - By default spdlog lets the underlying libc flush whenever it sees fit in order to [achieve good performance](https://github.com/gabime/spdlog/wiki/7.-Flush-policy).
+   - By default, the Log4sp extension flush the log buffer when [it sees fit in order](https://github.com/gabime/spdlog/wiki/7.-Flush-policy) to achieve good performance.
 
    - You can use `Logger.Flush()` to manually flush, or use `Logger.FlushOn()` set the minimum log level that will trigger automatic flush.
 
 5. Support "backtrace" log messages.
 
-   - store debug messages in a ring buffer and display them later on demand.
+   - store `trace` and `debug` messages in a ring buffer and display them later on demand.
 
 6. Support server console commands.
 
@@ -50,7 +54,7 @@ This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/
 
    - Does not block the server's main thread.
 
-8. Support for "infinite length" logging messages.
+8. Support for "unlimited size" logging messages.
 
    - For logging methods called `Logger.***AmxTpl()`, the maximum length of the log message is 2048 characters, and any excess will be truncated.
 
