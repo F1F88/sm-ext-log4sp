@@ -113,27 +113,27 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 
 ```
 # 队列大小：8192      线程数：1
-[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.549 secs   1818902/sec
-[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.539 secs   1853506/sec
-[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.547 secs   1827278/sec
-[benchmark] server-console-async-block     | Iters 1000000 | Elapsed  6.559 secs    152456/sec
+[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.532 secs   1878922/sec
+[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.530 secs   1883991/sec
+[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.527 secs   1895788/sec
+[benchmark] server-console-async-block     | Iters 1000000 | Elapsed  6.091 secs    164162/sec
 
-[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.558 secs   1790712/sec
-[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.553 secs   1807344/sec
-[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.541 secs   1846255/sec
-[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.391 secs   2555140/sec
+[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.530 secs   1883977/sec
+[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.528 secs   1893666/sec
+[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.511 secs   1956709/sec
+[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.407 secs   2455367/sec
 
 
 # 队列大小：8192      线程数：8
-[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.717 secs   1393237/sec
-[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.715 secs   1398374/sec
-[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.778 secs   1285284/sec
-[benchmark] server-console-async-block     | Iters 1000000 | Elapsed 12.136 secs     82395/sec
+[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.688 secs   1452901/sec
+[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.671 secs   1488398/sec
+[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.715 secs   1397846/sec
+[benchmark] server-console-async-block     | Iters 1000000 | Elapsed 11.645 secs     85873/sec
 
-[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.524 secs   1906501/sec
-[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.663 secs   1508213/sec
-[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.609 secs   1639347/sec
-[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.504 secs   1980939/sec
+[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.524 secs   1905625/sec
+[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.494 secs   2022167/sec
+[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.533 secs   1872676/sec
+[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.509 secs   1964281/sec
 ```
 
 #### Sourcemod logging
