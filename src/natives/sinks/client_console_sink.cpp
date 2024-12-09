@@ -1,105 +1,105 @@
-#include <log4sp/common.h>
-#include <log4sp/client_console_sink.h>
+#include "log4sp/sinks/client_console_sink.h"
+
+#include "log4sp/adapter/sink_hanlder.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                 ClientConsoleSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native ClientConsoleSinkST();
+ * public native ClientConsoleSink(bool multiThread = false);
  */
-static cell_t ClientConsoleSinkST(IPluginContext *ctx, const cell_t *params)
+static cell_t ClientConsoleSink(IPluginContext *ctx, const cell_t *params)
 {
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_ClientConsoleSinkSTHandleType,
-        std::make_shared<log4sp::sinks::client_console_sink_st>());
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    bool multiThread = static_cast<bool>(params[1]);
+    if (!multiThread)
+    {
+        auto sink   = std::make_shared<log4sp::sinks::client_console_sink_st>();
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of ClientConsoleSink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
+    }
+    else
+    {
+        auto sink   = std::make_shared<log4sp::sinks::client_console_sink_mt>();
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of multi thread ClientConsoleSink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
+    }
 }
 
 /**
- * public native void SetFilter(ClientConsoleSinkFilter filter);
+ * public native void SetFilter(SinkClientFilter filter);
+ *
+ * function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
  */
-static cell_t ClientConsoleSinkST_SetFilter(IPluginContext *ctx, const cell_t *params)
+static cell_t ClientConsoleSink_SetFilter(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        return false;
+        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        return 0;
     }
 
-    auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_st>(sink);
-    if (clientConsoleSink == nullptr)
+    auto funcID   = static_cast<funcid_t>(params[2]);
+    auto function = ctx->GetFunctionById(funcID);
+    if (function == nullptr)
     {
-        ctx->ReportError("Unable to cast sink to client_console_sink_st.");
-        return false;
+        ctx->ReportError("Invalid sink client filter function. (funcID: %d)", funcID);
+        return 0;
     }
 
-    IPluginFunction *filter = ctx->GetFunctionById(params[2]);
-    if (filter == NULL )
     {
-        ctx->ReportError("Invalid param filter %d.", params[2]);
-        return false;
+        auto realSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_st>(sink);
+        if (realSink != nullptr)
+        {
+            if (!realSink->set_player_filter(function))
+            {
+                ctx->ReportError("SM error! Adding filter to ClientConsoleSink failed.");
+            }
+            return 0;
+        }
     }
 
-    if (!clientConsoleSink->set_player_filter(filter))
     {
-        ctx->ReportError("Set filter failed.");
-        return false;
-    }
-    return true;
-}
-
-
-/**
- * public native ClientConsoleSinkMT();
- */
-static cell_t ClientConsoleSinkMT(IPluginContext *ctx, const cell_t *params)
-{
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_ClientConsoleSinkMTHandleType,
-        std::make_shared<log4sp::sinks::client_console_sink_mt>());
-}
-
-/**
- * public native void SetFilter(ClientConsoleSinkFilter filter);
- */
-static cell_t ClientConsoleSinkMT_SetFilter(IPluginContext *ctx, const cell_t *params)
-{
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
-    if (sink == nullptr)
-    {
-        return false;
+        auto realSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sink);
+        if (realSink != nullptr)
+        {
+            if (!realSink->set_player_filter(function))
+            {
+                ctx->ReportError("SM error! Adding filter to multi thread ClientConsoleSink failed.");
+            }
+            return 0;
+        }
     }
 
-    auto clientConsoleSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sink);
-    if (clientConsoleSink == nullptr)
-    {
-        ctx->ReportError("Unable to cast sink to client_console_sink_mt.");
-        return false;
-    }
-
-    IPluginFunction *filter = ctx->GetFunctionById(params[2]);
-    if (filter == NULL )
-    {
-        ctx->ReportError("Invalid param filter %d.", params[2]);
-        return false;
-    }
-
-    if (!clientConsoleSink->set_player_filter(filter))
-    {
-        ctx->ReportError("Set filter failed.");
-        return false;
-    }
-    return true;
+    ctx->ReportError("Not a valid ClientConsoleSink handle. (hdl: %d)", handle);
+    return 0;
 }
 
 const sp_nativeinfo_t ClientConsoleSinkNatives[] =
 {
-    {"ClientConsoleSinkST.ClientConsoleSinkST",     ClientConsoleSinkST},
-    {"ClientConsoleSinkST.SetFilter",               ClientConsoleSinkST_SetFilter},
-    {"ClientConsoleSinkMT.ClientConsoleSinkMT",     ClientConsoleSinkMT},
-    {"ClientConsoleSinkMT.SetFilter",               ClientConsoleSinkMT_SetFilter},
+    {"ClientConsoleSink.ClientConsoleSink",         ClientConsoleSink},
+    {"ClientConsoleSink.SetFilter",                 ClientConsoleSink_SetFilter},
 
-    {NULL,                                          NULL}
+    {nullptr,                                       nullptr}
 };

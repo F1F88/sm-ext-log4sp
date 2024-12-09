@@ -1,127 +1,113 @@
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include <log4sp/common.h>
+#include "log4sp/adapter/sink_hanlder.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                   DailyFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native DailyFileSinkST(
+ * public native DailyFileSink(
  *     const char[] file,
  *     int rotationHour = 0,
  *     int rotationMinute = 0,
  *     bool truncate = false,
- *     int maxFiles = 0
+ *     int maxFiles = 0,
+ *     bool multiThread = false
  * );
  */
-static cell_t DailyFileSinkST(IPluginContext *ctx, const cell_t *params)
+static cell_t DailyFileSink(IPluginContext *ctx, const cell_t *params)
 {
     char *file;
     ctx->LocalToString(params[1], &file);
+
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    int rotationHour = params[2];
-    int rotationMinute = params[3];
+    auto rotationHour   = static_cast<int>(params[2]);
+    auto rotationMinute = static_cast<int>(params[3]);
     if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
     {
         ctx->ReportError("Invalid rotation time in ctor");
-        return false;
+        return BAD_HANDLE;
     }
 
-    bool truncate = params[4];
-    uint16_t maxFiles = params[5];
+    auto truncate = static_cast<bool>(params[4]);
+    auto maxFiles = static_cast<uint16_t>(params[5]);
 
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_DailyFileSinkSTHandleType,
-        std::make_shared<spdlog::sinks::daily_file_sink_st>(path, rotationHour, rotationMinute, truncate, maxFiles));
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    bool multiThread = static_cast<bool>(params[6]);
+    if (!multiThread)
+    {
+        auto sink   = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, rotationHour, rotationMinute, truncate, maxFiles);
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of sink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
+    }
+    else
+    {
+        auto sink   = std::make_shared<spdlog::sinks::daily_file_sink_mt>(path, rotationHour, rotationMinute, truncate, maxFiles);
+        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of multi thread sink handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
+    }
 }
 
 /**
  * public native void GetFilename(char[] buffer, int maxlen);
  */
-static cell_t DailyFileSinkST_GetFilename(IPluginContext *ctx, const cell_t *params)
+static cell_t DailyFileSink_GetFilename(IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
+    auto handle = static_cast<Handle_t>(params[1]);
+
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        return false;
+        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        return 0;
     }
 
-    auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
-    if (dailySink == nullptr)
     {
-        ctx->ReportError("Unable to cast sink to daily_file_sink_st.");
-        return false;
+        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
+        if (realSink != nullptr)
+        {
+            ctx->StringToLocal(params[2], params[3], realSink->filename().c_str());
+            return 0;
+        }
     }
 
-    ctx->StringToLocal(params[2], params[3], dailySink->filename().data());
-    return true;
-}
-
-/**
- * public native DailyFileSinkMT(
- *     const char[] file,
- *     int rotationHour = 0,
- *     int rotationMinute = 0,
- *     bool truncate = false,
- *     int maxFiles = 0
- * );
- */
-static cell_t DailyFileSinkMT(IPluginContext *ctx, const cell_t *params)
-{
-    char *file;
-    ctx->LocalToString(params[1], &file);
-    char path[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
-
-    int rotationHour = params[2];
-    int rotationMinute = params[3];
-    if (rotationHour < 0 || rotationHour > 23 || rotationMinute < 0 || rotationMinute > 59)
     {
-        ctx->ReportError("Invalid rotation time in ctor");
-        return false;
+        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sink);
+        if (realSink != nullptr)
+        {
+            ctx->StringToLocal(params[2], params[3], realSink->filename().c_str());
+            return 0;
+        }
     }
 
-    bool truncate = params[4];
-    uint16_t maxFiles = params[5];
-
-    return log4sp::sinks::CreateHandleOrReportError(
-        ctx,
-        g_DailyFileSinkMTHandleType,
-        std::make_shared<spdlog::sinks::daily_file_sink_mt>(path, rotationHour, rotationMinute, truncate, maxFiles));
-}
-
-/**
- * public native void GetFilename(char[] buffer, int maxlen);
- */
-static cell_t DailyFileSinkMT_GetFilename(IPluginContext *ctx, const cell_t *params)
-{
-    spdlog::sink_ptr sink = log4sp::sinks::ReadHandleOrReportError(ctx, params[1]);
-    if (sink == nullptr)
-    {
-        return false;
-    }
-
-    auto dailySink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sink);
-    if (dailySink == nullptr)
-    {
-        ctx->ReportError("Unable to cast sink to daily_file_sink_mt.");
-        return false;
-    }
-
-    ctx->StringToLocal(params[2], params[3], dailySink->filename().data());
-    return true;
+    ctx->ReportError("Not a valid DailyFileSink handle. (hdl: %d)", handle);
+    return 0;
 }
 
 const sp_nativeinfo_t DailyFileSinkNatives[] =
 {
-    {"DailyFileSinkST.DailyFileSinkST",         DailyFileSinkST},
-    {"DailyFileSinkST.GetFilename",             DailyFileSinkST_GetFilename},
-    {"DailyFileSinkMT.DailyFileSinkMT",         DailyFileSinkMT},
-    {"DailyFileSinkMT.GetFilename",             DailyFileSinkMT_GetFilename},
+    {"DailyFileSink.DailyFileSink",             DailyFileSink},
+    {"DailyFileSink.GetFilename",               DailyFileSink_GetFilename},
 
-    {NULL,                                      NULL}
+    {nullptr,                                   nullptr}
 };

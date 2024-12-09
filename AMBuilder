@@ -6,16 +6,15 @@ projectName = 'log4sp'
 # smsdk_ext.cpp will be automatically added later
 sourceFiles = [
   'src/extension.cpp',
-  'src/log4sp/common.cpp',
-  'src/log4sp/sink_registry.cpp',
   'src/natives/common.cpp',
   'src/natives/logger.cpp',
   'src/natives/sinks/sink.cpp',
-  'src/natives/sinks/server_console_sink.cpp',
   'src/natives/sinks/base_file_sink.cpp',
-  'src/natives/sinks/rorating_file_sink.cpp',
-  'src/natives/sinks/daily_file_sink.cpp',
+  'src/natives/sinks/client_chat_sink.cpp',
   'src/natives/sinks/client_console_sink.cpp',
+  'src/natives/sinks/daily_file_sink.cpp',
+  'src/natives/sinks/rorating_file_sink.cpp',
+  'src/natives/sinks/server_console_sink.cpp',
 ]
 
 ###############

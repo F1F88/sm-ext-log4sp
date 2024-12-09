@@ -1,54 +1,88 @@
-**[English](./readme.md) | [Chinese](./readme-chi.md)**
+**[English](./readme.md) | [中文](./readme-chi.md)**
 
 # Logging for SourcePawn
 
-This is a Sourcemod extension that wraps the [spdlog](https://github.com/gabime/spdlog) library to enhance SourcePawn logging and debugging.
+Log4sp is a powerful [SourceMod](https://www.sourcemod.net/about.php) extension that provides SourceMod plugin developers with a powerful, high-performance, and easy-to-use [logging API](./sourcemod/scripting/include/).
+
+With Log4sp, plugin developers no longer need to write complex logging code, so they can focus more on the core function development of the plugin.
 
 ## Features
 
-1. Very fast, much faster than [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+1. Very fast, much faster than [SourceMod API - Logging](https://sm.alliedmods.net/new-api/logging)
 
-   - [spdlog benchmarks](https://github.com/gabime/spdlog#benchmarks)  |  [log4sp benchmarks](https://github.com/F1F88/sm-ext-log4sp#benchmarks)
+   - spdlog [benchmarks](https://github.com/gabime/spdlog#benchmarks)
 
-2. Each `Logger` and `Sink` can customize the log level
+   - log4sp [benchmarks](https://github.com/F1F88/sm-ext-log4sp#benchmarks)
 
-3. Each `Logger` and `Sink` can customize the [log message pattern](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+   - SourceMod API - Logging [benchmarks](https://github.com/F1F88/sm-ext-log4sp#sourcemod-logging)
 
-4. Each `Logger` can customize the [flush policy](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)
+2. Support custom log filtering.
 
-5. Each `Logger` can have multiple `Sink`
+   - For test environments, you can use low log level (such as `trace`, `debug`) to increase log message and find bugs.
 
-   - For example: A `Logger` that has both `ServerConsoleSink` and `DailyFileSink` is similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+   - For online environments, you can use high log level (such as: `warn`, `error`) to reduce log message and improve performance.
 
-6. Each `Logger` can dynamic change the log level and pattern
+3. Support custom log message pattern.
 
-   - see server command `"sm log4sp"`
+   - Custom information can be appended to log messages. (such as time, log level, source code location, etc.)
 
-7. Supports asynchronous `Logger`
+   - Default log message pattern is:
 
-8. Supports format parameters with variable numbers
+      > [%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%s:%#] %v
 
-   - [Parameter formatting](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) usage is consistent with [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+      > [2024-08-01 12:34:56:789] [log4sp] [info] [example.sp:123] message
 
-   - The maximum length of a variable parameter string is **2048** characters
-     If characters exceeding this length will be truncated
-     If longer message need to be log, non `AmxTpl` API can be used, e.g. `void Info(const char [] msg)`
+   - All pattern flags see: [spdlog wiki](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
-9. Supports [backtrace](https://github.com/gabime/spdlog?tab=readme-ov-file#backtrace-support)
+4. Support custom log message flush level.
 
-   - When enabled, `Trace` and `Debug` level log message are stored in a circular buffer and only output explicitly after calling `DumpBacktrace()`
+   - By default, the Log4sp extension flush the log buffer when [it sees fit in order](https://github.com/gabime/spdlog/wiki/7.-Flush-policy) to achieve good performance.
 
-10. Supports various log targets
+   - You can use `Logger.Flush()` to manually flush, or use `Logger.FlushOn()` set the minimum log level that will trigger automatic flush.
 
-    - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
+5. Support "backtrace" log messages.
 
-    - ClientConsoleSink (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole))
+   - store `trace` and `debug` messages in a ring buffer and display them later on demand.
 
-    - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+6. Support server console commands.
 
-    - DailyFileSink (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when [sv_logecho](https://forums.alliedmods.net/showthread.php?t=170556#sv_logecho) is 0)
+   - The server console command "sm log4sp" can dynamically modify the log level, flush level, log pattern, backtrace, etc.
 
-    - RotatingFileSink
+7. Support for asynchronous logging messages.
+
+   - Does not block the server's main thread.
+
+8. Support for "unlimited size" logging messages.
+
+   - For logging methods called `Logger.***AmxTpl()`, the maximum length of the log message is 2048 characters, and any excess will be truncated.
+
+   - For logging methods other than `Logger.***AmxTpl()`, the maximum length of the log message is unlimited. (theoretically, it depends on available memory)
+
+9. Supports logging to multiple sinks at once.
+
+   - Each Logger can have multiple Sinks.
+
+   - Each Sink can customize different log level and log pattern.
+
+      For example: When the Logger has `ServerConsoleSink` and `DailyFileSink`, it is equivalent to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when `sv_Logecho 1`.
+
+10. Various log targets
+
+    - BaseFileSink （Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+
+    - ClientChatSink（Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
+
+    - ClientConsoleSink（Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
+
+    - DailyFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+
+      Rotate log files based on date.
+
+    - RotatingFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+
+      Rotate log files based on file size.
+
+    - ServerConsoleSink（Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
 ## Documentation
 
@@ -60,86 +94,62 @@ Documentation can be found in the [wiki](https://github.com/F1F88/sm-ext-log4sp/
 
 ## Benchmarks
 
-Test platform: Windows 11 + VMware + Ubuntu 24.04 LTS + sourcemod 1.11
+Test platform: Windows 11 + VMware + Ubuntu 24.04 LTS + SourceMod 1.13.0.7178
 
-Host configuration: AMD Ryzen 7 6800H + 32 GB Memory
+Host configuration: AMD Ryzen 7 7840HS + 32 GB Memory
 
-VMware configuration: 1 CPU  + 8 kernel  + 4 GB Memory
+VM Ubuntu configuration: 1 CPU  + 8 kernel  + 8 GB Memory
 
-Test case 1: [benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
+Test case: [benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
 
-Test case 2: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.sp)
-
-#### Single thread (Synchronous)
+#### Synchronous
 
 ```
-[benchmark] base-file-st      | Iters 1000000 | Elapsed  0.268 secs   3719518/sec
-[benchmark] daily-file-st     | Iters 1000000 | Elapsed  0.278 secs   3589439/sec
-[benchmark] rotating-file-st  | Iters 1000000 | Elapsed  0.279 secs   3578598/sec
-[benchmark] server-console-st | Iters 1000000 | Elapsed  5.609 secs    178255/sec
+[benchmark] base-file         | Iters 1000000 | Elapsed  0.465 secs   2150463/sec
+[benchmark] daily-file        | Iters 1000000 | Elapsed  0.471 secs   2118729/sec
+[benchmark] rotating-file     | Iters 1000000 | Elapsed  0.482 secs   2073553/sec
+[benchmark] server-console    | Iters 1000000 | Elapsed  4.847 secs    206288/sec
 ```
 
-#### Multi thread (Asynchronous)
+#### Asynchronous
 
 ```
 # Queue size: 8192      Thread count: 1
-[benchmark] base-file-block        | Iters 1000000 | Elapsed  0.479 secs   2084762/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed  0.488 secs   2046592/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  0.462 secs   2162868/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed  8.422 secs    118725/sec
+[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.532 secs   1878922/sec
+[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.530 secs   1883991/sec
+[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.527 secs   1895788/sec
+[benchmark] server-console-async-block     | Iters 1000000 | Elapsed  6.091 secs    164162/sec
 
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.442 secs   2259856/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.438 secs   2280891/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.442 secs   2260684/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.379 secs   2632167/sec
-
-
-# Queue size: 8192      Thread count: 4
-[benchmark] base-file-block        | Iters 1000000 | Elapsed  1.049 secs    952753/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed  1.086 secs    920584/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  1.034 secs    967049/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed 15.784 secs     63354/sec
-
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.439 secs   2273952/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.451 secs   2212609/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.453 secs   2204658/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.372 secs   2684282/sec
-
-
-# Queue size: 131072    Thread count: 4
-[benchmark] base-file-block        | Iters 1000000 | Elapsed   0.998 secs   1001216/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed   0.973 secs   1027070/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed   0.956 secs   1045255/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed  13.952 secs     71671/sec
-
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed   0.472 secs   2116635/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed   0.441 secs   2264892/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed   0.478 secs   2091503/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed   0.385 secs   2592245/sec
+[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.530 secs   1883977/sec
+[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.528 secs   1893666/sec
+[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.511 secs   1956709/sec
+[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.407 secs   2455367/sec
 
 
 # Queue size: 8192      Thread count: 8
-[benchmark] base-file-block        | Iters 1000000 | Elapsed  1.135 secs    881010/sec
-[benchmark] daily-file-block       | Iters 1000000 | Elapsed  1.183 secs    845069/sec
-[benchmark] rotating-file-block    | Iters 1000000 | Elapsed  1.193 secs    838199/sec
-[benchmark] server-console-block   | Iters 1000000 | Elapsed 14.925 secs     67000/sec
+[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.688 secs   1452901/sec
+[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.671 secs   1488398/sec
+[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.715 secs   1397846/sec
+[benchmark] server-console-async-block     | Iters 1000000 | Elapsed 11.645 secs     85873/sec
 
-[benchmark] base-file-overrun      | Iters 1000000 | Elapsed  0.533 secs   1875363/sec
-[benchmark] daily-file-overrun     | Iters 1000000 | Elapsed  0.569 secs   1754767/sec
-[benchmark] rotating-file-overrun  | Iters 1000000 | Elapsed  0.508 secs   1967969/sec
-[benchmark] server-console-overrun | Iters 1000000 | Elapsed  0.394 secs   2532556/sec
+[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.524 secs   1905625/sec
+[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.494 secs   2022167/sec
+[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.533 secs   1872676/sec
+[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.509 secs   1964281/sec
 ```
 
 #### Sourcemod logging
 
 As a reference, [sourcemod logging API](https://sm.alliedmods.net/new-api/logging) was also tested
 
+Test case: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.sp)
+
 
 ```
-[benchmark] LogMessage    | Iters 1000000 | Elapsed 10.740 secs     93108/sec
-[benchmark] LogToFile     | Iters 1000000 | Elapsed  9.091 secs    109989/sec
-[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  8.823 secs    113336/sec
-[benchmark] PrintToServer | Iters 1000000 | Elapsed  5.779 secs    173024/sec
+[benchmark] LogMessage    | Iters 1000000 | Elapsed  9.657 secs    103548/sec
+[benchmark] LogToFile     | Iters 1000000 | Elapsed  8.070 secs    123903/sec
+[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.959 secs    125637/sec
+[benchmark] PrintToServer | Iters 1000000 | Elapsed  4.718 secs    211920/sec
 ```
 
 ## Credits
