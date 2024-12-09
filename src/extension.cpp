@@ -38,6 +38,7 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/command/root_console_command_handler.h"
+#include "log4sp/proxy/sync_logger_proxy.h"
 
 
 /**
@@ -95,7 +96,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     // Init Default Logger
     {
         auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
-        auto logger = std::make_shared<log4sp::logger_proxy>(SMEXT_CONF_LOGTAG, sink);
+        auto logger = std::make_shared<log4sp::sync_logger_proxy>(SMEXT_CONF_LOGTAG, sink);
         spdlog::set_default_logger(logger);
 
         // 默认 logger 属于拓展，不应该被任何插件释放

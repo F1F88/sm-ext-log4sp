@@ -8,7 +8,7 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/proxy/async_logger_proxy.h"
-#include "log4sp/proxy/logger_proxy.h"
+#include "log4sp/proxy/sync_logger_proxy.h"
 
 
 /**
@@ -50,7 +50,7 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     auto async = static_cast<bool>(params[4]);
     if (!async)
     {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sinkVector.begin(), sinkVector.end());
+        auto logger = std::make_shared<log4sp::sync_logger_proxy>(name, sinkVector.begin(), sinkVector.end());
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
@@ -107,7 +107,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     if (!async)
     {
         auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+        auto logger = std::make_shared<log4sp::sync_logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
@@ -163,7 +163,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto sink   = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+        auto logger = std::make_shared<log4sp::sync_logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
@@ -233,7 +233,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     if (!async)
     {
         auto sink     = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+        auto logger = std::make_shared<log4sp::sync_logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
@@ -298,7 +298,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     if (!async)
     {
         auto sink   = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+        auto logger = std::make_shared<log4sp::sync_logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
@@ -336,7 +336,7 @@ static cell_t GetName(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -357,7 +357,7 @@ static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -377,7 +377,7 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -400,7 +400,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -426,7 +426,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -448,7 +448,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -474,7 +474,7 @@ static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -488,7 +488,8 @@ static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -508,7 +509,7 @@ static cell_t LogAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -539,7 +540,7 @@ static cell_t LogSrc(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -566,7 +567,7 @@ static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -583,7 +584,8 @@ static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(loc, ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(loc, logger->name(), ex.what());
         return 0;
     }
 
@@ -601,7 +603,7 @@ static cell_t LogSrcAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -633,7 +635,7 @@ static cell_t LogLoc(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -667,7 +669,7 @@ static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -681,7 +683,8 @@ static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -709,7 +712,7 @@ static cell_t LogLocAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -748,7 +751,7 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -783,7 +786,7 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -797,7 +800,8 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -826,7 +830,7 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -866,7 +870,7 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -903,7 +907,7 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -917,7 +921,8 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -947,7 +952,7 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -988,7 +993,7 @@ static cell_t Trace(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1012,7 +1017,7 @@ static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1026,7 +1031,8 @@ static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -1044,7 +1050,7 @@ static cell_t TraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1073,7 +1079,7 @@ static cell_t Debug(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1097,7 +1103,7 @@ static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1111,7 +1117,8 @@ static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -1129,7 +1136,7 @@ static cell_t DebugAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1158,7 +1165,7 @@ static cell_t Info(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1182,7 +1189,7 @@ static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1196,7 +1203,8 @@ static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -1214,7 +1222,7 @@ static cell_t InfoAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1243,7 +1251,7 @@ static cell_t Warn(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1267,7 +1275,7 @@ static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1281,7 +1289,8 @@ static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -1299,7 +1308,7 @@ static cell_t WarnAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1328,7 +1337,7 @@ static cell_t Error(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1352,7 +1361,7 @@ static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1366,7 +1375,8 @@ static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -1384,7 +1394,7 @@ static cell_t ErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1413,7 +1423,7 @@ static cell_t Fatal(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1437,7 +1447,7 @@ static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1451,7 +1461,8 @@ static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
-        logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
+        auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+        logger_proxy->error_handler(log4sp::get_plugin_source_loc(ctx), logger->name(), ex.what());
         return 0;
     }
 
@@ -1469,7 +1480,7 @@ static cell_t FatalAmxTpl(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1498,7 +1509,7 @@ static cell_t Flush(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1519,7 +1530,7 @@ static cell_t GetFlushLevel(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1539,7 +1550,7 @@ static cell_t FlushOn(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1562,7 +1573,7 @@ static cell_t ShouldBacktrace(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1582,7 +1593,7 @@ static cell_t EnableBacktrace(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1605,7 +1616,7 @@ static cell_t DisableBacktrace(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1626,7 +1637,7 @@ static cell_t DumpBacktrace(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1647,7 +1658,7 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(loggerHandle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(loggerHandle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", loggerHandle, error);
@@ -1662,7 +1673,8 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->add_sink(sink);
+    auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+    logger_proxy->add_sink(sink);
     return 0;
 }
 
@@ -1676,7 +1688,7 @@ static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(loggerHandle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(loggerHandle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", loggerHandle, error);
@@ -1691,7 +1703,8 @@ static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->remove_sink(sink);
+    auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+    logger_proxy->remove_sink(sink);
     return 0;
 }
 
@@ -1707,7 +1720,7 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr)
     {
         ctx->ReportError("Invalid logger handle. (hdl: %d, err: %d)", handle, error);
@@ -1722,7 +1735,7 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_Cell, Param_String);
+    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_String);
     if (forward == nullptr)
     {
         ctx->ReportError("SM error! Create error handler forward failure.");
@@ -1736,7 +1749,8 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->set_error_forward(forward);
+    auto logger_proxy = std::dynamic_pointer_cast<log4sp::logger_proxy>(logger);
+    logger_proxy->set_error_forward(forward);
     return 0;
 }
 

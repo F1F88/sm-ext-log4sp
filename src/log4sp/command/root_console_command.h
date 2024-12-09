@@ -5,16 +5,26 @@
 #include "extension.h"
 
 
-namespace log4sp {
+namespace spdlog {
 
-class logger_proxy;
+class logger;
+
+namespace level {
+
+enum level_enum;
+
+} // namespace level
+} // namespace spdlog
+
+
+namespace log4sp {
 
 class command {
 public:
     virtual void execute(const ICommandArgs *args) = 0;
 
 protected:
-    std::shared_ptr<logger_proxy> arg_to_logger(const ICommandArgs *args, int num);
+    std::shared_ptr<spdlog::logger> arg_to_logger(const ICommandArgs *args, int num);
 
     spdlog::level::level_enum arg_to_level(const ICommandArgs *args, int num);
 };

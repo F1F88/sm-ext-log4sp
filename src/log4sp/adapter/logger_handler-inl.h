@@ -4,16 +4,14 @@
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_CRITICAL
     #include "spdlog/spdlog.h"
     // #include "spdlog/fmt/xchar.h"
+#else
+    #include "spdlog/logger.h"
 #endif
-
-#include "log4sp/proxy/logger_proxy.h"
 
 #include "log4sp/adapter/logger_handler.h"
 
 
 namespace log4sp {
-
-class logger_proxy;
 
 // inline std::string debugLoggers(std::unordered_map<std::string, std::shared_ptr<logger_proxy>> map) {
 //     std::string result = "[";
@@ -66,7 +64,7 @@ inline HandleType_t logger_handler::handle_type() const {
     return handle_type_;
 }
 
-inline Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
+inline Handle_t logger_handler::create_handle(std::shared_ptr<spdlog::logger> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
     Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
@@ -79,8 +77,8 @@ inline Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> obje
     return handle;
 }
 
-inline std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
-    logger_proxy *object;
+inline std::shared_ptr<spdlog::logger> logger_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
+    spdlog::logger *object;
     HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
 
     if (err != HandleError_None) {
@@ -112,7 +110,7 @@ inline logger_handler::~logger_handler() {
 }
 
 inline void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
-    auto logger = static_cast<log4sp::logger_proxy *>(object);
+    auto logger = static_cast<spdlog::logger *>(object);
 
     // SPDLOG_TRACE("Logger handle destroyed. (name: {}, obj: {})", logger->name(), fmt::ptr(logger));
 

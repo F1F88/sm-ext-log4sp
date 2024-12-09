@@ -2,16 +2,17 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
 
+#include "spdlog/logger.h"
+
 #include "log4sp/utils.h"
 #include "log4sp/adapter/logger_handler.h"
-#include "log4sp/proxy/logger_proxy.h"
 
 #include "log4sp/command/root_console_command.h"
 
 
 namespace log4sp {
 
-inline std::shared_ptr<logger_proxy> command::arg_to_logger(const ICommandArgs *args, int num) {
+inline std::shared_ptr<spdlog::logger> command::arg_to_logger(const ICommandArgs *args, int num) {
     const char *logger_name = args->Arg(num);
 
     Handle_t handle = logger_handler::instance().find_handle(logger_name);
@@ -23,7 +24,7 @@ inline std::shared_ptr<logger_proxy> command::arg_to_logger(const ICommandArgs *
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    std::shared_ptr<logger_proxy> logger = logger_handler::instance().read_handle(handle, &security, &error);
+    std::shared_ptr<spdlog::logger> logger = logger_handler::instance().read_handle(handle, &security, &error);
     if (logger == nullptr) {
         SPDLOG_CRITICAL("[SM] Internal Error! Logger with name '{}' does not exists. (err: {})", logger_name, static_cast<int>(error));
         return nullptr;
@@ -57,7 +58,7 @@ inline void get_lvl_command::execute(const ICommandArgs *args) {
         return;
     }
 
-    std::shared_ptr<logger_proxy> logger = arg_to_logger(args, 3);
+    std::shared_ptr<spdlog::logger> logger = arg_to_logger(args, 3);
     if (logger == nullptr) {
         return;
     }
@@ -146,7 +147,7 @@ inline void flush_command::execute(const ICommandArgs *args) {
         return;
     }
 
-    std::shared_ptr<logger_proxy> logger = arg_to_logger(args, 3);
+    std::shared_ptr<spdlog::logger> logger = arg_to_logger(args, 3);
     if (logger == nullptr) {
         return;
     }
@@ -162,7 +163,7 @@ inline void get_flush_lvl_command::execute(const ICommandArgs *args) {
         return;
     }
 
-    std::shared_ptr<logger_proxy> logger = arg_to_logger(args, 3);
+    std::shared_ptr<spdlog::logger> logger = arg_to_logger(args, 3);
     if (logger == nullptr) {
         return;
     }

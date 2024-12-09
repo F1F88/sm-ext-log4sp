@@ -12,7 +12,7 @@
 
 typeset LoggerErrorHandler
 {
-    function void (Logger logger, const char[] msg);
+    function void (const char[] name, const char[] msg);
 };
 
 

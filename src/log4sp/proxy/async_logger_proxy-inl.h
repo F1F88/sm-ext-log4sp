@@ -1,8 +1,6 @@
 #ifndef _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_INL_H_
 #define _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_INL_H_
 
-#include "spdlog/spdlog.h"
-
 #include "log4sp/adapter/logger_handler.h"
 
 #include "log4sp/proxy/async_logger_proxy.h"
@@ -12,10 +10,7 @@ namespace log4sp {
 
 inline async_logger_proxy::~async_logger_proxy() {
     std::lock_guard<std::mutex> lock(error_mutex_);
-    if (error_forward_ != nullptr) {
-        forwards->ReleaseForward(error_forward_);
-        error_forward_ = nullptr;
-    }
+    logger_proxy::release_error_forward();
 }
 
 inline void async_logger_proxy::add_sink(spdlog::sink_ptr sink) {
@@ -28,15 +23,12 @@ inline void async_logger_proxy::remove_sink(spdlog::sink_ptr sink) {
 
 inline void async_logger_proxy::set_error_forward(IChangeableForward *forward) {
     std::lock_guard<std::mutex> lock(error_mutex_);
-    if (error_forward_ != nullptr) {
-        forwards->ReleaseForward(error_forward_);
-    }
-    error_forward_ = forward;
+    logger_proxy::set_error_forward(forward);
 }
 
-inline void async_logger_proxy::error_handler(spdlog::source_loc loc, const std::string &msg) {
+inline void async_logger_proxy::error_handler(spdlog::source_loc loc, const std::string &name, const std::string &msg) {
     std::lock_guard<std::mutex> lock(error_mutex_);
-    logger_proxy::error_handler(loc, msg);
+    logger_proxy::error_handler(loc, name, msg);
 }
 
 inline void async_logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
@@ -47,7 +39,7 @@ inline void async_logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
             SPDLOG_CRITICAL("Internal Error! async log: thread pool doesn't exist anymore. Please contact the developer.");
         }
     } catch (const std::exception &ex) {
-        error_handler(msg.source, ex.what());
+        async_logger_proxy::error_handler(msg.source, name(), ex.what());
     } catch (...) {
         SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
         throw;
@@ -62,7 +54,7 @@ inline void async_logger_proxy::flush_() {
             throw std::runtime_error("Internal Error! async log: thread pool doesn't exist anymore");
         }
     } catch (const std::exception &ex) {
-        error_handler(spdlog::source_loc{}, ex.what());
+        async_logger_proxy::error_handler(spdlog::source_loc{}, name(), ex.what());
     } catch (...) {
         SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
         throw;
@@ -75,7 +67,7 @@ inline void async_logger_proxy::backend_sink_it_(const spdlog::details::log_msg 
             try {
                 sink->log(msg);
             } catch (const std::exception &ex) {
-                error_handler(msg.source, ex.what());
+                async_logger_proxy::error_handler(msg.source, name(), ex.what());
             } catch (...) {
                 SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
                 throw;
@@ -93,7 +85,7 @@ inline void async_logger_proxy::backend_flush_() {
         try {
             sink->flush();
         } catch (const std::exception &ex) {
-            error_handler(spdlog::source_loc{}, ex.what());
+            async_logger_proxy::error_handler(spdlog::source_loc{}, name(), ex.what());
         } catch (...) {
             SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
             throw;
