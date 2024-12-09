@@ -10,8 +10,10 @@ namespace sinks {
 
 template <typename Mutex>
 client_console_sink<Mutex>::~client_console_sink() {
+    std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
     if (player_filter_forward_ != nullptr) {
         forwards->ReleaseForward(player_filter_forward_);
+        player_filter_forward_ = nullptr;
     }
 }
 
