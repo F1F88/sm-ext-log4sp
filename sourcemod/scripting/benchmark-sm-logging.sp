@@ -94,8 +94,7 @@ Action CMD_Bench_LogMessage(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "LogMessage", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogMessage", iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
     FindConVar("sv_logecho").SetInt(val);
@@ -164,8 +163,7 @@ Action CMD_Bench_LogToFile(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "LogToFile", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogToFile", iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
     FindConVar("sv_logecho").SetInt(val);
@@ -234,8 +232,7 @@ Action CMD_Bench_LogToFileEx(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "LogToFileEx", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogToFileEx", iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
     FindConVar("sv_logecho").SetInt(val);
@@ -257,37 +254,37 @@ Action CMD_Bench_PrintToServer(int client, int args)
     {
         switch (i & 31)
         {
-            case 0:     PrintToServer("|  0 | [%s] [%s] |     010d:    %010d |    10d:    %10d | d: %d |", "2018-08-01 12:34:56", "name-X", i, -i, i);
-            case 1:     PrintToServer("|  1 | [%s] [%s] |    -010i:   %-010i |   -10i:   %-10i | i: %i |", "2018-08-01 12:34:56", "name-X", -i, i, -i);
-            case 2:     PrintToServer("|  2 | [%s] [%s] |     010u:    %010u |    10u:    %10u | u: %d |", "2018-08-01 12:34:56", "name-X", i, -i, i);
-            case 3:     PrintToServer("|  3 | [%s] [%s] |    -010u:   %-010u |   -10u:   %-10u | u: %i |", "2018-08-01 12:34:56", "name-X", -i, i, -i);
-            case 4:     PrintToServer("|  4 | [%s] [%s] |     010x:    %010x |    10x:    %10x | x: %x |", "2018-08-01 12:34:56", "name-X", i, -i, i);
-            case 5:     PrintToServer("|  5 | [%s] [%s] |    -010x:   %-010x |   -10x:   %-10x | x: %x |", "2018-08-01 12:34:56", "name-X", -i, i, -i);
-            case 6:     PrintToServer("|  6 | [%s] [%s] |      34b:     %34b |      b:      %b |", "2018-08-01 12:34:56", "name-X", float(i), float(-i));
-            case 7:     PrintToServer("|  7 | [%s] [%s] |     034b:    %034b |      b:      %b |", "2018-08-01 12:34:56", "name-X", float(-i), float(i));
-            case 8:     PrintToServer("|  8 | [%s] [%s] |     -34b:    %-34b |      b:      %b |", "2018-08-01 12:34:56", "name-X", float(i), float(-i));
-            case 9:     PrintToServer("|  9 | [%s] [%s] |    -034b:   %-034b |      b:      %b |", "2018-08-01 12:34:56", "name-X", float(-i), float(i));
-            case 10:    PrintToServer("| 10 | [%s] [%s] |      10f:     %10f |      f:      %f |", "2018-08-01 12:34:56", "name-X", float(i), float(-i));
-            case 11:    PrintToServer("| 11 | [%s] [%s] |     010f:    %010f |      f:      %f |", "2018-08-01 12:34:56", "name-X", float(-i), float(i));
-            case 12:    PrintToServer("| 12 | [%s] [%s] |    -010f:   %-010f |   -10f:   %-10f |", "2018-08-01 12:34:56", "name-X", float(i), float(-i));
-            case 14:    PrintToServer("| 14 | [%s] [%s] |     0.3f:    %0.3f |    .3f:    %.3f |", "2018-08-01 12:34:56", "name-X", float(-i), float(i));
-            case 15:    PrintToServer("| 15 | [%s] [%s] |    -0.3f:   %-0.3f |   -.3f:   %0.3f |", "2018-08-01 12:34:56", "name-X", float(i), float(-i));
-            case 16:    PrintToServer("| 16 | [%s] [%s] |   010.3f:  %010.3f |  10.3f:  %10.3f |", "2018-08-01 12:34:56", "name-X", float(-i), float(i));
-            case 17:    PrintToServer("| 17 | [%s] [%s] |  -010.3f: %-010.3f | -10.3f: %-10.3f |", "2018-08-01 12:34:56", "name-X", float(i), float(-i));
-            case 18:    PrintToServer("| 18 | [%s] [%s] |  %% | %c | %c | %c | %c | %c | %c | %c |", "2018-08-01 12:34:56", "name-X", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
-            case 19:    PrintToServer("| 19 | [%s] [%s] |      10s:     %10s |      s:      %s |", "2018-08-01 12:34:56", "name-X", "some messages", "some messages");
-            case 20:    PrintToServer("| 20 | [%s] [%s] |     -10s:    %-10s |      s:      %s |", "2018-08-01 12:34:56", "name-X", "some messages", "some string messages");
-            case 21:    PrintToServer("| 21 | [%s] [%s] |   16.10s:  %16.10s |   .10s:   %.10f |", "2018-08-01 12:34:56", "name-X", "some messages", "some messages");
-            case 22:    PrintToServer("| 22 | [%s] [%s] |  -16.10s: %-16.10s |  -.10s:  %-.10f |", "2018-08-01 12:34:56", "name-X", "some messages", "some messages");
-            case 23:    PrintToServer("| 23 | [%s] [%s] |      16t:     %16t |  0   t:      %t |", "2018-08-01 12:34:56", "name-X", "See console for output", "See console for output");
-            case 24:    PrintToServer("| 24 | [%s] [%s] |     -16t:    %-16t | 1 d  t:      %t |", "2018-08-01 12:34:56", "name-X", "See console for output", "Vote Delay Seconds", 234567890);
-            case 25:    PrintToServer("| 25 | [%s] [%s] |     .16t:    %.16t | 1 s  t:      %t |", "2018-08-01 12:34:56", "name-X", "See console for output", "Unable to find cvar", "some_cvar");
-            case 26:    PrintToServer("| 26 | [%s] [%s] |   20.16t:  %20.16t | 1 N  t:      %t |", "2018-08-01 12:34:56", "name-X", "See console for output", "Chat to admins", client);
-            case 27:    PrintToServer("| 27 | [%s] [%s] |    -.16t:   %-.16t | 2 N  t:      %t |", "2018-08-01 12:34:56", "name-X", "See console for output", "Private say to", client, client);
-            case 28:    PrintToServer("| 28 | [%s] [%s] |  -20.16t: %-20.16t | 2 s  t:      %t |", "2018-08-01 12:34:56", "name-X", "See console for output", "Vote Select", "somebody", "somebuttom");
-            case 29:    PrintToServer("| 29 | [%s] [%s] |      16T:     %16T |  0   T:      %T |", "2018-08-01 12:34:56", "name-X", "See console for output", client, "See console for output", client);
-            case 30:    PrintToServer("| 30 | [%s] [%s] |     -16T:    %-16T | 1 d  T:      %T |", "2018-08-01 12:34:56", "name-X", "See console for output", client, "Vote Delay Seconds", client, 234567890);
-            case 31:    PrintToServer("| 31 | [%s] [%s] |  -20.16T: %-20.16T | 2 s  T:      %T |", "2018-08-01 12:34:56", "name-X", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
+            case 0:     PrintToServer("|  0 | [%s] |     010d:    %010d |    10d:    %10d | d: %d |", "name-X", i, -i, i);
+            case 1:     PrintToServer("|  1 | [%s] |    -010i:   %-010i |   -10i:   %-10i | i: %i |", "name-X", -i, i, -i);
+            case 2:     PrintToServer("|  2 | [%s] |     010u:    %010u |    10u:    %10u | u: %d |", "name-X", i, -i, i);
+            case 3:     PrintToServer("|  3 | [%s] |    -010u:   %-010u |   -10u:   %-10u | u: %i |", "name-X", -i, i, -i);
+            case 4:     PrintToServer("|  4 | [%s] |     010x:    %010x |    10x:    %10x | x: %x |", "name-X", i, -i, i);
+            case 5:     PrintToServer("|  5 | [%s] |    -010x:   %-010x |   -10x:   %-10x | x: %x |", "name-X", -i, i, -i);
+            case 6:     PrintToServer("|  6 | [%s] |      34b:     %34b |      b:      %b |", "name-X", float(i), float(-i));
+            case 7:     PrintToServer("|  7 | [%s] |     034b:    %034b |      b:      %b |", "name-X", float(-i), float(i));
+            case 8:     PrintToServer("|  8 | [%s] |     -34b:    %-34b |      b:      %b |", "name-X", float(i), float(-i));
+            case 9:     PrintToServer("|  9 | [%s] |    -034b:   %-034b |      b:      %b |", "name-X", float(-i), float(i));
+            case 10:    PrintToServer("| 10 | [%s] |      10f:     %10f |      f:      %f |", "name-X", float(i), float(-i));
+            case 11:    PrintToServer("| 11 | [%s] |     010f:    %010f |      f:      %f |", "name-X", float(-i), float(i));
+            case 12:    PrintToServer("| 12 | [%s] |    -010f:   %-010f |   -10f:   %-10f |", "name-X", float(i), float(-i));
+            case 14:    PrintToServer("| 14 | [%s] |     0.3f:    %0.3f |    .3f:    %.3f |", "name-X", float(-i), float(i));
+            case 15:    PrintToServer("| 15 | [%s] |    -0.3f:   %-0.3f |   -.3f:   %0.3f |", "name-X", float(i), float(-i));
+            case 16:    PrintToServer("| 16 | [%s] |   010.3f:  %010.3f |  10.3f:  %10.3f |", "name-X", float(-i), float(i));
+            case 17:    PrintToServer("| 17 | [%s] |  -010.3f: %-010.3f | -10.3f: %-10.3f |", "name-X", float(i), float(-i));
+            case 18:    PrintToServer("| 18 | [%s] |  %% | %c | %c | %c | %c | %c | %c | %c |", "name-X", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
+            case 19:    PrintToServer("| 19 | [%s] |      10s:     %10s |      s:      %s |", "name-X", "some messages", "some messages");
+            case 20:    PrintToServer("| 20 | [%s] |     -10s:    %-10s |      s:      %s |", "name-X", "some messages", "some string messages");
+            case 21:    PrintToServer("| 21 | [%s] |   16.10s:  %16.10s |   .10s:   %.10f |", "name-X", "some messages", "some messages");
+            case 22:    PrintToServer("| 22 | [%s] |  -16.10s: %-16.10s |  -.10s:  %-.10f |", "name-X", "some messages", "some messages");
+            case 23:    PrintToServer("| 23 | [%s] |      16t:     %16t |  0   t:      %t |", "name-X", "See console for output", "See console for output");
+            case 24:    PrintToServer("| 24 | [%s] |     -16t:    %-16t | 1 d  t:      %t |", "name-X", "See console for output", "Vote Delay Seconds", 234567890);
+            case 25:    PrintToServer("| 25 | [%s] |     .16t:    %.16t | 1 s  t:      %t |", "name-X", "See console for output", "Unable to find cvar", "some_cvar");
+            case 26:    PrintToServer("| 26 | [%s] |   20.16t:  %20.16t | 1 N  t:      %t |", "name-X", "See console for output", "Chat to admins", client);
+            case 27:    PrintToServer("| 27 | [%s] |    -.16t:   %-.16t | 2 N  t:      %t |", "name-X", "See console for output", "Private say to", client, client);
+            case 28:    PrintToServer("| 28 | [%s] |  -20.16t: %-20.16t | 2 s  t:      %t |", "name-X", "See console for output", "Vote Select", "somebody", "somebuttom");
+            case 29:    PrintToServer("| 29 | [%s] |      16T:     %16T |  0   T:      %T |", "name-X", "See console for output", client, "See console for output", client);
+            case 30:    PrintToServer("| 30 | [%s] |     -16T:    %-16T | 1 d  T:      %T |", "name-X", "See console for output", client, "Vote Delay Seconds", client, 234567890);
+            case 31:    PrintToServer("| 31 | [%s] |  -20.16T: %-20.16T | 2 s  T:      %T |", "name-X", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
         }
     }
     profiler.Stop();
@@ -296,8 +293,7 @@ Action CMD_Bench_PrintToServer(int client, int args)
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec",
-                  "PrintToServer", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "PrintToServer", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 

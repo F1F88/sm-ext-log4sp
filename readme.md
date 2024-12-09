@@ -147,7 +147,7 @@ Test case: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.
 [benchmark] LogMessage    | Iters 1000000 | Elapsed  9.657 secs    103548/sec
 [benchmark] LogToFile     | Iters 1000000 | Elapsed  8.070 secs    123903/sec
 [benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.959 secs    125637/sec
-[benchmark] PrintToServer | Iters 1000000 | Elapsed  5.157 secs    193884/sec
+[benchmark] PrintToServer | Iters 1000000 | Elapsed  4.718 secs    211920/sec
 ```
 
 ## Credits

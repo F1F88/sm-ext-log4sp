@@ -146,7 +146,7 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 [benchmark] LogMessage    | Iters 1000000 | Elapsed  9.657 secs    103548/sec
 [benchmark] LogToFile     | Iters 1000000 | Elapsed  8.070 secs    123903/sec
 [benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.959 secs    125637/sec
-[benchmark] PrintToServer | Iters 1000000 | Elapsed  5.157 secs    193884/sec
+[benchmark] PrintToServer | Iters 1000000 | Elapsed  4.718 secs    211920/sec
 ```
 
 ## 制作人员
