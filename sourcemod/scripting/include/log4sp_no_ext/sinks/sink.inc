@@ -6,7 +6,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#include <log4sp_empty/common>
+#include <log4sp_no_ext/common>
 
 
 methodmap Sink < Handle

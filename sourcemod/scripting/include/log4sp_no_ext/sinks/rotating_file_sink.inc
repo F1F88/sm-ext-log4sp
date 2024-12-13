@@ -6,7 +6,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#include <log4sp_empty/sinks/sink>
+#include <log4sp_no_ext/sinks/sink>
 
 
 methodmap RotatingFileSink < Sink
