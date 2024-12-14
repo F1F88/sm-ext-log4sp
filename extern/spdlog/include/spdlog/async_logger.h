@@ -16,24 +16,18 @@
 
 #include <spdlog/logger.h>
 
-namespace spdlog {
+//* Log4sp customization *//
+#include <spdlog/details/backend_worker.h>
 
-// Async overflow policy - block by default.
-enum class async_overflow_policy {
-    block,           // Block until message can be enqueued
-    overrun_oldest,  // Discard oldest message in the queue if full when trying to
-                     // add new item.
-    discard_new      // Discard new message if the queue is full when trying to add new item.
-};
+namespace spdlog {
 
 namespace details {
 class thread_pool;
 }
 
-class SPDLOG_API async_logger final : public std::enable_shared_from_this<async_logger>,
-                                      public logger {
-    friend class details::thread_pool;
-
+//* Log4sp customization *//
+class SPDLOG_API async_logger final : public logger,
+                                      public details::backend_worker {
 public:
     template <typename It>
     async_logger(std::string logger_name,
@@ -60,8 +54,10 @@ public:
 protected:
     void sink_it_(const details::log_msg &msg) override;
     void flush_() override;
-    void backend_sink_it_(const details::log_msg &incoming_log_msg);
-    void backend_flush_();
+
+    //* Log4sp customization *//
+    void backend_sink_it_(const details::log_msg &incoming_log_msg) override;
+    void backend_flush_() override;
 
 private:
     std::weak_ptr<details::thread_pool> thread_pool_;
