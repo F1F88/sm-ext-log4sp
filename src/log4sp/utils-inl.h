@@ -69,7 +69,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
     }
 
     std::vector<std::string> trace;
-    trace.push_back(" Call tack trace:");
+    trace.emplace_back(" Call tack trace:");
 
     const char *func;
     const char *file;
@@ -79,7 +79,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
             func = iter->FunctionName();
             func = func != nullptr ? func : "<unknown function>";
 
-            trace.push_back(fmt::format("   [{}] {}", index, func));
+            trace.emplace_back(std::move(fmt::format("   [{}] {}", index, func)));
             continue;
         }
 
@@ -90,7 +90,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
             file = iter->FilePath();
             file = file != nullptr ? file : "<unknown>";
 
-            trace.push_back(fmt::format("   [{}] Line {}, {}::{}", index, iter->LineNumber(), file, func));
+            trace.emplace_back(std::move(fmt::format("   [{}] Line {}, {}::{}", index, iter->LineNumber(), file, func)));
         }
     }
 
@@ -140,7 +140,7 @@ try_serverlang:
     } else if ((target >= 1) && (target <= playerhelpers->GetMaxClients())) {
         langid = translator->GetClientLanguage(target);
     } else {
-        throw std::runtime_error(fmt::format("Translation failed: invalid client index {} (arg {})", target, *arg));
+        throw std::runtime_error(std::move(fmt::format("Translation failed: invalid client index {} (arg {})", target, *arg)));
     }
 
     if (pPhrases->FindTranslation(key, langid, &pTrans) != Trans_Okay) {
@@ -149,10 +149,10 @@ try_serverlang:
             goto try_serverlang;
         } else if (langid != SOURCEMOD_LANGUAGE_ENGLISH) {
             if (pPhrases->FindTranslation(key, SOURCEMOD_LANGUAGE_ENGLISH, &pTrans) != Trans_Okay) {
-                throw std::runtime_error(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg));
+                throw std::runtime_error(std::move(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg)));
             }
         } else {
-            throw std::runtime_error(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg));
+            throw std::runtime_error(std::move(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg)));
         }
     }
 
@@ -163,7 +163,7 @@ try_serverlang:
 
         /* Check if we're going to over the limit */
         if ((*arg) + (max_params - 1) > (size_t)params[0]) {
-            throw std::runtime_error(fmt::format("Translation string formatted incorrectly - missing at least {} parameters (arg {})", ((*arg + (max_params - 1)) - params[0]), *arg));
+            throw std::runtime_error(std::move(fmt::format("Translation string formatted incorrectly - missing at least {} parameters (arg {})", ((*arg + (max_params - 1)) - params[0]), *arg)));
         }
 
         /**
@@ -600,7 +600,7 @@ reswitch:
             }
         case 'c': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *c;
@@ -611,7 +611,7 @@ reswitch:
             }
         case 'b': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -623,7 +623,7 @@ reswitch:
         case 'd':
         case 'i': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -634,7 +634,7 @@ reswitch:
             }
         case 'u': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -645,7 +645,7 @@ reswitch:
             }
         case 'f': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -656,7 +656,7 @@ reswitch:
             }
         case 'L': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -667,7 +667,7 @@ reswitch:
                     const char *auth;
                     int userid;
                     if (!DescribePlayer(*value, &name, &auth, &userid)) {
-                        throw std::runtime_error(fmt::format("Client index {} is invalid (arg {})", static_cast<int>(*value), arg));
+                        throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                     }
 
                     ke::SafeSprintf(buffer, sizeof(buffer), "%s<%d><%s><>", name, userid, auth);
@@ -680,7 +680,7 @@ reswitch:
             }
         case 'N': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -689,7 +689,7 @@ reswitch:
                 const char *name = "Console";
                 if (*value) {
                     if (!DescribePlayer(*value, &name, nullptr, nullptr)) {
-                        throw std::runtime_error(fmt::format("Client index {} is invalid (arg {})", static_cast<int>(*value), arg));
+                        throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                     }
                 }
                 AddString(out, name, width, prec, flags);
@@ -698,7 +698,7 @@ reswitch:
             }
         case 's': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *str;
@@ -709,7 +709,7 @@ reswitch:
             }
         case 'T': {
                 if (arg + 1 > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *key;
@@ -722,7 +722,7 @@ reswitch:
             }
         case 't': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *key;
@@ -734,7 +734,7 @@ reswitch:
             }
         case 'X': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -746,7 +746,7 @@ reswitch:
             }
         case 'x': {
                 if (arg > args) {
-                    throw std::runtime_error(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;

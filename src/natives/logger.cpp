@@ -494,7 +494,7 @@ static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
 
     auto lvl = log4sp::cell_to_level(params[2]);
 
-    logger->log(lvl, msg);
+    logger->log(lvl, std::move(msg));
     return 0;
 }
 
@@ -587,7 +587,7 @@ static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log(loc, lvl, msg);
+    logger->log(loc, lvl, std::move(msg));
     return 0;
 }
 
@@ -695,7 +695,7 @@ static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
     auto lvl  = log4sp::cell_to_level(params[5]);
     auto loc  = spdlog::source_loc{file, line, func};
 
-    logger->log(loc, lvl, msg);
+    logger->log(loc, lvl, std::move(msg));
     return 0;
 }
 
@@ -803,7 +803,7 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
 
     auto lvl = log4sp::cell_to_level(params[2]);
 
-    logger->log(lvl, "Stack trace requested: {}", msg);
+    logger->log(lvl, "Stack trace requested: {}", std::move(msg));
 
     auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
     logger->log(lvl, "Called from: {}", plugin);
@@ -878,6 +878,8 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
+    ctx->ReportError(msg);
+
     logger->log(lvl, "Exception reported: {}", msg);
 
     auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
@@ -889,7 +891,6 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
         logger->log(lvl, iter.c_str());
     }
 
-    ctx->ReportError(msg);
     return 0;
 }
 
@@ -921,8 +922,10 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
+    ctx->ReportError(msg.c_str());
+
     auto lvl = log4sp::cell_to_level(params[2]);
-    logger->log(lvl, "Exception reported: {}", msg);
+    logger->log(lvl, "Exception reported: {}", std::move(msg));
 
     auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
     logger->log(lvl, "Blaming: {}", plugin);
@@ -930,10 +933,8 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     auto stackTrace = log4sp::get_stack_trace(ctx);
     for (auto iter  : stackTrace)
     {
-        logger->log(lvl, iter.c_str());
+        logger->log(lvl, iter);
     }
-
-    ctx->ReportError(msg.c_str());
     return 0;
 }
 
@@ -962,6 +963,8 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
+    ctx->ReportError(msg);
+
     auto lvl = log4sp::cell_to_level(params[2]);
     logger->log(lvl, "Exception reported: {}", msg);
 
@@ -971,10 +974,9 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     auto stackTrace = log4sp::get_stack_trace(ctx);
     for (auto iter  : stackTrace)
     {
-        logger->log(lvl, iter.c_str());
+        logger->log(lvl, iter);
     }
 
-    ctx->ReportError(msg);
     return 0;
 }
 
@@ -1030,7 +1032,7 @@ static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->trace(msg);
+    logger->trace(std::move(msg));
     return 0;
 }
 
@@ -1115,7 +1117,7 @@ static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->debug(msg);
+    logger->debug(std::move(msg));
     return 0;
 }
 
@@ -1200,7 +1202,7 @@ static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->info(msg);
+    logger->info(std::move(msg));
     return 0;
 }
 
@@ -1285,7 +1287,7 @@ static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->warn(msg);
+    logger->warn(std::move(msg));
     return 0;
 }
 
@@ -1370,7 +1372,7 @@ static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->error(msg);
+    logger->error(std::move(msg));
     return 0;
 }
 
@@ -1455,7 +1457,7 @@ static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->critical(msg);
+    logger->critical(std::move(msg));
     return 0;
 }
 
