@@ -21,7 +21,7 @@ namespace log4sp {
  *   3. 通过继承添加 error_handler()
  *   4. 修改源码，将 async_logger 设为了非 final 类
  */
-class logger_proxy : virtual public spdlog::logger {
+class logger_proxy : public spdlog::logger {
 public:
     explicit logger_proxy(std::string name)
         : spdlog::logger(std::move(name)), error_forward_(nullptr) {}

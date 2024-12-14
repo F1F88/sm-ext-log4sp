@@ -34,13 +34,11 @@ inline void logger_proxy::set_error_forward(IChangeableForward *forward) {
 
 inline void logger_proxy::error_handler(spdlog::source_loc loc, const std::string &msg) {
     if (error_forward_ != nullptr) {
-        Handle_t handle = log4sp::logger_handler::instance().find_handle(name());
-        error_forward_->PushCell(handle);
         error_forward_->PushString(msg.c_str());
         error_forward_->Execute();
     } else {
         static size_t err_counter = 0;
-        spdlog::log(loc, spdlog::level::err, "[{} ERROR #{}] {}", name(), ++err_counter, msg);
+        spdlog::log(loc, spdlog::level::err, "[#{}] [{}] {}", ++err_counter, name(), msg);
     }
 }
 

@@ -3,6 +3,8 @@
 
 #include "spdlog/async_logger.h"
 #include "spdlog/sinks/dist_sink.h"
+#include "spdlog/details/backend_worker.h"
+#include "spdlog/details/thread_pool.h"
 
 #include "log4sp/proxy/logger_proxy.h"
 
@@ -12,18 +14,16 @@ namespace log4sp {
 /**
  * 为了实现这个类，我们修改了 spdlog::async_logger 源码
  */
-class async_logger_proxy final : public spdlog::async_logger,
-                                 public logger_proxy {
-    friend class spdlog::details::thread_pool;
-
+class async_logger_proxy final : public logger_proxy,
+                                 public spdlog::details::backend_worker {
 public:
     async_logger_proxy(std::string name,
                        std::shared_ptr<spdlog::sinks::dist_sink_mt> sink,
                        std::weak_ptr<spdlog::details::thread_pool> tp,
                        spdlog::async_overflow_policy policy = spdlog::async_overflow_policy::block)
-        : spdlog::logger(std::move(name), std::move(sink)),
-          spdlog::async_logger(std::move(name), std::move(sink), std::move(tp), policy),
-          log4sp::logger_proxy(std::move(name), std::move(sink)) {}
+        : logger_proxy(std::move(name), std::move(sink)),
+          thread_pool_(std::move(tp)),
+          overflow_policy_(policy) {}
 
     ~async_logger_proxy() override;
 
@@ -38,10 +38,12 @@ public:
 protected:
     void sink_it_(const spdlog::details::log_msg &msg) override;
     void flush_() override;
-    void backend_sink_it_(const spdlog::details::log_msg &incoming_log_msg);
-    void backend_flush_();
+    void backend_sink_it_(const spdlog::details::log_msg &incoming_log_msg) override;
+    void backend_flush_() override;
 
 private:
+    std::weak_ptr<spdlog::details::thread_pool> thread_pool_;
+    spdlog::async_overflow_policy overflow_policy_;
     std::mutex error_mutex_;
 };
 
