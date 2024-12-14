@@ -27,13 +27,13 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
     cell_t *sinks;
     ctx->LocalToPhysAddr(params[2], &sinks);
 
-    auto numSinks = static_cast<unsigned int>(params[3]);
+    auto numSinks = static_cast<size_t>(params[3]);
     std::vector<spdlog::sink_ptr> sinkVector(numSinks, nullptr);
 
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
-    for (unsigned int i = 0; i < numSinks; ++i)
+    for (size_t i = 0; i < numSinks; ++i)
     {
         auto handle = static_cast<Handle_t>(sinks[i]);
 
@@ -232,7 +232,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     auto async = static_cast<bool>(params[6]);
     if (!async)
     {
-        auto sink     = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        auto sink   = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
         auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -1722,7 +1722,7 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_Cell, Param_String);
+    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
     if (forward == nullptr)
     {
         ctx->ReportError("SM error! Create error handler forward failure.");
