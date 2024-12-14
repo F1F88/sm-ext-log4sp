@@ -15,21 +15,16 @@
 methodmap Sink < Handle
 {
     /**
-     * Get the current logging level.
+     * Gets the sink log level.
      *
-     * @return          The current logging level.
-     * @error           Invalid sink handle.
+     * @return          The sink log level.
      */
     public native LogLevel GetLevel();
 
     /**
-     * Set the logging level.
+     * Sets the sink log level.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
-     *
-     * @param lvl       Logging level enum.
-     * @error           Invalid sink handle.
+     * @param lvl       Log level enum.
      */
     public native void SetLevel(LogLevel lvl);
 
@@ -37,79 +32,53 @@ methodmap Sink < Handle
      * Change log pattern.
      *
      * @note pattern flags: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
      *
      * @param pattern   Logger sinks pattern.
      * @param type      Pattern time.
-     * @error           Invalid sink handle.
      */
     public native void SetPattern(const char[] pattern);
 
     /**
-     * Return true logging is enabled for the given level.
+     * Gets whether logging is enabled for the given log level.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
-     *
-     * @param lvl       Logging level enum.
-     * @return          True if logging is enabled for the given level.
-     * @error           Invalid sink handle.
+     * @param lvl       Log level enum.
+     * @return          True if logging is enabled for the given log level.
      */
     public native bool ShouldLog(LogLevel lvl);
 
     /**
-     * Logging a Message.
+     * Logs a message.
      *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
-     *
-     * @param name      The name of the logger. This is used to identify the logger instance.
-     * @param lvl       Logging level.
-     * @param msg       Logging message.
-     * @error           Invalid sink handle.
+     * @param name      The name of a logger.
+     * @param lvl       Log level enum.
+     * @param msg       Log message.
      */
     public native void Log(const char[] name, LogLevel lvl, const char[] msg);
-    public native void LogAmxTpl(const char[] name, LogLevel lvl, const char[] fmt, any ...);
-    // public native void LogFmtTpl(LogLevel lvl, const char[] fmt, any ...);
-
-    /**
-     * Logging a Message with scripted source code location.
-     *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
-     *
-     * @param name      The name of the logger. This is used to identify the logger instance.
-     * @param lvl       Logging level.
-     * @param msg       Logging message.
-     * @error           Invalid sink handle.
-     */
-    public native void LogSrc(const char[] name, LogLevel lvl, const char[] msg);
-    public native void LogSrcAmxTpl(const char[] name, LogLevel lvl, const char[] fmt, any ...);
-    // public native void LogSrcFmtTpl(LogLevel lvl, const char[] fmt, any ...);
-
-    /**
-     * Logging a Message with code location.
-     *
-     * @note The native will log a message and:
-     *       warn  - If lvl out of bounds - Fix lvl to nearest bounds.
-     *
-     * @param file      Source code location File name.
-     * @param line      Source code location File line number.
-     * @param func      Source code location Function name.
-     * @param name      The name of the logger. This is used to identify the logger instance.
-     * @param lvl       Logging level.
-     * @param msg       Logging message.
-     * @error           Invalid sink handle.
-     */
-    public native void LogLoc(const char[] file, int line, const char[] func, const char[] name, LogLevel lvl, const char[] msg);
-    public native void LogLocAmxTpl(const char[] file, int line, const char[] func, const char[] name, LogLevel lvl, const char[] fmt, any ...);
-    // public native void LogLocFmtTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
 
     /**
      * Manual flush logger contents.
-     *
-     * @error           Invalid sink handle.
      */
     public native void Flush();
 }
+
+
+/**
+ * The filter is called at sink::sink_it_.
+ * filter return Plugin_Continue to allow sink it, others skip sink it to this client.
+ *
+ * extension only call filter when the client in game, so you don't need this code: "if (IsClientInGame(client)) ".
+ * By default (no filter is set), the sink will sink to all in game clients.
+ *
+ * Param msg is a message that has been formatted but not yet formatted by a pattern.
+ *
+ * For example, only sink to alive client
+ *      Action FilterAlivePlayer(int client) {
+ *          return IsPlayerAlive(client) ? Plugin_Continue : Plugin_Handled;
+ *      }
+ */
+typeset SinkClientFilter
+{
+    function Action (int client);
+    function Action (int client, const char[] name, LogLevel lvl);
+    function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
+};

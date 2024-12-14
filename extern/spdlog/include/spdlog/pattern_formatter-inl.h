@@ -10,7 +10,11 @@
 #include <spdlog/details/fmt_helper.h>
 #include <spdlog/details/log_msg.h>
 #include <spdlog/details/os.h>
-#include <spdlog/mdc.h>
+
+#ifndef SPDLOG_NO_TLS
+    #include <spdlog/mdc.h>
+#endif
+
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/formatter.h>
 
@@ -176,7 +180,7 @@ public:
 
 // Abbreviated month
 static const std::array<const char *, 12> months{
-    {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"}};
+    {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}};
 
 template <typename ScopedPadder>
 class b_formatter final : public flag_formatter {
@@ -693,15 +697,18 @@ public:
     #pragma warning(disable : 4127)  // consider using 'if constexpr' instead
 #endif                               // _MSC_VER
     static const char *basename(const char *filename) {
-        //* Log4sp customization *//
-        // 先后顺序很重要，即使大部分插件是在 windows 下编译的
-        // 原因: '/' 是 Win 的特殊字符 , 但 '\' 不是 Linux 的特殊字符
-        const char *rv = std::strrchr(filename, '/');
-        if (rv != nullptr) {
-            return rv + 1;
-        } else {
-            const char *rv = std::strrchr(filename, '\\');
+        // if the size is 2 (1 character + null terminator) we can use the more efficient strrchr
+        // the branch will be elided by optimizations
+        if (sizeof(os::folder_seps) == 2) {
+            const char *rv = std::strrchr(filename, os::folder_seps[0]);
             return rv != nullptr ? rv + 1 : filename;
+        } else {
+            const std::reverse_iterator<const char *> begin(filename + std::strlen(filename));
+            const std::reverse_iterator<const char *> end(filename);
+
+            const auto it = std::find_first_of(begin, end, std::begin(os::folder_seps),
+                                               std::end(os::folder_seps) - 1);
+            return it != end ? it.base() : filename;
         }
     }
 #ifdef _MSC_VER
@@ -783,6 +790,7 @@ private:
 
 // Class for formatting Mapped Diagnostic Context (MDC) in log messages.
 // Example: [logger-name] [info] [mdc_key_1:mdc_value_1 mdc_key_2:mdc_value_2] some message
+#ifndef SPDLOG_NO_TLS
 template <typename ScopedPadder>
 class mdc_formatter : public flag_formatter {
 public:
@@ -821,6 +829,7 @@ public:
         }
     }
 };
+#endif
 
 // Full info formatter
 // pattern: [%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%s:%#] %v
@@ -898,6 +907,7 @@ public:
             dest.push_back(' ');
         }
 
+#ifndef SPDLOG_NO_TLS
         // add mdc if present
         auto &mdc_map = mdc::get_context();
         if (!mdc_map.empty()) {
@@ -906,6 +916,7 @@ public:
             dest.push_back(']');
             dest.push_back(' ');
         }
+#endif
         // fmt_helper::append_string_view(msg.msg(), dest);
         fmt_helper::append_string_view(msg.payload, dest);
     }
@@ -913,7 +924,11 @@ public:
 private:
     std::chrono::seconds cache_timestamp_{0};
     memory_buf_t cached_datetime_;
+
+#ifndef SPDLOG_NO_TLS
     mdc_formatter<null_scoped_padder> mdc_formatter_{padding_info{}};
+#endif
+
 };
 
 }  // namespace details
@@ -1208,9 +1223,11 @@ SPDLOG_INLINE void pattern_formatter::handle_flag_(char flag, details::padding_i
                     padding));
             break;
 
+#ifndef SPDLOG_NO_TLS  // mdc formatter requires TLS support
         case ('&'):
             formatters_.push_back(details::make_unique<details::mdc_formatter<Padder>>(padding));
             break;
+#endif
 
         default:  // Unknown flag appears as is
             auto unknown_flag = details::make_unique<details::aggregate_formatter>();

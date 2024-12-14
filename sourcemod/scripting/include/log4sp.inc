@@ -56,17 +56,19 @@
 #include <log4sp/sinks/rotating_file_sink>
 #include <log4sp/sinks/daily_file_sink>
 #include <log4sp/sinks/client_console_sink>
+#include <log4sp/sinks/client_chat_sink>
 
 #else
 
-#include <log4sp_empty/common>
-#include <log4sp_empty/logger>
-#include <log4sp_empty/sinks/sink>
-#include <log4sp_empty/sinks/server_console_sink>
-#include <log4sp_empty/sinks/base_file_sink>
-#include <log4sp_empty/sinks/rotating_file_sink>
-#include <log4sp_empty/sinks/daily_file_sink>
-#include <log4sp_empty/sinks/client_console_sink>
+#include <log4sp_no_ext/common>
+#include <log4sp_no_ext/logger>
+#include <log4sp_no_ext/sinks/sink>
+#include <log4sp_no_ext/sinks/server_console_sink>
+#include <log4sp_no_ext/sinks/base_file_sink>
+#include <log4sp_no_ext/sinks/rotating_file_sink>
+#include <log4sp_no_ext/sinks/daily_file_sink>
+#include <log4sp_no_ext/sinks/client_console_sink>
+#include <log4sp_no_ext/sinks/client_chat_sink>
 
 #endif
 
@@ -80,7 +82,7 @@
 /**
  * Do not edit below this line!
  */
-#define LOG4SP_EXT_VERSION  "1.4.1"
+#define LOG4SP_EXT_VERSION              "1.5.0"
 
 public Extension __ext_log4sp =
 {

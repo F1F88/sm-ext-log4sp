@@ -9,17 +9,17 @@
 
 #include <chrono>
 #include <functional>
-#include <future>
 #include <memory>
 #include <thread>
 #include <vector>
 
 namespace spdlog {
-class async_logger;
 
 namespace details {
+//* Log4sp customization *//
+class backend_worker;
 
-using async_logger_ptr = std::shared_ptr<spdlog::async_logger>;
+using backend_worker_ptr = std::shared_ptr<backend_worker>;
 
 enum class async_msg_type { log, flush, terminate };
 
@@ -27,8 +27,7 @@ enum class async_msg_type { log, flush, terminate };
 // Movable only. should never be copied
 struct async_msg : log_msg_buffer {
     async_msg_type msg_type{async_msg_type::log};
-    async_logger_ptr worker_ptr;
-    std::promise<void> flush_promise;
+    backend_worker_ptr worker_ptr;
 
     async_msg() = default;
     ~async_msg() = default;
@@ -55,23 +54,15 @@ struct async_msg : log_msg_buffer {
 #endif
 
     // construct from log_msg with given type
-    async_msg(async_logger_ptr &&worker, async_msg_type the_type, const details::log_msg &m)
+    async_msg(backend_worker_ptr &&worker, async_msg_type the_type, const details::log_msg &m)
         : log_msg_buffer{m},
           msg_type{the_type},
-          worker_ptr{std::move(worker)},
-          flush_promise{} {}
+          worker_ptr{std::move(worker)} {}
 
-    async_msg(async_logger_ptr &&worker, async_msg_type the_type)
+    async_msg(backend_worker_ptr &&worker, async_msg_type the_type)
         : log_msg_buffer{},
           msg_type{the_type},
-          worker_ptr{std::move(worker)},
-          flush_promise{} {}
-
-    async_msg(async_logger_ptr &&worker, async_msg_type the_type, std::promise<void> &&promise)
-        : log_msg_buffer{},
-          msg_type{the_type},
-          worker_ptr{std::move(worker)},
-          flush_promise{std::move(promise)} {}
+          worker_ptr{std::move(worker)} {}
 
     explicit async_msg(async_msg_type the_type)
         : async_msg{nullptr, the_type} {}
@@ -95,11 +86,10 @@ public:
     thread_pool(const thread_pool &) = delete;
     thread_pool &operator=(thread_pool &&) = delete;
 
-    void post_log(async_logger_ptr &&worker_ptr,
+    void post_log(backend_worker_ptr &&worker_ptr,
                   const details::log_msg &msg,
                   async_overflow_policy overflow_policy);
-    std::future<void> post_flush(async_logger_ptr &&worker_ptr,
-                                 async_overflow_policy overflow_policy);
+    void post_flush(backend_worker_ptr &&worker_ptr, async_overflow_policy overflow_policy);
     size_t overrun_counter();
     void reset_overrun_counter();
     size_t discard_counter();
