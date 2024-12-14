@@ -76,6 +76,8 @@ Action CB_CMD(int client, int args)
     TestSinkLog(sink4);
     delete sink4;
 
+    TestNullSink();
+
     return Plugin_Handled;
 }
 
@@ -332,4 +334,15 @@ Action CB_CMD_ThrowError2(int client, int args)
     PrintToServer("--- 测试是否继续执行 2 ---");
     delete log;
     return Plugin_Handled;
+}
+
+void TestNullSink()
+{
+    PrintToServer("========== Test Null Sink ==========");
+    Sink sinks[1];
+    Logger log = new Logger("test-null-sink", sinks, 0);
+
+    log.Info("lalala");
+    delete log;
+    PrintToServer("========== Test Null Sink End ==========");
 }
