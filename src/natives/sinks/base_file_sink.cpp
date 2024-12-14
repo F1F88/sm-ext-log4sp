@@ -88,10 +88,50 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
     return 0;
 }
 
+/**
+ * public native void Truncate();
+ */
+static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (sink == nullptr)
+    {
+        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        return 0;
+    }
+
+    {
+        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
+        if (realSink != nullptr)
+        {
+            realSink->truncate();
+            return 0;
+        }
+    }
+
+    {
+        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink);
+        if (realSink != nullptr)
+        {
+            realSink->truncate();
+            return 0;
+        }
+    }
+
+    ctx->ReportError("Not a valid BaseFileSink handle. (hdl: %d)", handle);
+    return 0;
+}
+
 const sp_nativeinfo_t BaseFileSinkNatives[] =
 {
     {"BaseFileSink.BaseFileSink",               BaseFileSink},
     {"BaseFileSink.GetFilename",                BaseFileSink_GetFilename},
+    {"BaseFileSink.Truncate",                   BaseFileSink_Truncate},
 
     {nullptr,                                   nullptr}
 };

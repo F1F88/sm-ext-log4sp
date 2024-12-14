@@ -28,4 +28,6 @@ methodmap BaseFileSink < Sink
      * @param maxlen    Maximum length of the buffer.
      */
     public native void GetFilename(char[] buffer, int maxlen);
+
+    public native void Truncate();
 }

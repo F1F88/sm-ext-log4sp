@@ -16,4 +16,6 @@ methodmap BaseFileSink < Sink
     }
 
     public void GetFilename(char[] buffer, int maxlen) {}
+
+    public void Truncate() {}
 }
