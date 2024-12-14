@@ -384,8 +384,10 @@ void Test_Logger_Error_Handler(Logger logger)
 }
 
 
-void ErrorHandler(const char[] name, const char[] msg)
+void ErrorHandler(Logger logger, const char[] msg)
 {
     static int cnt = 0;
-    PrintToServer("custom error handler: %d | hdl=%d | name=%s | msg=%s |", ++cnt, Logger.Get(name), name, msg);
+    char name[256];
+    logger.GetName(name, sizeof(name));
+    PrintToServer("custom error handler: %d | hdl=%d | name=%s | msg=%s |", ++cnt, logger, name, msg);
 }

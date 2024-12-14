@@ -16,54 +16,46 @@ namespace log4sp {
  *   4. async_logger 被 final 修饰，无法继承，重写可能还涉及线程池部分
  *
  * 方案：
- *   1. 通过继承 logger_proxy 接口，重写接口解决并发安全问题
- *   2. 通过继承 spdlog::logger 类，重写 sink_it_ 和 flush_ 捕获到异常时的处理方案（调用 logger_proxy 接口的 error_handle 方法）
+ *   1. 通过继承添加 add_sink 和 remove_sink 方法解决
+ *   2. 通过继承重写 sink_it_ 和 flush_ 捕获到异常时的处理方案（）
  *   3. 通过继承添加 error_handler()
  *   4. 修改源码，将 async_logger 设为了非 final 类
  */
-class logger_proxy {
+class logger_proxy : virtual public spdlog::logger {
 public:
-    logger_proxy() : error_forward_(nullptr) {}
-    ~logger_proxy() {
-        release_error_forward();
-    }
+    explicit logger_proxy(std::string name)
+        : spdlog::logger(std::move(name)), error_forward_(nullptr) {}
 
-    virtual void add_sink(spdlog::sink_ptr sink) = 0;
+    template <typename It>
+    logger_proxy(std::string name, It begin, It end)
+        : spdlog::logger(std::move(name), begin, end), error_forward_(nullptr) {}
 
-    virtual void remove_sink(spdlog::sink_ptr sink) = 0;
+    logger_proxy(std::string name, spdlog::sink_ptr single_sink)
+        : spdlog::logger(std::move(name), std::move(single_sink)), error_forward_(nullptr) {}
 
-    virtual void set_error_forward(IChangeableForward *forward) {
-        if (error_forward_ != nullptr) {
-            forwards->ReleaseForward(error_forward_);
-        }
-        error_forward_ = forward;
-    }
+    logger_proxy(std::string name, spdlog::sinks_init_list sinks)
+        : spdlog::logger(std::move(name), std::move(sinks)), error_forward_(nullptr) {}
 
-    virtual void release_error_forward() {
-        if (error_forward_ != nullptr) {
-            forwards->ReleaseForward(error_forward_);
-            error_forward_ = nullptr;
-        }
-    }
+    ~logger_proxy() override;
 
-    virtual void error_handler(spdlog::source_loc loc, const std::string &name, const std::string &msg) {
-        if (error_forward_ != nullptr) {
-            SPDLOG_TRACE("loc: Line {}, {}::{}", loc.line, loc.filename, loc.funcname);
-            SPDLOG_TRACE("name: {}", name);
+    virtual void add_sink(spdlog::sink_ptr sink);
 
-            error_forward_->PushString(name.c_str());
-            error_forward_->PushString(msg.c_str());
-            error_forward_->Execute();
-        } else {
-            static size_t err_counter = 0;
-            spdlog::log(loc, spdlog::level::err, "[{}] [{}] {}", ++err_counter, name, msg);
-        }
-    }
+    virtual void remove_sink(spdlog::sink_ptr sink);
+
+    virtual void set_error_forward(IChangeableForward *forward);
+
+    // sink_it_ 和 flush_ 遇到异常时将调用这个以替代 spdlog::logger 的 err_handler_
+    virtual void error_handler(spdlog::source_loc loc, const std::string &msg);
 
 protected:
     IChangeableForward *error_forward_;     // 通过 set_error_forward() 赋值
+
+    // 重写以在捕获到异常时自定义处理方案
+    void sink_it_(const spdlog::details::log_msg &msg) override;
+    void flush_() override;
 };
 
 
 }       // namespace log4sp
+#include "log4sp/proxy/logger_proxy-inl.h"
 #endif  // _LOG4SP_PROXY_LOGGER_PROXY_H_

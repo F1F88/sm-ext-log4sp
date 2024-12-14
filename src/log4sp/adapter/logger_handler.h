@@ -6,12 +6,10 @@
 #include "extension.h"
 
 
-namespace spdlog {
-    class logger;
-}
-
-
 namespace log4sp {
+
+class logger_proxy;
+
 
 /**
  * SourceMod handlesys 的适配器
@@ -51,7 +49,7 @@ public:
      * @param error     Optional pointer to store an error code on failure (undefined on success).
      * @return          object 对象的 handle 或 BAD_HANDLE 表示创建失败
      */
-    Handle_t create_handle(std::shared_ptr<spdlog::logger> object,
+    Handle_t create_handle(std::shared_ptr<logger_proxy> object,
                            const HandleSecurity *security,
                            const HandleAccess *access,
                            HandleError *error);
@@ -64,9 +62,9 @@ public:
      * @param error     HandleError error code.
      * @return          object 智能指针或 nullptr 表示读取失败.
      */
-    std::shared_ptr<spdlog::logger> read_handle(Handle_t handle,
-                                                HandleSecurity *security,
-                                                HandleError *error);
+    std::shared_ptr<logger_proxy> read_handle(Handle_t handle,
+                                              HandleSecurity *security,
+                                              HandleError *error);
 
     /**
      * @brief 根据 logger name 查找是否已创建为 handle
@@ -101,7 +99,7 @@ private:
 
     HandleType_t handle_type_;
     std::unordered_map<std::string, Handle_t> handles_;
-    std::unordered_map<std::string, std::shared_ptr<spdlog::logger>> loggers_;
+    std::unordered_map<std::string, std::shared_ptr<logger_proxy>> loggers_;
 };
 
 
