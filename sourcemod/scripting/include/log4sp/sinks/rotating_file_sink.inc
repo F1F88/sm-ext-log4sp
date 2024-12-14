@@ -43,6 +43,8 @@ methodmap RotatingFileSink < Sink
      */
     public native void GetFilename(char[] buffer, int maxlength);
 
+    public native void RotateNow();
+
     /**
      * Calc filename according to index and file extension if exists.
      * e.g. calcFilename("logs/mylog.txt, 3) => "logs/mylog.3.txt".

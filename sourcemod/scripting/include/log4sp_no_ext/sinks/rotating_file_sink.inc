@@ -17,5 +17,7 @@ methodmap RotatingFileSink < Sink
 
     public void GetFilename(char[] buffer, int maxlength) {}
 
+    public void RotateNow() {}
+
     public static void CalcFilename(const char[] file, int index, char[] buffer, int maxlength) {}
 }

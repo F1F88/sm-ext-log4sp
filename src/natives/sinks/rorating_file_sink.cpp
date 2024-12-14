@@ -108,6 +108,45 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
 }
 
 /**
+ * public native void RotateNow();
+ */
+static cell_t RotatingFileSink_RotateNow(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (sink == nullptr)
+    {
+        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        return 0;
+    }
+
+    {
+        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
+        if (realSink != nullptr)
+        {
+            realSink->rotate_now();
+            return 0;
+        }
+    }
+
+    {
+        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(sink);
+        if (realSink != nullptr)
+        {
+            realSink->rotate_now();
+            return 0;
+        }
+    }
+
+    ctx->ReportError("Not a valid RotatingFileSink handle. (hdl: %d)", handle);
+    return 0;
+}
+
+/**
  * public native void CalcFilename(const char[] file, int index, char[] buffer, int maxlength);
  */
 static cell_t RotatingFileSink_CalcFilename(IPluginContext *ctx, const cell_t *params)
@@ -125,6 +164,7 @@ const sp_nativeinfo_t RotatingFileSinkNatives[] =
 {
     {"RotatingFileSink.RotatingFileSink",       RotatingFileSink},
     {"RotatingFileSink.GetFilename",            RotatingFileSink_GetFilename},
+    {"RotatingFileSink.RotateNow",              RotatingFileSink_RotateNow},
     {"RotatingFileSink.CalcFilename",           RotatingFileSink_CalcFilename},
 
     {nullptr,                                   nullptr}
