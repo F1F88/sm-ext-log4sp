@@ -18,9 +18,9 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
 2. Support custom log filtering.
 
-   - For test, you can use low log level (such as `trace`, `debug`) to increase log message and find bugs.
+   - For test, using lower log level (e.g., `trace`, `debug`) can increase log messages and help find problems.
 
-   - For release, you can use high log level (such as: `warn`, `error`) to reduce log message and improve performance.
+   - For release, using higher log level (e.g., `warn`, `error`) can reduce log messages and thus improve performance.
 
 3. Support custom log message pattern.
 
@@ -36,7 +36,7 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
 4. Support custom log message flush level.
 
-   - By default, the Log4sp extension flush the log buffer when [it sees fit in order](https://github.com/gabime/spdlog/wiki/7.-Flush-policy) to achieve good performance.
+   - By default, the log4sp extension flush the log buffer when [it sees fit in order](https://github.com/gabime/spdlog/wiki/7.-Flush-policy) to achieve good performance.
 
    - `Logger.Flush()` can be manually flushed.
 
@@ -56,9 +56,9 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
 8. Support for "unlimited size" logging messages.
 
-   - For `Logger.LogAmxTpl()` logging methods, the maximum length of the log message is 2048 characters, and any excess will be truncated.
+   - For `Logger.LogAmxTpl()` method, the maximum length of the log message is 2048 characters, and the excess will be truncated.
 
-   - For `Logger.Log()` and `Logger.LogEx()` logging methods, the maximum length of the message is not limited. (theoretically subject to available memory)
+   - For `Logger.Log()` and `Logger.LogEx()` methods, the length of the log message is not limited (theoretically subject to available memory)
 
 9. Supports logging to multiple sinks at once.
 

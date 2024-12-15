@@ -18,9 +18,9 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
 2. 支持自定义日志过滤
 
-   - 对于测试环境，可以使用低日志级别（如：`trace`、`debug`） 增加日志输出，从而发现问题
+   - 对于测试环境，使用较低的日志级别（如：`trace`、`debug`）可以增加日志输出，从而排查问题
 
-   - 对于发布环境，可以使用高日志级别（如：`warn`、`error`）减少日志输出，从而提高性能
+   - 对于发布环境，使用较高的日志级别（如：`warn`、`error`）可以减少日志输出，从而提高性能
 
 3. 支持自定义日志消息模板
 
@@ -36,7 +36,7 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
 4. 支持自定义日志消息刷新级别
 
-   - 默认情况下，Log4sp 拓展会在[认为合适的时候](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)刷新日志缓冲区，以实现更高的性能
+   - 默认情况下，log4sp 拓展会在[认为合适时](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)刷新日志缓冲区，以实现更高的性能
 
    - `Logger.Flush()` 可以手动刷新
 
@@ -56,9 +56,9 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
 8. 支持 "无限长度" 的日志消息
 
-   - 对于 `Logger.LogAmxTpl()` 的记录日志方法，输出的日志消息最大长度为 2048 字符，超出的部分会被截断
+   - 对于 `Logger.LogAmxTpl()` 方法，日志消息的最大长度为 2048 字符，超出的部分会被截断
 
-   - 对于 `Logger.Log()` 和 `Logger.LogEx()`的记录日志方法，输出的日志消息长度不受限制（理论上取决于可用内存）
+   - 对于 `Logger.Log()` 和 `Logger.LogEx()`方法，日志消息的长度不受限制（理论上取决于可用内存）
 
 9. 支持一次日志操作写入多个输出源
 
