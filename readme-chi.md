@@ -20,7 +20,7 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
    - 对于测试环境，可以使用低日志级别（如：`trace`、`debug`） 增加日志输出，从而发现问题
 
-   - 对于线上环境，可以使用高日志级别（如：`warn`、`error`）减少日志输出，从而提高性能
+   - 对于发布环境，可以使用高日志级别（如：`warn`、`error`）减少日志输出，从而提高性能
 
 3. 支持自定义日志消息模板
 
@@ -38,15 +38,17 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
    - 默认情况下，Log4sp 拓展会在[认为合适的时候](https://github.com/gabime/spdlog/wiki/7.-Flush-policy)刷新日志缓冲区，以实现更高的性能
 
-   - 你可以使用 `Logger.Flush()` 手动刷新，也可以使用 `Logger.FlushOn()` 自定义触发自动刷新的最低日志级别
+   - `Logger.Flush()` 可以手动刷新
+
+   - `Logger.FlushOn()` 可以自定义触发自动刷新的最低日志级别
 
 5. 支持 "回溯" 日志消息
 
-   - 可以将 `trace` 和 `debug` 日志消息存储在环形缓冲区中，后续按需输出
+   - 将 `trace` 和 `debug` 日志消息存储在环形缓冲区中，后续按需输出
 
 6. 支持服务器控制台菜单
 
-   - 服务器控制台指令 "sm log4sp" 可以动态的修改 日志级别、刷新级别、日志模板、"回溯" 等
+   - 服务器控制台指令 **"sm log4sp"** 可以动态的修改 日志级别、刷新级别、日志模板、"回溯" 等
 
 7. 支持异步记录日志消息
 
@@ -54,9 +56,9 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
 8. 支持 "无限长度" 的日志消息
 
-   - 对于 `Logger.***AmxTpl()` 的记录日志方法，输出的日志消息最大长度为 2048 字符，超出的部分会被截断
+   - 对于 `Logger.LogAmxTpl()` 的记录日志方法，输出的日志消息最大长度为 2048 字符，超出的部分会被截断
 
-   - 对于非 `Logger.***AmxTpl()` 的记录日志方法，输出的日志消息长度不受限制（理论上取决于可用内存）
+   - 对于 `Logger.Log()` 和 `Logger.LogEx()`的记录日志方法，输出的日志消息长度不受限制（理论上取决于可用内存）
 
 9. 支持一次日志操作写入多个输出源
 
@@ -64,7 +66,7 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
    - 每一个输出源 (Sink) 都可以自定义不同的日志级别、日志模板
 
-      例如：当 Logger 拥有 `ServerConsoleSink`、`DailyFileSink` 时，相当于 `sv_logecho 1` 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
+      例如：当 Logger 拥有 `ServerConsoleSink` 和 `DailyFileSink` 时，相当于 `sv_logecho 1` 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
 10. 支持多种输出源
 
@@ -74,23 +76,19 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
     - ClientConsoleSink（类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
 
-    - DailyFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+    - DailyFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)，基于日期更替日志文件）
 
-      基于日期更替日志文件
-
-    - RotatingFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
-
-      基于文件大小更替日志文件
+    - RotatingFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)，基于文件大小更替日志文件）
 
     - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
 ## 文档
 
-详细的使用文档可以在这里查看：[wiki](https://github.com/F1F88/sm-ext-log4sp/wiki)
+详细的使用文档可以在这里查看：[wiki pages](https://github.com/F1F88/sm-ext-log4sp/wiki)
 
 ## 支持的游戏
 
-`log4sp.ext` 应该适用于 Linux 和 Windows 上的所有游戏
+`log4sp` 拓展应该适用于 Linux 和 Windows 上的所有游戏
 
 ## 性能测试
 

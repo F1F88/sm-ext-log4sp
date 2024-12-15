@@ -18,9 +18,9 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
 2. Support custom log filtering.
 
-   - For test environments, you can use low log level (such as `trace`, `debug`) to increase log message and find bugs.
+   - For test, you can use low log level (such as `trace`, `debug`) to increase log message and find bugs.
 
-   - For online environments, you can use high log level (such as: `warn`, `error`) to reduce log message and improve performance.
+   - For release, you can use high log level (such as: `warn`, `error`) to reduce log message and improve performance.
 
 3. Support custom log message pattern.
 
@@ -38,7 +38,9 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
    - By default, the Log4sp extension flush the log buffer when [it sees fit in order](https://github.com/gabime/spdlog/wiki/7.-Flush-policy) to achieve good performance.
 
-   - You can use `Logger.Flush()` to manually flush, or use `Logger.FlushOn()` set the minimum log level that will trigger automatic flush.
+   - `Logger.Flush()` can be manually flushed.
+
+   - `Logger.FlushOn()` can set the minimum log level that will trigger automatic flush.
 
 5. Support "backtrace" log messages.
 
@@ -46,7 +48,7 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
 6. Support server console commands.
 
-   - The server console command "sm log4sp" can dynamically modify the log level, flush level, log pattern, backtrace, etc.
+   - The server console command **"sm log4sp"** can dynamically modify the log level, flush level, log pattern, backtrace, etc.
 
 7. Support for asynchronous logging messages.
 
@@ -54,9 +56,9 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
 8. Support for "unlimited size" logging messages.
 
-   - For logging methods called `Logger.***AmxTpl()`, the maximum length of the log message is 2048 characters, and any excess will be truncated.
+   - For `Logger.LogAmxTpl()` logging methods, the maximum length of the log message is 2048 characters, and any excess will be truncated.
 
-   - For logging methods other than `Logger.***AmxTpl()`, the maximum length of the log message is unlimited. (theoretically, it depends on available memory)
+   - For `Logger.Log()` and `Logger.LogEx()` logging methods, the maximum length of the message is not limited. (theoretically subject to available memory)
 
 9. Supports logging to multiple sinks at once.
 
@@ -64,7 +66,7 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
    - Each Sink can customize different log level and log pattern.
 
-      For example: When the Logger has `ServerConsoleSink` and `DailyFileSink`, it is equivalent to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when `sv_Logecho 1`.
+      For example: When the Logger has `ServerConsoleSink` and `DailyFileSink`, it is equivalent to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when `sv_logecho 1`.
 
 10. Various log targets
 
@@ -74,23 +76,19 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
     - ClientConsoleSink（Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
 
-    - DailyFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
+    - DailyFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on date.）
 
-      Rotate log files based on date.
-
-    - RotatingFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)）
-
-      Rotate log files based on file size.
+    - RotatingFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on file size.）
 
     - ServerConsoleSink（Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
 ## Documentation
 
-Documentation can be found in the [wiki](https://github.com/F1F88/sm-ext-log4sp/wiki) pages.
+Documentation can be found in the [wiki pages](https://github.com/F1F88/sm-ext-log4sp/wiki).
 
 ## Supported Games
 
-`log4sp.ext` should work for all games on Linux and Windows.
+The `log4sp` extension should work for all games on Linux and Windows.
 
 ## Benchmarks
 
