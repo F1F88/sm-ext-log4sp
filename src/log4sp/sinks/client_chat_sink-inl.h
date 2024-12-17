@@ -9,7 +9,7 @@ namespace log4sp {
 namespace sinks {
 
 template <typename Mutex>
-client_chat_sink<Mutex>::~client_chat_sink() {
+inline client_chat_sink<Mutex>::~client_chat_sink() {
     std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
     if (player_filter_forward_ != nullptr) {
         forwards->ReleaseForward(player_filter_forward_);
