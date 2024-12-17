@@ -2,9 +2,9 @@
 
 # Logging for SourcePawn
 
-Log4sp is a powerful [SourceMod](https://www.sourcemod.net/about.php) extension that provides SourceMod plugin developers with a powerful, high-performance, and easy-to-use [logging API](./sourcemod/scripting/include/).
+Log4sp is a powerful [SourceMod](https://www.sourcemod.net/about.php) extension that provides SourceMod plugin developers with a high-performance, feature-rich, and easy-to-use [logging API](./sourcemod/scripting/include/).
 
-With Log4sp, plugin developers no longer need to write complex logging code, so they can focus more on the core function development of the plugin.
+With log4sp, plugin developers no longer need to write complex logging code, so they can focus more on the core function development of the plugin.
 
 ## Features
 
@@ -26,13 +26,15 @@ With Log4sp, plugin developers no longer need to write complex logging code, so 
 
    - Custom information can be appended to log messages. (such as time, log level, source code location, etc.)
 
-   - Default log message pattern is:
+   - Specify the style of the log message and append more information (such as time, log level, source code location, etc.)
+
+   - Default log message pattern:
 
       > [%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%s:%#] %v
 
       > [2024-08-01 12:34:56:789] [log4sp] [info] [example.sp:123] message
 
-   - All pattern flags see: [spdlog wiki](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
+   - All log message pattern flags: [spdlog wiki](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags)
 
 4. Support custom log message flush level.
 
