@@ -895,7 +895,7 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void LogStackTraceEx(LogLevel lvl, const char[] msg, any ...);
+ * public native void ThrowErrorEx(LogLevel lvl, const char[] fmt, any ...);
  */
 static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
 {
@@ -918,6 +918,7 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     }
     catch(const std::exception& ex)
     {
+        ctx->ReportError(ex.what());
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
     }
