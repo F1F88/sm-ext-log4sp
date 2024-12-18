@@ -65,7 +65,7 @@ inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdna
     if (iter != commands_.end()) {
         iter->second->execute(args);
     } else {
-        rootconsole->ConsolePrint("[SM] The function name '%s' does not exist.", function_name);
+        rootconsole->ConsolePrint("[SM] The function name '%s' does not exist.", function_name.c_str());
         rootconsole->ConsolePrint("-------------------------------------------");
         draw_menu();
     }
