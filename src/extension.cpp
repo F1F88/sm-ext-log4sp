@@ -80,12 +80,18 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         const char *queueSizeStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolQueueSize");
         auto queueSize = queueSizeStr != nullptr ? static_cast<size_t>(atoi(queueSizeStr)) : static_cast<size_t>(8192);
 
+        if (queueSize == 0 || queueSize > 1024 * 1024 * 10)
+        {
+            snprintf(error, maxlen, "Invalid configuration \"Log4sp_ThreadPoolQueueSize\" (%s), valid range is 1-10485760.", queueSizeStr);
+            return false;
+        }
+
         const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
         auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoi(threadCountStr)) : static_cast<size_t>(1);
 
         if (threadCount == 0 || threadCount > 1000)
         {
-            snprintf(error, maxlen, "Invalid thread count config (%s), valid range is 1-1000.", threadCountStr);
+            snprintf(error, maxlen, "Invalid configuration \"Log4sp_ThreadPoolThreadCount\" (%s), valid range is 1-1000.", threadCountStr);
             return false;
         }
 
