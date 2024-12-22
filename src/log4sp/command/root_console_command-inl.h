@@ -2,6 +2,8 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
 
+#include "spdlog/fmt/xchar.h"
+
 #include "log4sp/utils.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/proxy/logger_proxy.h"
@@ -48,6 +50,14 @@ inline spdlog::level::level_enum command::arg_to_level(const ICommandArgs *args,
     }
 
     return level;
+}
+
+
+inline void list_command::execute(const ICommandArgs *args) {
+    std::vector<std::string> names = log4sp::logger_handler::instance().get_all_logger_names();
+
+    auto msg = spdlog::fmt_lib::format("[SM] List of all logger names: [{}].", spdlog::fmt_lib::join(names, ", "));
+    rootconsole->ConsolePrint("%s", msg.c_str());
 }
 
 

@@ -12,8 +12,7 @@ namespace log4sp {
 inline root_console_command_handler &root_console_command_handler::instance() {
     static root_console_command_handler singleInstance;
 
-    // TODO
-    // singleInstance.commands_["list_logger"]     = std::make_unique<list_logger_command>();
+    singleInstance.commands_["list"]            = std::make_unique<list_command>();
     singleInstance.commands_["get_lvl"]         = std::make_unique<get_lvl_command>();
     singleInstance.commands_["set_lvl"]         = std::make_unique<set_lvl_command>();
     singleInstance.commands_["set_pattern"]     = std::make_unique<set_pattern_command>();
@@ -35,7 +34,7 @@ inline void root_console_command_handler::draw_menu() {
     rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
     rootconsole->ConsolePrint("Usage: sm log4sp <function_name> <logger_name> [arguments]");
 
-    // rootconsole->DrawGenericOption("list_logger", "Show all loggers name."); // ref: https://github.com/gabime/spdlog/issues/180
+    rootconsole->DrawGenericOption("list",          "List all logger names.");
     rootconsole->DrawGenericOption("get_lvl",       fmt::format("Gets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_lvl",       fmt::format("Sets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_pattern",   "Sets a logger log pattern.");

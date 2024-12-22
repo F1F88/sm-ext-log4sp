@@ -138,6 +138,15 @@ inline void logger_handler::remove_handle_type() {
     }
 }
 
+inline std::vector<std::string> logger_handler::get_all_logger_names() {
+    std::vector<std::string> names;
+    // names.reserve(loggers_.size());
+    for (const auto& pair : loggers_) {
+        names.push_back(pair.first);
+    }
+    return names;
+}
+
 
 }       // namespace log4sp
 #endif  // _LOG4SP_ADAPTER_LOGGER_HANDLER_INL_H_

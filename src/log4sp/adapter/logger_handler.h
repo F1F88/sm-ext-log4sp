@@ -90,6 +90,15 @@ public:
      */
     void remove_handle_type();
 
+    /**
+     * @brief 返回所有 logger 名称组成的数组
+     *
+     * @note 拓展启动时就注册了一个全局 logger，所以这个方法返回的数组大小至少为 1
+     *
+     * @return          所有 logger 名称组成的数组
+     */
+    std::vector<std::string> get_all_logger_names();
+
 private:
     logger_handler() : handle_type_(NO_HANDLE_TYPE) {}
     ~logger_handler();

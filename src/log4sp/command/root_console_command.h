@@ -20,6 +20,12 @@ protected:
 };
 
 
+class list_command final : public command {
+public:
+    void execute(const ICommandArgs *args) override;
+};
+
+
 class get_lvl_command final : public command {
 public:
     void execute(const ICommandArgs *args) override;
