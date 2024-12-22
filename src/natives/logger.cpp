@@ -766,7 +766,7 @@ static cell_t LogStackTrace(IPluginContext *ctx, const cell_t *params)
     logger->log(lvl, "Called from: {}", plugin);
 
     auto stackTrace = log4sp::get_stack_trace(ctx);
-    for (auto iter  : stackTrace)
+    for (auto &iter : stackTrace)
     {
         logger->log(lvl, iter);
     }
@@ -809,7 +809,7 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
     logger->log(lvl, "Called from: {}", plugin);
 
     auto stackTrace = log4sp::get_stack_trace(ctx);
-    for (auto iter  : stackTrace)
+    for (auto &iter : stackTrace)
     {
         logger->log(lvl, iter);
     }
@@ -849,7 +849,7 @@ static cell_t LogStackTraceAmxTpl(IPluginContext *ctx, const cell_t *params)
     logger->log(lvl, "Called from: {}", plugin);
 
     auto stackTrace = log4sp::get_stack_trace(ctx);
-    for (auto iter  : stackTrace)
+    for (auto &iter : stackTrace)
     {
         logger->log(lvl, iter);
     }
@@ -886,7 +886,7 @@ static cell_t ThrowError(IPluginContext *ctx, const cell_t *params)
     logger->log(lvl, "Blaming: {}", plugin);
 
     auto stackTrace = log4sp::get_stack_trace(ctx);
-    for (auto iter  : stackTrace)
+    for (auto &iter : stackTrace)
     {
         logger->log(lvl, iter.c_str());
     }
@@ -932,7 +932,7 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     logger->log(lvl, "Blaming: {}", plugin);
 
     auto stackTrace = log4sp::get_stack_trace(ctx);
-    for (auto iter  : stackTrace)
+    for (auto &iter : stackTrace)
     {
         logger->log(lvl, iter);
     }
@@ -973,7 +973,7 @@ static cell_t ThrowErrorAmxTpl(IPluginContext *ctx, const cell_t *params)
     logger->log(lvl, "Blaming: {}", plugin);
 
     auto stackTrace = log4sp::get_stack_trace(ctx);
-    for (auto iter  : stackTrace)
+    for (auto &iter : stackTrace)
     {
         logger->log(lvl, iter);
     }
