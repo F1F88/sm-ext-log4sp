@@ -9,6 +9,7 @@
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/proxy/async_logger_proxy.h"
 #include "log4sp/proxy/logger_proxy.h"
+#include "log4sp/sinks/client_chat_sink.h"
 
 
 /**
@@ -177,6 +178,54 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     {
         auto policy     = log4sp::cell_to_policy(params[5]);
         auto sink       = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
+        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
+        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
+        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of asynchronous logger handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
+    }
+}
+
+/**
+ * public static native Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ */
+static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    {
+        ctx->ReportError("Logger with name '%s' already exists.", name);
+        return BAD_HANDLE;
+    }
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    auto async = static_cast<bool>(params[2]);
+    if (!async)
+    {
+        auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_st>();
+        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+        if (handle == BAD_HANDLE)
+        {
+            ctx->ReportError("Allocation of logger handle failed. (err: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        return handle;
+    }
+    else
+    {
+        auto policy     = log4sp::cell_to_policy(params[3]);
+        auto sink       = std::make_shared<log4sp::sinks::client_chat_sink_st>();
         auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
         auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
@@ -1749,6 +1798,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Get",                              Get},
     {"Logger.CreateServerConsoleLogger",        CreateServerConsoleLogger},
     {"Logger.CreateBaseFileLogger",             CreateBaseFileLogger},
+    {"Logger.CreateClientChatLogger",           CreateClientChatLogger},
     {"Logger.CreateRotatingFileLogger",         CreateRotatingFileLogger},
     {"Logger.CreateDailyFileLogger",            CreateDailyFileLogger},
     {"Logger.GetName",                          GetName},

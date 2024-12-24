@@ -78,6 +78,8 @@ Action CB_CMD(int client, int args)
 
     TestNullSink();
 
+    StaticFactory();
+
     return Plugin_Handled;
 }
 
@@ -345,4 +347,14 @@ void TestNullSink()
     log.Info("lalala");
     delete log;
     PrintToServer("========== Test Null Sink End ==========");
+}
+
+void StaticFactory()
+{
+    Logger log = Logger.CreateClientChatLogger("test-factory-client-chat");
+    Sink sink = new ServerConsoleSink();
+    log.AddSink(sink);
+    log.Fatal("This is a ClientChatLogger");
+    delete sink;
+    delete log;
 }
