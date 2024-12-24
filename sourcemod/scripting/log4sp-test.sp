@@ -352,9 +352,10 @@ void TestNullSink()
 void StaticFactory()
 {
     Logger log = Logger.CreateClientChatLogger("test-factory-client-chat");
-    Sink sink = new ServerConsoleSink();
-    log.AddSink(sink);
     log.Fatal("This is a ClientChatLogger");
-    delete sink;
+    delete log;
+
+    log = Logger.CreateClientConsoleLogger("test-factory-client-console");
+    log.Fatal("This is a ClientConsoleLogger");
     delete log;
 }

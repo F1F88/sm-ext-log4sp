@@ -84,6 +84,18 @@ methodmap Logger < Handle
     public static native Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
+     * Create a logger handle that outputs to the client console.
+     *
+     * @param name      The name of the new logger.
+     * @param async     If true, Log operations will be pushed to background threads for processing,
+     *                  which can avoid blocking the main thread.
+     * @param policy    Message queue overflow policy. (Only used when async = true)
+     * @return          Logger handle.
+     * @error           Logger name already exits.
+     */
+    public static native Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+
+    /**
      * Create a logger handle that outputs to a file and rotates the file based on size.
      *
      * @param name          The name of the logger.

@@ -39,6 +39,10 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
+    public static Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+        return view_as<Logger>(INVALID_HANDLE);
+    }
+
     public static Logger CreateRotatingFileLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
         return view_as<Logger>(INVALID_HANDLE);
     }
