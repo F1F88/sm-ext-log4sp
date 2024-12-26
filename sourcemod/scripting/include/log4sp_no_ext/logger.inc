@@ -15,6 +15,11 @@ typeset LoggerErrorHandler
     function void (const char[] msg);
 };
 
+typeset LoggerApplyCallback
+{
+    function void (Logger logger);
+};
+
 static char __message[2048];
 
 methodmap Logger < Handle
@@ -50,6 +55,8 @@ methodmap Logger < Handle
     public static Logger CreateDailyFileLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
         return view_as<Logger>(INVALID_HANDLE);
     }
+
+    public static void ApplyAll(LoggerApplyCallback callback) {}
 
     public void GetName(char[] buffer, int maxlen) {}
 

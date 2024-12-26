@@ -29,6 +29,22 @@ typeset LoggerErrorHandler
 };
 
 
+/**
+ * Callback for apply a user defined function on all logger handles.
+ *
+ * Example:
+ *      void FlushAllLoggers(Logger logger) {
+ *          logger.Flush();
+ *      }
+ *
+ * @param logger    Logger handle.
+ */
+typeset LoggerApplyAllCallback
+{
+    function void (Logger logger);
+};
+
+
 methodmap Logger < Handle
 {
     /**
@@ -155,6 +171,13 @@ methodmap Logger < Handle
         int maxFiles = 0,
         bool async = false,
         AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+
+    /**
+     * Apply a user defined function on all logger handles.
+     *
+     * @param callback  A callback that apply a user defined function on all logger handles.
+     */
+    public static native void ApplyAll(LoggerApplyAllCallback callback);
 
     /**
      * Gets the logger name.

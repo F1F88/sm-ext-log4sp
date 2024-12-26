@@ -75,6 +75,13 @@ public:
     Handle_t find_handle(const std::string &name);
 
     /**
+     * Apply a user defined function on all logger handles.
+     * Example:
+     *      apply_all([&](std::shared_ptr<spdlog::logger> l) {l->flush();});
+     */
+    void apply_all(const std::function<void(std::shared_ptr<logger_proxy>)> &fun);
+
+    /**
      * @brief Called when destroying a handle.  Must be implemented.
      *
      * @param type      Handle type.

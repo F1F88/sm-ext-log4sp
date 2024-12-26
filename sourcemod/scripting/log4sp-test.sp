@@ -80,6 +80,8 @@ Action CB_CMD(int client, int args)
 
     StaticFactory();
 
+    ApplyAll();
+
     return Plugin_Handled;
 }
 
@@ -358,4 +360,21 @@ void StaticFactory()
     log = Logger.CreateClientConsoleLogger("test-factory-client-console");
     log.Fatal("This is a ClientConsoleLogger");
     delete log;
+}
+
+void ApplyAll()
+{
+    Logger.ApplyAll(ApplyAll_LogSomeMessage);
+}
+
+void ApplyAll_LogSomeMessage(Logger logger)
+{
+    logger.Info("Hello Logger.ApplyAll !");
+    logger.SetErrorHandler(LogToSM);
+    logger.InfoEx("ajdh%d%d");
+}
+
+void LogToSM(const char[] msg)
+{
+    LogError(msg);
 }

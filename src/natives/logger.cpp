@@ -425,6 +425,50 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
+ * public static native void ApplyAll(LoggerApplyCallback callback);
+ *
+ * function void (Logger logger);
+ */
+static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
+{
+    auto funcID   = static_cast<funcid_t>(params[1]);
+    auto function = ctx->GetFunctionById(funcID);
+    if (function == nullptr)
+    {
+        ctx->ReportError("Invalid apply all function. (funcID: %d)", static_cast<int>(funcID));
+        return 0;
+    }
+
+    IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_Cell);
+    if (forward == nullptr)
+    {
+        ctx->ReportError("SM error! Create apply all forward failure.");
+        return 0;
+    }
+
+    if (!forward->AddFunction(function))
+    {
+        forwards->ReleaseForward(forward);
+        ctx->ReportError("SM error! Adding error handler function failed.");
+        return 0;
+    }
+
+    log4sp::logger_handler::instance().apply_all(
+        [forward](std::shared_ptr<log4sp::logger_proxy> logger) {
+            Handle_t handle = log4sp::logger_handler::instance().find_handle(logger->name());
+            if (handle == BAD_HANDLE) {
+                SPDLOG_CRITICAL("Unknown logger. (name: {})", logger->name());
+                return;
+            }
+
+            forward->PushCell(handle);
+            forward->Execute();
+        }
+    );
+    return 0;
+}
+
+/**
  * public native void GetName(char[] buffer, int maxlen);
  */
 static cell_t GetName(IPluginContext *ctx, const cell_t *params)
@@ -1851,6 +1895,8 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.CreateClientConsoleLogger",        CreateClientConsoleLogger},
     {"Logger.CreateRotatingFileLogger",         CreateRotatingFileLogger},
     {"Logger.CreateDailyFileLogger",            CreateDailyFileLogger},
+    {"Logger.ApplyAll",                         ApplyAll},
+
     {"Logger.GetName",                          GetName},
     {"Logger.GetLevel",                         GetLevel},
     {"Logger.SetLevel",                         SetLevel},
