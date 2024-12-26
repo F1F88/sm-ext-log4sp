@@ -10,6 +10,19 @@
 #include <log4sp/sinks/sink>
 
 
+/**
+ * Callback for user defined error handler.
+ *
+ * @note The default handler uses the global logger (log4sp) to log an error message
+ *       containing the number of errors, the name of logger, and the error message.
+ *
+ * Example:
+ *      void LogToSM(const char[] msg) {
+ *          LogError(msg);
+ *      }
+ *
+ * @param msg       Error message.
+ */
 typeset LoggerErrorHandler
 {
     function void (const char[] msg);
