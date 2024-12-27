@@ -11,90 +11,100 @@ class logger_proxy;
 
 class command {
 public:
-    virtual void execute(const ICommandArgs *args) = 0;
+    /**
+     * 命令模式抽象类
+     *
+     * 重复操作不算失败，不需要抛出异常，但可能响应一条消息
+     * 例如：多次启用 backtrace
+     *
+     * @param args      参数列表
+     * @exception       指令执行失败时抛出异常，消息为失败原因
+     *                  例如：参数不匹配
+     */
+    virtual void execute(const std::vector<std::string> &args) = 0;
 
 protected:
-    std::shared_ptr<logger_proxy> arg_to_logger(const ICommandArgs *args, int num);
+    std::shared_ptr<logger_proxy> arg_to_logger(const std::string &arg);
 
-    spdlog::level::level_enum arg_to_level(const ICommandArgs *args, int num);
+    spdlog::level::level_enum arg_to_level(const std::string &arg);
 };
 
 
 class list_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class get_lvl_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class set_lvl_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class set_pattern_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class should_log_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class log_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class flush_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class get_flush_lvl_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class set_flush_lvl_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class should_bt_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class enable_bt_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class disable_bt_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 
 class dump_bt_command final : public command {
 public:
-    void execute(const ICommandArgs *args) override;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 

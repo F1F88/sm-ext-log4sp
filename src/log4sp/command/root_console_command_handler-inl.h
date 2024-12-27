@@ -51,6 +51,16 @@ inline void root_console_command_handler::draw_menu() {
 }
 
 
+inline void root_console_command_handler::execute(const std::string &cmdname, const std::vector<std::string> &args) {
+    auto iter = commands_.find(cmdname);
+    if (iter != commands_.end()) {
+        iter->second->execute(args);
+    } else {
+        throw std::runtime_error(spdlog::fmt_lib::format("The function name '{}' does not exist.", cmdname));
+    }
+}
+
+
 inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args) {
     // 0-sm  |  1-log4sp  |  2-function name  |  3-logger name  |  x-params
     int argCnt = args->ArgC();
@@ -61,13 +71,15 @@ inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdna
 
     std::string function_name {args->Arg(2)};
 
-    auto iter = commands_.find(function_name);
-    if (iter != commands_.end()) {
-        iter->second->execute(args);
-    } else {
-        rootconsole->ConsolePrint("[SM] The function name '%s' does not exist.", function_name.c_str());
-        rootconsole->ConsolePrint("-------------------------------------------");
-        draw_menu();
+    std::vector<std::string> arguments;
+    for (int i = 3; i < argCnt; ++i) {
+        arguments.push_back(args->Arg(i));
+    }
+
+    try {
+        execute(function_name, arguments);
+    } catch (const std::exception &ex) {
+        rootconsole->ConsolePrint("[SM] %s", ex.what());
     }
 }
 

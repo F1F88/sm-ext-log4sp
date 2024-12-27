@@ -21,6 +21,16 @@ public:
     void draw_menu();
 
     /**
+     * @brief 执行命令
+     *
+     * @param cmdname   命令名称
+     * @param args      命令所需参数
+     * @exception       指令执行失败时抛出异常，消息为失败原因
+     *                  例如：指令不存在，或参数不匹配
+     */
+    void execute(const std::string &cmdname, const std::vector<std::string> &args);
+
+    /**
      * @brief Handles a root console menu action.
      */
     void OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args);
