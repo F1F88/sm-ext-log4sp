@@ -15,7 +15,7 @@ typeset LoggerErrorHandler
     function void (const char[] msg);
 };
 
-typeset LoggerApplyCallback
+typeset LoggerApplyAllCallback
 {
     function void (Logger logger);
 };
@@ -56,7 +56,7 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static void ApplyAll(LoggerApplyCallback callback) {}
+    public static void ApplyAll(LoggerApplyAllCallback callback) {}
 
     public void GetName(char[] buffer, int maxlen) {}
 
