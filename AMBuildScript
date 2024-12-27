@@ -118,7 +118,7 @@ class ExtensionConfig(object):
       '-fvisibility=hidden',
     ]
     cxx.cxxflags += [
-      '-std=c++20',     #* log4sp addition *#
+      '-std=c++17',     #* log4sp addition *#
 
       # '-fno-exceptions',
       '-fexceptions',   #* log4sp addition *#
@@ -184,8 +184,10 @@ class ExtensionConfig(object):
       '/GR',            #* log4sp addition *#
 
       '/TP',
+      '/std:c++17',
       '/utf-8',         #* log4sp addition *#
       '/GL',            #* log4sp addition *#
+      '/Ot',            #* log4sp addition *#
     ]
     cxx.linkflags += [
       '/MACHINE:X86',
@@ -205,7 +207,7 @@ class ExtensionConfig(object):
 
     if builder.options.opt == '1':
       cxx.cflags += ['/Ox', '/Zo']
-      cxx.linkflags += ['/OPT:ICF', '/OPT:REF']
+      cxx.linkflags += ['/OPT:ICF', '/OPT:REF', '/LTCG']
 
     if builder.options.debug == '1':
       cxx.cflags += ['/Od', '/RTC1']
