@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: build on ${{ matrix.os_short }} with ${{ matrix.sm_short }}
+    name: build with ${{ matrix.sm_short }} on ${{ matrix.os_short }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
@@ -17,31 +17,31 @@ jobs:
 
         include:
           - os: ubuntu-latest
-            os_short: ubuntu_latest
+            os_short: ubuntulatest
 
           - os: ubuntu-24.04
-            os_short: ubuntu_2404
+            os_short: ubuntu2404
 
           - os: ubuntu-22.04
-            os_short: ubuntu_2204
+            os_short: ubuntu2204
 
           - os: ubuntu-20.04
-            os_short: ubuntu_2004
+            os_short: ubuntu2004
 
           - os: windows-latest
-            os_short: win_latest
+            os_short: winlatest
 
           - sm_version: latest
             sm_branch: master
-            sm_short: sm_latest
+            sm_short: smlatest
 
           - sm_version: "1.12"
             sm_branch: "1.12-dev"
-            sm_short: sm_112
+            sm_short: sm112
 
           - sm_version: "1.11"
             sm_branch: "1.11-dev"
-            sm_short: sm_111
+            sm_short: sm111
 
     env:
       # 设置 Windows 系统的 Python 的默认编码为 UTF-8
@@ -107,12 +107,12 @@ jobs:
           python -m pip install wheel
           pip install git+https://github.com/alliedmodders/ambuild
 
-      - name: Getting SourceMod ${{ matrix.sm_short }}
+      - name: Getting SourceMod ${{ matrix.sm_version }}
         uses: actions/checkout@v4
         with:
           repository: alliedmodders/sourcemod
           ref: ${{ matrix.sm_branch }}
-          path: sourcemod-${{ matrix.sm_version }}
+          path: ${{ matrix.sm_short }}
           submodules: recursive
 
       - name: Getting own repository
@@ -125,11 +125,11 @@ jobs:
         working-directory: extension
         run: |
           mkdir build && cd build
-          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/sourcemod-${{ matrix.sm_version }}"
+          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/${{ matrix.sm_short }}"
           ambuild
 
       - name: Uploading package
         uses: actions/upload-artifact@v4
         with:
-          name: sm-ext-log4sp-${{ matrix.os_short }}-${{ matrix.sm_short }}-${{ env.GITHUB_SHA_SHORT }}
+          name: sm-ext-log4sp-${{ env.GITHUB_SHA_SHORT }}-${{ matrix.sm_short }}-${{ matrix.os_short }}
           path: extension/build/package
