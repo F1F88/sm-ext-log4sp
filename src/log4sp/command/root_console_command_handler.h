@@ -26,7 +26,7 @@ public:
     void OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args);
 
 private:
-    root_console_command_handler() {}
+    root_console_command_handler();
     ~root_console_command_handler() {}
 
     std::unordered_map<std::string, std::unique_ptr<command>> commands_;

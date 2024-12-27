@@ -9,23 +9,24 @@
 
 namespace log4sp {
 
+inline root_console_command_handler::root_console_command_handler() {
+    commands_["list"]           = std::make_unique<list_command>();
+    commands_["get_lvl"]        = std::make_unique<get_lvl_command>();
+    commands_["set_lvl"]        = std::make_unique<set_lvl_command>();
+    commands_["set_pattern"]    = std::make_unique<set_pattern_command>();
+    commands_["should_log"]     = std::make_unique<should_log_command>();
+    commands_["log"]            = std::make_unique<log_command>();
+    commands_["flush"]          = std::make_unique<flush_command>();
+    commands_["get_flush_lvl"]  = std::make_unique<get_flush_lvl_command>();
+    commands_["set_flush_lvl"]  = std::make_unique<set_flush_lvl_command>();
+    commands_["should_bt"]      = std::make_unique<should_bt_command>();
+    commands_["enable_bt"]      = std::make_unique<enable_bt_command>();
+    commands_["disable_bt"]     = std::make_unique<disable_bt_command>();
+    commands_["dump_bt"]        = std::make_unique<dump_bt_command>();
+}
+
 inline root_console_command_handler &root_console_command_handler::instance() {
     static root_console_command_handler singleInstance;
-
-    singleInstance.commands_["list"]            = std::make_unique<list_command>();
-    singleInstance.commands_["get_lvl"]         = std::make_unique<get_lvl_command>();
-    singleInstance.commands_["set_lvl"]         = std::make_unique<set_lvl_command>();
-    singleInstance.commands_["set_pattern"]     = std::make_unique<set_pattern_command>();
-    singleInstance.commands_["should_log"]      = std::make_unique<should_log_command>();
-    singleInstance.commands_["log"]             = std::make_unique<log_command>();
-    singleInstance.commands_["flush"]           = std::make_unique<flush_command>();
-    singleInstance.commands_["get_flush_lvl"]   = std::make_unique<get_flush_lvl_command>();
-    singleInstance.commands_["set_flush_lvl"]   = std::make_unique<set_flush_lvl_command>();
-    singleInstance.commands_["should_bt"]       = std::make_unique<should_bt_command>();
-    singleInstance.commands_["enable_bt"]       = std::make_unique<enable_bt_command>();
-    singleInstance.commands_["disable_bt"]      = std::make_unique<disable_bt_command>();
-    singleInstance.commands_["dump_bt"]         = std::make_unique<dump_bt_command>();
-
     return singleInstance;
 }
 
