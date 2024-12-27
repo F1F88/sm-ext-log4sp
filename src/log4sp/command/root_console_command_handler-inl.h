@@ -33,7 +33,7 @@ inline root_console_command_handler &root_console_command_handler::instance() {
 
 inline void root_console_command_handler::draw_menu() {
     rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
-    rootconsole->ConsolePrint("Usage: sm log4sp <function_name> <logger_name> [arguments]");
+    rootconsole->ConsolePrint("Usage: sm log4sp <function_name> [arguments]");
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
     rootconsole->DrawGenericOption("get_lvl",       fmt::format("Gets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
