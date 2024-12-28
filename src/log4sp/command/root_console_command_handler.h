@@ -44,6 +44,9 @@ private:
     root_console_command_handler();
     ~root_console_command_handler() {}
 
+    root_console_command_handler(const root_console_command_handler&) = delete;
+    root_console_command_handler& operator=(const root_console_command_handler&) = delete;
+
     std::unordered_map<std::string, std::unique_ptr<command>> commands_;
 };
 
