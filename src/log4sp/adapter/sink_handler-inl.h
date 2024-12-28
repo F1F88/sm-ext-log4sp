@@ -14,32 +14,6 @@
 
 namespace log4sp {
 
-// inline std::string debugSinks(std::unordered_map<spdlog::sinks::sink*, std::shared_ptr<spdlog::sinks::sink>> map) {
-//     std::string result = "[";
-//     for (const auto& [key, value] : map) {
-//         result += fmt::format("({}: {}), ", fmt::ptr(key), fmt::ptr(value.get()));
-//     }
-//     if (!map.empty()) {
-//         result.pop_back();
-//         result.pop_back();
-//     }
-//     result += "]";
-//     return result;
-// }
-
-// inline std::string debugHandlers(std::unordered_map<spdlog::sinks::sink*, Handle_t> map){
-//     std::string result = "[";
-//     for (const auto& [key, value] : map) {
-//         result += fmt::format("({}: {}), ", fmt::ptr(key), static_cast<int>(value));
-//     }
-//     if (!map.empty()) {
-//         result.pop_back();
-//         result.pop_back();
-//     }
-//     result += "]";
-//     return result;
-// }
-
 inline sink_handler& sink_handler::instance() {
     static sink_handler instance;
     return instance;
@@ -74,7 +48,7 @@ inline Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink>
     handles_[object.get()] = handle;
     sinks_[object.get()] = object;
 
-    // SPDLOG_TRACE("Sink handle created. (obj: {}, hdl: {})", fmt::ptr(object.get()), handle);
+    SPDLOG_TRACE("Sink handle created. (obj: {}, hdl: {})", spdlog::fmt_lib::ptr(object.get()), handle);
     return handle;
 }
 
@@ -91,7 +65,7 @@ inline std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t h
 
     auto found = sinks_.find(object);
     if (found == sinks_.end()) {
-        SPDLOG_CRITICAL("Internal Error! handle is valid, but sink is not found. (obj: {}, hdl: {})", fmt::ptr(object), handle);
+        SPDLOG_CRITICAL("Internal Error! handle is valid, but sink is not found. (obj: {}, hdl: {})", spdlog::fmt_lib::ptr(object), handle);
         if (error) {
             *error = HandleError_Index;
         }
@@ -108,18 +82,18 @@ inline sink_handler::~sink_handler() {
 inline void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
     auto sink = static_cast<spdlog::sinks::sink *>(object);
 
-    // SPDLOG_TRACE("Sink handle destroyed. (obj: {})", fmt::ptr(object));
+    SPDLOG_TRACE("Sink handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
 
     auto found_handle = handles_.find(sink);
     if (found_handle == handles_.end()) {
-        SPDLOG_CRITICAL("Unknown handle destroyed. (obj: {})", fmt::ptr(object));
+        SPDLOG_CRITICAL("Unknown handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
     } else {
         handles_.erase(found_handle);
     }
 
     auto found_sink = sinks_.find(sink);
     if (found_sink == sinks_.end()) {
-        SPDLOG_CRITICAL("Unknown handle destroyed. (obj: {})", fmt::ptr(object));
+        SPDLOG_CRITICAL("Unknown handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
     } else {
         sinks_.erase(found_sink);
     }

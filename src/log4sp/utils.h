@@ -61,7 +61,7 @@ std::string format_cell_to_string(IPluginContext *ctx, const cell_t *params, uns
  * param 指向的参数是可变参数
  * 当格式与参数不匹配时抛出异常
  */
-fmt::memory_buffer format_cell_to_memory_buf(const char *format, IPluginContext *ctx, const cell_t *params, int *param);
+spdlog::fmt_lib::memory_buffer format_cell_to_memory_buf(const char *format, IPluginContext *ctx, const cell_t *params, int *param);
 
 
 }       // namespace log4sp

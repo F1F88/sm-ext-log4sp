@@ -81,7 +81,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
             func = iter->FunctionName();
             func = func != nullptr ? func : "<unknown function>";
 
-            trace.emplace_back(std::move(fmt::format("   [{}] {}", index, func)));
+            trace.emplace_back(std::move(spdlog::fmt_lib::format("   [{}] {}", index, func)));
             continue;
         }
 
@@ -92,7 +92,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
             file = iter->FilePath();
             file = file != nullptr ? file : "<unknown>";
 
-            trace.emplace_back(std::move(fmt::format("   [{}] Line {}, {}::{}", index, iter->LineNumber(), file, func)));
+            trace.emplace_back(std::move(spdlog::fmt_lib::format("   [{}] Line {}, {}::{}", index, iter->LineNumber(), file, func)));
         }
     }
 
@@ -108,7 +108,7 @@ inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const 
     int lparam = ++param;
 
     auto out = format_cell_to_memory_buf(format, ctx, params, &lparam);
-    return fmt::to_string(out);
+    return spdlog::fmt_lib::to_string(out);
 }
 
 
@@ -127,7 +127,7 @@ inline static void ReorderTranslationParams(const Translation *pTrans, cell_t *p
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-inline static fmt::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg) {
+inline static spdlog::fmt_lib::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg) {
     unsigned int langid;
     Translation pTrans;
     IPlugin *pl = plsys->FindPluginByContext(ctx->GetContext());
@@ -142,7 +142,7 @@ try_serverlang:
     } else if ((target >= 1) && (target <= playerhelpers->GetMaxClients())) {
         langid = translator->GetClientLanguage(target);
     } else {
-        throw std::runtime_error(std::move(fmt::format("Translation failed: invalid client index {} (arg {})", target, *arg)));
+        throw std::runtime_error(std::move(spdlog::fmt_lib::format("Translation failed: invalid client index {} (arg {})", target, *arg)));
     }
 
     if (pPhrases->FindTranslation(key, langid, &pTrans) != Trans_Okay) {
@@ -151,10 +151,10 @@ try_serverlang:
             goto try_serverlang;
         } else if (langid != SOURCEMOD_LANGUAGE_ENGLISH) {
             if (pPhrases->FindTranslation(key, SOURCEMOD_LANGUAGE_ENGLISH, &pTrans) != Trans_Okay) {
-                throw std::runtime_error(std::move(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg)));
+                throw std::runtime_error(std::move(spdlog::fmt_lib::format("Language phrase \"{}\" not found (arg {})", key, *arg)));
             }
         } else {
-            throw std::runtime_error(std::move(fmt::format("Language phrase \"{}\" not found (arg {})", key, *arg)));
+            throw std::runtime_error(std::move(spdlog::fmt_lib::format("Language phrase \"{}\" not found (arg {})", key, *arg)));
         }
     }
 
@@ -165,7 +165,7 @@ try_serverlang:
 
         /* Check if we're going to over the limit */
         if ((*arg) + (max_params - 1) > (size_t)params[0]) {
-            throw std::runtime_error(std::move(fmt::format("Translation string formatted incorrectly - missing at least {} parameters (arg {})", ((*arg + (max_params - 1)) - params[0]), *arg)));
+            throw std::runtime_error(std::move(spdlog::fmt_lib::format("Translation string formatted incorrectly - missing at least {} parameters (arg {})", ((*arg + (max_params - 1)) - params[0]), *arg)));
         }
 
         /**
@@ -182,7 +182,7 @@ try_serverlang:
     }
 }
 
-inline static void AddString(fmt::memory_buffer &out, const char *string, int width, int prec, int flags) {
+inline static void AddString(spdlog::fmt_lib::memory_buffer &out, const char *string, int width, int prec, int flags) {
     if (string == nullptr) {
         const char nlstr[] = {'(','n','u','l','l',')','\0'};
         const int size = sizeof(nlstr);
@@ -222,7 +222,7 @@ inline static void AddString(fmt::memory_buffer &out, const char *string, int wi
     }
 }
 
-inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int prec, int flags) {
+inline static void AddFloat(spdlog::fmt_lib::memory_buffer &out, double fval, int width, int prec, int flags) {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
@@ -326,7 +326,7 @@ inline static void AddFloat(fmt::memory_buffer &out, double fval, int width, int
     }
 }
 
-inline static void AddBinary(fmt::memory_buffer &out, unsigned int val, int width, int flags) {
+inline static void AddBinary(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[32];
 
     int iter = 31;
@@ -364,7 +364,7 @@ inline static void AddBinary(fmt::memory_buffer &out, unsigned int val, int widt
     }
 }
 
-inline static void AddUInt(fmt::memory_buffer &out, unsigned int val, int width, int flags) {
+inline static void AddUInt(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[10];
     int digits = 0;
     do {
@@ -403,7 +403,7 @@ inline static void AddUInt(fmt::memory_buffer &out, unsigned int val, int width,
     }
 }
 
-inline static void AddInt(fmt::memory_buffer &out, int val, int width, int flags) {
+inline static void AddInt(spdlog::fmt_lib::memory_buffer &out, int val, int width, int flags) {
     char text[10];
     int digits = 0;
 
@@ -458,7 +458,7 @@ inline static void AddInt(fmt::memory_buffer &out, int val, int width, int flags
     }
 }
 
-inline static void AddHex(fmt::memory_buffer &out, unsigned int val, int width, int flags) {
+inline static void AddHex(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[8];
     int digits = 0;
 
@@ -528,8 +528,8 @@ inline static bool DescribePlayer(int index, const char **namep, const char **au
     return true;
 }
 
-inline fmt::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param) {
-    auto out = fmt::memory_buffer();
+inline spdlog::fmt_lib::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param) {
+    auto out = spdlog::fmt_lib::memory_buffer();
 
     int args = params[0];       // params count
     int arg  = *param;          // 用于遍历 params 的指针
@@ -602,7 +602,7 @@ reswitch:
             }
         case 'c': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *c;
@@ -613,7 +613,7 @@ reswitch:
             }
         case 'b': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -625,7 +625,7 @@ reswitch:
         case 'd':
         case 'i': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -636,7 +636,7 @@ reswitch:
             }
         case 'u': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -647,7 +647,7 @@ reswitch:
             }
         case 'f': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -658,7 +658,7 @@ reswitch:
             }
         case 'L': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -669,7 +669,7 @@ reswitch:
                     const char *auth;
                     int userid;
                     if (!DescribePlayer(*value, &name, &auth, &userid)) {
-                        throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                        throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                     }
 
                     ke::SafeSprintf(buffer, sizeof(buffer), "%s<%d><%s><>", name, userid, auth);
@@ -682,7 +682,7 @@ reswitch:
             }
         case 'N': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -691,7 +691,7 @@ reswitch:
                 const char *name = "Console";
                 if (*value) {
                     if (!DescribePlayer(*value, &name, nullptr, nullptr)) {
-                        throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                        throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                     }
                 }
                 AddString(out, name, width, prec, flags);
@@ -700,7 +700,7 @@ reswitch:
             }
         case 's': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *str;
@@ -711,32 +711,32 @@ reswitch:
             }
         case 'T': {
                 if (arg + 1 > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *key;
                 cell_t *target;
                 ctx->LocalToString(params[arg++], &key);
                 ctx->LocalToPhysAddr(params[arg++], &target);
-                fmt::memory_buffer phrase = Translate(ctx, key, *target, params, &arg);
+                spdlog::fmt_lib::memory_buffer phrase = Translate(ctx, key, *target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
         case 't': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 char *key;
                 cell_t target = translator->GetGlobalTarget();
                 ctx->LocalToString(params[arg++], &key);
-                fmt::memory_buffer phrase = Translate(ctx, key, target, params, &arg);
+                spdlog::fmt_lib::memory_buffer phrase = Translate(ctx, key, target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
         case 'X': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;
@@ -748,7 +748,7 @@ reswitch:
             }
         case 'x': {
                 if (arg > args) {
-                    throw std::runtime_error(std::move(fmt::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
+                    throw std::runtime_error(std::move(spdlog::fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args)));
                 }
 
                 cell_t *value;

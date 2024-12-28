@@ -40,8 +40,8 @@ inline void root_console_command_handler::draw_menu() {
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
     rootconsole->DrawGenericOption("apply_all",     "Apply a command function on all loggers.");
-    rootconsole->DrawGenericOption("get_lvl",       fmt::format("Gets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
-    rootconsole->DrawGenericOption("set_lvl",       fmt::format("Sets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
+    rootconsole->DrawGenericOption("get_lvl",       spdlog::fmt_lib::format("Gets a logger log level. [{}]", spdlog::fmt_lib::join(spdlog::level::level_string_views, " < ")).c_str());
+    rootconsole->DrawGenericOption("set_lvl",       spdlog::fmt_lib::format("Sets a logger log level. [{}]", spdlog::fmt_lib::join(spdlog::level::level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_pattern",   "Sets a logger log pattern.");
     rootconsole->DrawGenericOption("should_log",    "Gets a logger whether logging is enabled for the given log level.");
     rootconsole->DrawGenericOption("log",           "Use a logger to log a message.");

@@ -15,32 +15,6 @@ namespace log4sp {
 
 class logger_proxy;
 
-// inline std::string debugLoggers(std::unordered_map<std::string, std::shared_ptr<logger_proxy>> map) {
-//     std::string result = "[";
-//     for (const auto& [key, value] : map) {
-//         result += fmt::format("({}: {}), ", key, fmt::ptr(value.get()));
-//     }
-//     if (!map.empty()) {
-//         result.pop_back();
-//         result.pop_back();
-//     }
-//     result += "]";
-//     return result;
-// }
-
-// inline std::string debugHandlers(std::unordered_map<std::string, Handle_t> map){
-//     std::string result = "[";
-//     for (const auto& [key, value] : map) {
-//         result += fmt::format("({}: {}), ", key, static_cast<int>(value));
-//     }
-//     if (!map.empty()) {
-//         result.pop_back();
-//         result.pop_back();
-//     }
-//     result += "]";
-//     return result;
-// }
-
 inline logger_handler& logger_handler::instance() {
     static logger_handler instance;
     return instance;
@@ -75,7 +49,7 @@ inline Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> obje
     handles_[object->name()] = handle;
     loggers_[object->name()] = object;
 
-    // SPDLOG_TRACE("Logger handle created. (name: {}, hdl: {}, obj: {})", object->name(), handle, fmt::ptr(object.get()));
+    SPDLOG_TRACE("Logger handle created. (name: {}, hdl: {})", object->name(), handle);
     return handle;
 }
 
@@ -125,7 +99,7 @@ inline logger_handler::~logger_handler() {
 inline void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
     auto logger = static_cast<log4sp::logger_proxy *>(object);
 
-    // SPDLOG_TRACE("Logger handle destroyed. (name: {}, obj: {})", logger->name(), fmt::ptr(logger));
+    SPDLOG_TRACE("Logger handle destroyed. (name: {})", logger->name());
 
     auto found_handle = handles_.find(logger->name());
     if (found_handle == handles_.end()) {
