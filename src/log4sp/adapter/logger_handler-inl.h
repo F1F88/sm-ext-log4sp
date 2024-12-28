@@ -107,6 +107,11 @@ inline Handle_t logger_handler::find_handle(const std::string &name) {
     return found == handles_.end() ? BAD_HANDLE : found->second;
 }
 
+inline std::shared_ptr<logger_proxy> logger_handler::find_logger(const std::string &name) {
+    auto found = loggers_.find(name);
+    return found == loggers_.end() ? BAD_HANDLE : found->second;
+}
+
 inline void logger_handler::apply_all(const std::function<void(const std::shared_ptr<logger_proxy>)> &fun) {
     for (auto &l : loggers_) {
         fun(l.second);

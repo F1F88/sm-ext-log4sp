@@ -67,12 +67,20 @@ public:
                                               HandleError *error);
 
     /**
-     * @brief 根据 logger name 查找是否已创建为 handle
+     * @brief 根据 name 查找 handle
      *
      * @param name      logger 对象的名称
      * @return          logger 对象的 handle 或 BAD_HANDLE 表示不存在
      */
     Handle_t find_handle(const std::string &name);
+
+    /**
+     * @brief 根据 name 查找 logger
+     *
+     * @param name      logger 对象的名称
+     * @return          logger 对象的智能指针或 nullptr 表示不存在
+     */
+    std::shared_ptr<logger_proxy> find_logger(const std::string &name);
 
     /**
      * Apply a user defined function on all logger handles.
