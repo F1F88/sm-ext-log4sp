@@ -2,6 +2,11 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_
 
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <vector>
+
 #include "extension.h"
 
 
@@ -108,6 +113,15 @@ public:
 };
 
 
+class apply_all_command final : public command {
+public:
+    apply_all_command(std::unordered_set<std::string> functions) : functions_(functions) {}
+
+    void execute(const std::vector<std::string> &args) override;
+
+private:
+    std::unordered_set<std::string> functions_;
+};
 }       // namespace log4sp
 #include "log4sp/command/root_console_command-inl.h"
 #endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_

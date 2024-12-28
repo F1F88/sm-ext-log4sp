@@ -11,6 +11,7 @@ namespace log4sp {
 
 inline root_console_command_handler::root_console_command_handler() {
     commands_["list"]           = std::make_unique<list_command>();
+    commands_["apply_all"]      = std::make_unique<apply_all_command>(std::unordered_set<std::string>{"get_lvl", "set_lvl", "set_pattern", "should_log", "log", "flush", "get_flush_lvl", "set_flush_lvl", "should_bt", "enable_bt", "disable_bt", "dump_bt"});
     commands_["get_lvl"]        = std::make_unique<get_lvl_command>();
     commands_["set_lvl"]        = std::make_unique<set_lvl_command>();
     commands_["set_pattern"]    = std::make_unique<set_pattern_command>();
@@ -36,6 +37,7 @@ inline void root_console_command_handler::draw_menu() {
     rootconsole->ConsolePrint("Usage: sm log4sp <function_name> [arguments]");
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
+    rootconsole->DrawGenericOption("apply_all",     "Apply a command function on all loggers.");
     rootconsole->DrawGenericOption("get_lvl",       fmt::format("Gets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_lvl",       fmt::format("Sets a logger log level. [{}]", fmt::join(spdlog::level::level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_pattern",   "Sets a logger log pattern.");
