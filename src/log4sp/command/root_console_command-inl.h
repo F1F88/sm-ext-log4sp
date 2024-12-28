@@ -14,19 +14,10 @@
 namespace log4sp {
 
 inline std::shared_ptr<logger_proxy> command::arg_to_logger(const std::string &arg) {
-    // 尝试按名字查找 handle
-    Handle_t handle = logger_handler::instance().find_handle(arg);
-    if (handle == BAD_HANDLE) {
-        throw std::runtime_error("Logger with name '"+ arg + "' does not exists.");
-    }
-
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
-
-    // 尝试按 handle 查找 object
-    std::shared_ptr<logger_proxy> logger = logger_handler::instance().read_handle(handle, &security, &error);
+    // 尝试按名字查找 object
+    auto logger = logger_handler::instance().find_logger(arg);
     if (logger == nullptr) {
-        throw std::runtime_error(spdlog::fmt_lib::format("Internal Error! Logger with name '{}' does not exists. (err: {})", arg, static_cast<int>(error)));
+        throw std::runtime_error("Logger with name '"+ arg + "' does not exists.");
     }
     return logger;
 }
