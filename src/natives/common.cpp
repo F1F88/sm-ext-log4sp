@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <iterator>
+
 #include "log4sp/utils.h"
 
 /**

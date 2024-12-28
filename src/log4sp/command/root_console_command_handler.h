@@ -1,6 +1,11 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_H_
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "extension.h"
 
 

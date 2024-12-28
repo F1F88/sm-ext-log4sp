@@ -1,6 +1,7 @@
 #ifndef _LOG4SP_ADAPTER_SINK_HANDLER_H_
 #define _LOG4SP_ADAPTER_SINK_HANDLER_H_
 
+#include <memory>
 #include <unordered_map>
 
 #include "extension.h"

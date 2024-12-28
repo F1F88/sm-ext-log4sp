@@ -1,6 +1,8 @@
 #ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_
 
+#include <exception>
+
 #include "spdlog/fmt/xchar.h"
 
 #include "log4sp/command/root_console_command.h"

@@ -1,6 +1,8 @@
 #ifndef _LOG4SP_UTILS_H_
 #define _LOG4SP_UTILS_H_
 
+#include <vector>
+
 #include "spdlog/common.h"
 
 #include "extension.h"

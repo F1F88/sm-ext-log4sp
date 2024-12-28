@@ -1,7 +1,11 @@
 #ifndef _LOG4SP_ADAPTER_LOGGER_HANDLER_H_
 #define _LOG4SP_ADAPTER_LOGGER_HANDLER_H_
 
+#include <functional>
+#include <memory>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "extension.h"
 

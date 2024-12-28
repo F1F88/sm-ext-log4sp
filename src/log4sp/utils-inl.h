@@ -1,6 +1,8 @@
 #ifndef _LOG4SP_UTILS_INL_H_
 #define _LOG4SP_UTILS_INL_H_
 
+#include <math.h>
+
 #include "spdlog/async.h"
 
 #include "log4sp/utils.h"

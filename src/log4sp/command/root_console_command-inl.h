@@ -3,6 +3,7 @@
 #define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
 
 #include <regex>
+#include <stdlib.h>
 
 #include "spdlog/fmt/xchar.h"
 
@@ -180,7 +181,7 @@ inline void enable_bt_command::execute(const std::vector<std::string> &args) {
     }
 
     auto logger = arg_to_logger(args[0]);
-    auto number = static_cast<size_t>(atoll(args[1].c_str()));
+    auto number = static_cast<size_t>(std::atoll(args[1].c_str()));
 
     if (logger->should_backtrace()) {
         rootconsole->ConsolePrint("[SM] Logger '%s' has enabled backtrace logging.", logger->name().c_str());

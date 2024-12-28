@@ -1,6 +1,8 @@
 #ifndef _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_H_
 #define _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_H_
 
+#include <mutex>
+
 #include "spdlog/async_logger.h"
 #include "spdlog/sinks/dist_sink.h"
 #include "spdlog/details/backend_worker.h"
