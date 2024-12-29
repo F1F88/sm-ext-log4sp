@@ -16,6 +16,8 @@ class logger_proxy;
 
 class command {
 public:
+    virtual ~command() = default;
+
     /**
      * 命令模式抽象类
      *
