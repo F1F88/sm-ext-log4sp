@@ -26,7 +26,7 @@ public:
     /**
      * @brief 全局单例对象
      */
-    static logger_handler &instance();
+    [[nodiscard]] static logger_handler &instance();
 
     /**
      * @brief 用于 SDK_OnLoad 时创建 handle type
@@ -40,7 +40,7 @@ public:
      *
      * @return          handle type 或者 NO_HANDLE_TYPE 代表还没创建或创建失败
      */
-    HandleType_t handle_type() const;
+    [[nodiscard]] HandleType_t handle_type() const;
 
     /**
      * @brief handlesys->CreateHandleEx 的适配器
@@ -53,10 +53,10 @@ public:
      * @param error     Optional pointer to store an error code on failure (undefined on success).
      * @return          object 对象的 handle 或 BAD_HANDLE 表示创建失败
      */
-    Handle_t create_handle(std::shared_ptr<logger_proxy> object,
-                           const HandleSecurity *security,
-                           const HandleAccess *access,
-                           HandleError *error);
+    [[nodiscard]] Handle_t create_handle(std::shared_ptr<logger_proxy> object,
+                                         const HandleSecurity *security,
+                                         const HandleAccess *access,
+                                         HandleError *error);
 
     /**
      * @brief handlesys->ReadHandle 的适配器
@@ -66,9 +66,9 @@ public:
      * @param error     HandleError error code.
      * @return          object 智能指针或 nullptr 表示读取失败.
      */
-    std::shared_ptr<logger_proxy> read_handle(Handle_t handle,
-                                              HandleSecurity *security,
-                                              HandleError *error);
+    [[nodiscard]] std::shared_ptr<logger_proxy> read_handle(Handle_t handle,
+                                                            HandleSecurity *security,
+                                                            HandleError *error);
 
     /**
      * @brief 根据 name 查找 handle
@@ -76,7 +76,7 @@ public:
      * @param name      logger 对象的名称
      * @return          logger 对象的 handle 或 BAD_HANDLE 表示不存在
      */
-    Handle_t find_handle(const std::string &name);
+    [[nodiscard]] Handle_t find_handle(const std::string &name);
 
     /**
      * @brief 根据 name 查找 logger
@@ -84,7 +84,7 @@ public:
      * @param name      logger 对象的名称
      * @return          logger 对象的智能指针或 nullptr 表示不存在
      */
-    std::shared_ptr<logger_proxy> find_logger(const std::string &name);
+    [[nodiscard]] std::shared_ptr<logger_proxy> find_logger(const std::string &name);
 
     /**
      * Apply a user defined function on all logger handles.
@@ -116,7 +116,7 @@ public:
      *
      * @return          所有 logger 名称组成的数组
      */
-    std::vector<std::string> get_all_logger_names();
+    [[nodiscard]] std::vector<std::string> get_all_logger_names();
 
 private:
     logger_handler() : handle_type_(NO_HANDLE_TYPE) {}

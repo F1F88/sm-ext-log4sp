@@ -30,7 +30,7 @@ public:
     /**
      * @brief 全局单例对象
      */
-    static sink_handler &instance();
+    [[nodiscard]] static sink_handler &instance();
 
     /**
      * @brief 用于 SDK_OnLoad 时创建 handle type
@@ -44,7 +44,7 @@ public:
      *
      * @return          handle type 或者 NO_HANDLE_TYPE 代表还没创建或创建失败
      */
-    HandleType_t handle_type() const;
+    [[nodiscard]] HandleType_t handle_type() const;
 
     /**
      * @brief handlesys->CreateHandleEx 的适配器
@@ -57,10 +57,10 @@ public:
      * @param error     Optional pointer to store an error code on failure (undefined on success).
      * @return          object 对象的 handle 或 BAD_HANDLE 表示创建失败
      */
-    Handle_t create_handle(std::shared_ptr<spdlog::sinks::sink> object,
-                           const HandleSecurity *security,
-                           const HandleAccess *access,
-                           HandleError *error);
+    [[nodiscard]] Handle_t create_handle(std::shared_ptr<spdlog::sinks::sink> object,
+                                         const HandleSecurity *security,
+                                         const HandleAccess *access,
+                                         HandleError *error);
 
     /**
      * @brief handlesys->ReadHandle 的适配器
@@ -70,9 +70,9 @@ public:
      * @param error     HandleError error code.
      * @return          object 智能指针或 nullptr 表示读取失败.
      */
-    std::shared_ptr<spdlog::sinks::sink> read_handle(Handle_t handle,
-                                                     HandleSecurity *security,
-                                                     HandleError *error);
+    [[nodiscard]] std::shared_ptr<spdlog::sinks::sink> read_handle(Handle_t handle,
+                                                                   HandleSecurity *security,
+                                                                   HandleError *error);
 
     /**
      * @brief Called when destroying a handle.  Must be implemented.

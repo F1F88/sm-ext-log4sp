@@ -18,7 +18,7 @@ public:
     /**
      * @brief 全局单例对象
      */
-    static root_console_command_handler &instance();
+    [[nodiscard]] static root_console_command_handler &instance();
 
     /**
      * @brief 绘制 log4sp 指令菜单

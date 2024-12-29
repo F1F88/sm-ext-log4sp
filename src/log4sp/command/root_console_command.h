@@ -31,9 +31,9 @@ public:
     virtual void execute(const std::vector<std::string> &args) = 0;
 
 protected:
-    std::shared_ptr<logger_proxy> arg_to_logger(const std::string &arg);
+    [[nodiscard]] std::shared_ptr<logger_proxy> arg_to_logger(const std::string &arg);
 
-    spdlog::level::level_enum arg_to_level(const std::string &arg);
+    [[nodiscard]] spdlog::level::level_enum arg_to_level(const std::string &arg);
 };
 
 
