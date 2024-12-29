@@ -290,7 +290,7 @@ inline static void AddFloat(spdlog::fmt_lib::memory_buffer &out, double fval, in
     } else {
         while (digits--) {
             val = (int)(fval / tmp);
-            out.push_back('0' + val);
+            out.push_back('0' + static_cast<char>(val));
             fval -= val * tmp;
             tmp *= 0.1;
         }
@@ -312,7 +312,7 @@ inline static void AddFloat(spdlog::fmt_lib::memory_buffer &out, double fval, in
         while (prec--) {
             tmp *= 0.1;
             val = (int)(fval / tmp);
-            out.push_back('0' + val);
+            out.push_back('0' + static_cast<char>(val));
             fval -= val * tmp;
         }
     }
