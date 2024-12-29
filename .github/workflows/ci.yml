@@ -17,31 +17,31 @@ jobs:
 
         include:
           - os: ubuntu-latest
-            os_short: ubuntulatest
+            os_short: ubuntu_latest
 
           - os: ubuntu-24.04
-            os_short: ubuntu2404
+            os_short: ubuntu_24_04
 
           - os: ubuntu-22.04
-            os_short: ubuntu2204
+            os_short: ubuntu_22_04
 
           - os: ubuntu-20.04
-            os_short: ubuntu2004
+            os_short: ubuntu_20_04
 
           - os: windows-latest
-            os_short: winlatest
+            os_short: win_latest
 
           - sm_version: latest
             sm_branch: master
-            sm_short: smlatest
+            sm_short: sm_latest
 
           - sm_version: "1.12"
             sm_branch: "1.12-dev"
-            sm_short: sm112
+            sm_short: sm_1_12
 
           - sm_version: "1.11"
             sm_branch: "1.11-dev"
-            sm_short: sm111
+            sm_short: sm_1_11
 
     env:
       # 设置 Windows 系统的 Python 的默认编码为 UTF-8
