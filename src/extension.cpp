@@ -95,7 +95,15 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
             return false;
         }
 
-        spdlog::init_thread_pool(queueSize, threadCount);
+        try
+        {
+            spdlog::init_thread_pool(queueSize, threadCount);
+        }
+        catch(const std::exception &ex)
+        {
+            snprintf(error, maxlen, "Could not create global thread pool, reason : %s", ex.what());
+            return false;
+        }
     }
 
     // Init Global Logger
