@@ -121,7 +121,14 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[4], &msg);
 
-    sink->log(spdlog::details::log_msg(name, lvl, msg));
+    try
+    {
+        sink->log(spdlog::details::log_msg(name, lvl, msg));
+    }
+    catch (const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+    }
     return 0;
 }
 
@@ -142,7 +149,14 @@ static cell_t Flush(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    sink->flush();
+    try
+    {
+        sink->flush();
+    }
+    catch (const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+    }
     return 0;
 }
 
