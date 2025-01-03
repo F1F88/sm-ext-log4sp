@@ -102,13 +102,23 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
+    spdlog::sink_ptr sink;
+    try
+    {
+        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
+
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
     auto async = static_cast<bool>(params[2]);
     if (!async)
     {
-        auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
         auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -122,7 +132,6 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     else
     {
         auto policy     = log4sp::cell_to_policy(params[3]);
-        auto sink       = std::make_shared<spdlog::sinks::stdout_sink_st>();
         auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
         auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
@@ -158,13 +167,23 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
 
     auto truncate = static_cast<bool>(params[3]);
 
+    spdlog::sink_ptr sink;
+    try
+    {
+        sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
+
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
     auto async = static_cast<bool>(params[4]);
     if (!async)
     {
-        auto sink   = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
         auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -178,7 +197,6 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     else
     {
         auto policy     = log4sp::cell_to_policy(params[5]);
-        auto sink       = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
         auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
         auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
@@ -206,13 +224,14 @@ static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
+    auto sink = std::make_shared<log4sp::sinks::client_chat_sink_st>();
+
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
     auto async = static_cast<bool>(params[2]);
     if (!async)
     {
-        auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_st>();
         auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -226,7 +245,6 @@ static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
     else
     {
         auto policy     = log4sp::cell_to_policy(params[3]);
-        auto sink       = std::make_shared<log4sp::sinks::client_chat_sink_st>();
         auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
         auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
@@ -254,13 +272,14 @@ static cell_t CreateClientConsoleLogger(IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
+    auto sink = std::make_shared<log4sp::sinks::client_console_sink_st>();
+
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
     auto async = static_cast<bool>(params[2]);
     if (!async)
     {
-        auto sink   = std::make_shared<log4sp::sinks::client_console_sink_st>();
         auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -274,7 +293,6 @@ static cell_t CreateClientConsoleLogger(IPluginContext *ctx, const cell_t *param
     else
     {
         auto policy     = log4sp::cell_to_policy(params[3]);
-        auto sink       = std::make_shared<log4sp::sinks::client_console_sink_st>();
         auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
         auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
@@ -308,21 +326,20 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    auto maxFileSize = static_cast<size_t>(params[3]);
-    if (maxFileSize == 0)
-    {
-        ctx->ReportError("Param maxFileSize cannot be 0.");
-        return BAD_HANDLE;
-    }
-
-    auto maxFiles = static_cast<size_t>(params[4]);
-    if (maxFiles > 200000)
-    {
-        ctx->ReportError("Param maxFiles cannot exceed 200000.");
-        return BAD_HANDLE;
-    }
-
+    auto maxFileSize  = static_cast<size_t>(params[3]);
+    auto maxFiles     = static_cast<size_t>(params[4]);
     auto rotateOnOpen = static_cast<bool>(params[5]);
+
+    spdlog::sink_ptr sink;
+    try
+    {
+        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
 
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
@@ -330,7 +347,6 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     auto async = static_cast<bool>(params[6]);
     if (!async)
     {
-        auto sink   = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
         auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -344,7 +360,6 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     else
     {
         auto policy     = log4sp::cell_to_policy(params[7]);
-        auto sink       = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
         auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
         auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
@@ -378,16 +393,21 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    auto hour   = static_cast<int>(params[3]);
-    auto minute = static_cast<int>(params[4]);
-    if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
-    {
-        ctx->ReportError("Invalid rotation time in ctor. (%d:%d)", hour, minute);
-        return BAD_HANDLE;
-    }
-
+    auto hour     = static_cast<int>(params[3]);
+    auto minute   = static_cast<int>(params[4]);
     auto truncate = static_cast<bool>(params[5]);
     auto maxFiles = static_cast<uint16_t>(params[6]);
+
+    spdlog::sink_ptr sink;
+    try
+    {
+        sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
 
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
@@ -395,7 +415,6 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     auto async = static_cast<bool>(params[7]);
     if (!async)
     {
-        auto sink   = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
         auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
         auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -409,7 +428,6 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     else
     {
         auto policy     = log4sp::cell_to_policy(params[8]);
-        auto sink       = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
         auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
         auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
