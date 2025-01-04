@@ -214,6 +214,7 @@ static void __Log(LogLevel lvl, const char[] msg) {
         case LogLevel_Warn:     LogMessage("["... LOG4SP_LEVEL_NAME_WARN ..."] %s", msg);
         case LogLevel_Error:    LogError("["... LOG4SP_LEVEL_NAME_ERROR ..."] %s", msg);
         case LogLevel_Fatal:    LogError("["... LOG4SP_LEVEL_NAME_FATAL ..."] %s", msg);
+        case LogLevel_Off:      LogError("["... LOG4SP_LEVEL_NAME_OFF ..."] %s", msg);
     }
 }
 
@@ -243,6 +244,7 @@ static void __LogStackTrace(LogLevel lvl, const char[] msg) {
         case LogLevel_Warn:     LogStackTrace("["... LOG4SP_LEVEL_NAME_WARN ..."] %s", msg);
         case LogLevel_Error:    LogStackTrace("["... LOG4SP_LEVEL_NAME_ERROR ..."] %s", msg);
         case LogLevel_Fatal:    LogStackTrace("["... LOG4SP_LEVEL_NAME_FATAL ..."] %s", msg);
+        case LogLevel_Off:      LogStackTrace("["... LOG4SP_LEVEL_NAME_OFF ..."] %s", msg);
     }
 }
 
@@ -252,5 +254,6 @@ static void __ThrowError(LogLevel lvl, const char[] msg) {
         case LogLevel_Warn:     ThrowError("["... LOG4SP_LEVEL_NAME_WARN ..."] %s", msg);
         case LogLevel_Error:    ThrowError("["... LOG4SP_LEVEL_NAME_ERROR ..."] %s", msg);
         case LogLevel_Fatal:    ThrowError("["... LOG4SP_LEVEL_NAME_FATAL ..."] %s", msg);
+        case LogLevel_Off:      ThrowError("["... LOG4SP_LEVEL_NAME_OFF ..."] %s", msg);
     }
 }
