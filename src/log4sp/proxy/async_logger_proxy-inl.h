@@ -44,12 +44,12 @@ inline void async_logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
         if (auto pool_ptr = thread_pool_.lock()) {
             pool_ptr->post_log(shared_from_this(), msg, overflow_policy_);
         } else {
-            SPDLOG_CRITICAL("Internal Error! async log: thread pool doesn't exist anymore. Please contact the developer.");
+            throw std::runtime_error("Internal Error! async log: thread pool doesn't exist anymore.");
         }
     } catch (const std::exception &ex) {
         error_handler(msg.source, ex.what());
     } catch (...) {
-        SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
+        smutils->LogError(myself, "Internal Error! async log: Unknown exception caught.");
         throw;
     }
 }
@@ -59,12 +59,12 @@ inline void async_logger_proxy::flush_() {
         if (auto pool_ptr = thread_pool_.lock()) {
             pool_ptr->post_flush(shared_from_this(), overflow_policy_);
         } else {
-            throw std::runtime_error("Internal Error! async log: thread pool doesn't exist anymore");
+            throw std::runtime_error("Internal Error! async flush: thread pool doesn't exist anymore");
         }
     } catch (const std::exception &ex) {
         error_handler(spdlog::source_loc{}, ex.what());
     } catch (...) {
-        SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
+        smutils->LogError(myself, "Internal Error! async flush: Unknown exception caught.");
         throw;
     }
 }
@@ -77,7 +77,7 @@ inline void async_logger_proxy::backend_sink_it_(const spdlog::details::log_msg 
             } catch (const std::exception &ex) {
                 error_handler(msg.source, ex.what());
             } catch (...) {
-                SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
+                smutils->LogError(myself, "Internal Error! async backend log: Unknown exception caught.");
                 throw;
             }
         }
@@ -95,7 +95,7 @@ inline void async_logger_proxy::backend_flush_() {
         } catch (const std::exception &ex) {
             error_handler(spdlog::source_loc{}, ex.what());
         } catch (...) {
-            SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
+            smutils->LogError(myself, "Internal Error! async backend flush: Unknown exception caught.");
             throw;
         }
     }

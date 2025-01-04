@@ -50,7 +50,7 @@ inline void logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
             } catch (const std::exception &ex) {
                 error_handler(msg.source, ex.what());
             } catch (...) {
-                SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
+                smutils->LogError(myself, "Internal Error! logger log: Unknown exception caught.");
                 throw;
             }
         }
@@ -68,7 +68,7 @@ inline void logger_proxy::flush_() {
         } catch (const std::exception &ex) {
             error_handler(spdlog::source_loc{}, ex.what());
         } catch (...) {
-            SPDLOG_CRITICAL("Internal Error! Extension Log4sp encountered an unknown exception. Please contact the developer.");
+            smutils->LogError(myself, "Internal Error! logger flush: Unknown exception caught.");
             throw;
         }
     }
