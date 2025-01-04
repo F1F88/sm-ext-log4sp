@@ -68,37 +68,31 @@ static cell_t ClientChatSink_SetFilter(IPluginContext *ctx, const cell_t *params
         return 0;
     }
 
-    if (typeid(sink.get()) == typeid(log4sp::sinks::client_chat_sink_st))
     {
         auto chatSink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_st>(sink);
-        if (chatSink == nullptr)
+        if (chatSink != nullptr)
         {
-            ctx->ReportError("Unable to cast sink to single thread client_chat_sink_st.");
-            return 0;
-        }
-
-        if (!chatSink->set_player_filter(function))
-        {
-            ctx->ReportError("SM error! Adding filter to ClientChatSink failed.");
+            if (!chatSink->set_player_filter(function))
+            {
+                ctx->ReportError("SM error! Adding filter to ClientChatSink failed.");
+            }
             return 0;
         }
     }
-    else
+
     {
         auto chatSink = std::dynamic_pointer_cast<log4sp::sinks::client_chat_sink_mt>(sink);
-        if (chatSink == nullptr)
+        if (chatSink != nullptr)
         {
-            ctx->ReportError("Unable to cast sink to multi thread client_chat_sink.");
-            return 0;
-        }
-
-        if (!chatSink->set_player_filter(function))
-        {
-            ctx->ReportError("SM error! Adding filter to multi thread ClientChatSink failed.");
+            if (!chatSink->set_player_filter(function))
+            {
+                ctx->ReportError("SM error! Adding filter to multi thread ClientChatSink failed.");
+            }
             return 0;
         }
     }
 
+    ctx->ReportError("Not a valid ClientChatSink handle. (hdl: %d)", handle);
     return 0;
 }
 
