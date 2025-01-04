@@ -53,10 +53,13 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
     // Init handle type
     {
-        HandleError err = log4sp::logger_handler::instance().create_handle_type();
-        if (err != HandleError_None)
+        try
         {
-            snprintf(error, maxlen, "Could not create Logger handle type. (err: %d)", err);
+            log4sp::logger_handler::initialize();
+        }
+        catch(const std::exception &ex)
+        {
+            snprintf(error, maxlen, "Could not create Logger handle type. (reason: %s)", ex.what());
             return false;
         }
 
@@ -163,9 +166,10 @@ void Log4sp::SDK_OnUnload()
     rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, &log4sp::root_console_command_handler::instance());
 
     assert(log4sp::sink_handler::instance().handle_type() != NO_HANDLE_TYPE);
+    assert(log4sp::logger_handler::instance().handle_type() != NO_HANDLE_TYPE);
 
     log4sp::sink_handler::destroy();
-    log4sp::logger_handler::instance().remove_handle_type();
+    log4sp::logger_handler::destroy();
 
     spdlog::shutdown();
 }

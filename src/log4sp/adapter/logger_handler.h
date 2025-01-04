@@ -29,11 +29,23 @@ public:
     [[nodiscard]] static logger_handler &instance();
 
     /**
-     * @brief 用于 SDK_OnLoad 时创建 handle type
+     * @brief 用于 SDK_OnLoad 时创建 handle type。
+     *
+     * @note  需要与 destroy 配对使用。
      *
      * @return          HandleError error code.
+     * @exception       Logger handle type 已存在，或创建失败。
      */
-    HandleError create_handle_type();
+    static void initialize();
+
+    /**
+     * @brief 用于 SDK_OnUnload 时移除 handle type。
+     *
+     * @note  需要与 initialize 配对使用。
+     * @note  为了避免影响其他清理工作，此方法不抛出异常。
+     * @note  移除后所有的 logger handle 都将被释放，所以 handles_ 和 loggers_ 会被清空。
+     */
+    static void destroy();
 
     /**
      * @brief 获取 handle type
@@ -87,6 +99,15 @@ public:
     [[nodiscard]] std::shared_ptr<logger_proxy> find_logger(const std::string &name);
 
     /**
+     * @brief 返回所有 logger 名称组成的数组
+     *
+     * @note 拓展启动时就注册了一个全局 logger，所以这个方法返回的数组大小至少为 1
+     *
+     * @return          所有 logger 名称组成的数组
+     */
+    [[nodiscard]] std::vector<std::string> get_all_logger_names();
+
+    /**
      * Apply a user defined function on all logger handles.
      * Example:
      *      apply_all([&](std::shared_ptr<spdlog::logger> l) {l->flush();});
@@ -101,29 +122,15 @@ public:
      */
     void OnHandleDestroy(HandleType_t type, void *object) override;
 
-    /**
-     * @brief 用于 SDK_OnUnload 时移除 handle type。
-     *        移除后，SourceMod 应该会 Free 这个 type 下的所有 handle 实例
-     *        OnHandleDestroy 里会逐个从 handles_ 和 loggers_ 移除数据
-     *        所以最终 handles_ 和 loggers_ 应该是空的
-     */
-    void remove_handle_type();
-
-    /**
-     * @brief 返回所有 logger 名称组成的数组
-     *
-     * @note 拓展启动时就注册了一个全局 logger，所以这个方法返回的数组大小至少为 1
-     *
-     * @return          所有 logger 名称组成的数组
-     */
-    [[nodiscard]] std::vector<std::string> get_all_logger_names();
-
 private:
     logger_handler() : handle_type_(NO_HANDLE_TYPE) {}
     ~logger_handler();
 
     logger_handler(const logger_handler&) = delete;
     logger_handler& operator=(const logger_handler&) = delete;
+
+    void initialize_();
+    void destroy_();
 
     HandleType_t handle_type_;
     std::unordered_map<std::string, Handle_t> handles_;

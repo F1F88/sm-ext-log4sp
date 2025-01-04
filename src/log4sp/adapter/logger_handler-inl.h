@@ -1,9 +1,11 @@
 #ifndef _LOG4SP_ADAPTER_LOGGER_HANDLER_INL_H_
 #define _LOG4SP_ADAPTER_LOGGER_HANDLER_INL_H_
 
-#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_CRITICAL
-    #include "spdlog/spdlog.h"
-    // #include "spdlog/fmt/xchar.h"
+#include <cassert>
+#include <string>
+
+#if SPDLOG_ACTIVE_LEVEL < SPDLOG_LEVEL_INFO
+    #include "spdlog/spdlog.h"  // SPDLOG_TRACE 和 SPDLOG_DEBUG 需要
 #endif
 
 #include "log4sp/proxy/logger_proxy.h"
@@ -13,28 +15,19 @@
 
 namespace log4sp {
 
-class logger_proxy;
-
 inline logger_handler& logger_handler::instance() {
     static logger_handler instance;
     return instance;
 }
 
-inline HandleError logger_handler::create_handle_type() {
-    HandleAccess access;
-    HandleError error;
-
-    // 默认情况下，创建的 Logger handle 可以被非拥有者以外的人删除
-    handlesys->InitAccessDefaults(nullptr, &access);
-    access.access[HandleAccess_Delete] = 0;
-
-    handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
-    if (handle_type_ == NO_HANDLE_TYPE) {
-        SPDLOG_CRITICAL("Internal Error! Logger handle type is not registered.");
-        return error;
-    }
-    return HandleError_None;
+inline void logger_handler::initialize() {
+    instance().initialize_();
 }
+
+inline void logger_handler::destroy() {
+    instance().destroy_();
+}
+
 
 inline HandleType_t logger_handler::handle_type() const {
     return handle_type_;
@@ -45,6 +38,9 @@ inline Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> obje
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
     }
+
+    assert(handles_.find(object->name()) == handles_.end());
+    assert(loggers_.find(object->name()) == loggers_.end());
 
     handles_[object->name()] = handle;
     loggers_[object->name()] = object;
@@ -64,15 +60,9 @@ inline std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle
         return nullptr;
     }
 
-    auto found = loggers_.find(object->name());
-    if (found == loggers_.end()) {
-        SPDLOG_CRITICAL("Internal Error! handle is valid, but logger is not found. (name: {}, hdl: {})", object->name(), handle);
-        if (error) {
-            *error = HandleError_Index;
-        }
-        return nullptr;
-    }
+    assert(loggers_.find(object->name()) != loggers_.end());
 
+    auto found = loggers_.find(object->name());
     return found->second;
 }
 
@@ -86,14 +76,18 @@ inline std::shared_ptr<logger_proxy> logger_handler::find_logger(const std::stri
     return found == loggers_.end() ? BAD_HANDLE : found->second;
 }
 
+inline std::vector<std::string> logger_handler::get_all_logger_names() {
+    std::vector<std::string> names;
+    for (const auto &pair : loggers_) {
+        names.push_back(pair.first);
+    }
+    return names;
+}
+
 inline void logger_handler::apply_all(const std::function<void(const std::shared_ptr<logger_proxy>)> &fun) {
     for (auto &l : loggers_) {
         fun(l.second);
     }
-}
-
-inline logger_handler::~logger_handler() {
-    remove_handle_type();
 }
 
 inline void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
@@ -101,35 +95,43 @@ inline void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
 
     SPDLOG_TRACE("Logger handle destroyed. (name: {})", logger->name());
 
-    auto found_handle = handles_.find(logger->name());
-    if (found_handle == handles_.end()) {
-        SPDLOG_CRITICAL("Unknown handle destroyed. (name: {})", logger->name());
-    } else {
-        handles_.erase(found_handle);
+    assert(handles_.find(logger->name()) != handles_.end());
+    assert(loggers_.find(logger->name()) != loggers_.end());
+
+    handles_.erase(logger->name());
+    loggers_.erase(logger->name());
+}
+
+
+inline logger_handler::~logger_handler() {
+    destroy_();
+}
+
+inline void logger_handler::initialize_() {
+    if (handlesys->FindHandleType("Logger", &handle_type_)) {
+        throw std::runtime_error("Logger handle type already exists");
     }
 
-    auto found_logger = loggers_.find(logger->name());
-    if (found_logger == loggers_.end()) {
-        SPDLOG_CRITICAL("Unknown handle destroyed. (name: {})", logger->name());
-    } else {
-        loggers_.erase(found_logger);
+    HandleAccess access;
+    HandleError error;
+
+    // 默认情况下，创建的 handle 可以被任意插件释放
+    handlesys->InitAccessDefaults(nullptr, &access);
+    access.access[HandleAccess_Delete] = 0;
+
+    handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
+    if (handle_type_ == NO_HANDLE_TYPE) {
+        throw std::runtime_error("Handle error code " + std::to_string(static_cast<int>(error)));
     }
 }
 
-inline void logger_handler::remove_handle_type() {
+inline void logger_handler::destroy_() {
+    assert(handle_type_ != NO_HANDLE_TYPE);
+
     if (handle_type_ != NO_HANDLE_TYPE) {
         handlesys->RemoveType(handle_type_, myself->GetIdentity());
         handle_type_ = NO_HANDLE_TYPE;
     }
-}
-
-inline std::vector<std::string> logger_handler::get_all_logger_names() {
-    std::vector<std::string> names;
-    // names.reserve(loggers_.size());
-    for (const auto& pair : loggers_) {
-        names.push_back(pair.first);
-    }
-    return names;
 }
 
 
