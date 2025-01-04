@@ -1,12 +1,7 @@
-#ifndef _LOG4SP_ADAPTER_LOGGER_HANDLER_INL_H_
-#define _LOG4SP_ADAPTER_LOGGER_HANDLER_INL_H_
-
 #include <cassert>
 #include <string>
 
-#if SPDLOG_ACTIVE_LEVEL < SPDLOG_LEVEL_INFO
-    #include "spdlog/spdlog.h"  // SPDLOG_TRACE 和 SPDLOG_DEBUG 需要
-#endif
+#include "spdlog/spdlog.h"  // SPDLOG_TRACE 和 SPDLOG_DEBUG 需要
 
 #include "log4sp/proxy/logger_proxy.h"
 
@@ -15,25 +10,25 @@
 
 namespace log4sp {
 
-inline logger_handler& logger_handler::instance() {
+logger_handler& logger_handler::instance() {
     static logger_handler instance;
     return instance;
 }
 
-inline void logger_handler::initialize() {
+void logger_handler::initialize() {
     instance().initialize_();
 }
 
-inline void logger_handler::destroy() {
+void logger_handler::destroy() {
     instance().destroy_();
 }
 
 
-inline HandleType_t logger_handler::handle_type() const {
+HandleType_t logger_handler::handle_type() const {
     return handle_type_;
 }
 
-inline Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
+Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
     Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
@@ -49,7 +44,7 @@ inline Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> obje
     return handle;
 }
 
-inline std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
+std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
     logger_proxy *object;
     HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
 
@@ -66,17 +61,17 @@ inline std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle
     return found->second;
 }
 
-inline Handle_t logger_handler::find_handle(const std::string &name) {
+Handle_t logger_handler::find_handle(const std::string &name) {
     auto found = handles_.find(name);
     return found == handles_.end() ? BAD_HANDLE : found->second;
 }
 
-inline std::shared_ptr<logger_proxy> logger_handler::find_logger(const std::string &name) {
+std::shared_ptr<logger_proxy> logger_handler::find_logger(const std::string &name) {
     auto found = loggers_.find(name);
     return found == loggers_.end() ? BAD_HANDLE : found->second;
 }
 
-inline std::vector<std::string> logger_handler::get_all_logger_names() {
+std::vector<std::string> logger_handler::get_all_logger_names() {
     std::vector<std::string> names;
     for (const auto &pair : loggers_) {
         names.push_back(pair.first);
@@ -84,19 +79,19 @@ inline std::vector<std::string> logger_handler::get_all_logger_names() {
     return names;
 }
 
-inline void logger_handler::apply_all(const std::function<void(const Handle_t)> &fun) {
+void logger_handler::apply_all(const std::function<void(const Handle_t)> &fun) {
     for (auto &h : handles_) {
         fun(h.second);
     }
 }
 
-inline void logger_handler::apply_all(const std::function<void(std::shared_ptr<logger_proxy>)> &fun) {
+void logger_handler::apply_all(const std::function<void(std::shared_ptr<logger_proxy>)> &fun) {
     for (auto &l : loggers_) {
         fun(l.second);
     }
 }
 
-inline void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
+void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
     auto logger = static_cast<log4sp::logger_proxy *>(object);
 
     SPDLOG_TRACE("Logger handle destroyed. (name: {})", logger->name());
@@ -109,11 +104,11 @@ inline void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
 }
 
 
-inline logger_handler::~logger_handler() {
+logger_handler::~logger_handler() {
     destroy_();
 }
 
-inline void logger_handler::initialize_() {
+void logger_handler::initialize_() {
     if (handlesys->FindHandleType("Logger", &handle_type_)) {
         throw std::runtime_error("Logger handle type already exists");
     }
@@ -131,7 +126,7 @@ inline void logger_handler::initialize_() {
     }
 }
 
-inline void logger_handler::destroy_() {
+void logger_handler::destroy_() {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
     if (handle_type_ != NO_HANDLE_TYPE) {
@@ -142,4 +137,3 @@ inline void logger_handler::destroy_() {
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_ADAPTER_LOGGER_HANDLER_INL_H_

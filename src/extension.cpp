@@ -38,6 +38,7 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/command/root_console_command_handler.h"
+#include "log4sp/proxy/logger_proxy.h"
 
 
 /**

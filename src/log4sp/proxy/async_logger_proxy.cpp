@@ -1,6 +1,3 @@
-#ifndef _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_INL_H_
-#define _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_INL_H_
-
 #include "spdlog/spdlog.h"
 
 #include "log4sp/adapter/logger_handler.h"
@@ -10,7 +7,7 @@
 
 namespace log4sp {
 
-inline async_logger_proxy::~async_logger_proxy() {
+async_logger_proxy::~async_logger_proxy() {
     std::lock_guard<std::mutex> lock(error_mutex_);
     if (error_forward_ != nullptr) {
         forwards->ReleaseForward(error_forward_);
@@ -18,15 +15,15 @@ inline async_logger_proxy::~async_logger_proxy() {
     }
 }
 
-inline void async_logger_proxy::add_sink(spdlog::sink_ptr sink) {
+void async_logger_proxy::add_sink(spdlog::sink_ptr sink) {
     std::static_pointer_cast<spdlog::sinks::dist_sink_mt>(sinks_.front())->add_sink(sink);
 }
 
-inline void async_logger_proxy::remove_sink(spdlog::sink_ptr sink) {
+void async_logger_proxy::remove_sink(spdlog::sink_ptr sink) {
     std::static_pointer_cast<spdlog::sinks::dist_sink_mt>(sinks_.front())->remove_sink(sink);
 }
 
-inline void async_logger_proxy::set_error_forward(IChangeableForward *forward) {
+void async_logger_proxy::set_error_forward(IChangeableForward *forward) {
     std::lock_guard<std::mutex> lock(error_mutex_);
     if (error_forward_ != nullptr) {
         forwards->ReleaseForward(error_forward_);
@@ -34,12 +31,12 @@ inline void async_logger_proxy::set_error_forward(IChangeableForward *forward) {
     error_forward_ = forward;
 }
 
-inline void async_logger_proxy::error_handler(spdlog::source_loc loc, const std::string &msg) {
+void async_logger_proxy::error_handler(spdlog::source_loc loc, const std::string &msg) {
     std::lock_guard<std::mutex> lock(error_mutex_);
     logger_proxy::error_handler(loc, msg);
 }
 
-inline void async_logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
+void async_logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
     try {
         if (auto pool_ptr = thread_pool_.lock()) {
             pool_ptr->post_log(shared_from_this(), msg, overflow_policy_);
@@ -54,7 +51,7 @@ inline void async_logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
     }
 }
 
-inline void async_logger_proxy::flush_() {
+void async_logger_proxy::flush_() {
     try {
         if (auto pool_ptr = thread_pool_.lock()) {
             pool_ptr->post_flush(shared_from_this(), overflow_policy_);
@@ -69,7 +66,7 @@ inline void async_logger_proxy::flush_() {
     }
 }
 
-inline void async_logger_proxy::backend_sink_it_(const spdlog::details::log_msg &msg) {
+void async_logger_proxy::backend_sink_it_(const spdlog::details::log_msg &msg) {
     for (auto &sink : sinks_) {
         if (sink->should_log(msg.level)) {
             try {
@@ -88,7 +85,7 @@ inline void async_logger_proxy::backend_sink_it_(const spdlog::details::log_msg 
     }
 }
 
-inline void async_logger_proxy::backend_flush_() {
+void async_logger_proxy::backend_flush_() {
     for (auto &sink : sinks_) {
         try {
             sink->flush();
@@ -103,4 +100,3 @@ inline void async_logger_proxy::backend_flush_() {
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_INL_H_

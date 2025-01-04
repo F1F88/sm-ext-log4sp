@@ -1,7 +1,3 @@
-
-#ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
-#define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_
-
 #include <regex>
 #include <stdlib.h>
 
@@ -12,11 +8,12 @@
 #include "log4sp/proxy/logger_proxy.h"
 
 #include "log4sp/command/root_console_command.h"
+#include "log4sp/command/root_console_command_handler.h"
 
 
 namespace log4sp {
 
-inline std::shared_ptr<logger_proxy> command::arg_to_logger(const std::string &arg) {
+std::shared_ptr<logger_proxy> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
     auto logger = logger_handler::instance().find_logger(arg);
     if (logger == nullptr) {
@@ -25,7 +22,7 @@ inline std::shared_ptr<logger_proxy> command::arg_to_logger(const std::string &a
     return logger;
 }
 
-inline spdlog::level::level_enum command::arg_to_level(const std::string &arg) {
+spdlog::level::level_enum command::arg_to_level(const std::string &arg) {
     // 尝试按名字转换
     auto level = spdlog::level::from_str(arg);
 
@@ -43,7 +40,7 @@ inline spdlog::level::level_enum command::arg_to_level(const std::string &arg) {
 }
 
 
-inline void list_command::execute(const std::vector<std::string> &args) {
+void list_command::execute(const std::vector<std::string> &args) {
     std::vector<std::string> names = log4sp::logger_handler::instance().get_all_logger_names();
 
     auto msg = spdlog::fmt_lib::format("[SM] List of all logger names: [{}].", spdlog::fmt_lib::join(names, ", "));
@@ -51,7 +48,7 @@ inline void list_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void get_lvl_command::execute(const std::vector<std::string> &args) {
+void get_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error("Usage: sm log4sp get_lvl <logger_name>");
     }
@@ -63,7 +60,7 @@ inline void get_lvl_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void set_lvl_command::execute(const std::vector<std::string> &args) {
+void set_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
         throw std::runtime_error("Usage: sm log4sp set_lvl <logger_name> <level>");
     }
@@ -81,7 +78,7 @@ inline void set_lvl_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void set_pattern_command::execute(const std::vector<std::string> &args) {
+void set_pattern_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
         throw std::runtime_error("Usage: sm log4sp set_pattern <logger_name> <pattern>");
     }
@@ -94,7 +91,7 @@ inline void set_pattern_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void should_log_command::execute(const std::vector<std::string> &args) {
+void should_log_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
         throw std::runtime_error("Usage: sm log4sp should_log <logger_name> <level>");
     }
@@ -107,7 +104,7 @@ inline void should_log_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void log_command::execute(const std::vector<std::string> &args) {
+void log_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 3) {
         throw std::runtime_error("Usage: sm log4sp log <logger_name> <level> <message>");
     }
@@ -121,7 +118,7 @@ inline void log_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void flush_command::execute(const std::vector<std::string> &args) {
+void flush_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error("Usage: sm log4sp flush <logger_name>");
     }
@@ -133,7 +130,7 @@ inline void flush_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void get_flush_lvl_command::execute(const std::vector<std::string> &args) {
+void get_flush_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error("Usage: sm log4sp get_flush_lvl <logger_name>");
     }
@@ -145,7 +142,7 @@ inline void get_flush_lvl_command::execute(const std::vector<std::string> &args)
 }
 
 
-inline void set_flush_lvl_command::execute(const std::vector<std::string> &args) {
+void set_flush_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
         throw std::runtime_error("Usage: sm log4sp set_flush_lvl <logger_name> <level>");
     }
@@ -163,7 +160,7 @@ inline void set_flush_lvl_command::execute(const std::vector<std::string> &args)
 }
 
 
-inline void should_bt_command::execute(const std::vector<std::string> &args) {
+void should_bt_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error("Usage: sm log4sp should_bt <logger_name>");
     }
@@ -175,7 +172,7 @@ inline void should_bt_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void enable_bt_command::execute(const std::vector<std::string> &args) {
+void enable_bt_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
         throw std::runtime_error("Usage: sm log4sp enable_bt <logger_name> <number>");
     }
@@ -193,7 +190,7 @@ inline void enable_bt_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void disable_bt_command::execute(const std::vector<std::string> &args) {
+void disable_bt_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error("Usage: sm log4sp disable_bt <logger_name>");
     }
@@ -210,7 +207,7 @@ inline void disable_bt_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void dump_bt_command::execute(const std::vector<std::string> &args) {
+void dump_bt_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error("Usage: sm log4sp dump_bt <logger_name>");
     }
@@ -227,7 +224,7 @@ inline void dump_bt_command::execute(const std::vector<std::string> &args) {
 }
 
 
-inline void apply_all_command::execute(const std::vector<std::string> &args) {
+void apply_all_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error{
             spdlog::fmt_lib::format(
@@ -262,4 +259,3 @@ inline void apply_all_command::execute(const std::vector<std::string> &args) {
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_INL_H_

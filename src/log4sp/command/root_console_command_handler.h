@@ -8,10 +8,10 @@
 
 #include "extension.h"
 
+#include "log4sp/command/root_console_command.h"
+
 
 namespace log4sp {
-
-class command;
 
 class root_console_command_handler final : public IRootConsoleCommand {
 public:
