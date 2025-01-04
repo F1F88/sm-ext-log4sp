@@ -483,6 +483,8 @@ static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
             forward->Execute();
         }
     );
+
+    forwards->ReleaseForward(forward);
     return 0;
 }
 
