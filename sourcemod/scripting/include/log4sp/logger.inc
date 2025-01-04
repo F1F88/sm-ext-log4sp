@@ -173,9 +173,10 @@ methodmap Logger < Handle
         AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
-     * Apply a user defined function on all logger handles.
+     * Apply a user defined function on all loggers.
      *
-     * @param callback  A callback that apply a user defined function on all logger handles.
+     * @param callback  A callback that apply a user defined function on all loggers.
+     * @error           Invalid apply all callback.
      */
     public static native void ApplyAll(LoggerApplyAllCallback callback);
 

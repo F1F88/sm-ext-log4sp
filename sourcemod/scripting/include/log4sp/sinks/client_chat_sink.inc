@@ -22,7 +22,7 @@ methodmap ClientChatSink < Sink
     /**
      * Set the clint chat sink filter.
      *
-     * @error           Invalid client chat sink filter.
+     * @error               Invalid sink client filter.
      */
     public native void SetFilter(SinkClientFilter filter);
 }

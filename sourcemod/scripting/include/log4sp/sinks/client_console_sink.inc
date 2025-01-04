@@ -22,7 +22,7 @@ methodmap ClientConsoleSink < Sink
     /**
      * Set the clint console sink filter.
      *
-     * @error               Invalid client console sink filter.
+     * @error               Invalid sink client filter.
      */
     public native void SetFilter(SinkClientFilter filter);
 }
