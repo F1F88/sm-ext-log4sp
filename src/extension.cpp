@@ -95,12 +95,30 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
             return false;
         }
 
-        spdlog::init_thread_pool(queueSize, threadCount);
+        try
+        {
+            spdlog::init_thread_pool(queueSize, threadCount);
+        }
+        catch(const std::exception &ex)
+        {
+            snprintf(error, maxlen, "Could not create global thread pool, reason : %s", ex.what());
+            return false;
+        }
     }
 
-    // Init Default Logger
+    // Init Global Logger
     {
-        auto sink   = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        spdlog::sink_ptr sink;
+        try
+        {
+            sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        }
+        catch(const std::exception &ex)
+        {
+            snprintf(error, maxlen, "Could not create global logger handle, reason : %s", ex.what());
+            return false;
+        }
+
         auto logger = std::make_shared<log4sp::logger_proxy>(SMEXT_CONF_LOGTAG, sink);
         spdlog::set_default_logger(logger);
 
@@ -116,7 +134,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &err);
         if (handle == BAD_HANDLE)
         {
-            snprintf(error, maxlen, "Could not create default logger handle. (err: %d)", err);
+            snprintf(error, maxlen, "Could not create global logger handle. (err: %d)", err);
             return false;
         }
     }

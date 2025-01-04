@@ -17,36 +17,38 @@ static cell_t BaseFileSink(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    auto truncate = static_cast<bool>(params[2]);
+    auto truncate    = static_cast<bool>(params[2]);
+    auto multiThread = static_cast<bool>(params[3]);
+
+    spdlog::sink_ptr sink;
+    try
+    {
+        if (!multiThread)
+        {
+            sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        }
+        else
+        {
+            sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, truncate);
+        }
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
 
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    bool multiThread = static_cast<bool>(params[3]);
-    if (!multiThread)
+    Handle_t handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
     {
-        auto sink   = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
-        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("Allocation of sink handle failed. (err: %d)", handle, error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
+        ctx->ReportError("Allocation of sink handle failed. (err: %d)", handle, error);
+        return BAD_HANDLE;
     }
-    else
-    {
-        auto sink   = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, truncate);
-        auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("Allocation of multi thread sink handle failed. (err: %d)", handle, error);
-            return BAD_HANDLE;
-        }
 
-        return handle;
-    }
+    return handle;
 }
 
 /**
@@ -109,7 +111,14 @@ static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
         auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
         if (realSink != nullptr)
         {
-            realSink->truncate();
+            try
+            {
+                realSink->truncate();
+            }
+            catch(const std::exception &ex)
+            {
+                ctx->ReportError(ex.what());
+            }
             return 0;
         }
     }
@@ -118,7 +127,14 @@ static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
         auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink);
         if (realSink != nullptr)
         {
-            realSink->truncate();
+            try
+            {
+                realSink->truncate();
+            }
+            catch(const std::exception &ex)
+            {
+                ctx->ReportError(ex.what());
+            }
             return 0;
         }
     }
