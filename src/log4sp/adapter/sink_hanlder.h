@@ -111,5 +111,4 @@ private:
 
 
 }       // namespace log4sp
-#include "log4sp/adapter/sink_handler-inl.h"
 #endif  // _LOG4SP_ADAPTER_SINK_HANDLER_H_

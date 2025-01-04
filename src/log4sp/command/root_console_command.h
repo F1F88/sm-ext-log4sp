@@ -124,6 +124,7 @@ public:
 private:
     std::unordered_set<std::string> functions_;
 };
+
+
 }       // namespace log4sp
-#include "log4sp/command/root_console_command-inl.h"
 #endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_

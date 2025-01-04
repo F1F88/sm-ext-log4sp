@@ -51,5 +51,4 @@ private:
 };
 
 }       // namespace log4sp
-#include "log4sp/command/root_console_command_handler-inl.h"
 #endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_H_

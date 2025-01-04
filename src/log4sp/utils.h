@@ -65,5 +65,4 @@ namespace log4sp {
 
 
 }       // namespace log4sp
-#include "utils-inl.h"
 #endif  // _LOG4SP_UTILS_H_
