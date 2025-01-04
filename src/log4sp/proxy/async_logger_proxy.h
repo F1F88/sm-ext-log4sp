@@ -51,5 +51,4 @@ private:
 
 
 }       // namespace log4sp
-#include "log4sp/proxy/async_logger_proxy-inl.h"
 #endif  // _LOG4SP_PROXY_ASYNC_LOGGER_PROXY_H_

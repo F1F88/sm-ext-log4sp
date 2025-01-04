@@ -1,6 +1,3 @@
-#ifndef _LOG4SP_UTILS_INL_H_
-#define _LOG4SP_UTILS_INL_H_
-
 #include <math.h>
 
 #include "spdlog/async.h"
@@ -10,7 +7,7 @@
 namespace log4sp {
 
 
-inline spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept {
+spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept {
     if (lvl < 0) {
         return static_cast<spdlog::level::level_enum>(0);
     }
@@ -22,7 +19,7 @@ inline spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept {
     return static_cast<spdlog::level::level_enum>(lvl);
 }
 
-inline spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept {
+spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept {
     if (policy < 0) {
         return static_cast<spdlog::async_overflow_policy>(0);
     }
@@ -34,7 +31,7 @@ inline spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept {
     return static_cast<spdlog::async_overflow_policy>(policy);
 }
 
-inline spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept {
+spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept {
     if (type < 0) {
         return static_cast<spdlog::pattern_time_type>(0);
     }
@@ -46,7 +43,7 @@ inline spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept
     return static_cast<spdlog::pattern_time_type>(type);
 }
 
-inline spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx) {
+spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx) {
     auto iter = ctx->CreateFrameIterator();
     spdlog::source_loc loc;
 
@@ -63,7 +60,7 @@ inline spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx) {
     return loc;
 }
 
-inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
+std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
     auto iter = ctx->CreateFrameIterator();
     if (!iter->Done()) {
         ctx->DestroyFrameIterator(iter);
@@ -101,7 +98,7 @@ inline std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
 }
 
 
-inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param) {
+std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, unsigned int param) {
     char *format;
     ctx->LocalToString(params[param], &format);
 
@@ -119,7 +116,7 @@ inline std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const 
 #define ZEROPAD         0x00000002      /* zero (as opposed to blank) pad */
 #define UPPERDIGITS     0x00000004      /* make alpha digits uppercase */
 
-inline static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) {
+static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) {
     cell_t new_params[MAX_TRANSLATE_PARAMS];
     for (unsigned int i = 0; i < pTrans->fmt_count; i++) {
         new_params[i] = params[pTrans->fmt_order[i]];
@@ -127,7 +124,7 @@ inline static void ReorderTranslationParams(const Translation *pTrans, cell_t *p
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-inline static spdlog::fmt_lib::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg) {
+static spdlog::fmt_lib::memory_buffer Translate(IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, int *arg) {
     unsigned int langid;
     Translation pTrans;
     IPlugin *pl = plsys->FindPluginByContext(ctx->GetContext());
@@ -182,7 +179,7 @@ try_serverlang:
     }
 }
 
-inline static void AddString(spdlog::fmt_lib::memory_buffer &out, const char *string, int width, int prec, int flags) {
+static void AddString(spdlog::fmt_lib::memory_buffer &out, const char *string, int width, int prec, int flags) {
     if (string == nullptr) {
         const char nlstr[] = {'(','n','u','l','l',')','\0'};
         const int size = sizeof(nlstr);
@@ -222,7 +219,7 @@ inline static void AddString(spdlog::fmt_lib::memory_buffer &out, const char *st
     }
 }
 
-inline static void AddFloat(spdlog::fmt_lib::memory_buffer &out, double fval, int width, int prec, int flags) {
+static void AddFloat(spdlog::fmt_lib::memory_buffer &out, double fval, int width, int prec, int flags) {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
@@ -326,7 +323,7 @@ inline static void AddFloat(spdlog::fmt_lib::memory_buffer &out, double fval, in
     }
 }
 
-inline static void AddBinary(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
+static void AddBinary(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[32];
 
     int iter = 31;
@@ -364,7 +361,7 @@ inline static void AddBinary(spdlog::fmt_lib::memory_buffer &out, unsigned int v
     }
 }
 
-inline static void AddUInt(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
+static void AddUInt(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[10];
     int digits = 0;
     do {
@@ -403,7 +400,7 @@ inline static void AddUInt(spdlog::fmt_lib::memory_buffer &out, unsigned int val
     }
 }
 
-inline static void AddInt(spdlog::fmt_lib::memory_buffer &out, int val, int width, int flags) {
+static void AddInt(spdlog::fmt_lib::memory_buffer &out, int val, int width, int flags) {
     char text[10];
     int digits = 0;
 
@@ -458,7 +455,7 @@ inline static void AddInt(spdlog::fmt_lib::memory_buffer &out, int val, int widt
     }
 }
 
-inline static void AddHex(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
+static void AddHex(spdlog::fmt_lib::memory_buffer &out, unsigned int val, int width, int flags) {
     char text[8];
     int digits = 0;
 
@@ -506,7 +503,7 @@ inline static void AddHex(spdlog::fmt_lib::memory_buffer &out, unsigned int val,
     }
 }
 
-inline static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp) {
+static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp) {
     auto player = playerhelpers->GetGamePlayer(index);
     if (!player || !player->IsConnected()) {
         return false;
@@ -528,7 +525,7 @@ inline static bool DescribePlayer(int index, const char **namep, const char **au
     return true;
 }
 
-inline spdlog::fmt_lib::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param) {
+spdlog::fmt_lib::memory_buffer format_cell_to_memory_buf(const char *format, SourcePawn::IPluginContext *ctx, const cell_t *params, int *param) {
     auto out = spdlog::fmt_lib::memory_buffer();
 
     int args = params[0];       // params count
@@ -779,4 +776,3 @@ reswitch:
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_UTILS_INL_H_

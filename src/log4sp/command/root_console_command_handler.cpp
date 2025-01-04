@@ -1,17 +1,13 @@
-#ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_
-#define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_
-
 #include <exception>
 
+#include "spdlog/common.h"
 #include "spdlog/fmt/xchar.h"
-
-#include "log4sp/command/root_console_command.h"
 
 #include "log4sp/command/root_console_command_handler.h"
 
 namespace log4sp {
 
-inline root_console_command_handler::root_console_command_handler() {
+root_console_command_handler::root_console_command_handler() {
     commands_["list"]           = std::make_unique<list_command>();
     commands_["apply_all"]      = std::make_unique<apply_all_command>(std::unordered_set<std::string>{"get_lvl", "set_lvl", "set_pattern", "should_log", "log", "flush", "get_flush_lvl", "set_flush_lvl", "should_bt", "enable_bt", "disable_bt", "dump_bt"});
     commands_["get_lvl"]        = std::make_unique<get_lvl_command>();
@@ -28,13 +24,13 @@ inline root_console_command_handler::root_console_command_handler() {
     commands_["dump_bt"]        = std::make_unique<dump_bt_command>();
 }
 
-inline root_console_command_handler &root_console_command_handler::instance() {
+root_console_command_handler &root_console_command_handler::instance() {
     static root_console_command_handler singleInstance;
     return singleInstance;
 }
 
 
-inline void root_console_command_handler::draw_menu() {
+void root_console_command_handler::draw_menu() {
     rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
     rootconsole->ConsolePrint("Usage: sm log4sp <function_name> [arguments]");
 
@@ -55,7 +51,7 @@ inline void root_console_command_handler::draw_menu() {
 }
 
 
-inline void root_console_command_handler::execute(const std::string &cmdname, const std::vector<std::string> &args) {
+void root_console_command_handler::execute(const std::string &cmdname, const std::vector<std::string> &args) {
     auto iter = commands_.find(cmdname);
     if (iter != commands_.end()) {
         iter->second->execute(args);
@@ -65,7 +61,7 @@ inline void root_console_command_handler::execute(const std::string &cmdname, co
 }
 
 
-inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args) {
+void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args) {
     // 0-sm  |  1-log4sp  |  2-function name  |  3-logger name  |  x-params
     int argCnt = args->ArgC();
     if (argCnt <= 2) {
@@ -89,4 +85,3 @@ inline void root_console_command_handler::OnRootConsoleCommand(const char *cmdna
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_HANDLER_INL_H_

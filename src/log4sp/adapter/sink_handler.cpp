@@ -1,39 +1,33 @@
-#ifndef _LOG4SP_ADAPTER_SINK_HANDLER_INL_H_
-#define _LOG4SP_ADAPTER_SINK_HANDLER_INL_H_
-
 #include <cassert>
 #include <string>
 
-#if SPDLOG_ACTIVE_LEVEL < SPDLOG_LEVEL_INFO
-    #include "spdlog/spdlog.h"  // SPDLOG_TRACE 和 SPDLOG_DEBUG 需要
-#else
-    #include "spdlog/sinks/sink.h"
-#endif
+#include "spdlog/spdlog.h"  // SPDLOG_TRACE 和 SPDLOG_DEBUG 需要
+// #include "spdlog/sinks/sink.h"
 
 #include "log4sp/adapter/sink_hanlder.h"
 
 
 namespace log4sp {
 
-inline sink_handler& sink_handler::instance() {
+sink_handler& sink_handler::instance() {
     static sink_handler instance;
     return instance;
 }
 
-inline void sink_handler::initialize() {
+void sink_handler::initialize() {
     instance().initialize_();
 }
 
-inline void sink_handler::destroy() {
+void sink_handler::destroy() {
     instance().destroy_();
 }
 
 
-inline HandleType_t sink_handler::handle_type() const {
+HandleType_t sink_handler::handle_type() const {
     return handle_type_;
 }
 
-inline Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
+Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
     Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
@@ -49,7 +43,7 @@ inline Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink>
     return handle;
 }
 
-inline std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
+std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
     spdlog::sinks::sink *object;
     HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
 
@@ -66,7 +60,7 @@ inline std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t h
     return found->second;
 }
 
-inline void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
+void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
     SPDLOG_TRACE("A sink handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
 
     auto sink = static_cast<spdlog::sinks::sink *>(object);
@@ -79,11 +73,11 @@ inline void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
 }
 
 
-inline sink_handler::~sink_handler() {
+sink_handler::~sink_handler() {
     destroy_();
 }
 
-inline void sink_handler::initialize_() {
+void sink_handler::initialize_() {
     if (handlesys->FindHandleType("Sink", &handle_type_)) {
         throw std::runtime_error("Sink handle type already exists");
     }
@@ -101,7 +95,7 @@ inline void sink_handler::initialize_() {
     }
 }
 
-inline void sink_handler::destroy_() {
+void sink_handler::destroy_() {
     if (handle_type_ != NO_HANDLE_TYPE) {
         handlesys->RemoveType(handle_type_, myself->GetIdentity());
         handle_type_ = NO_HANDLE_TYPE;
@@ -110,4 +104,3 @@ inline void sink_handler::destroy_() {
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_ADAPTER_SINK_HANDLER_INL_H_

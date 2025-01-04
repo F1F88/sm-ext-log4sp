@@ -57,5 +57,4 @@ protected:
 
 
 }       // namespace log4sp
-#include "log4sp/proxy/logger_proxy-inl.h"
 #endif  // _LOG4SP_PROXY_LOGGER_PROXY_H_
