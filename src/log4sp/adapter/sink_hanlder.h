@@ -35,9 +35,21 @@ public:
     /**
      * @brief 用于 SDK_OnLoad 时创建 handle type
      *
+     * @note  需要与 destroy 配对使用。
+     *
      * @return          HandleError error code.
+     * @exception       Sink handle type 已存在，或创建失败。
      */
-    HandleError create_handle_type();
+    static void initialize();
+
+    /**
+     * @brief 用于 SDK_OnUnload 时移除 handle type。
+     *
+     * @note  需要与 initialize 配对使用。
+     * @note  为了避免影响其他清理工作，此方法不抛出异常。
+     * @note  移除后所有的 sink handle 都将被释放，所以 handles_ 和 sinks_ 会被清空。
+     */
+    static void destroy();
 
     /**
      * @brief 获取 handle type
@@ -82,20 +94,15 @@ public:
      */
     void OnHandleDestroy(HandleType_t type, void *object) override;
 
-    /**
-     * @brief 用于 SDK_OnUnload 时移除 handle type
-     *        移除后，SourceMod 应该会 Free 这个 type 下的所有 handle 实例
-     *        OnHandleDestroy 里会逐个从 handles_ 和 sinks_ 移除数据
-     *        所以最终 handles_ 和 sinks_ 应该是空的
-     */
-    void remove_handle_type();
-
 private:
     sink_handler() : handle_type_(NO_HANDLE_TYPE) {}
     ~sink_handler();
 
     sink_handler(const sink_handler&) = delete;
     sink_handler& operator=(const sink_handler&) = delete;
+
+    void initialize_();
+    void destroy_();
 
     HandleType_t handle_type_;
     std::unordered_map<spdlog::sinks::sink*, Handle_t> handles_;

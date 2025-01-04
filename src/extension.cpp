@@ -60,10 +60,13 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
             return false;
         }
 
-        err = log4sp::sink_handler::instance().create_handle_type();
-        if (err != HandleError_None)
+        try
         {
-            snprintf(error, maxlen, "Could not create Sink handle type (err: %d)", err);
+            log4sp::sink_handler::initialize();
+        }
+        catch(const std::exception &ex)
+        {
+            snprintf(error, maxlen, "Could not create Sink handle type. (reason: %s)", ex.what());
             return false;
         }
     }
@@ -159,7 +162,9 @@ void Log4sp::SDK_OnUnload()
 {
     rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, &log4sp::root_console_command_handler::instance());
 
-    log4sp::sink_handler::instance().remove_handle_type();
+    assert(log4sp::sink_handler::instance().handle_type() != NO_HANDLE_TYPE);
+
+    log4sp::sink_handler::destroy();
     log4sp::logger_handler::instance().remove_handle_type();
 
     spdlog::shutdown();

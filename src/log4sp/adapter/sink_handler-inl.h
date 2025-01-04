@@ -1,10 +1,11 @@
 #ifndef _LOG4SP_ADAPTER_SINK_HANDLER_INL_H_
 #define _LOG4SP_ADAPTER_SINK_HANDLER_INL_H_
 
+#include <cassert>
+#include <string>
 
-#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_CRITICAL
-    #include "spdlog/spdlog.h"
-    // #include "spdlog/fmt/xchar.h"
+#if SPDLOG_ACTIVE_LEVEL < SPDLOG_LEVEL_INFO
+    #include "spdlog/spdlog.h"  // SPDLOG_TRACE 和 SPDLOG_DEBUG 需要
 #else
     #include "spdlog/sinks/sink.h"
 #endif
@@ -19,21 +20,14 @@ inline sink_handler& sink_handler::instance() {
     return instance;
 }
 
-inline HandleError sink_handler::create_handle_type() {
-    HandleAccess access;
-    HandleError error;
-
-    // 默认情况下，创建的 Sink handle 可以被非拥有者以外的人删除
-    handlesys->InitAccessDefaults(nullptr, &access);
-    access.access[HandleAccess_Delete] = 0;
-
-   handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
-    if (handle_type_ == NO_HANDLE_TYPE) {
-        SPDLOG_CRITICAL("Internal Error! Sink handle type is not registered.");
-        return error;
-    }
-    return HandleError_None;
+inline void sink_handler::initialize() {
+    instance().initialize_();
 }
+
+inline void sink_handler::destroy() {
+    instance().destroy_();
+}
+
 
 inline HandleType_t sink_handler::handle_type() const {
     return handle_type_;
@@ -44,6 +38,9 @@ inline Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink>
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
     }
+
+    assert(handles_.find(object.get()) == handles_.end());
+    assert(sinks_.find(object.get()) == sinks_.end());
 
     handles_[object.get()] = handle;
     sinks_[object.get()] = object;
@@ -63,43 +60,48 @@ inline std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t h
         return nullptr;
     }
 
-    auto found = sinks_.find(object);
-    if (found == sinks_.end()) {
-        SPDLOG_CRITICAL("Internal Error! handle is valid, but sink is not found. (obj: {}, hdl: {})", spdlog::fmt_lib::ptr(object), handle);
-        if (error) {
-            *error = HandleError_Index;
-        }
-        return nullptr;
-    }
+    assert(sinks_.find(object) != sinks_.end());
 
+    auto found = sinks_.find(object);
     return found->second;
 }
 
-inline sink_handler::~sink_handler() {
-    remove_handle_type();
-}
-
 inline void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
+    SPDLOG_TRACE("A sink handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
+
     auto sink = static_cast<spdlog::sinks::sink *>(object);
 
-    SPDLOG_TRACE("Sink handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
+    assert(handles_.find(sink) != handles_.end());
+    assert(sinks_.find(sink) != sinks_.end());
 
-    auto found_handle = handles_.find(sink);
-    if (found_handle == handles_.end()) {
-        SPDLOG_CRITICAL("Unknown handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
-    } else {
-        handles_.erase(found_handle);
+    handles_.erase(sink);
+    sinks_.erase(sink);
+}
+
+
+inline sink_handler::~sink_handler() {
+    destroy_();
+}
+
+inline void sink_handler::initialize_() {
+    if (handlesys->FindHandleType("Sink", &handle_type_)) {
+        throw std::runtime_error("Sink handle type already exists");
     }
 
-    auto found_sink = sinks_.find(sink);
-    if (found_sink == sinks_.end()) {
-        SPDLOG_CRITICAL("Unknown handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
-    } else {
-        sinks_.erase(found_sink);
+    HandleAccess access;
+    HandleError error;
+
+    // 默认情况下，创建的 handle 可以被任意插件释放
+    handlesys->InitAccessDefaults(nullptr, &access);
+    access.access[HandleAccess_Delete] = 0;
+
+    handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
+    if (handle_type_ == NO_HANDLE_TYPE) {
+        throw std::runtime_error("Handle error code " + std::to_string(static_cast<int>(error)));
     }
 }
 
-inline void sink_handler::remove_handle_type() {
+inline void sink_handler::destroy_() {
     if (handle_type_ != NO_HANDLE_TYPE) {
         handlesys->RemoveType(handle_type_, myself->GetIdentity());
         handle_type_ = NO_HANDLE_TYPE;
