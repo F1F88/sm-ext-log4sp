@@ -97,15 +97,15 @@ methodmap Logger < Handle
     }
 
     public void LogLoc(const char[] file, int line, const char[] func, LogLevel lvl, const char[] msg) {
-        __LogLoc(file, line, func, lvl, msg);
+        __LogLoc(file, line, lvl, msg);
     }
     public void LogLocEx(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...) {
         VFormat(__message, sizeof(__message), fmt, 7);
-        __LogLoc(file, line, func, lvl, __message);
+        __LogLoc(file, line, lvl, __message);
     }
     public void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...) {
         VFormat(__message, sizeof(__message), fmt, 7);
-        __LogLoc(file, line, func, lvl, __message);
+        __LogLoc(file, line, lvl, __message);
     }
 
     public void LogStackTrace(LogLevel lvl, const char[] msg) {
@@ -219,22 +219,25 @@ static void __Log(LogLevel lvl, const char[] msg) {
 }
 
 static void __LogSrc(LogLevel lvl, const char[] msg) {
-    char file[PLATFORM_MAX_PATH];
-    char func[PLATFORM_MAX_PATH];
-    int line = 0;
     FrameIterator iter = new FrameIterator();
-    do
-    {
-        iter.GetFilePath(file, sizeof(file));
-        iter.GetFunctionName(func, sizeof(func));
-        line = iter.LineNumber;
-        PrintToServer("%s - %s - %d", file, func, line);
-    } while(iter.Next());
-    __Log(lvl, msg);
+
+    iter.Next();
+    iter.Next();
+    iter.Next();
+
+    char file[PLATFORM_MAX_PATH];
+    iter.GetFilePath(file, sizeof(file));
+    int line = iter.LineNumber;
+
+    delete iter;
+
+    __LogLoc(file, line, lvl, msg);
 }
 
-static void __LogLoc(const char[] file, int line, const char[] func, LogLevel lvl, const char[] msg) {
-    Format(__message, sizeof(__message), "[%s:%d:%s] %s", file, line, func, msg);
+static void __LogLoc(const char[] file, int line, LogLevel lvl, const char[] msg) {
+    int sep = FindCharInString(file, '\\', true) + 1;
+    sep = sep != 0 ? sep : FindCharInString(file, '/', true) + 1;
+    Format(__message, sizeof(__message), "[%s:%d] %s", file[sep], line, msg);
     __Log(lvl, __message);
 }
 
