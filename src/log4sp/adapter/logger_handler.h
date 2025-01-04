@@ -109,6 +109,11 @@ public:
 
     /**
      * Apply a user defined function on all logger handles.
+     */
+    void apply_all(const std::function<void(const Handle_t)> &fun);
+
+    /**
+     * Apply a user defined function on all logger handles.
      * Example:
      *      apply_all([&](std::shared_ptr<spdlog::logger> l) {l->flush();});
      */

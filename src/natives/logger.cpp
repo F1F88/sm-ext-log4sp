@@ -472,13 +472,7 @@ static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
     }
 
     log4sp::logger_handler::instance().apply_all(
-        [forward](std::shared_ptr<log4sp::logger_proxy> logger) {
-            Handle_t handle = log4sp::logger_handler::instance().find_handle(logger->name());
-            if (handle == BAD_HANDLE) {
-                SPDLOG_CRITICAL("Unknown logger. (name: {})", logger->name());
-                return;
-            }
-
+        [forward](const Handle_t handle) {
             forward->PushCell(handle);
             forward->Execute();
         }

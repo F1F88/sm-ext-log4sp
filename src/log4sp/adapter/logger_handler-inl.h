@@ -84,7 +84,13 @@ inline std::vector<std::string> logger_handler::get_all_logger_names() {
     return names;
 }
 
-inline void logger_handler::apply_all(const std::function<void(const std::shared_ptr<logger_proxy>)> &fun) {
+inline void logger_handler::apply_all(const std::function<void(const Handle_t)> &fun) {
+    for (auto &h : handles_) {
+        fun(h.second);
+    }
+}
+
+inline void logger_handler::apply_all(const std::function<void(std::shared_ptr<logger_proxy>)> &fun) {
     for (auto &l : loggers_) {
         fun(l.second);
     }
