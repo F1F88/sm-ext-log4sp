@@ -11,10 +11,10 @@ namespace log4sp {
 namespace sinks {
 
 template<typename Mutex>
-class client_console_sink : public spdlog::sinks::base_sink<Mutex>
+class client_console_sink final : public spdlog::sinks::base_sink<Mutex>
 {
 public:
-    ~client_console_sink();
+    ~client_console_sink() override;
 
     bool set_player_filter(IPluginFunction *filter);
 
