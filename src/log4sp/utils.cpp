@@ -62,7 +62,7 @@ spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx) {
 
 std::vector<std::string> get_stack_trace(IPluginContext *ctx) {
     auto iter = ctx->CreateFrameIterator();
-    if (!iter->Done()) {
+    if (iter->Done()) {
         ctx->DestroyFrameIterator(iter);
         return {};
     }
