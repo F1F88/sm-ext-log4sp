@@ -48,6 +48,40 @@ void list_command::execute(const std::vector<std::string> &args) {
 }
 
 
+void apply_all_command::execute(const std::vector<std::string> &args) {
+    if (args.empty()) {
+        throw std::runtime_error{
+            spdlog::fmt_lib::format(
+                "Usage: sm log4sp apply_all <function_name> [arguments]\nAvailable function names are [{}]",
+                spdlog::fmt_lib::join(functions_, ", "))};
+    }
+
+    auto function_name = args[0];
+    auto iter = functions_.find(function_name);
+    if (iter == functions_.end()) {
+        throw std::runtime_error("The function name '" + function_name +"' does not exist.");
+    }
+
+    auto names = logger_handler::instance().get_all_logger_names();
+    for (auto &name : names) {
+        std::vector<std::string> arguments{name};
+        arguments.insert(arguments.begin() + 1, args.begin() + 1, args.end());
+
+        try {
+            root_console_command_handler::instance().execute(function_name, arguments);
+        } catch (const std::exception &ex) {
+            // 如果是参数格式问题，将消息替换为 apply_all 格式
+            std::string msg{ex.what()};
+            if (std::regex_match(msg, std::regex{"Usage: sm log4sp [a-z|_]+ <logger_name>.*"})) {
+                msg = std::regex_replace(msg, std::regex{" <logger_name>"}, "");
+                msg = std::regex_replace(msg, std::regex{"Usage: sm log4sp "}, "Usage: sm log4sp apply_all ");
+            }
+            throw std::runtime_error{msg};
+        }
+    }
+}
+
+
 void get_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error("Usage: sm log4sp get_lvl <logger_name>");
@@ -221,40 +255,6 @@ void dump_bt_command::execute(const std::vector<std::string> &args) {
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will dump backtrace logging message.", logger->name().c_str());
     logger->dump_backtrace();
-}
-
-
-void apply_all_command::execute(const std::vector<std::string> &args) {
-    if (args.empty()) {
-        throw std::runtime_error{
-            spdlog::fmt_lib::format(
-                "Usage: sm log4sp apply_all <function_name> [arguments]\nAvailable function names are [{}]",
-                spdlog::fmt_lib::join(functions_, ", "))};
-    }
-
-    auto function_name = args[0];
-    auto iter = functions_.find(function_name);
-    if (iter == functions_.end()) {
-        throw std::runtime_error("The function name '" + function_name +"' does not exist.");
-    }
-
-    auto names = logger_handler::instance().get_all_logger_names();
-    for (auto &name : names) {
-        std::vector<std::string> arguments{name};
-        arguments.insert(arguments.begin() + 1, args.begin() + 1, args.end());
-
-        try {
-            root_console_command_handler::instance().execute(function_name, arguments);
-        } catch (const std::exception &ex) {
-            // 如果是参数格式问题，将消息替换为 apply_all 格式
-            std::string msg{ex.what()};
-            if (std::regex_match(msg, std::regex{"Usage: sm log4sp [a-z|_]+ <logger_name>.*"})) {
-                msg = std::regex_replace(msg, std::regex{" <logger_name>"}, "");
-                msg = std::regex_replace(msg, std::regex{"Usage: sm log4sp "}, "Usage: sm log4sp apply_all ");
-            }
-            throw std::runtime_error{msg};
-        }
-    }
 }
 
 

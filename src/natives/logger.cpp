@@ -643,7 +643,7 @@ static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -738,7 +738,7 @@ static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(loc, ex.what());
         return 0;
@@ -836,7 +836,7 @@ static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 6);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -952,7 +952,7 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -1073,7 +1073,7 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 3);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
@@ -1184,7 +1184,7 @@ static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -1269,7 +1269,7 @@ static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -1354,7 +1354,7 @@ static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -1439,7 +1439,7 @@ static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -1524,7 +1524,7 @@ static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;
@@ -1609,7 +1609,7 @@ static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
     {
         msg = log4sp::format_cell_to_string(ctx, params, 2);
     }
-    catch(const std::exception& ex)
+    catch(const std::exception &ex)
     {
         logger->error_handler(log4sp::get_plugin_source_loc(ctx), ex.what());
         return 0;

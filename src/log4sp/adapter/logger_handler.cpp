@@ -10,7 +10,7 @@
 
 namespace log4sp {
 
-logger_handler& logger_handler::instance() {
+logger_handler &logger_handler::instance() {
     static logger_handler instance;
     return instance;
 }
@@ -40,7 +40,7 @@ Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> object, con
     handles_[object->name()] = handle;
     loggers_[object->name()] = object;
 
-    SPDLOG_TRACE("Logger handle created. (name: {}, hdl: {})", object->name(), handle);
+    SPDLOG_TRACE("A logger handle created. (name: {}, hdl: {})", object->name(), handle);
     return handle;
 }
 
@@ -94,7 +94,7 @@ void logger_handler::apply_all(const std::function<void(std::shared_ptr<logger_p
 void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
     auto logger = static_cast<log4sp::logger_proxy *>(object);
 
-    SPDLOG_TRACE("Logger handle destroyed. (name: {})", logger->name());
+    SPDLOG_TRACE("A logger handle destroyed. (name: {})", logger->name());
 
     assert(handles_.find(logger->name()) != handles_.end());
     assert(loggers_.find(logger->name()) != loggers_.end());
@@ -105,14 +105,10 @@ void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
 
 
 logger_handler::~logger_handler() {
-    destroy_();
+    assert(handle_type_ == NO_HANDLE_TYPE);
 }
 
 void logger_handler::initialize_() {
-    if (handlesys->FindHandleType("Logger", &handle_type_)) {
-        throw std::runtime_error("Logger handle type already exists");
-    }
-
     HandleAccess access;
     HandleError error;
 
@@ -122,7 +118,7 @@ void logger_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (handle_type_ == NO_HANDLE_TYPE) {
-        throw std::runtime_error("Handle error code " + std::to_string(static_cast<int>(error)));
+        throw std::runtime_error("Failed to create Logger handle type. (error: " + std::to_string(static_cast<int>(error)) + ")");
     }
 }
 

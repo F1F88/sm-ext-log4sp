@@ -52,40 +52,22 @@ SMEXT_LINK(&g_Log4sp);
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
-    // Init handle type
+    try
     {
-        try
-        {
-            log4sp::logger_handler::initialize();
-        }
-        catch(const std::exception &ex)
-        {
-            snprintf(error, maxlen, "Could not create Logger handle type. (reason: %s)", ex.what());
-            return false;
-        }
-
-        try
-        {
-            log4sp::sink_handler::initialize();
-        }
-        catch(const std::exception &ex)
-        {
-            snprintf(error, maxlen, "Could not create Sink handle type. (reason: %s)", ex.what());
-            return false;
-        }
+        log4sp::logger_handler::initialize();
+        log4sp::sink_handler::initialize();
+        log4sp::root_console_command_handler::initialize();
     }
-
-    // Init console command
-    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Logging For SourcePawn command menu", &log4sp::root_console_command_handler::instance()))
+    catch(const std::exception &ex)
     {
-        snprintf(error, maxlen, "Could not add root console commmand 'log4sp'.");
+        snprintf(error, maxlen, "Initialization failure: %s", ex.what());
         return false;
     }
 
     // Init Global Thread Pool
     {
         const char *queueSizeStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolQueueSize");
-        auto queueSize = queueSizeStr != nullptr ? static_cast<size_t>(atoi(queueSizeStr)) : static_cast<size_t>(8192);
+        auto queueSize = queueSizeStr != nullptr ? static_cast<size_t>(atoll(queueSizeStr)) : static_cast<size_t>(8192);
 
         if (queueSize == 0 || queueSize > 1024 * 1024 * 10)
         {
@@ -94,7 +76,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         }
 
         const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
-        auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoi(threadCountStr)) : static_cast<size_t>(1);
+        auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoll(threadCountStr)) : static_cast<size_t>(1);
 
         if (threadCount == 0 || threadCount > 1000)
         {
@@ -129,14 +111,13 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         auto logger = std::make_shared<log4sp::logger_proxy>(SMEXT_CONF_LOGTAG, sink);
         spdlog::set_default_logger(logger);
 
-        // 默认 logger 属于拓展，不应该被任何插件释放
+        // 全局 logger 属于拓展，不应该被任何插件释放
         HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
-
         HandleAccess access;
+        HandleError err;
+
         handlesys->InitAccessDefaults(nullptr, &access);
         access.access[HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
-
-        HandleError err;
 
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &err);
         if (handle == BAD_HANDLE)
@@ -164,11 +145,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 void Log4sp::SDK_OnUnload()
 {
-    rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, &log4sp::root_console_command_handler::instance());
-
-    assert(log4sp::sink_handler::instance().handle_type() != NO_HANDLE_TYPE);
-    assert(log4sp::logger_handler::instance().handle_type() != NO_HANDLE_TYPE);
-
+    log4sp::root_console_command_handler::destroy();
     log4sp::sink_handler::destroy();
     log4sp::logger_handler::destroy();
 

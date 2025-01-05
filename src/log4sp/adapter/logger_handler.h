@@ -30,17 +30,14 @@ public:
 
     /**
      * @brief 用于 SDK_OnLoad 时创建 handle type。
-     *
      * @note  需要与 destroy 配对使用。
      *
-     * @return          HandleError error code.
      * @exception       Logger handle type 已存在，或创建失败。
      */
     static void initialize();
 
     /**
      * @brief 用于 SDK_OnUnload 时移除 handle type。
-     *
      * @note  需要与 initialize 配对使用。
      * @note  为了避免影响其他清理工作，此方法不抛出异常。
      * @note  移除后所有的 logger handle 都将被释放，所以 handles_ 和 loggers_ 会被清空。
@@ -127,12 +124,12 @@ public:
      */
     void OnHandleDestroy(HandleType_t type, void *object) override;
 
+    logger_handler(const logger_handler &) = delete;
+    logger_handler &operator=(const logger_handler &) = delete;
+
 private:
     logger_handler() : handle_type_(NO_HANDLE_TYPE) {}
     ~logger_handler();
-
-    logger_handler(const logger_handler&) = delete;
-    logger_handler& operator=(const logger_handler&) = delete;
 
     void initialize_();
     void destroy_();

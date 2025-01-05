@@ -39,78 +39,7 @@ protected:
 
 class list_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class get_lvl_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class set_lvl_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class set_pattern_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class should_log_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class log_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class flush_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class get_flush_lvl_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class set_flush_lvl_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class should_bt_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class enable_bt_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class disable_bt_command final : public command {
-public:
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class dump_bt_command final : public command {
-public:
+    list_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
@@ -118,11 +47,94 @@ public:
 class apply_all_command final : public command {
 public:
     apply_all_command(std::unordered_set<std::string> functions) : functions_(functions) {}
-
     void execute(const std::vector<std::string> &args) override;
 
 private:
     std::unordered_set<std::string> functions_;
+};
+
+
+class get_lvl_command final : public command {
+public:
+    get_lvl_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class set_lvl_command final : public command {
+public:
+    set_lvl_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class set_pattern_command final : public command {
+public:
+    set_pattern_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class should_log_command final : public command {
+public:
+    should_log_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class log_command final : public command {
+public:
+    log_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class flush_command final : public command {
+public:
+    flush_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class get_flush_lvl_command final : public command {
+public:
+    get_flush_lvl_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class set_flush_lvl_command final : public command {
+public:
+    set_flush_lvl_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class should_bt_command final : public command {
+public:
+    should_bt_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class enable_bt_command final : public command {
+public:
+    enable_bt_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class disable_bt_command final : public command {
+public:
+    disable_bt_command() = default;
+    void execute(const std::vector<std::string> &args) override;
+};
+
+
+class dump_bt_command final : public command {
+public:
+    dump_bt_command() = default;
+    void execute(const std::vector<std::string> &args) override;
 };
 
 

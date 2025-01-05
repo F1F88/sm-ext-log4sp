@@ -21,6 +21,22 @@ public:
     [[nodiscard]] static root_console_command_handler &instance();
 
     /**
+     * @brief 用于 SDK_OnLoad 时添加控制台指令。
+     *
+     * @exception       添加控制台指令失败。
+     * @note            需要与 destroy 配对使用。
+     */
+    static void initialize();
+
+    /**
+     * @brief 用于 SDK_OnUnload 时移除控制台指令。
+     *
+     * @note            需要与 initialize 配对使用。
+     * @note            为了避免影响其他清理工作，此方法不抛出异常。
+     */
+    static void destroy();
+
+    /**
      * @brief 绘制 log4sp 指令菜单
      */
     void draw_menu();
@@ -40,12 +56,14 @@ public:
      */
     void OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args);
 
+    root_console_command_handler(const root_console_command_handler &) = delete;
+    root_console_command_handler &operator=(const root_console_command_handler &) = delete;
+
 private:
     root_console_command_handler();
-    ~root_console_command_handler() {}
 
-    root_console_command_handler(const root_console_command_handler&) = delete;
-    root_console_command_handler& operator=(const root_console_command_handler&) = delete;
+    void initialize_();
+    void destroy_();
 
     std::unordered_map<std::string, std::unique_ptr<command>> commands_;
 };

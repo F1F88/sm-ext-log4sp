@@ -9,7 +9,7 @@
 
 namespace log4sp {
 
-sink_handler& sink_handler::instance() {
+sink_handler &sink_handler::instance() {
     static sink_handler instance;
     return instance;
 }
@@ -39,7 +39,7 @@ Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object
     handles_[object.get()] = handle;
     sinks_[object.get()] = object;
 
-    SPDLOG_TRACE("Sink handle created. (obj: {}, hdl: {})", spdlog::fmt_lib::ptr(object.get()), handle);
+    SPDLOG_TRACE("A sink handle created. (obj: {}, hdl: {})", spdlog::fmt_lib::ptr(object.get()), handle);
     return handle;
 }
 
@@ -74,14 +74,10 @@ void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
 
 
 sink_handler::~sink_handler() {
-    destroy_();
+    assert(handle_type_ == NO_HANDLE_TYPE);
 }
 
 void sink_handler::initialize_() {
-    if (handlesys->FindHandleType("Sink", &handle_type_)) {
-        throw std::runtime_error("Sink handle type already exists");
-    }
-
     HandleAccess access;
     HandleError error;
 
@@ -91,11 +87,13 @@ void sink_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (handle_type_ == NO_HANDLE_TYPE) {
-        throw std::runtime_error("Handle error code " + std::to_string(static_cast<int>(error)));
+        throw std::runtime_error("Failed to create Sink handle type. (error: " + std::to_string(static_cast<int>(error)) + ")");
     }
 }
 
 void sink_handler::destroy_() {
+    assert(handle_type_ != NO_HANDLE_TYPE);
+
     if (handle_type_ != NO_HANDLE_TYPE) {
         handlesys->RemoveType(handle_type_, myself->GetIdentity());
         handle_type_ = NO_HANDLE_TYPE;
