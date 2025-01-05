@@ -23,7 +23,7 @@ void root_console_command_handler::destroy() {
 
 
 void root_console_command_handler::draw_menu() {
-    rootconsole->ConsolePrint("Logging for SourcePawn Menu:");
+    rootconsole->ConsolePrint("Log for SourcePawn Menu:");
     rootconsole->ConsolePrint("Usage: sm log4sp <function_name> [arguments]");
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
@@ -93,7 +93,7 @@ root_console_command_handler::root_console_command_handler() {
 }
 
 void root_console_command_handler::initialize_() {
-    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Logging for SourcePawn command menu", this)) {
+    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Log for SourcePawn command menu", this)) {
         throw std::runtime_error("Failed to add root console commmand \"" + std::string{SMEXT_CONF_LOGTAG} + "\".");
     }
 }

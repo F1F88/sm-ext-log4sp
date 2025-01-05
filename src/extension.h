@@ -34,7 +34,7 @@
 
 /**
  * @file extension.h
- * @brief Logging for sourcepawn extension code header.
+ * @brief Log for SourcePawn extension code header.
  */
 #include "smsdk_ext.h"
 

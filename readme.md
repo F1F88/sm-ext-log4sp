@@ -1,6 +1,6 @@
 **[English](./readme.md) | [中文](./readme-chi.md)**
 
-# Logging for SourcePawn
+# Log for SourcePawn
 
 Log4sp is a powerful [SourceMod](https://www.sourcemod.net/about.php) extension that provides SourceMod plugin developers with a high-performance, feature-rich, and easy-to-use [logging API](./sourcemod/scripting/include/).
 

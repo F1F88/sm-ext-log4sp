@@ -1,6 +1,6 @@
 **[English](./readme.md) | [中文](./readme-chi.md)**
 
-# Logging for SourcePawn
+# Log for SourcePawn
 
 Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓展，为 SourceMod 插件开发者提供了一套高性能、功能丰富、简单易用的[记录日志 API](./sourcemod/scripting/include/)。
 

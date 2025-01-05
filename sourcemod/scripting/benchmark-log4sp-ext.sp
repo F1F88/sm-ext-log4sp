@@ -9,7 +9,7 @@
 #define PLUGIN_NAME             "Benchmark Log4sp.ext"
 #define PLUGIN_AUTHOR           "F1F88"
 #define PLUGIN_VERSION          LOG4SP_EXT_VERSION
-#define PLUGIN_DESCRIPTION      "Benchmark Logging for SourcePawn extension api"
+#define PLUGIN_DESCRIPTION      "Benchmark Log for SourcePawn extension api"
 #define PLUGIN_URL              "https://github.com/F1F88/sm-ext-log4sp"
 
 public Plugin myinfo = {
