@@ -15,5 +15,5 @@ methodmap DailyFileSink < Sink
         return view_as<DailyFileSink>(INVALID_HANDLE);
     }
 
-    public void GetFilename(char[] buffer, int maxlength) {}
+    public int GetFilename(char[] buffer, int maxlength) {}
 }

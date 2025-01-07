@@ -484,7 +484,7 @@ static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void GetName(char[] buffer, int maxlen);
+ * public native int GetName(char[] buffer, int maxlen);
  */
 static cell_t GetName(IPluginContext *ctx, const cell_t *params)
 {
@@ -500,8 +500,9 @@ static cell_t GetName(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    ctx->StringToLocal(params[2], params[3], logger->name().c_str());
-    return 0;
+    size_t bytes;
+    ctx->StringToLocalUTF8(params[2], params[3], logger->name().c_str(), &bytes);
+    return bytes;
 }
 
 /**

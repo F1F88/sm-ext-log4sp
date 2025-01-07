@@ -11,8 +11,9 @@ static cell_t LogLevelToName(IPluginContext *ctx, const cell_t *params)
     auto lvl = log4sp::cell_to_level(params[1]);
     auto name = spdlog::level::to_string_view(lvl).data();
 
-    ctx->StringToLocal(params[2], params[3], name);
-    return 0;
+    size_t bytes;
+    ctx->StringToLocalUTF8(params[2], params[3], name, &bytes);
+    return bytes;
 }
 
 /**
@@ -23,8 +24,9 @@ static cell_t LogLevelToShortName(IPluginContext *ctx, const cell_t *params)
     auto lvl = log4sp::cell_to_level(params[1]);
     auto name = spdlog::level::to_short_c_str(lvl);
 
-    ctx->StringToLocal(params[2], params[3], name);
-    return 0;
+    size_t bytes;
+    ctx->StringToLocalUTF8(params[2], params[3], name, &bytes);
+    return bytes;
 }
 
 /**

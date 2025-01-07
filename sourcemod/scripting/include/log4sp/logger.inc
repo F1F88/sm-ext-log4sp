@@ -185,8 +185,9 @@ methodmap Logger < Handle
      *
      * @param buffer    Buffer to store logger name.
      * @param maxlen    Maximum length of the buffer.
+     * @return          Number of characters written to the buffer, not including the null terminator.
      */
-    public native void GetName(char[] buffer, int maxlen);
+    public native int GetName(char[] buffer, int maxlen);
 
     /**
      * Gets the logger log level.

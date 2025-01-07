@@ -72,8 +72,9 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
         auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
         if (realSink != nullptr)
         {
-            ctx->StringToLocal(params[2], params[3], realSink->filename().c_str());
-            return 0;
+            size_t bytes;
+            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+            return bytes;
         }
     }
 
@@ -81,8 +82,9 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
         auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink);
         if (realSink != nullptr)
         {
-            ctx->StringToLocal(params[2], params[3], realSink->filename().c_str());
-            return 0;
+            size_t bytes;
+            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+            return bytes;
         }
     }
 

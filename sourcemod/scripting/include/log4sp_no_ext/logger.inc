@@ -58,7 +58,9 @@ methodmap Logger < Handle
 
     public static void ApplyAll(LoggerApplyAllCallback callback) {}
 
-    public void GetName(char[] buffer, int maxlen) {}
+    public int GetName(char[] buffer, int maxlen) {
+        return 0;
+    }
 
     public LogLevel GetLevel() {
         return LogLevel_Info;

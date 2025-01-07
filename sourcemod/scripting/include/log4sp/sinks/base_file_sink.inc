@@ -26,8 +26,9 @@ methodmap BaseFileSink < Sink
      *
      * @param buffer    Buffer to store file name.
      * @param maxlen    Maximum length of the buffer.
+     * @return          Number of characters written to the buffer, not including the null terminator.
      */
-    public native void GetFilename(char[] buffer, int maxlen);
+    public native int GetFilename(char[] buffer, int maxlen);
 
     public native void Truncate();
 }

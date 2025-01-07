@@ -40,8 +40,9 @@ methodmap RotatingFileSink < Sink
      *
      * @param buffer        Buffer to store file name.
      * @param maxlen        Maximum length of the buffer.
+     * @return              Number of characters written to the buffer, not including the null terminator.
      */
-    public native void GetFilename(char[] buffer, int maxlength);
+    public native int GetFilename(char[] buffer, int maxlength);
 
     public native void RotateNow();
 
@@ -53,6 +54,7 @@ methodmap RotatingFileSink < Sink
      * @param index         File index.
      * @param buffer        Buffer to store file name.
      * @param maxlen        Maximum length of the buffer.
+     * @return              Number of characters written to the buffer, not including the null terminator.
      */
-    public static native void CalcFilename(const char[] file, int index, char[] buffer, int maxlength);
+    public static native int CalcFilename(const char[] file, int index, char[] buffer, int maxlength);
 }

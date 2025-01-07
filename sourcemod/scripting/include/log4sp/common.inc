@@ -85,8 +85,9 @@ enum AsyncOverflowPolicy
  * @param lvl       Logging level enum.
  * @param buffer    Buffer to store log level name.
  * @param maxlen    Maximum length of the buffer.
+ * @return          Number of characters written to the buffer, not including the null terminator.
  */
-native void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
+native int LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
 
 /**
  * Convert a logging level enum to short name.
@@ -94,8 +95,9 @@ native void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
  * @param lvl       Logging level enum.
  * @param buffer    Buffer to store log level short name.
  * @param maxlen    Maximum length of the buffer.
+ * @return          Number of characters written to the buffer, not including the null terminator.
  */
-native void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
+native int LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
 
 /**
  * Convert a logging level name to log level enum.

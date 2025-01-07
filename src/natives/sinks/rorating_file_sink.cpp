@@ -79,8 +79,9 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
         auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
         if (realSink != nullptr)
         {
-            ctx->StringToLocal(params[2], params[3], realSink->filename().c_str());
-            return 0;
+            size_t bytes;
+            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+            return bytes;
         }
     }
 
@@ -88,8 +89,9 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
         auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(sink);
         if (realSink != nullptr)
         {
-            ctx->StringToLocal(params[2], params[3], realSink->filename().c_str());
-            return 0;
+            size_t bytes;
+            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+            return bytes;
         }
     }
 
@@ -160,8 +162,9 @@ static cell_t RotatingFileSink_CalcFilename(IPluginContext *ctx, const cell_t *p
     auto index = static_cast<size_t>(params[2]);
 
     auto filename = spdlog::sinks::rotating_file_sink_st::calc_filename(file, index);
-    ctx->StringToLocal(params[3], params[4], filename.c_str());
-    return 0;
+    size_t bytes;
+    ctx->StringToLocalUTF8(params[3], params[4], filename.c_str(), &bytes);
+    return bytes;
 }
 
 const sp_nativeinfo_t RotatingFileSinkNatives[] =

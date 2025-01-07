@@ -15,7 +15,7 @@ methodmap BaseFileSink < Sink
         return view_as<BaseFileSink>(INVALID_HANDLE);
     }
 
-    public void GetFilename(char[] buffer, int maxlen) {}
+    public int GetFilename(char[] buffer, int maxlen) {}
 
     public void Truncate() {}
 }

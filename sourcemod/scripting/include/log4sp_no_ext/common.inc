@@ -60,27 +60,27 @@ enum AsyncOverflowPolicy
 }
 
 
-stock void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen) {
+stock int LogLevelToName(LogLevel lvl, char[] buffer, int maxlen) {
     switch (lvl) {
-        case LogLevel_Trace:    strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_TRACE);
-        case LogLevel_Debug:    strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_DEBUG);
-        case LogLevel_Info:     strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_INFO);
-        case LogLevel_Warn:     strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_WARN);
-        case LogLevel_Error:    strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_ERROR);
-        case LogLevel_Fatal:    strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_FATAL);
-        case LogLevel_Off:      strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_OFF);
+        case LogLevel_Trace:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_TRACE);
+        case LogLevel_Debug:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_DEBUG);
+        case LogLevel_Info:     return strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_INFO);
+        case LogLevel_Warn:     return strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_WARN);
+        case LogLevel_Error:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_ERROR);
+        case LogLevel_Fatal:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_FATAL);
+        default:                return strcopy(buffer, maxlen, LOG4SP_LEVEL_NAME_OFF);
     }
 }
 
-stock void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen) {
+stock int LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen) {
     switch (lvl) {
-        case LogLevel_Trace:    strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_TRACE);
-        case LogLevel_Debug:    strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_DEBUG);
-        case LogLevel_Info:     strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_INFO);
-        case LogLevel_Warn:     strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_WARN);
-        case LogLevel_Error:    strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_ERROR);
-        case LogLevel_Fatal:    strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_FATAL);
-        case LogLevel_Off:      strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_OFF);
+        case LogLevel_Trace:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_TRACE);
+        case LogLevel_Debug:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_DEBUG);
+        case LogLevel_Info:     return strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_INFO);
+        case LogLevel_Warn:     return strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_WARN);
+        case LogLevel_Error:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_ERROR);
+        case LogLevel_Fatal:    return strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_FATAL);
+        default:                return strcopy(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_OFF);
     }
 }
 
