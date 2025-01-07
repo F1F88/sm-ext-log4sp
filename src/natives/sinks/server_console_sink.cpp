@@ -37,7 +37,7 @@ static cell_t ServerConsoleSink(IPluginContext *ctx, const cell_t *params)
     Handle_t handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
-        ctx->ReportError("Allocation of sink handle failed. (err: %d)", handle, error);
+        ctx->ReportError("SM error! Could not create server console sink handle (error: %d)", error);
         return BAD_HANDLE;
     }
 

@@ -44,7 +44,7 @@ static cell_t BaseFileSink(IPluginContext *ctx, const cell_t *params)
     Handle_t handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
-        ctx->ReportError("Allocation of sink handle failed. (err: %d)", handle, error);
+        ctx->ReportError("SM error! Could not create base file sink handle (error: %d)", error);
         return BAD_HANDLE;
     }
 
@@ -64,7 +64,7 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -88,7 +88,7 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
         }
     }
 
-    ctx->ReportError("Not a valid BaseFileSink handle. (hdl: %d)", handle);
+    ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
     return 0;
 }
 
@@ -105,7 +105,7 @@ static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -141,7 +141,7 @@ static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
         }
     }
 
-    ctx->ReportError("Not a valid BaseFileSink handle. (hdl: %d)", handle);
+    ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
     return 0;
 }
 

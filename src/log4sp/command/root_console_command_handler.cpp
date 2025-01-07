@@ -48,7 +48,7 @@ void root_console_command_handler::execute(const std::string &cmdname, const std
     if (iter != commands_.end()) {
         iter->second->execute(args);
     } else {
-        throw std::runtime_error(spdlog::fmt_lib::format("The function name '{}' does not exist.", cmdname));
+        throw std::runtime_error{spdlog::fmt_lib::format("Command function \"{}\" not found.", cmdname)};
     }
 }
 
@@ -94,7 +94,7 @@ root_console_command_handler::root_console_command_handler() {
 
 void root_console_command_handler::initialize_() {
     if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Log for SourcePawn command menu", this)) {
-        throw std::runtime_error("Failed to add root console commmand \"" + std::string{SMEXT_CONF_LOGTAG} + "\".");
+        throw std::runtime_error{"SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\"."};
     }
 }
 

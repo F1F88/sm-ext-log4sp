@@ -21,7 +21,7 @@ static cell_t ClientConsoleSink(IPluginContext *ctx, const cell_t *params)
         auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
-            ctx->ReportError("Allocation of ClientConsoleSink handle failed. (err: %d)", handle, error);
+            ctx->ReportError("SM error! Could not create client console sink handle (error: %d)", error);
             return BAD_HANDLE;
         }
 
@@ -33,7 +33,7 @@ static cell_t ClientConsoleSink(IPluginContext *ctx, const cell_t *params)
         auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
-            ctx->ReportError("Allocation of multi thread ClientConsoleSink handle failed. (err: %d)", handle, error);
+            ctx->ReportError("SM error! Could not create client console sink handle (error: %d)", error);
             return BAD_HANDLE;
         }
 
@@ -56,7 +56,7 @@ static cell_t ClientConsoleSink_SetFilter(IPluginContext *ctx, const cell_t *par
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -64,7 +64,7 @@ static cell_t ClientConsoleSink_SetFilter(IPluginContext *ctx, const cell_t *par
     auto function = ctx->GetFunctionById(funcID);
     if (function == nullptr)
     {
-        ctx->ReportError("Invalid sink client filter function. (funcID: %d)", funcID);
+        ctx->ReportError("Invalid sink client filter function id (%X)", static_cast<int>(funcID));
         return 0;
     }
 
@@ -72,9 +72,13 @@ static cell_t ClientConsoleSink_SetFilter(IPluginContext *ctx, const cell_t *par
         auto realSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_st>(sink);
         if (realSink != nullptr)
         {
-            if (!realSink->set_player_filter(function))
+            try
             {
-                ctx->ReportError("SM error! Adding filter to ClientConsoleSink failed.");
+                realSink->set_player_filter(function);
+            }
+            catch (const std::exception &ex)
+            {
+                ctx->ReportError(ex.what());
             }
             return 0;
         }
@@ -84,15 +88,19 @@ static cell_t ClientConsoleSink_SetFilter(IPluginContext *ctx, const cell_t *par
         auto realSink = std::dynamic_pointer_cast<log4sp::sinks::client_console_sink_mt>(sink);
         if (realSink != nullptr)
         {
-            if (!realSink->set_player_filter(function))
+            try
             {
-                ctx->ReportError("SM error! Adding filter to multi thread ClientConsoleSink failed.");
+                realSink->set_player_filter(function);
+            }
+            catch (const std::exception &ex)
+            {
+                ctx->ReportError(ex.what());
             }
             return 0;
         }
     }
 
-    ctx->ReportError("Not a valid ClientConsoleSink handle. (hdl: %d)", handle);
+    ctx->ReportError("Invalid client console sink handle %x (error: %d)", handle, HandleError_Parameter);
     return 0;
 }
 

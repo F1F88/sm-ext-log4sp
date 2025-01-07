@@ -1,6 +1,7 @@
 #include <regex>
 #include <stdlib.h>
 
+#include "spdlog/spdlog.h"
 #include "spdlog/fmt/xchar.h"
 
 #include "log4sp/utils.h"
@@ -17,7 +18,7 @@ std::shared_ptr<logger_proxy> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
     auto logger = logger_handler::instance().find_logger(arg);
     if (logger == nullptr) {
-        throw std::runtime_error("Logger with name '"+ arg + "' does not exists.");
+        throw std::runtime_error{spdlog::fmt_lib::format("Logger with name \"{}\" not exists.", arg)};
     }
     return logger;
 }
@@ -52,14 +53,14 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
         throw std::runtime_error{
             spdlog::fmt_lib::format(
-                "Usage: sm log4sp apply_all <function_name> [arguments]\nAvailable function names are [{}]",
+                "Usage: sm log4sp apply_all <function_name> [arguments]\nAvailable function names: [{}]",
                 spdlog::fmt_lib::join(functions_, ", "))};
     }
 
     auto function_name = args[0];
     auto iter = functions_.find(function_name);
     if (iter == functions_.end()) {
-        throw std::runtime_error("The function name '" + function_name +"' does not exist.");
+        throw std::runtime_error{spdlog::fmt_lib::format("Command function \"{}\" not found.", function_name)};
     }
 
     auto names = logger_handler::instance().get_all_logger_names();

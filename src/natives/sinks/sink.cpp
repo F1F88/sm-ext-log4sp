@@ -20,7 +20,7 @@ static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -40,7 +40,7 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -63,7 +63,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -87,7 +87,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -109,7 +109,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -145,7 +145,7 @@ static cell_t Flush(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 

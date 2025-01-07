@@ -51,7 +51,7 @@ static cell_t RotatingFileSink(IPluginContext *ctx, const cell_t *params)
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
-        ctx->ReportError("Allocation of sink handle failed. (err: %d)", handle, error);
+        ctx->ReportError("SM error! Could not create rotating file sink handle (error: %d)", error);
         return BAD_HANDLE;
     }
 
@@ -71,7 +71,7 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -95,7 +95,7 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
         }
     }
 
-    ctx->ReportError("Not a valid RotatingFileSink handle. (hdl: %d)", handle);
+    ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
     return 0;
 }
 
@@ -112,7 +112,7 @@ static cell_t RotatingFileSink_RotateNow(IPluginContext *ctx, const cell_t *para
     spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
     if (sink == nullptr)
     {
-        ctx->ReportError("Invalid sink handle. (hdl: %d, err: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
@@ -148,7 +148,7 @@ static cell_t RotatingFileSink_RotateNow(IPluginContext *ctx, const cell_t *para
         }
     }
 
-    ctx->ReportError("Not a valid RotatingFileSink handle. (hdl: %d)", handle);
+    ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
     return 0;
 }
 

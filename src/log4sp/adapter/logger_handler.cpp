@@ -118,7 +118,7 @@ void logger_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (handle_type_ == NO_HANDLE_TYPE) {
-        throw std::runtime_error("Failed to create Logger handle type. (error: " + std::to_string(static_cast<int>(error)) + ")");
+        throw std::runtime_error{spdlog::fmt_lib::format("SM error! Could not create Logger handle type (error: {})", static_cast<int>(error))};
     }
 }
 

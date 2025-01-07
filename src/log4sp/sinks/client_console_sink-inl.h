@@ -1,6 +1,7 @@
 #ifndef _LOG4SP_SINKS_CLIENT_CONSOLE_SINK_INL_H_
 #define _LOG4SP_SINKS_CLIENT_CONSOLE_SINK_INL_H_
 
+#include <cassert>
 #include <mutex>
 
 #include "log4sp/sinks/client_console_sink.h"
@@ -18,11 +19,9 @@ inline client_console_sink<Mutex>::~client_console_sink() {
 }
 
 template <typename Mutex>
-inline bool client_console_sink<Mutex>::set_player_filter(IPluginFunction *filter) {
+inline void client_console_sink<Mutex>::set_player_filter(IPluginFunction *filter) {
     std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-    if (filter == nullptr) {
-        return false;
-    }
+    assert(filter != nullptr);
 
     if (player_filter_forward_ != nullptr) {
         forwards->ReleaseForward(player_filter_forward_); // 清空 forward function
@@ -30,10 +29,12 @@ inline bool client_console_sink<Mutex>::set_player_filter(IPluginFunction *filte
 
     player_filter_forward_ = forwards->CreateForwardEx(nullptr, ET_Ignore, 4, nullptr, Param_Cell, Param_String, Param_Cell, Param_String);
     if (player_filter_forward_ == nullptr) {
-        return false;
+        std::runtime_error{"SM error! Could not create sink client filter forward."};
     }
 
-    return player_filter_forward_->AddFunction(filter);
+    if (!player_filter_forward_->AddFunction(filter)) {
+        std::runtime_error{"SM error! Could not add sink client filter function."};
+    }
 }
 
 template <typename Mutex>

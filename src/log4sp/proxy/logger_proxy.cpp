@@ -47,7 +47,7 @@ void logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
             } catch (const std::exception &ex) {
                 error_handler(msg.source, ex.what());
             } catch (...) {
-                smutils->LogError(myself, "Internal Error! logger log: Unknown exception caught.");
+                smutils->LogError(myself, "Extension Error! logger log: Unknown exception caught.");
                 throw;
             }
         }
@@ -65,7 +65,7 @@ void logger_proxy::flush_() {
         } catch (const std::exception &ex) {
             error_handler(spdlog::source_loc{}, ex.what());
         } catch (...) {
-            smutils->LogError(myself, "Internal Error! logger flush: Unknown exception caught.");
+            smutils->LogError(myself, "Extension Error! logger flush: Unknown exception caught.");
             throw;
         }
     }
