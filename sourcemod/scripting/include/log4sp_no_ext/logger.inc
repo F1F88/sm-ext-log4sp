@@ -32,6 +32,14 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
+    public static int GetLoggers(Logger[] buffer, int maxlen) {
+        return 0;
+    }
+
+    public static int GetNames(char[][] buffer, int maxStrings, int maxStringLenth) {
+        return 0;
+    }
+
     public static Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
         return view_as<Logger>(INVALID_HANDLE);
     }
