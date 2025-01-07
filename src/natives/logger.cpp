@@ -652,7 +652,7 @@ static cell_t LogEx(IPluginContext *ctx, const cell_t *params)
 
     auto lvl = log4sp::cell_to_level(params[2]);
 
-    logger->log(lvl, std::move(msg));
+    logger->log(lvl, msg);
     return 0;
 }
 
@@ -745,7 +745,7 @@ static cell_t LogSrcEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log(loc, lvl, std::move(msg));
+    logger->log(loc, lvl, msg);
     return 0;
 }
 
@@ -853,7 +853,7 @@ static cell_t LogLocEx(IPluginContext *ctx, const cell_t *params)
     auto lvl  = log4sp::cell_to_level(params[5]);
     auto loc  = spdlog::source_loc{file, line, func};
 
-    logger->log(loc, lvl, std::move(msg));
+    logger->log(loc, lvl, msg);
     return 0;
 }
 
@@ -961,7 +961,7 @@ static cell_t LogStackTraceEx(IPluginContext *ctx, const cell_t *params)
 
     auto lvl = log4sp::cell_to_level(params[2]);
 
-    logger->log(lvl, "Stack trace requested: {}", std::move(msg));
+    logger->log(lvl, "Stack trace requested: {}", msg);
 
     auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
     logger->log(lvl, "Called from: {}", plugin);
@@ -1084,7 +1084,7 @@ static cell_t ThrowErrorEx(IPluginContext *ctx, const cell_t *params)
     ctx->ReportError(msg.c_str());
 
     auto lvl = log4sp::cell_to_level(params[2]);
-    logger->log(lvl, "Exception reported: {}", std::move(msg));
+    logger->log(lvl, "Exception reported: {}", msg);
 
     auto plugin = plsys->FindPluginByContext(ctx->GetContext())->GetFilename();
     logger->log(lvl, "Blaming: {}", plugin);
@@ -1191,7 +1191,7 @@ static cell_t TraceEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->trace(std::move(msg));
+    logger->trace(msg);
     return 0;
 }
 
@@ -1276,7 +1276,7 @@ static cell_t DebugEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->debug(std::move(msg));
+    logger->debug(msg);
     return 0;
 }
 
@@ -1361,7 +1361,7 @@ static cell_t InfoEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->info(std::move(msg));
+    logger->info(msg);
     return 0;
 }
 
@@ -1446,7 +1446,7 @@ static cell_t WarnEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->warn(std::move(msg));
+    logger->warn(msg);
     return 0;
 }
 
@@ -1531,7 +1531,7 @@ static cell_t ErrorEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->error(std::move(msg));
+    logger->error(msg);
     return 0;
 }
 
@@ -1616,7 +1616,7 @@ static cell_t FatalEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->critical(std::move(msg));
+    logger->critical(msg);
     return 0;
 }
 
