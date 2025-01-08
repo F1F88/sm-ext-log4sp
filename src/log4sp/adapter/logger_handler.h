@@ -128,13 +128,13 @@ public:
     logger_handler &operator=(const logger_handler &) = delete;
 
 private:
-    logger_handler() : handle_type_(NO_HANDLE_TYPE) {}
-    ~logger_handler();
+    logger_handler() = default;
+    ~logger_handler() = default;
 
     void initialize_();
     void destroy_();
 
-    HandleType_t handle_type_;
+    HandleType_t handle_type_{NO_HANDLE_TYPE};
     std::unordered_map<std::string, Handle_t> handles_;
     std::unordered_map<std::string, std::shared_ptr<logger_proxy>> loggers_;
 };

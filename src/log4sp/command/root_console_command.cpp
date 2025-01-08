@@ -85,7 +85,7 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
 
 void get_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw std::runtime_error("Usage: sm log4sp get_lvl <logger_name>");
+        throw std::runtime_error{"Usage: sm log4sp get_lvl <logger_name>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -97,7 +97,7 @@ void get_lvl_command::execute(const std::vector<std::string> &args) {
 
 void set_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw std::runtime_error("Usage: sm log4sp set_lvl <logger_name> <level>");
+        throw std::runtime_error{"Usage: sm log4sp set_lvl <logger_name> <level>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -115,7 +115,7 @@ void set_lvl_command::execute(const std::vector<std::string> &args) {
 
 void set_pattern_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw std::runtime_error("Usage: sm log4sp set_pattern <logger_name> <pattern>");
+        throw std::runtime_error{"Usage: sm log4sp set_pattern <logger_name> <pattern>"};
     }
 
     auto logger  = arg_to_logger(args[0]);
@@ -128,7 +128,7 @@ void set_pattern_command::execute(const std::vector<std::string> &args) {
 
 void should_log_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw std::runtime_error("Usage: sm log4sp should_log <logger_name> <level>");
+        throw std::runtime_error{"Usage: sm log4sp should_log <logger_name> <level>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -141,7 +141,7 @@ void should_log_command::execute(const std::vector<std::string> &args) {
 
 void log_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 3) {
-        throw std::runtime_error("Usage: sm log4sp log <logger_name> <level> <message>");
+        throw std::runtime_error{"Usage: sm log4sp log <logger_name> <level> <message>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -155,7 +155,7 @@ void log_command::execute(const std::vector<std::string> &args) {
 
 void flush_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw std::runtime_error("Usage: sm log4sp flush <logger_name>");
+        throw std::runtime_error{"Usage: sm log4sp flush <logger_name>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -167,7 +167,7 @@ void flush_command::execute(const std::vector<std::string> &args) {
 
 void get_flush_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw std::runtime_error("Usage: sm log4sp get_flush_lvl <logger_name>");
+        throw std::runtime_error{"Usage: sm log4sp get_flush_lvl <logger_name>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -179,7 +179,7 @@ void get_flush_lvl_command::execute(const std::vector<std::string> &args) {
 
 void set_flush_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw std::runtime_error("Usage: sm log4sp set_flush_lvl <logger_name> <level>");
+        throw std::runtime_error{"Usage: sm log4sp set_flush_lvl <logger_name> <level>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -197,7 +197,7 @@ void set_flush_lvl_command::execute(const std::vector<std::string> &args) {
 
 void should_bt_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw std::runtime_error("Usage: sm log4sp should_bt <logger_name>");
+        throw std::runtime_error{"Usage: sm log4sp should_bt <logger_name>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -209,7 +209,7 @@ void should_bt_command::execute(const std::vector<std::string> &args) {
 
 void enable_bt_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw std::runtime_error("Usage: sm log4sp enable_bt <logger_name> <number>");
+        throw std::runtime_error{"Usage: sm log4sp enable_bt <logger_name> <number>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -227,7 +227,7 @@ void enable_bt_command::execute(const std::vector<std::string> &args) {
 
 void disable_bt_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw std::runtime_error("Usage: sm log4sp disable_bt <logger_name>");
+        throw std::runtime_error{"Usage: sm log4sp disable_bt <logger_name>"};
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -244,7 +244,7 @@ void disable_bt_command::execute(const std::vector<std::string> &args) {
 
 void dump_bt_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw std::runtime_error("Usage: sm log4sp dump_bt <logger_name>");
+        throw std::runtime_error{"Usage: sm log4sp dump_bt <logger_name>"};
     }
 
     auto logger = arg_to_logger(args[0]);

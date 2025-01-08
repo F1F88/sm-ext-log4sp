@@ -23,7 +23,7 @@ protected:
 
     void flush_() override {}
 
-    IChangeableForward *player_filter_forward_;
+    IChangeableForward *player_filter_forward_{nullptr};
 };
 
 using client_chat_sink_mt = client_chat_sink<std::mutex>;

@@ -133,8 +133,7 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     else
     {
         auto policy     = log4sp::cell_to_policy(params[3]);
-        auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
+        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -198,8 +197,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     else
     {
         auto policy     = log4sp::cell_to_policy(params[5]);
-        auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
+        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -246,8 +244,7 @@ static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
     else
     {
         auto policy     = log4sp::cell_to_policy(params[3]);
-        auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
+        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -294,8 +291,7 @@ static cell_t CreateClientConsoleLogger(IPluginContext *ctx, const cell_t *param
     else
     {
         auto policy     = log4sp::cell_to_policy(params[3]);
-        auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
+        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -361,8 +357,7 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     else
     {
         auto policy     = log4sp::cell_to_policy(params[7]);
-        auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
+        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
@@ -429,8 +424,7 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     else
     {
         auto policy     = log4sp::cell_to_policy(params[8]);
-        auto sinkVector = std::vector<spdlog::sink_ptr>{sink};
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
+        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
         auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
         if (handle == BAD_HANDLE)

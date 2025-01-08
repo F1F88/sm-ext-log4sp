@@ -24,17 +24,17 @@ namespace log4sp {
 class logger_proxy : public spdlog::logger {
 public:
     explicit logger_proxy(std::string name)
-        : spdlog::logger(std::move(name)), error_forward_(nullptr) {}
+        : spdlog::logger(std::move(name)) {}
 
     template <typename It>
     logger_proxy(std::string name, It begin, It end)
-        : spdlog::logger(std::move(name), begin, end), error_forward_(nullptr) {}
+        : spdlog::logger(std::move(name), begin, end) {}
 
     logger_proxy(std::string name, spdlog::sink_ptr single_sink)
-        : spdlog::logger(std::move(name), std::move(single_sink)), error_forward_(nullptr) {}
+        : spdlog::logger(std::move(name), std::move(single_sink)) {}
 
     logger_proxy(std::string name, spdlog::sinks_init_list sinks)
-        : spdlog::logger(std::move(name), std::move(sinks)), error_forward_(nullptr) {}
+        : spdlog::logger(std::move(name), std::move(sinks)) {}
 
     ~logger_proxy() override;
 
@@ -48,7 +48,7 @@ public:
     virtual void error_handler(spdlog::source_loc loc, const std::string &msg);
 
 protected:
-    IChangeableForward *error_forward_;     // 通过 set_error_forward() 赋值
+    IChangeableForward *error_forward_{nullptr};
 
     // 重写以在捕获到异常时自定义处理方案
     void sink_it_(const spdlog::details::log_msg &msg) override;

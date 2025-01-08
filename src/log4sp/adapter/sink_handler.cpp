@@ -73,10 +73,6 @@ void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
 }
 
 
-sink_handler::~sink_handler() {
-    assert(handle_type_ == NO_HANDLE_TYPE);
-}
-
 void sink_handler::initialize_() {
     HandleAccess access;
     HandleError error;

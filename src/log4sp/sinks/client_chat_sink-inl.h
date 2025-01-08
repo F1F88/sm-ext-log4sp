@@ -11,7 +11,7 @@ namespace sinks {
 
 template <typename Mutex>
 inline client_chat_sink<Mutex>::~client_chat_sink() {
-    std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
+    std::lock_guard<Mutex> lock{spdlog::sinks::base_sink<Mutex>::mutex_};
     if (player_filter_forward_ != nullptr) {
         forwards->ReleaseForward(player_filter_forward_);
         player_filter_forward_ = nullptr;
@@ -20,7 +20,7 @@ inline client_chat_sink<Mutex>::~client_chat_sink() {
 
 template <typename Mutex>
 inline void client_chat_sink<Mutex>::set_player_filter(IPluginFunction *filter) {
-    std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
+    std::lock_guard<Mutex> lock{spdlog::sinks::base_sink<Mutex>::mutex_};
     assert(filter != nullptr);
 
     if (player_filter_forward_ != nullptr) {
@@ -41,7 +41,7 @@ template <typename Mutex>
 inline void client_chat_sink<Mutex>::sink_it_(const spdlog::details::log_msg &msg) {
     spdlog::memory_buf_t formatted;
     spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
-    std::string message = spdlog::fmt_lib::to_string(formatted);
+    std::string message{spdlog::fmt_lib::to_string(formatted)};
 
     auto name = msg.logger_name.data();
     auto lvl = static_cast<cell_t>(msg.level);

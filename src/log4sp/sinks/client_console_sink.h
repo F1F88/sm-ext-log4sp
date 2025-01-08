@@ -23,7 +23,7 @@ protected:
 
     void flush_() override {}
 
-    IChangeableForward *player_filter_forward_;
+    IChangeableForward *player_filter_forward_{nullptr};
 };
 
 using client_console_sink_mt = client_console_sink<std::mutex>;

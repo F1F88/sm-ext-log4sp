@@ -104,10 +104,6 @@ void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
 }
 
 
-logger_handler::~logger_handler() {
-    assert(handle_type_ == NO_HANDLE_TYPE);
-}
-
 void logger_handler::initialize_() {
     HandleAccess access;
     HandleError error;

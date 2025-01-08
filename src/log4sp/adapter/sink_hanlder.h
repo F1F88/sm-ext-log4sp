@@ -96,13 +96,13 @@ public:
     sink_handler &operator=(const sink_handler &) = delete;
 
 private:
-    sink_handler() : handle_type_(NO_HANDLE_TYPE) {}
-    ~sink_handler();
+    sink_handler() = default;
+    ~sink_handler() = default;
 
     void initialize_();
     void destroy_();
 
-    HandleType_t handle_type_;
+    HandleType_t handle_type_{NO_HANDLE_TYPE};
     std::unordered_map<spdlog::sinks::sink*, Handle_t> handles_;
     std::unordered_map<spdlog::sinks::sink*, std::shared_ptr<spdlog::sinks::sink>> sinks_;
 };

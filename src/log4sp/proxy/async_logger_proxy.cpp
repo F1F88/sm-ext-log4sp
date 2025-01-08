@@ -41,7 +41,7 @@ void async_logger_proxy::sink_it_(const spdlog::details::log_msg &msg) {
         if (auto pool_ptr = thread_pool_.lock()) {
             pool_ptr->post_log(shared_from_this(), msg, overflow_policy_);
         } else {
-            throw std::runtime_error("Extension Error! async log: thread pool doesn't exist anymore.");
+            throw std::runtime_error{"Extension Error! async log: thread pool doesn't exist anymore."};
         }
     } catch (const std::exception &ex) {
         error_handler(msg.source, ex.what());
@@ -56,7 +56,7 @@ void async_logger_proxy::flush_() {
         if (auto pool_ptr = thread_pool_.lock()) {
             pool_ptr->post_flush(shared_from_this(), overflow_policy_);
         } else {
-            throw std::runtime_error("Extension Error! async flush: thread pool doesn't exist anymore");
+            throw std::runtime_error{"Extension Error! async flush: thread pool doesn't exist anymore"};
         }
     } catch (const std::exception &ex) {
         error_handler(spdlog::source_loc{}, ex.what());
