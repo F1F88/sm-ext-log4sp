@@ -192,6 +192,13 @@ methodmap Logger < Handle
     public native int GetName(char[] buffer, int maxlen);
 
     /**
+     * Gets the length of the logger name.
+     *
+     * @return          Length of the logger name string.
+     */
+    public native int GetNameLength();
+
+    /**
      * Gets the logger log level.
      *
      * @return          The logger log level.

@@ -372,12 +372,12 @@ void ApplyAll()
 
     // 获取所有 logger 名称
     const int blocksize = 1024;
-    char buffer[blocksize];
     ArrayList names = new ArrayList(blocksize);
 
     Logger.ApplyAll(ApplyAll_GetNames, names);
     for (int i = 0; i < names.Length; ++i)
     {
+        char buffer[blocksize];
         names.GetString(i, buffer, sizeof(buffer));
         PrintToServer("[%d/%d] name: %s", i, names.Length, buffer);
     }
@@ -399,8 +399,10 @@ void LogToSM(const char[] msg)
 
 void ApplyAll_GetNames(Logger logger, ArrayList names)
 {
-    char buffer[1024];
-    logger.GetName(buffer, sizeof(buffer));
+    int size = logger.GetNameLength() + 1;
+    char[] buffer = new char[size];
+
+    logger.GetName(buffer, size);
     names.PushString(buffer);
-    // PrintToServer("name = %s", buffer);
+    // PrintToServer("length = %2d | name = %s", size, buffer);
 }

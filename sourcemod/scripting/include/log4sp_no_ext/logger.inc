@@ -63,6 +63,10 @@ methodmap Logger < Handle
         return 0;
     }
 
+    public int GetNameLength() {
+        return 0;
+    }
+
     public LogLevel GetLevel() {
         return LogLevel_Info;
     }

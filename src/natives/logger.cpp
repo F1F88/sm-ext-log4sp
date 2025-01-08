@@ -503,6 +503,26 @@ static cell_t GetName(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
+ * public native int GetNameLength();
+ */
+static cell_t GetNameLength(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    std::shared_ptr<log4sp::logger_proxy> logger = log4sp::logger_handler::instance().read_handle(handle, &security, &error);
+    if (logger == nullptr)
+    {
+        ctx->ReportError("Invalid logger handle %x (error: %d)", handle, error);
+        return 0;
+    }
+
+    return logger->name().length();
+}
+
+/**
  * public native LogLevel GetLevel();
  */
 static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
@@ -1911,6 +1931,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.ApplyAll",                         ApplyAll},
 
     {"Logger.GetName",                          GetName},
+    {"Logger.GetNameLength",                    GetNameLength},
     {"Logger.GetLevel",                         GetLevel},
     {"Logger.SetLevel",                         SetLevel},
     {"Logger.SetPattern",                       SetPattern},
