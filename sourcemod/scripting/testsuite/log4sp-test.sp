@@ -353,6 +353,7 @@ void TestNullSink()
 
 void StaticFactory()
 {
+    PrintToServer("========== Test Static Factory ==========");
     Logger log = Logger.CreateClientChatLogger("test-factory-client-chat");
     log.Fatal("This is a ClientChatLogger");
     delete log;
@@ -360,11 +361,28 @@ void StaticFactory()
     log = Logger.CreateClientConsoleLogger("test-factory-client-console");
     log.Fatal("This is a ClientConsoleLogger");
     delete log;
+    PrintToServer("========== Test Static Factory End ==========");
 }
 
 void ApplyAll()
 {
+    PrintToServer("========== Test Apply All ==========");
+    // 使用所有 logger 输出一条日志
     Logger.ApplyAll(ApplyAll_LogSomeMessage);
+
+    // 获取所有 logger 名称
+    const int blocksize = 1024;
+    char buffer[blocksize];
+    ArrayList names = new ArrayList(blocksize);
+
+    Logger.ApplyAll(ApplyAll_GetNames, names);
+    for (int i = 0; i < names.Length; ++i)
+    {
+        names.GetString(i, buffer, sizeof(buffer));
+        PrintToServer("[%d/%d] name: %s", i, names.Length, buffer);
+    }
+    delete names;
+    PrintToServer("========== Test Apply All End ==========");
 }
 
 void ApplyAll_LogSomeMessage(Logger logger)
@@ -377,4 +395,12 @@ void ApplyAll_LogSomeMessage(Logger logger)
 void LogToSM(const char[] msg)
 {
     LogError(msg);
+}
+
+void ApplyAll_GetNames(Logger logger, ArrayList names)
+{
+    char buffer[1024];
+    logger.GetName(buffer, sizeof(buffer));
+    names.PushString(buffer);
+    // PrintToServer("name = %s", buffer);
 }
