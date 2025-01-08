@@ -82,10 +82,6 @@ Action CB_CMD(int client, int args)
 
     ApplyAll();
 
-    GetNames();
-
-    GetLoggers();
-
     return Plugin_Handled;
 }
 
@@ -381,28 +377,4 @@ void ApplyAll_LogSomeMessage(Logger logger)
 void LogToSM(const char[] msg)
 {
     LogError(msg);
-}
-
-void GetNames()
-{
-    char names[1024][1024];
-    int len = Logger.GetNames(names, sizeof(names), sizeof(names[]));
-
-    for (int i = 0; i< len; ++i)
-    {
-        PrintToServer("Length: %d | Index: %d | Name: %s", len, i, names[i]);
-    }
-}
-
-void GetLoggers()
-{
-    Logger loggers[1024];
-    int len = Logger.GetLoggers(loggers, sizeof(loggers));
-
-    char buffer[1024];
-    for (int i = 0; i< len; ++i)
-    {
-        loggers[i].GetName(buffer, sizeof(buffer));
-        PrintToServer("Length: %d | Index: %d | Name: %s", len, i, buffer);
-    }
 }

@@ -91,57 +91,6 @@ static cell_t Get(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public static native int GetLoggers(Logger[] buffer, int maxlen);
- */
-static cell_t GetLoggers(IPluginContext *ctx, const cell_t *params)
-{
-    cell_t *buffer;
-    ctx->LocalToPhysAddr(params[1], &buffer);
-
-    auto maxlen = static_cast<int>(params[2]);
-
-    std::vector<Handle_t> handles;
-    log4sp::logger_handler::instance().apply_all(
-        [&](const Handle_t handle) {
-            handles.emplace_back(handle);
-        }
-    );
-
-    int size = handles.size();
-    for (int i = 0; i < maxlen && i < size; ++i)
-    {
-        buffer[i] = handles[i];
-    }
-
-    return std::min(maxlen, size);
-}
-
-/**
- * public static native int GetNames(char[][] buffer, int maxStrings, int maxStringLenth);
- */
-static cell_t GetNames(IPluginContext *ctx, const cell_t *params)
-{
-    cell_t *buffer;
-    ctx->LocalToPhysAddr(params[1], &buffer);
-
-    auto maxStrings = static_cast<int>(params[2]);
-    auto maxStringLenth = static_cast<int>(params[3]);
-
-    std::vector<std::string> names = log4sp::logger_handler::instance().get_all_logger_names();
-
-    int counter = 0;
-    for (auto &name : names)
-    {
-        if (counter >= maxStrings)
-            break;
-
-        ctx->StringToLocalUTF8(buffer[counter++], maxStringLenth, name.c_str(), nullptr);
-    }
-
-    return counter;
-}
-
-/**
  * public static native Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
  */
 static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *params)
@@ -1950,8 +1899,6 @@ const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
     {"Logger.Get",                              Get},
-    {"Logger.GetLoggers",                       GetLoggers},
-    {"Logger.GetNames",                         GetNames},
     {"Logger.CreateServerConsoleLogger",        CreateServerConsoleLogger},
     {"Logger.CreateBaseFileLogger",             CreateBaseFileLogger},
     {"Logger.CreateClientChatLogger",           CreateClientChatLogger},

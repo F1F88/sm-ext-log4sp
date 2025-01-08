@@ -70,25 +70,6 @@ methodmap Logger < Handle
     public static native Logger Get(const char[] name);
 
     /**
-     * Gets all logger handls.
-     *
-     * @param buffer    Buffer to store all logger handles.
-     * @param maxlen    Maximum length of the buffer.
-     * @return          The number of logger handles written to the buffer.
-     */
-    public static native int GetLoggers(Logger[] buffer, int maxlen);
-
-    /**
-     * Gets all logger names.
-     *
-     * @param buffer            Buffer to store all logger names.
-     * @param maxStrings        Number of string buffers (first dimension size).
-     * @param maxStringLength   Maximum length of each string buffer.
-     * @return                  The number of logger names written to the buffer.
-     */
-    public static native int GetNames(char[][] buffer, int maxStrings, int maxStringLenth);
-
-    /**
      * Create a logger handle that outputs to the server console.
      *
      * @param name      The name of the new logger.
