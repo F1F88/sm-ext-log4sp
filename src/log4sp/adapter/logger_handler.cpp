@@ -71,14 +71,6 @@ std::shared_ptr<logger_proxy> logger_handler::find_logger(const std::string &nam
     return found == loggers_.end() ? BAD_HANDLE : found->second;
 }
 
-std::vector<std::string> logger_handler::get_all_logger_names() {
-    std::vector<std::string> names;
-    for (const auto &pair : loggers_) {
-        names.push_back(pair.first);
-    }
-    return names;
-}
-
 void logger_handler::apply_all(const std::function<void(const Handle_t)> &fun) {
     for (auto &h : handles_) {
         fun(h.second);

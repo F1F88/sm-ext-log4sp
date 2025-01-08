@@ -96,15 +96,6 @@ public:
     [[nodiscard]] std::shared_ptr<logger_proxy> find_logger(const std::string &name);
 
     /**
-     * @brief 返回所有 logger 名称组成的数组
-     *
-     * @note 拓展启动时就注册了一个全局 logger，所以这个方法返回的数组大小至少为 1
-     *
-     * @return          所有 logger 名称组成的数组
-     */
-    [[nodiscard]] std::vector<std::string> get_all_logger_names();
-
-    /**
      * Apply a user defined function on all logger handles.
      */
     void apply_all(const std::function<void(const Handle_t)> &fun);

@@ -42,7 +42,12 @@ spdlog::level::level_enum command::arg_to_level(const std::string &arg) {
 
 
 void list_command::execute(const std::vector<std::string> &args) {
-    std::vector<std::string> names = log4sp::logger_handler::instance().get_all_logger_names();
+    std::vector<std::string> names;
+    log4sp::logger_handler::instance().apply_all(
+        [&names](std::shared_ptr<logger_proxy> logger) {
+            names.push_back(logger->name());
+        }
+    );
 
     auto msg = spdlog::fmt_lib::format("[SM] List of all logger names: [{}].", spdlog::fmt_lib::join(names, ", "));
     rootconsole->ConsolePrint("%s", msg.c_str());
@@ -57,29 +62,35 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
                 spdlog::fmt_lib::join(functions_, ", "))};
     }
 
-    auto function_name = args[0];
+    const std::string function_name = args[0];
     auto iter = functions_.find(function_name);
     if (iter == functions_.end()) {
         throw std::runtime_error{spdlog::fmt_lib::format("Command function \"{}\" not found.", function_name)};
     }
 
-    auto names = logger_handler::instance().get_all_logger_names();
-    for (auto &name : names) {
-        std::vector<std::string> arguments{name};
-        arguments.insert(arguments.begin() + 1, args.begin() + 1, args.end());
+    std::vector<std::string> arguments{args};
 
-        try {
-            root_console_command_handler::instance().execute(function_name, arguments);
-        } catch (const std::exception &ex) {
-            // 如果是参数格式问题，将消息替换为 apply_all 格式
-            std::string msg{ex.what()};
-            if (std::regex_match(msg, std::regex{"Usage: sm log4sp [a-z|_]+ <logger_name>.*"})) {
-                msg = std::regex_replace(msg, std::regex{" <logger_name>"}, "");
-                msg = std::regex_replace(msg, std::regex{"Usage: sm log4sp "}, "Usage: sm log4sp apply_all ");
+    logger_handler::instance().apply_all(
+        [&function_name, &arguments](std::shared_ptr<logger_proxy> logger) {
+            arguments[0] = logger->name();
+
+            try {
+                root_console_command_handler::instance().execute(function_name, arguments);
+            } catch (const std::exception &ex) {
+                // 如果是参数格式问题，将消息替换为 apply_all 格式
+                static const std::regex match_usage_pattern{R"(Usage: sm log4sp [a-z_]+ <logger_name>.*)"};
+                static const std::regex replace_logger_name_pattern{R"( <logger_name>)"};
+                static const std::regex replace_prefix_pattern{R"(Usage: sm log4sp )"};
+
+                std::string msg{ex.what()};
+                if (std::regex_match(msg, match_usage_pattern)) {
+                    msg = std::regex_replace(msg, replace_logger_name_pattern, "");
+                    msg = std::regex_replace(msg, replace_prefix_pattern, "Usage: sm log4sp apply_all ");
+                }
+                throw std::runtime_error{msg};
             }
-            throw std::runtime_error{msg};
         }
-    }
+    );
 }
 
 
