@@ -155,4 +155,6 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 
 - Fyren, nosoop, Deathreus 为拓展管理 Sink Handle 提供了解决思路
 
+- [blueblur0730](https://github.com/blueblur0730), Digby 帮助改进了遍历操作所有 logger
+
 如有遗漏，请联系我

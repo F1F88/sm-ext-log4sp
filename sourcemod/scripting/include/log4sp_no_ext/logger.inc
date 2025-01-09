@@ -18,6 +18,7 @@ typeset LoggerErrorHandler
 typeset LoggerApplyAllCallback
 {
     function void (Logger logger);
+    function void (Logger logger, any data);
 };
 
 static char __message[2048];
@@ -31,6 +32,8 @@ methodmap Logger < Handle
     public static Logger Get(const char[] name) {
         return view_as<Logger>(INVALID_HANDLE);
     }
+
+    public static void ApplyAll(LoggerApplyAllCallback callback, any data = 0) {}
 
     public static Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
         return view_as<Logger>(INVALID_HANDLE);
@@ -56,9 +59,11 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static void ApplyAll(LoggerApplyAllCallback callback) {}
-
     public int GetName(char[] buffer, int maxlen) {
+        return 0;
+    }
+
+    public int GetNameLength() {
         return 0;
     }
 
