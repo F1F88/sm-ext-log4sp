@@ -158,5 +158,7 @@ Test case: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.
 
 - Fyren, nosoop, Deathreus provides solution for managing the Sink Handle
 
+- [blueblur0730](https://github.com/blueblur0730), Digby helped improve the traversal operation of all loggers
+
 If I missed anyone, please contact me.
 
