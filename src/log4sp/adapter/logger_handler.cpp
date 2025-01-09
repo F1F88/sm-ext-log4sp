@@ -10,7 +10,7 @@
 
 namespace log4sp {
 
-logger_handler &logger_handler::instance() {
+logger_handler &logger_handler::instance() noexcept {
     static logger_handler instance;
     return instance;
 }
@@ -19,16 +19,16 @@ void logger_handler::initialize() {
     instance().initialize_();
 }
 
-void logger_handler::destroy() {
+void logger_handler::destroy() noexcept {
     instance().destroy_();
 }
 
 
-HandleType_t logger_handler::handle_type() const {
+HandleType_t logger_handler::handle_type() const noexcept {
     return handle_type_;
 }
 
-Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
+Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) noexcept {
     Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
@@ -44,7 +44,7 @@ Handle_t logger_handler::create_handle(std::shared_ptr<logger_proxy> object, con
     return handle;
 }
 
-std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
+std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) noexcept {
     logger_proxy *object;
     HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
 
@@ -61,12 +61,12 @@ std::shared_ptr<logger_proxy> logger_handler::read_handle(Handle_t handle, Handl
     return found->second;
 }
 
-Handle_t logger_handler::find_handle(const std::string &name) {
+Handle_t logger_handler::find_handle(const std::string &name) noexcept {
     auto found = handles_.find(name);
     return found == handles_.end() ? BAD_HANDLE : found->second;
 }
 
-std::shared_ptr<logger_proxy> logger_handler::find_logger(const std::string &name) {
+std::shared_ptr<logger_proxy> logger_handler::find_logger(const std::string &name) noexcept {
     auto found = loggers_.find(name);
     return found == loggers_.end() ? BAD_HANDLE : found->second;
 }
@@ -110,7 +110,7 @@ void logger_handler::initialize_() {
     }
 }
 
-void logger_handler::destroy_() {
+void logger_handler::destroy_() noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
     if (handle_type_ != NO_HANDLE_TYPE) {

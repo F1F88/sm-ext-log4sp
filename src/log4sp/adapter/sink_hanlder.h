@@ -30,7 +30,7 @@ public:
     /**
      * @brief 全局单例对象
      */
-    [[nodiscard]] static sink_handler &instance();
+    [[nodiscard]] static sink_handler &instance() noexcept;
 
     /**
      * @brief 用于 SDK_OnLoad 时创建 handle type。
@@ -47,14 +47,14 @@ public:
      * @note            为了避免影响其他清理工作，此方法不抛出异常。
      * @note            移除后所有的 sink handle 都将被释放，所以 handles_ 和 sinks_ 会被清空。
      */
-    static void destroy();
+    static void destroy() noexcept;
 
     /**
      * @brief 获取 handle type
      *
      * @return          handle type 或者 NO_HANDLE_TYPE 代表还没创建或创建失败
      */
-    [[nodiscard]] HandleType_t handle_type() const;
+    [[nodiscard]] HandleType_t handle_type() const noexcept;
 
     /**
      * @brief handlesys->CreateHandleEx 的适配器
@@ -70,7 +70,7 @@ public:
     [[nodiscard]] Handle_t create_handle(std::shared_ptr<spdlog::sinks::sink> object,
                                          const HandleSecurity *security,
                                          const HandleAccess *access,
-                                         HandleError *error);
+                                         HandleError *error) noexcept;
 
     /**
      * @brief handlesys->ReadHandle 的适配器
@@ -82,7 +82,7 @@ public:
      */
     [[nodiscard]] std::shared_ptr<spdlog::sinks::sink> read_handle(Handle_t handle,
                                                                    HandleSecurity *security,
-                                                                   HandleError *error);
+                                                                   HandleError *error) noexcept;
 
     /**
      * @brief Called when destroying a handle.  Must be implemented.
@@ -100,7 +100,7 @@ private:
     ~sink_handler() = default;
 
     void initialize_();
-    void destroy_();
+    void destroy_() noexcept;
 
     HandleType_t handle_type_{NO_HANDLE_TYPE};
     std::unordered_map<spdlog::sinks::sink*, Handle_t> handles_;

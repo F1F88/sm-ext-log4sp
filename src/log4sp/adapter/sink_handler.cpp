@@ -9,7 +9,7 @@
 
 namespace log4sp {
 
-sink_handler &sink_handler::instance() {
+sink_handler &sink_handler::instance() noexcept {
     static sink_handler instance;
     return instance;
 }
@@ -18,16 +18,16 @@ void sink_handler::initialize() {
     instance().initialize_();
 }
 
-void sink_handler::destroy() {
+void sink_handler::destroy() noexcept {
     instance().destroy_();
 }
 
 
-HandleType_t sink_handler::handle_type() const {
+HandleType_t sink_handler::handle_type() const noexcept {
     return handle_type_;
 }
 
-Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) {
+Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) noexcept {
     Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
@@ -43,7 +43,7 @@ Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object
     return handle;
 }
 
-std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) {
+std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) noexcept {
     spdlog::sinks::sink *object;
     HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
 
@@ -87,7 +87,7 @@ void sink_handler::initialize_() {
     }
 }
 
-void sink_handler::destroy_() {
+void sink_handler::destroy_() noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
     if (handle_type_ != NO_HANDLE_TYPE) {
