@@ -12,24 +12,21 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04, ubuntu-22.04, ubuntu-20.04, windows-latest]
+        os: [ubuntu-latest, ubuntu-20.04, windows-latest, windows-2019]
         sm_version: [latest, "1.12", "1.11"]
 
         include:
           - os: ubuntu-latest
             os_short: ubuntu_latest
 
-          - os: ubuntu-24.04
-            os_short: ubuntu_24_04
-
-          - os: ubuntu-22.04
-            os_short: ubuntu_22_04
-
           - os: ubuntu-20.04
             os_short: ubuntu_20_04
 
           - os: windows-latest
             os_short: win_latest
+
+          - os: windows-2019
+            os_short: win_2019
 
           - sm_version: latest
             sm_branch: master
