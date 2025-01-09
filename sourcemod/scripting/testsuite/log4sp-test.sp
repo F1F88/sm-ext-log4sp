@@ -61,7 +61,7 @@ Action CB_CMD(int client, int args)
     TestSinkLvl(sink1);
     delete sink1;
 
-    Sink sink2 = new ServerConsoleSink(true);
+    Sink sink2 = new ServerConsoleSink(.multiThread = true);
     TestSinkLog(sink2);
     delete sink2;
 
@@ -69,7 +69,7 @@ Action CB_CMD(int client, int args)
     TestSinkPattern(sink3);
     delete sink3;
 
-    ClientConsoleSink sink4 = new ClientConsoleSink(true);
+    ClientConsoleSink sink4 = new ClientConsoleSink(.multiThread = true);
     TestSinkLvl(sink4);
     TestSinkLog(sink4);
     sink4.SetFilter(filter);
@@ -85,9 +85,8 @@ Action CB_CMD(int client, int args)
     return Plugin_Handled;
 }
 
-Action filter(int client, const char[] name, LogLevel lvl, const char[] msg)
+Action filter(int client)
 {
-    // PrintToServer("[SP] Client Msg: client=%d | name=%s | lvl=%d | msg=%s |", client, name, lvl, msg);
     return Plugin_Continue;
 }
 

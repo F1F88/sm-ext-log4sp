@@ -14,6 +14,11 @@ template<typename Mutex>
 class client_console_sink final : public spdlog::sinks::base_sink<Mutex>
 {
 public:
+    client_console_sink() = default;
+    client_console_sink(IPluginFunction *filter) {
+        set_player_filter(filter);
+    }
+
     ~client_console_sink() override;
 
     void set_player_filter(IPluginFunction *filter);

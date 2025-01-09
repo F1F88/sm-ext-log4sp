@@ -11,7 +11,7 @@
 
 methodmap ClientConsoleSink < Sink
 {
-    public ClientConsoleSink(bool multiThread = false) {
+    public ClientConsoleSink(SinkClientFilter filter = INVALID_FUNCTION, bool multiThread = false) {
         return view_as<ClientConsoleSink>(INVALID_HANDLE);
     }
 

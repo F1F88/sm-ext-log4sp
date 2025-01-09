@@ -11,7 +11,7 @@
 
 methodmap ClientChatSink < Sink
 {
-    public ClientChatSink(bool multiThread = false) {
+    public ClientChatSink(SinkClientFilter filter = INVALID_FUNCTION, bool multiThread = false) {
         return view_as<ClientChatSink>(INVALID_HANDLE);
     }
 

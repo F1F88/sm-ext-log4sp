@@ -146,19 +146,21 @@ void Test_ClientConsoleLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    Sink sinks[1];
-
+    Sink sinks[4];
     sinks[0] = new ClientConsoleSink();
+    sinks[1] = new ClientConsoleSink(SinkFilter_Admin);
+    sinks[2] = new ClientConsoleSink(.multiThread = true);
+    sinks[3] = new ClientConsoleSink(SinkFilter_Admin, true);
+
     log = new Logger("test-client-console-logger", sinks, sizeof(sinks));
+
+    delete sinks[0];
+    delete sinks[1];
+    delete sinks[2];
+    delete sinks[3];
+
     Test_Logger(log, "test-client-console-logger", false);
     delete log;
-    delete sinks[0];
-
-    sinks[0] = new ClientConsoleSink(true);
-    log = new Logger("test-async-client-console-logger", sinks, sizeof(sinks), true);
-    Test_Logger(log, "test-async-client-console-logger", true);
-    delete log;
-    delete sinks[0];
 }
 
 void Test_ClientChatLogger()
@@ -175,19 +177,21 @@ void Test_ClientChatLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    Sink sinks[1];
-
+    Sink sinks[4];
     sinks[0] = new ClientChatSink();
+    sinks[1] = new ClientChatSink(SinkFilter_Admin);
+    sinks[2] = new ClientChatSink(.multiThread = true);
+    sinks[3] = new ClientChatSink(SinkFilter_Admin, true);
+
     log = new Logger("test-client-chat-logger", sinks, sizeof(sinks));
+
+    delete sinks[0];
+    delete sinks[1];
+    delete sinks[2];
+    delete sinks[3];
+
     Test_Logger(log, "test-client-chat-logger", false);
     delete log;
-    delete sinks[0];
-
-    sinks[0] = new ClientChatSink(true);
-    log = new Logger("test-async-client-chat-logger", sinks, sizeof(sinks), true);
-    Test_Logger(log, "test-async-client-chat-logger", true);
-    delete log;
-    delete sinks[0];
 }
 
 void Test_BaseFileLogger()
@@ -388,4 +392,10 @@ void ErrorHandler(const char[] msg)
 {
     static int cnt = 0;
     PrintToServer("custom error handler: %d | msg=%s |", ++cnt, msg);
+}
+
+
+Action SinkFilter_Admin(int client)
+{
+    return GetUserAdmin(client) != INVALID_ADMIN_ID ? Plugin_Continue : Plugin_Handled;
 }

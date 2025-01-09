@@ -7,17 +7,20 @@
 // *                                 ClientChatSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native ClientChatSink(bool multiThread = false);
+ * public native ClientChatSink(SinkClientFilter filter = INVALID_FUNCTION, bool multiThread = false);
  */
 static cell_t ClientChatSink(IPluginContext *ctx, const cell_t *params)
 {
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    bool multiThread = static_cast<bool>(params[1]);
+    auto funcID   = static_cast<funcid_t>(params[1]);
+    auto function = ctx->GetFunctionById(funcID); // 默认是 nullptr，即不过滤
+
+    bool multiThread = static_cast<bool>(params[2]);
     if (!multiThread)
     {
-        auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_st>();
+        auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_st>(function);
         auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
@@ -29,7 +32,7 @@ static cell_t ClientChatSink(IPluginContext *ctx, const cell_t *params)
     }
     else
     {
-        auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_mt>();
+        auto sink   = std::make_shared<log4sp::sinks::client_chat_sink_mt>(function);
         auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
         if (handle == BAD_HANDLE)
         {
