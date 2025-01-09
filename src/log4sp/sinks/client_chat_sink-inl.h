@@ -66,7 +66,9 @@ inline void client_chat_sink<Mutex>::sink_it_(const spdlog::details::log_msg &ms
             }
         }
 
-        gamehelpers->TextMsg(client, TEXTMSG_DEST_CHAT, message.c_str());
+        if (!gamehelpers->TextMsg(client, TEXTMSG_DEST_CHAT, message.c_str())) {
+            throw std::runtime_error{"Could not send a usermessage"};
+        }
     }
 }
 
