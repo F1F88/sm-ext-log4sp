@@ -14,6 +14,9 @@ methodmap ClientChatSink < Sink
     /**
      * This sink is output to all client chat.
      *
+     * @note Only one message can be active at a time.
+     * @note It is illegal to send any message while a non-intercept hook is in progress.
+     *
      * @param filter        Filter function called when logging a message to a client.
      *                      If INVALID_FUNCTION then no filtering, logging to all clients.
      * @param multiThread   If true, the created sink will be multi threaded and thread safe.
