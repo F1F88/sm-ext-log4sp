@@ -42,7 +42,7 @@ public:
      * @note  为了避免影响其他清理工作，此方法不抛出异常。
      * @note  移除后所有的 logger handle 都将被释放，所以 handles_ 和 loggers_ 会被清空。
      */
-    static void destroy();
+    static void destroy() noexcept;
 
     /**
      * @brief 获取 handle type
