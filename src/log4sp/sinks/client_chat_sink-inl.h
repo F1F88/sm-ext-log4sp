@@ -29,7 +29,7 @@ inline void client_chat_sink<Mutex>::set_player_filter(IPluginFunction *filter) 
         return;
     }
 
-    player_filter_forward_ = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_Cell);
+    player_filter_forward_ = forwards->CreateForwardEx(nullptr, ET_Hook, 1, nullptr, Param_Cell);
     if (player_filter_forward_ == nullptr) {
         std::runtime_error{"SM error! Could not create sink client filter forward."};
     }
