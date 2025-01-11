@@ -36,7 +36,7 @@ Action CB_CMD(int client, int args)
     TestLoggerLvl(logger1);
     delete logger1;
 
-    Logger logger2 = Logger.CreateServerConsoleLogger("logger-test-2", true);
+    Logger logger2 = Logger.CreateServerConsoleLogger("logger-test-2");
     TestLoggerLog(logger2);
     delete logger2;
 
@@ -44,7 +44,7 @@ Action CB_CMD(int client, int args)
     TestLoggerPattern(logger3);
     delete logger3;
 
-    Logger logger4 = Logger.CreateServerConsoleLogger("logger-test-4", true);
+    Logger logger4 = Logger.CreateServerConsoleLogger("logger-test-4");
     TestLoggerFlush(logger4);
     delete logger4;
 
@@ -52,7 +52,7 @@ Action CB_CMD(int client, int args)
     TestLoggerBacktrace(logger5);
     delete logger5;
 
-    Logger logger6 = Logger.CreateServerConsoleLogger("logger-test-6", true);
+    Logger logger6 = Logger.CreateServerConsoleLogger("logger-test-6");
     TestLoggerSink(logger6);
     delete logger6;
 

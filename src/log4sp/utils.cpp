@@ -1,7 +1,5 @@
 #include <math.h>
 
-#include "spdlog/async.h"
-
 #include "log4sp/utils.h"
 
 namespace log4sp {
@@ -17,18 +15,6 @@ spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept {
     }
 
     return static_cast<spdlog::level::level_enum>(lvl);
-}
-
-spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept {
-    if (policy < 0) {
-        return static_cast<spdlog::async_overflow_policy>(0);
-    }
-
-    if (policy >= 3) {
-        return static_cast<spdlog::async_overflow_policy>(2);
-    }
-
-    return static_cast<spdlog::async_overflow_policy>(policy);
 }
 
 spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept {

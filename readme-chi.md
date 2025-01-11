@@ -50,17 +50,13 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
    - 服务器控制台指令 **"sm log4sp"** 可以动态的修改 日志级别、刷新级别、日志模板、"回溯" 等
 
-7. 支持异步记录日志消息
-
-   - 不会阻塞服务器的主线程
-
-8. 支持 "无限长度" 的日志消息
+7. 支持 "无限长度" 的日志消息
 
    - 对于 `Logger.LogAmxTpl()` 方法，日志消息的最大长度为 2048 字符，超出的部分会被截断
 
    - 对于 `Logger.Log()` 和 `Logger.LogEx()`方法，日志消息的长度不受限制（理论上取决于可用内存）
 
-9. 支持一次日志操作写入多个输出源
+8. 支持一次日志操作写入多个输出源
 
    - 每一个记录器 (Logger) 都可以拥有多个输出源 (Sink)
 
@@ -68,7 +64,7 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
       例如：当 Logger 拥有 `ServerConsoleSink` 和 `DailyFileSink` 时，相当于 `sv_logecho 1` 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-10. 支持多种输出源
+9. 支持多种输出源
 
     - BaseFileSink （类似于 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
 
@@ -102,40 +98,11 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 
 测试用例：[benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
 
-#### 同步
-
 ```
 [benchmark] base-file         | Iters 1000000 | Elapsed  0.465 secs   2150463/sec
 [benchmark] daily-file        | Iters 1000000 | Elapsed  0.471 secs   2118729/sec
 [benchmark] rotating-file     | Iters 1000000 | Elapsed  0.482 secs   2073553/sec
 [benchmark] server-console    | Iters 1000000 | Elapsed  4.847 secs    206288/sec
-```
-
-#### 异步 Logger
-
-```
-# 队列大小：8192      线程数：1
-[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.532 secs   1878922/sec
-[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.530 secs   1883991/sec
-[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.527 secs   1895788/sec
-[benchmark] server-console-async-block     | Iters 1000000 | Elapsed  6.091 secs    164162/sec
-
-[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.530 secs   1883977/sec
-[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.528 secs   1893666/sec
-[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.511 secs   1956709/sec
-[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.407 secs   2455367/sec
-
-
-# 队列大小：8192      线程数：8
-[benchmark] base-file-async-block          | Iters 1000000 | Elapsed  0.688 secs   1452901/sec
-[benchmark] daily-file-async-block         | Iters 1000000 | Elapsed  0.671 secs   1488398/sec
-[benchmark] rotating-file-async-block      | Iters 1000000 | Elapsed  0.715 secs   1397846/sec
-[benchmark] server-console-async-block     | Iters 1000000 | Elapsed 11.645 secs     85873/sec
-
-[benchmark] base-file-async-overrun        | Iters 1000000 | Elapsed  0.524 secs   1905625/sec
-[benchmark] daily-file-async-overrun       | Iters 1000000 | Elapsed  0.494 secs   2022167/sec
-[benchmark] rotating-file-async-overrun    | Iters 1000000 | Elapsed  0.533 secs   1872676/sec
-[benchmark] server-console-async-overrun   | Iters 1000000 | Elapsed  0.509 secs   1964281/sec
 ```
 
 #### Sourcemod logging

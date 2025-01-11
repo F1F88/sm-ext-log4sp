@@ -52,13 +52,6 @@ enum PatternTimeType
     PatternTimeType_Utc
 };
 
-enum AsyncOverflowPolicy
-{
-    AsyncOverflowPolicy_Block,
-    AsyncOverflowPolicy_OverrunOldest,
-    AsyncOverflowPolicy_DiscardNew
-}
-
 
 stock int LogLevelToName(LogLevel lvl, char[] buffer, int maxlen) {
     switch (lvl) {

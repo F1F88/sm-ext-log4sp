@@ -66,20 +66,6 @@ enum PatternTimeType
 };
 
 /**
- * Async overflow policy.
- * block by default.
- *
- * @note If you pass an out-of-bounds value to native,
- *       native will modify it to the nearest boundary value.
- */
-enum AsyncOverflowPolicy
-{
-    AsyncOverflowPolicy_Block,          // Block until message can be enqueued.
-    AsyncOverflowPolicy_OverrunOldest,  // Discard oldest message in the queue if full when trying to add new item.
-    AsyncOverflowPolicy_DiscardNew      // Discard new message if the queue is full when trying to add new item.
-}
-
-/**
  * Convert a logging level enum to name.
  *
  * @param lvl       Logging level enum.

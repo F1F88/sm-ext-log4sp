@@ -61,7 +61,7 @@ void Test_DefaultLogger()
         ThrowError("Failed to get default logger. (1)");
     }
 
-    Test_Logger(log, LOG4SP_DEFAULT_LOGGER_NAME, false);
+    Test_Logger(log, LOG4SP_DEFAULT_LOGGER_NAME);
 
     delete log;
     log = Logger.Get(LOG4SP_DEFAULT_LOGGER_NAME);
@@ -78,11 +78,7 @@ void Test_ServerConsoleLogger()
     Logger log;
 
     log = Logger.CreateServerConsoleLogger("test-server-console-logger");
-    Test_Logger(log, "test-server-console-logger", false);
-    delete log;
-
-    log = Logger.CreateServerConsoleLogger("test-async-server-console-logger", .async=true);
-    Test_Logger(log, "test-async-server-console-logger", true);
+    Test_Logger(log, "test-server-console-logger");
     delete log;
 }
 
@@ -96,16 +92,8 @@ void Test_RotatingFileLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.Get("test-async-rotate-file-logger");
-    if (log != INVALID_HANDLE)
-        delete log;
-
     log = Logger.CreateRotatingFileLogger("test-rotate-file-logger", "logs/test/rotate.log", 1024 * 1024, 3);
-    Test_Logger(log, "test-rotate-file-logger", false);
-    delete log;
-
-    log = Logger.CreateRotatingFileLogger("test-async-rotate-file-logger", "logs/test/rotate-async.log", 1024 * 1024, 3, .async=true);
-    Test_Logger(log, "test-async-rotate-file-logger", true);
+    Test_Logger(log, "test-rotate-file-logger");
     delete log;
 }
 
@@ -119,16 +107,8 @@ void Test_DailyFileLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.Get("test-async-daily-file-logger");
-    if (log != INVALID_HANDLE)
-        delete log;
-
     log = Logger.CreateDailyFileLogger("test-daily-file-logger", "logs/test/daily.log", .truncate=true);
-    Test_Logger(log, "test-daily-file-logger", false);
-    delete log;
-
-    log = Logger.CreateDailyFileLogger("test-async-daily-file-logger", "logs/test/daily-async.log", .truncate=true, .async=true);
-    Test_Logger(log, "test-async-daily-file-logger", true);
+    Test_Logger(log, "test-daily-file-logger");
     delete log;
 }
 
@@ -142,24 +122,16 @@ void Test_ClientConsoleLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.Get("test-async-client-console-logger");
-    if (log != INVALID_HANDLE)
-        delete log;
-
-    Sink sinks[4];
+    Sink sinks[2];
     sinks[0] = new ClientConsoleSink();
     sinks[1] = new ClientConsoleSink(SinkFilter_Admin);
-    sinks[2] = new ClientConsoleSink(.multiThread = true);
-    sinks[3] = new ClientConsoleSink(SinkFilter_Admin, true);
 
     log = new Logger("test-client-console-logger", sinks, sizeof(sinks));
 
     delete sinks[0];
     delete sinks[1];
-    delete sinks[2];
-    delete sinks[3];
 
-    Test_Logger(log, "test-client-console-logger", false);
+    Test_Logger(log, "test-client-console-logger");
     delete log;
 }
 
@@ -173,24 +145,16 @@ void Test_ClientChatLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.Get("test-async-client-chat-logger");
-    if (log != INVALID_HANDLE)
-        delete log;
-
-    Sink sinks[4];
+    Sink sinks[2];
     sinks[0] = new ClientChatSink();
     sinks[1] = new ClientChatSink(SinkFilter_Admin);
-    sinks[2] = new ClientChatSink(.multiThread = true);
-    sinks[3] = new ClientChatSink(SinkFilter_Admin, true);
 
     log = new Logger("test-client-chat-logger", sinks, sizeof(sinks));
 
     delete sinks[0];
     delete sinks[1];
-    delete sinks[2];
-    delete sinks[3];
 
-    Test_Logger(log, "test-client-chat-logger", false);
+    Test_Logger(log, "test-client-chat-logger");
     delete log;
 }
 
@@ -204,25 +168,17 @@ void Test_BaseFileLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.Get("test-async-base-file-logger");
-    if (log != INVALID_HANDLE)
-        delete log;
-
     log = Logger.CreateBaseFileLogger("test-base-file-logger", "logs/test/base.log", .truncate=true);
-    Test_Logger(log, "test-base-file-logger", false);
-    delete log;
-
-    log = Logger.CreateBaseFileLogger("test-async-base-file-logger", "logs/test/base-async.log", .truncate=true, .async=true);
-    Test_Logger(log, "test-async-base-file-logger", true);
+    Test_Logger(log, "test-base-file-logger");
     delete log;
 }
 
-void Test_Logger(Logger logger, const char[] name, bool async)
+void Test_Logger(Logger logger, const char[] name)
 {
     Test_Logger_Log(logger);
     Test_Logger_Member(logger, name);
     Test_Logger_Backtrace(logger);
-    Test_Logger_Update_Sinks(logger, async);
+    Test_Logger_Update_Sinks(logger);
     Test_Logger_Error_Handler(logger);
 }
 
@@ -367,9 +323,9 @@ void Test_Logger_Backtrace(Logger logger)
     AssertEq("SetLevel(origin)", logger.GetLevel(), originLogLevel);
 }
 
-void Test_Logger_Update_Sinks(Logger logger, bool mt)
+void Test_Logger_Update_Sinks(Logger logger)
 {
-    Sink sink = new BaseFileSink("addons/sourcemod/logs/log4sp-test-logger-sinks.log", true, mt);
+    Sink sink = new BaseFileSink("addons/sourcemod/logs/log4sp-test-logger-sinks.log");
     logger.AddSink(sink);
     Test_Logger_Log(logger);
     logger.DropSink(sink);
