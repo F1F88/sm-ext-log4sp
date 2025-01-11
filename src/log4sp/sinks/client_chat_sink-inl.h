@@ -21,21 +21,21 @@ inline client_chat_sink<Mutex>::~client_chat_sink() {
 template <typename Mutex>
 inline void client_chat_sink<Mutex>::set_player_filter(IPluginFunction *filter) {
     std::lock_guard<Mutex> lock{spdlog::sinks::base_sink<Mutex>::mutex_};
+    if (filter == nullptr) {
+        throw std::runtime_error{"Invalid sink client filter function"};
+    }
+
     if (player_filter_forward_ != nullptr) {
         forwards->ReleaseForward(player_filter_forward_); // 清空 forward function
     }
 
-    if (filter == nullptr) {
-        return;
-    }
-
     player_filter_forward_ = forwards->CreateForwardEx(nullptr, ET_Hook, 1, nullptr, Param_Cell);
     if (player_filter_forward_ == nullptr) {
-        std::runtime_error{"SM error! Could not create sink client filter forward."};
+        throw std::runtime_error{"SM error! Could not create sink client filter forward."};
     }
 
     if (!player_filter_forward_->AddFunction(filter)) {
-        std::runtime_error{"SM error! Could not add sink client filter function."};
+        throw std::runtime_error{"SM error! Could not add sink client filter function."};
     }
 }
 

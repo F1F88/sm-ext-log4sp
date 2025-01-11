@@ -114,25 +114,29 @@ methodmap Logger < Handle
      * Create a logger handle that outputs to the client chat.
      *
      * @param name      The name of the new logger.
+     * @param filter    Filter function called when logging a message to a client.
+     *                  If INVALID_FUNCTION then no filtering, logging to all clients.
      * @param async     If true, Log operations will be pushed to background threads for processing,
      *                  which can avoid blocking the main thread.
      * @param policy    Message queue overflow policy. (Only used when async = true)
      * @return          Logger handle.
      * @error           Logger name already exits.
      */
-    public static native Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public static native Logger CreateClientChatLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
      * Create a logger handle that outputs to the client console.
      *
      * @param name      The name of the new logger.
+     * @param filter    Filter function called when logging a message to a client.
+     *                  If INVALID_FUNCTION then no filtering, logging to all clients.
      * @param async     If true, Log operations will be pushed to background threads for processing,
      *                  which can avoid blocking the main thread.
      * @param policy    Message queue overflow policy. (Only used when async = true)
      * @return          Logger handle.
      * @error           Logger name already exits.
      */
-    public static native Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public static native Logger CreateClientConsoleLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on size.

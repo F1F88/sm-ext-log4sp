@@ -43,11 +43,11 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+    public static Logger CreateClientChatLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+    public static Logger CreateClientConsoleLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 

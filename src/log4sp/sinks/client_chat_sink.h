@@ -14,9 +14,10 @@ template<typename Mutex>
 class client_chat_sink final : public spdlog::sinks::base_sink<Mutex>
 {
 public:
-    client_chat_sink() = default;
-    client_chat_sink(IPluginFunction *filter) {
-        set_player_filter(filter);
+    explicit client_chat_sink(IPluginFunction *filter) {
+        if (filter != nullptr) {
+            set_player_filter(filter);
+        }
     }
 
     ~client_chat_sink() override;

@@ -254,7 +254,7 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public static native Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ * public static native Logger CreateClientChatLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
  */
 static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
 {
@@ -266,7 +266,10 @@ static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    auto sink = std::make_shared<log4sp::sinks::client_chat_sink_st>();
+    auto funcID   = static_cast<funcid_t>(params[2]);
+    auto function = ctx->GetFunctionById(funcID); // 默认是 nullptr，即不过滤
+
+    auto sink = std::make_shared<log4sp::sinks::client_chat_sink_st>(function);
 
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
@@ -301,7 +304,7 @@ static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public static native Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ * public static native Logger CreateClientConsoleLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
  */
 static cell_t CreateClientConsoleLogger(IPluginContext *ctx, const cell_t *params)
 {
@@ -313,7 +316,10 @@ static cell_t CreateClientConsoleLogger(IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    auto sink = std::make_shared<log4sp::sinks::client_console_sink_st>();
+    auto funcID   = static_cast<funcid_t>(params[2]);
+    auto function = ctx->GetFunctionById(funcID); // 默认是 nullptr，即不过滤
+
+    auto sink = std::make_shared<log4sp::sinks::client_console_sink_st>(function);
 
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
