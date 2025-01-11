@@ -82,6 +82,8 @@ Action CB_CMD(int client, int args)
 
     ApplyAll();
 
+    Test_CallbackSink();
+
     return Plugin_Handled;
 }
 
@@ -404,4 +406,54 @@ void ApplyAll_GetNames(Logger logger, ArrayList names)
     logger.GetName(buffer, size);
     names.PushString(buffer);
     // PrintToServer("length = %2d | name = %s", size, buffer);
+}
+
+CallbackSink g_hCallbackSink[1];
+void Test_CallbackSink()
+{
+    g_hCallbackSink[0] = new CallbackSink(CBSink_Log);
+
+    Logger logger = new Logger("test-callback-sink", g_hCallbackSink, sizeof(g_hCallbackSink));
+
+    logger.LogSrc(LogLevel_Warn, "Hello callback sink!");
+    logger.Flush();
+
+    delete g_hCallbackSink[0];
+    delete logger;
+
+    g_hCallbackSink[0] = new CallbackSink(CBSink_Log, CBSink_Flush);
+    logger = new Logger("test-callback-sink-2", g_hCallbackSink, sizeof(g_hCallbackSink));
+
+    logger.LogSrc(LogLevel_Error, "Hello callback sink! 222");
+    logger.Flush();
+
+    delete g_hCallbackSink[0];
+    delete logger;
+}
+
+void CBSink_Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2])
+{
+    PrintToServer("name = %s | lvl = %d | payload = %s | ", name, lvl, msg);
+    PrintToServer("source_loc = %s::%d::%s", file, line, func);
+    PrintToServer("seconds = %d %d", seconds[0], seconds[1]);
+    PrintToServer("nanoseconds = %d %d", nanoseconds[0], nanoseconds[1]);
+
+    // int time[2];
+    // GetTime(time);
+    // PrintToServer("GetTime = %d %d %d", GetTime(), time[0], time[1]);
+
+    char buffer[512];
+    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg);
+    PrintToServer("buffer = %s", buffer);
+
+    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg, file, 222, "MyFunc2", seconds);
+    PrintToServer("buffer 222 = %s", buffer);
+
+    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg, file, 333, "MyFunc3", {0, 0}, nanoseconds);
+    PrintToServer("buffer 333 = %s", buffer);
+}
+
+void CBSink_Flush()
+{
+    PrintToServer("On CBSink_Flush");
 }
