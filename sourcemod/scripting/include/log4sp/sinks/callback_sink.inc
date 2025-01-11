@@ -14,7 +14,7 @@
  *
  * @param name          The name of a logger.
  * @param lvl           Log level enum.
- * @param msg           Log message.
+ * @param msg           Pre formatted log message.
  * @param file          The file name of the source code location.
  * @param line          The line number of the source code location.
  * @param func          The function name of the source code location.
@@ -67,7 +67,7 @@ methodmap CallbackSink < Sink
     public native void SetFlushCallback(CustomFlushCallback flushCallback);
 
     /**
-     * TODO Docs
+     * Format log message in a pre-set pattern.
      *
      * @note If nanoseconds is not 0, nanoseconds is used as the time of the log message.
      * @note If nanoseconds is 0 and seconds is not 0, seconds is used as the time of the log message.
@@ -77,7 +77,7 @@ methodmap CallbackSink < Sink
      * @param maxlen        Maximum length of the buffer.
      * @param name          The name of a logger.
      * @param lvl           Log level enum.
-     * @param msg           Log message.
+     * @param msg           Pre formatted log message.
      * @param file          The file name of the source code location.
      * @param line          The line number of the source code location.
      * @param func          The function name of the source code location.
