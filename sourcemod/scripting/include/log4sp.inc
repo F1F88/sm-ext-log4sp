@@ -52,6 +52,7 @@
 #include <log4sp/logger>
 #include <log4sp/sinks/sink>
 #include <log4sp/sinks/base_file_sink>
+#include <log4sp/sinks/callback_sink>
 #include <log4sp/sinks/client_chat_sink>
 #include <log4sp/sinks/client_console_sink>
 #include <log4sp/sinks/daily_file_sink>
@@ -64,6 +65,7 @@
 #include <log4sp_no_ext/logger>
 #include <log4sp_no_ext/sinks/sink>
 #include <log4sp_no_ext/sinks/base_file_sink>
+#include <log4sp_no_ext/sinks/callback_sink>
 #include <log4sp_no_ext/sinks/client_chat_sink>
 #include <log4sp_no_ext/sinks/client_console_sink>
 #include <log4sp_no_ext/sinks/daily_file_sink>

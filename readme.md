@@ -74,6 +74,8 @@ With log4sp, plugin developers no longer need to write complex logging code, so 
 
     - BaseFileSink （Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
 
+    - CallbackSink
+
     - ClientChatSink（Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
 
     - ClientConsoleSink（Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）

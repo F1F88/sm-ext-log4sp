@@ -34,6 +34,8 @@ public void OnPluginStart()
     RegConsoleCmd("sm_log4sp_bench_rotating_file",                  Command_BenchRotatingFile);
     RegConsoleCmd("sm_log4sp_bench_server_console",                 Command_BenchServerConsole);
 
+    RegConsoleCmd("sm_log4sp_bench_callback",                       Command_BenchCallback);
+
     RegConsoleCmd("sm_log4sp_bench_base_file_async_block",          Command_BenchBaseFileAsyncBlock);
     RegConsoleCmd("sm_log4sp_bench_daily_file_async_block",         Command_BenchDailyFileAsyncBlock);
     RegConsoleCmd("sm_log4sp_bench_rotating_file_async_block",      Command_BenchRotatingFileAsyncBlock);
@@ -103,6 +105,30 @@ Action Command_BenchServerConsole(int client, int args)
     PrintToServer("");
     PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "server-console", iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
+}
+
+
+Action Command_BenchCallback(int client, int args)
+{
+    int iters = 1_000_000;
+    if (args >= 1)
+    {
+        iters = GetCmdArgInt(1);
+    }
+
+    Sink sinks[1];
+    sinks[0] = new CallbackSink(CallBackSink_CB);
+    Logger logger = new Logger("name-E", sinks, 1);
+    float delta = BenchLogger(iters, client, logger);
+
+    PrintToServer("");
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "callback-sink", iters, delta, RoundToFloor(iters / delta));
+    return Plugin_Handled;
+}
+
+void CallBackSink_CB(const char[] name, LogLevel lvl, const char[] msg)
+{
+    // Do something
 }
 
 
