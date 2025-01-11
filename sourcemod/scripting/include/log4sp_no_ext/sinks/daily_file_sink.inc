@@ -11,7 +11,7 @@
 
 methodmap DailyFileSink < Sink
 {
-    public DailyFileSink(const char[] file, int rotationHour = 0, int rotationMinute = 0, bool truncate = false, int maxFiles = 0, bool multiThread = false) {
+    public DailyFileSink(const char[] file, int rotationHour = 0, int rotationMinute = 0, bool truncate = false, int maxFiles = 0) {
         return view_as<DailyFileSink>(INVALID_HANDLE);
     }
 

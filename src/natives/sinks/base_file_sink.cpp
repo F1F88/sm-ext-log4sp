@@ -7,7 +7,7 @@
 // *                                   BaseFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native BaseFileSink(const char[] file, bool truncate = false, bool multiThread = false);
+ * public native BaseFileSink(const char[] file, bool truncate = false);
  */
 static cell_t BaseFileSink(IPluginContext *ctx, const cell_t *params)
 {
@@ -18,19 +18,11 @@ static cell_t BaseFileSink(IPluginContext *ctx, const cell_t *params)
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
     auto truncate    = static_cast<bool>(params[2]);
-    auto multiThread = static_cast<bool>(params[3]);
 
     spdlog::sink_ptr sink;
     try
     {
-        if (!multiThread)
-        {
-            sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
-        }
-        else
-        {
-            sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, truncate);
-        }
+        sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
     }
     catch(const std::exception &ex)
     {
@@ -68,28 +60,16 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
         return 0;
     }
 
+    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
+    if (realSink == nullptr)
     {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
-        if (realSink != nullptr)
-        {
-            size_t bytes;
-            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-            return bytes;
-        }
+        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
     }
 
-    {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink);
-        if (realSink != nullptr)
-        {
-            size_t bytes;
-            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-            return bytes;
-        }
-    }
-
-    ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
-    return 0;
+    size_t bytes;
+    ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+    return bytes;
 }
 
 /**
@@ -109,39 +89,22 @@ static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
+    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
+    if (realSink == nullptr)
     {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
-        if (realSink != nullptr)
-        {
-            try
-            {
-                realSink->truncate();
-            }
-            catch(const std::exception &ex)
-            {
-                ctx->ReportError(ex.what());
-            }
-            return 0;
-        }
+        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
     }
 
+    try
     {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink);
-        if (realSink != nullptr)
-        {
-            try
-            {
-                realSink->truncate();
-            }
-            catch(const std::exception &ex)
-            {
-                ctx->ReportError(ex.what());
-            }
-            return 0;
-        }
+        realSink->truncate();
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
     }
 
-    ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
     return 0;
 }
 

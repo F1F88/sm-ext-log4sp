@@ -11,7 +11,7 @@
 
 methodmap BaseFileSink < Sink
 {
-    public BaseFileSink(const char[] file, bool truncate = false, bool multiThread = false) {
+    public BaseFileSink(const char[] file, bool truncate = false) {
         return view_as<BaseFileSink>(INVALID_HANDLE);
     }
 

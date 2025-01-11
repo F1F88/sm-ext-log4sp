@@ -12,8 +12,7 @@
  *     int rotationHour = 0,
  *     int rotationMinute = 0,
  *     bool truncate = false,
- *     int maxFiles = 0,
- *     bool multiThread = false
+ *     int maxFiles = 0
  * );
  */
 static cell_t DailyFileSink(IPluginContext *ctx, const cell_t *params)
@@ -28,19 +27,11 @@ static cell_t DailyFileSink(IPluginContext *ctx, const cell_t *params)
     auto rotationMinute = static_cast<int>(params[3]);
     auto truncate       = static_cast<bool>(params[4]);
     auto maxFiles       = static_cast<uint16_t>(params[5]);
-    auto multiThread    = static_cast<bool>(params[6]);
 
     spdlog::sink_ptr sink;
     try
     {
-        if (!multiThread)
-        {
-            sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, rotationHour, rotationMinute, truncate, maxFiles);
-        }
-        else
-        {
-            sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(path, rotationHour, rotationMinute, truncate, maxFiles);
-        }
+        sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, rotationHour, rotationMinute, truncate, maxFiles);
     }
     catch(const std::exception &ex)
     {
@@ -78,28 +69,16 @@ static cell_t DailyFileSink_GetFilename(IPluginContext *ctx, const cell_t *param
         return 0;
     }
 
+    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
+    if (realSink == nullptr)
     {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
-        if (realSink != nullptr)
-        {
-            size_t bytes;
-            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-            return bytes;
-        }
+        ctx->ReportError("Invalid daily file sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
     }
 
-    {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_mt>(sink);
-        if (realSink != nullptr)
-        {
-            size_t bytes;
-            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-            return bytes;
-        }
-    }
-
-    ctx->ReportError("Invalid daily file sink handle %x (error: %d)", handle, HandleError_Parameter);
-    return 0;
+    size_t bytes;
+    ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+    return bytes;
 }
 
 const sp_nativeinfo_t DailyFileSinkNatives[] =

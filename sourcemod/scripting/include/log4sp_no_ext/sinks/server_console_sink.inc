@@ -11,7 +11,7 @@
 
 methodmap ServerConsoleSink < Sink
 {
-    public ServerConsoleSink(bool multiThread = false) {
+    public ServerConsoleSink() {
         return view_as<ServerConsoleSink>(INVALID_HANDLE);
     }
 }

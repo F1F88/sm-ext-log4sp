@@ -16,10 +16,9 @@ methodmap ClientConsoleSink < Sink
      *
      * @param filter        Filter function called when logging a message to a client.
      *                      If INVALID_FUNCTION then no filtering, logging to all clients.
-     * @param multiThread   If true, the created sink will be multi threaded and thread safe.
      * @return              ClientConsoleSink handle.
      */
-    public native ClientConsoleSink(SinkClientFilter filter = INVALID_FUNCTION, bool multiThread = false);
+    public native ClientConsoleSink(SinkClientFilter filter = INVALID_FUNCTION);
 
     /**
      * Set the clint console sink filter.

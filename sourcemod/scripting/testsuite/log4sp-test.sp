@@ -61,7 +61,7 @@ Action CB_CMD(int client, int args)
     TestSinkLvl(sink1);
     delete sink1;
 
-    Sink sink2 = new ServerConsoleSink(.multiThread = true);
+    Sink sink2 = new ServerConsoleSink();
     TestSinkLog(sink2);
     delete sink2;
 
@@ -69,7 +69,7 @@ Action CB_CMD(int client, int args)
     TestSinkPattern(sink3);
     delete sink3;
 
-    ClientConsoleSink sink4 = new ClientConsoleSink(.multiThread = true);
+    ClientConsoleSink sink4 = new ClientConsoleSink();
     TestSinkLvl(sink4);
     TestSinkLog(sink4);
     sink4.SetFilter(filter);
@@ -236,18 +236,18 @@ void TestLoggerSink(Logger logger)
     logger.GetName(name, sizeof(name));
     PrintToServer("========== Test Logger Sink Start | name=%s |==========", name);
 
-    logger.Info("Test before add ServerConsoleSinkMT message. 1");
+    logger.Info("Test before add ServerConsoleSink message. 1");
 
-    Sink sink1 = new ServerConsoleSink(true);
+    Sink sink1 = new ServerConsoleSink();
     sink1.SetPattern("This is Sink1 %v");
     logger.AddSink(sink1);
 
-    Sink sink2 = new ServerConsoleSink(true);
+    Sink sink2 = new ServerConsoleSink();
     sink2.SetPattern("This is Sink2 %v");
     logger.AddSink(sink2);
 
     // 这个操作至少会在 ServerConsole 输出 2 条 log message
-    logger.Info("Test after add ServerConsoleSinkMT message. 2");
+    logger.Info("Test after add ServerConsoleSink message. 2");
 
     // 从 logger 中移除 sink1
     logger.DropSink(sink1);
@@ -262,7 +262,7 @@ void TestLoggerSink(Logger logger)
 
     // 本次输出在 ServerConsole 的 log message 会减少 1 条
     // 因为 sink1 从 logger 中移除了
-    logger.Info("Test after add ServerConsoleSinkMT message. 3");
+    logger.Info("Test after add ServerConsoleSink message. 3");
 
     PrintToServer("========== Test Logger Sink End | name=%s | ==========", name);
 }

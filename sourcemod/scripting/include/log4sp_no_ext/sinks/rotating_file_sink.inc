@@ -11,7 +11,7 @@
 
 methodmap RotatingFileSink < Sink
 {
-    public RotatingFileSink(const char[] file, const int maxFileSize, const int maxFiles, bool rotateOnOpen = false, bool multiThread = false) {
+    public RotatingFileSink(const char[] file, const int maxFileSize, const int maxFiles, bool rotateOnOpen = false) {
         return view_as<RotatingFileSink>(INVALID_HANDLE);
     }
 

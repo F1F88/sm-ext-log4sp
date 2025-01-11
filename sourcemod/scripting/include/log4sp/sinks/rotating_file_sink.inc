@@ -25,15 +25,13 @@ methodmap RotatingFileSink < Sink
      * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  If true, the log file will be rotated when opened.
-     * @param multiThread   If true, the created sink will be multi threaded and thread safe.
      * @return              RotatingFileSink handle.
      * @error               Param maxFileSize <= 0, Param maxFiles > 200000.
      */
     public native RotatingFileSink(const char[] file,
                                    const int maxFileSize,
                                    const int maxFiles,
-                                   bool rotateOnOpen = false,
-                                   bool multiThread = false);
+                                   bool rotateOnOpen = false);
 
     /**
      * Get the current filename being used by the file sink.
