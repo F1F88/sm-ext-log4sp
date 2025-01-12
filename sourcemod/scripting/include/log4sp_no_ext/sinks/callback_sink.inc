@@ -15,6 +15,8 @@ typeset CustomLogCallback
     function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
     function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2]);
     function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2]);
+
+    function void (const char[] msg);
 }
 
 typedef CustomFlushCallback = function void();
@@ -22,11 +24,13 @@ typedef CustomFlushCallback = function void();
 
 methodmap CallbackSink < Sink
 {
-    public CallbackSink(CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION) {
+    public CallbackSink(CustomLogCallback logCallback = INVALID_FUNCTION, CustomLogCallback logPostCallback = INVALID_FUNCTION, CustomFlushCallback flushCallback = INVALID_FUNCTION) {
         return view_as<CallbackSink>(INVALID_HANDLE);
     }
 
     public void SetLogCallback(CustomLogCallback logCallback) {}
+
+    public void SetLogPostCallback(CustomLogCallback logPostCallback) {}
 
     public void SetFlushCallback(CustomFlushCallback flushCallback) {}
 
