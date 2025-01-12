@@ -411,21 +411,35 @@ void ApplyAll_GetNames(Logger logger, ArrayList names)
 CallbackSink g_hCallbackSink[1];
 void Test_CallbackSink()
 {
-    g_hCallbackSink[0] = new CallbackSink(CBSink_Log);
+    g_hCallbackSink[0] = new CallbackSink();
 
     Logger logger = new Logger("test-callback-sink", g_hCallbackSink, sizeof(g_hCallbackSink));
 
-    logger.LogSrc(LogLevel_Warn, "Hello callback sink!");
+    logger.LogSrc(LogLevel_Warn, "Hello callback sink! 11111");
     logger.Flush();
+    PrintToServer("-- 11111 --");
 
-    delete g_hCallbackSink[0];
-    delete logger;
-
-    g_hCallbackSink[0] = new CallbackSink(CBSink_Log, CBSink_Flush);
-    logger = new Logger("test-callback-sink-2", g_hCallbackSink, sizeof(g_hCallbackSink));
-
-    logger.LogSrc(LogLevel_Error, "Hello callback sink! 222");
+    g_hCallbackSink[0].SetLogCallback(CBSink_Log);
+    logger.LogSrc(LogLevel_Warn, "Hello callback sink! 22222");
     logger.Flush();
+    PrintToServer("-- 22222 --");
+
+    g_hCallbackSink[0].SetLogPostCallback(CBSink_LogPost);
+    logger.LogSrc(LogLevel_Warn, "Hello callback sink! 33333");
+    logger.Flush();
+    PrintToServer("-- 33333 --");
+
+    g_hCallbackSink[0].SetFlushCallback(CBSink_Flush);
+    logger.LogSrc(LogLevel_Warn, "Hello callback sink! 44444");
+    logger.Flush();
+    PrintToServer("-- 44444 --");
+
+    g_hCallbackSink[0].SetLogCallback(INVALID_FUNCTION);
+    g_hCallbackSink[0].SetLogPostCallback(INVALID_FUNCTION);
+    g_hCallbackSink[0].SetFlushCallback(INVALID_FUNCTION);
+    logger.LogSrc(LogLevel_Warn, "Hello callback sink! 55555");
+    logger.Flush();
+    PrintToServer("-- 55555 --");
 
     delete g_hCallbackSink[0];
     delete logger;
@@ -433,27 +447,35 @@ void Test_CallbackSink()
 
 void CBSink_Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2])
 {
-    PrintToServer("name = %s | lvl = %d | payload = %s | ", name, lvl, msg);
-    PrintToServer("source_loc = %s::%d::%s", file, line, func);
-    PrintToServer("seconds = %d %d", seconds[0], seconds[1]);
-    PrintToServer("nanoseconds = %d %d", nanoseconds[0], nanoseconds[1]);
+    PrintToServer("Callback Sink 1 | Log 1 | name = %s, lvl = %d, payload = %s", name, lvl, msg);
+    PrintToServer("Callback Sink 2 | Log 2 | source loc = %s::%d::%s", file, line, func);
+    PrintToServer("Callback Sink 3 | Log 3 | seconds = %b %b, nanoseconds = %b %b", seconds[1], seconds[0], nanoseconds[1], nanoseconds[0]);
 
-    // int time[2];
-    // GetTime(time);
-    // PrintToServer("GetTime = %d %d %d", GetTime(), time[0], time[1]);
-
+    int length;
     char buffer[512];
-    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg);
-    PrintToServer("buffer = %s", buffer);
+    length = g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg);
+    buffer[length - 1] = '\0';
+    PrintToServer("Callback Sink 4 | FormatPattern 1 | name, lvl, msg = %s", buffer);
 
     g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg, file, 222, "MyFunc2", seconds);
-    PrintToServer("buffer 222 = %s", buffer);
+    buffer[length - 1] = '\0';
+    PrintToServer("Callback Sink 5 | FormatPattern 2 | name, lvl, msg, file, line, func, seconds = %s", buffer);
 
-    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg, file, 333, "MyFunc3", {0, 0}, nanoseconds);
-    PrintToServer("buffer 333 = %s", buffer);
+    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg, file, 333, "MyFunc3", _, nanoseconds);
+    buffer[length - 1] = '\0';
+    PrintToServer("Callback Sink 6 | FormatPattern 3 | name, lvl, msg, file, line, func, nanoseconds = %s", buffer);
+}
+
+void CBSink_LogPost(const char[] msg)
+{
+    char buffer[512];
+    int length = strcopy(buffer, sizeof(buffer), msg);
+    buffer[length - 1] = '\0';
+
+    PrintToServer("Callback Sink 7 | Log Post | msg = %s", buffer);
 }
 
 void CBSink_Flush()
 {
-    PrintToServer("On CBSink_Flush");
+    PrintToServer("Callback Sink 8 | Flush |");
 }
