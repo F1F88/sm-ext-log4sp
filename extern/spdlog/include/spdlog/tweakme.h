@@ -71,7 +71,6 @@
 // separator.
 //
 // #define SPDLOG_FOLDER_SEPS "\\"
-#define SPDLOG_FOLDER_SEPS "/\\"
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,14 +104,6 @@
 //
 // #define SPDLOG_LEVEL_NAMES { "MY TRACE", "MY DEBUG", "MY INFO", "MY WARNING", "MY ERROR", "MY
 // CRITICAL", "OFF" }
-// TODO: 这是一个临时的解决方案 (See: https://github.com/gabime/spdlog/issues/3233)
-#if __cplusplus >= 201703L
-    #include <string_view>
-    using namespace std::literals;
-    #define SPDLOG_LEVEL_NAMES { "trace"sv, "debug"sv, "info"sv, "warn"sv, "error"sv, "fatal"sv, "off"sv }
-#else
-    #define SPDLOG_LEVEL_NAMES { "trace", "debug", "info", "warn", "error", "fatal", "off" }
-#endif
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -120,14 +111,13 @@
 // These can be longer than one character.
 //
 // #define SPDLOG_SHORT_LEVEL_NAMES { "T", "D", "I", "W", "E", "C", "O" }
-#define SPDLOG_SHORT_LEVEL_NAMES { "T", "D", "I", "W", "E", "F", "O" }
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 // Uncomment to disable default logger creation.
 // This might save some (very) small initialization time if no default logger is needed.
 //
-#define SPDLOG_DISABLE_DEFAULT_LOGGER
+// #define SPDLOG_DISABLE_DEFAULT_LOGGER
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -73,13 +73,31 @@ class ExtensionConfig(object):
     elif cxx.vendor == 'msvc':
       self.configure_msvc(cxx)
 
+    #* spdlog settings *#
+    cxx.defines += [
+      'SPDLOG_FOLDER_SEPS="/\\\\"',
+      'SPDLOG_LEVEL_NAMES={{"trace", 5ULL}, {"debug", 5ULL}, {"info", 4ULL}, {"warn", 4ULL}, {"error", 5ULL}, {"fatal", 5ULL}, {"off", 3ULL}}',
+      'SPDLOG_SHORT_LEVEL_NAMES={"T", "D", "I", "W", "E", "F", "O"}',
+    ]
+
     # Optimization
     if builder.options.opt == '1':
-      cxx.defines += ['NDEBUG']
+      cxx.defines += [
+        'NDEBUG',
+        'SPDLOG_NO_SOURCE_LOC',
+        'SPDLOG_NO_ATOMIC_LEVELS',
+        'SPDLOG_NO_TLS',
+        'SPDLOG_DISABLE_DEFAULT_LOGGER',
+        'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_OFF',
+      ]
 
     # Debugging
     if builder.options.debug == '1':
-      cxx.defines += ['DEBUG', '_DEBUG']
+      cxx.defines += [
+        'DEBUG',
+        '_DEBUG',
+        'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE',
+      ]
 
     # Platform-specifics
     if builder.target_platform == 'linux':
@@ -129,11 +147,6 @@ class ExtensionConfig(object):
       '-fvisibility-inlines-hidden',
 
       '-fPIC',          #* log4sp addition *#
-      '-g0',            #* log4sp addition *#
-      '-flto=auto',         #* log4sp addition *#
-      '-funroll-loops',     #* log4sp addition *#
-      '-floop-interchange', #* log4sp addition *#
-      '-finline-functions'  #* log4sp addition *#
     ]
     cxx.linkflags += ['-m32']
 
@@ -161,6 +174,17 @@ class ExtensionConfig(object):
 
     if builder.options.opt == '1':
       cxx.cflags += ['-O3']
+      cxx.cxxflags += [
+        '-g0',
+        '-flto=auto',
+        '-funroll-loops',
+        '-floop-interchange',
+        '-finline-functions',
+      ]
+      cxx.defines += ['SPDLOG_CLOCK_COARSE']
+      if os.environ.get('GITHUB_ACTIONS') != 'true':
+        cxx.cflags += ['-march=native']
+        cxx.cxxflags += ['-march=native']
 
   def configure_msvc(self, cxx):
     if builder.options.debug == '1':
@@ -186,8 +210,6 @@ class ExtensionConfig(object):
       '/TP',
       '/std:c++17',
       '/utf-8',         #* log4sp addition *#
-      '/GL',            #* log4sp addition *#
-      '/Ot',            #* log4sp addition *#
     ]
     cxx.linkflags += [
       '/MACHINE:X86',
@@ -207,7 +229,7 @@ class ExtensionConfig(object):
 
     if builder.options.opt == '1':
       cxx.cflags += ['/Ox', '/Zo']
-      cxx.linkflags += ['/OPT:ICF', '/OPT:REF', '/LTCG']
+      cxx.linkflags += ['/OPT:ICF', '/OPT:REF', '/GL', '/LTCG']
 
     if builder.options.debug == '1':
       cxx.cflags += ['/Od', '/RTC1']
