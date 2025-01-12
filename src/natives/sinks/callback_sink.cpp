@@ -208,19 +208,23 @@ static cell_t FormatPattern(IPluginContext *ctx, const cell_t *params)
     if (nanoseconds[0] != 0 || nanoseconds[1] != 0)
     {
         logTime = std::chrono::system_clock::time_point{
-            std::chrono::nanoseconds{
-                (static_cast<int64_t>(static_cast<uint32_t>(nanoseconds[1])) << 32) |
-                static_cast<uint32_t>(nanoseconds[0])
-            }
+            std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                std::chrono::nanoseconds{
+                    (static_cast<int64_t>(static_cast<uint32_t>(nanoseconds[1])) << 32) |
+                    static_cast<uint32_t>(nanoseconds[0])
+                }
+            )
         };
     }
     else if (seconds[0] != 0 || seconds[1] != 0)
     {
         logTime = std::chrono::system_clock::time_point{
-            std::chrono::seconds{
-                (static_cast<int64_t>(static_cast<uint32_t>(seconds[1])) << 32) |
-                static_cast<uint32_t>(seconds[0])
-            }
+            std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                std::chrono::seconds{
+                    (static_cast<int64_t>(static_cast<uint32_t>(seconds[1])) << 32) |
+                    static_cast<uint32_t>(seconds[0])
+                }
+            )
         };
     }
 
