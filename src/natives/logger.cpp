@@ -7,8 +7,6 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/proxy/logger_proxy.h"
-#include "log4sp/sinks/client_chat_sink.h"
-#include "log4sp/sinks/client_console_sink.h"
 
 
 /**
@@ -181,70 +179,6 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
         ctx->ReportError(ex.what());
         return BAD_HANDLE;
     }
-
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
-
-    auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-    if (handle == BAD_HANDLE)
-    {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-        return BAD_HANDLE;
-    }
-
-    return handle;
-}
-
-/**
- * public static native Logger CreateClientChatLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION);
- */
-static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
-{
-    char *name;
-    ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    auto funcID   = static_cast<funcid_t>(params[2]);
-    auto function = ctx->GetFunctionById(funcID); // 默认是 nullptr，即不过滤
-
-    auto sink = std::make_shared<log4sp::sinks::client_chat_sink_st>(function);
-
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
-
-    auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-    if (handle == BAD_HANDLE)
-    {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-        return BAD_HANDLE;
-    }
-
-    return handle;
-}
-
-/**
- * public static native Logger CreateClientConsoleLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION);
- */
-static cell_t CreateClientConsoleLogger(IPluginContext *ctx, const cell_t *params)
-{
-    char *name;
-    ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    auto funcID   = static_cast<funcid_t>(params[2]);
-    auto function = ctx->GetFunctionById(funcID); // 默认是 nullptr，即不过滤
-
-    auto sink = std::make_shared<log4sp::sinks::client_console_sink_st>(function);
 
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
@@ -1801,8 +1735,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Get",                              Get},
     {"Logger.CreateServerConsoleLogger",        CreateServerConsoleLogger},
     {"Logger.CreateBaseFileLogger",             CreateBaseFileLogger},
-    {"Logger.CreateClientChatLogger",           CreateClientChatLogger},
-    {"Logger.CreateClientConsoleLogger",        CreateClientConsoleLogger},
     {"Logger.CreateRotatingFileLogger",         CreateRotatingFileLogger},
     {"Logger.CreateDailyFileLogger",            CreateDailyFileLogger},
     {"Logger.ApplyAll",                         ApplyAll},

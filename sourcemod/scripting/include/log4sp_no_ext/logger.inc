@@ -43,14 +43,6 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger CreateClientChatLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
-    public static Logger CreateClientConsoleLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
     public static Logger CreateRotatingFileLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false) {
         return view_as<Logger>(INVALID_HANDLE);
     }

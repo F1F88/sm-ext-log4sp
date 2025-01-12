@@ -42,9 +42,9 @@ Action CB_CMD(int client, int args)
 
     Test_DailyFileLogger();
 
-    Test_ClientConsoleLogger();
+    Test_ClientConsoleAllLogger();
 
-    Test_ClientChatLogger();
+    Test_ClientChatAllLogger();
 
     Test_BaseFileLogger();
 
@@ -112,49 +112,45 @@ void Test_DailyFileLogger()
     delete log;
 }
 
-void Test_ClientConsoleLogger()
+void Test_ClientConsoleAllLogger()
 {
-    SetTestContext("Log4sp Test client console logger");
+    SetTestContext("Log4sp Test client console all logger");
 
     Logger log;
 
-    log = Logger.Get("test-client-console-logger");
+    log = Logger.Get("test-client-console-all-logger");
     if (log != INVALID_HANDLE)
         delete log;
 
-    Sink sinks[2];
-    sinks[0] = new ClientConsoleSink();
-    sinks[1] = new ClientConsoleSink(SinkFilter_Admin);
+    Sink sinks[1];
+    sinks[0] = new ClientConsoleAllSink();
 
-    log = new Logger("test-client-console-logger", sinks, sizeof(sinks));
+    log = new Logger("test-client-console-all-logger", sinks, sizeof(sinks));
 
     delete sinks[0];
-    delete sinks[1];
 
-    Test_Logger(log, "test-client-console-logger");
+    Test_Logger(log, "test-client-console-all-logger");
     delete log;
 }
 
-void Test_ClientChatLogger()
+void Test_ClientChatAllLogger()
 {
-    SetTestContext("Log4sp Test client chat logger");
+    SetTestContext("Log4sp Test client chat all logger");
 
     Logger log;
 
-    log = Logger.Get("test-client-chat-logger");
+    log = Logger.Get("test-client-chat-all-logger");
     if (log != INVALID_HANDLE)
         delete log;
 
-    Sink sinks[2];
-    sinks[0] = new ClientChatSink();
-    sinks[1] = new ClientChatSink(SinkFilter_Admin);
+    Sink sinks[1];
+    sinks[0] = new ClientChatAllSink();
 
-    log = new Logger("test-client-chat-logger", sinks, sizeof(sinks));
+    log = new Logger("test-client-chat-all-logger", sinks, sizeof(sinks));
 
     delete sinks[0];
-    delete sinks[1];
 
-    Test_Logger(log, "test-client-chat-logger");
+    Test_Logger(log, "test-client-chat-all-logger");
     delete log;
 }
 
@@ -348,10 +344,4 @@ void ErrorHandler(const char[] msg)
 {
     static int cnt = 0;
     PrintToServer("custom error handler: %d | msg=%s |", ++cnt, msg);
-}
-
-
-Action SinkFilter_Admin(int client)
-{
-    return GetUserAdmin(client) != INVALID_ADMIN_ID ? Plugin_Continue : Plugin_Handled;
 }

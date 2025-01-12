@@ -18,8 +18,6 @@ sourceFiles = [
   'src/natives/sinks/sink.cpp',
   'src/natives/sinks/base_file_sink.cpp',
   'src/natives/sinks/callback_sink.cpp',
-  'src/natives/sinks/client_chat_sink.cpp',
-  'src/natives/sinks/client_console_sink.cpp',
   'src/natives/sinks/daily_file_sink.cpp',
   'src/natives/sinks/rorating_file_sink.cpp',
   'src/natives/sinks/server_console_sink.cpp',

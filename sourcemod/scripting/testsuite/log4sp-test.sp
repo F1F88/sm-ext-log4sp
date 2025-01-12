@@ -69,27 +69,18 @@ Action CB_CMD(int client, int args)
     TestSinkPattern(sink3);
     delete sink3;
 
-    ClientConsoleSink sink4 = new ClientConsoleSink();
+    ClientConsoleAllSink sink4 = new ClientConsoleAllSink();
     TestSinkLvl(sink4);
-    TestSinkLog(sink4);
-    sink4.SetFilter(filter);
     TestSinkLog(sink4);
     delete sink4;
 
     TestNullSink();
-
-    StaticFactory();
 
     ApplyAll();
 
     Test_CallbackSink();
 
     return Plugin_Handled;
-}
-
-Action filter(int client)
-{
-    return Plugin_Continue;
 }
 
 void TestLoggerLvl(Logger logger)
@@ -350,19 +341,6 @@ void TestNullSink()
     log.Info("lalala");
     delete log;
     PrintToServer("========== Test Null Sink End ==========");
-}
-
-void StaticFactory()
-{
-    PrintToServer("========== Test Static Factory ==========");
-    Logger log = Logger.CreateClientChatLogger("test-factory-client-chat");
-    log.Fatal("This is a ClientChatLogger");
-    delete log;
-
-    log = Logger.CreateClientConsoleLogger("test-factory-client-console");
-    log.Fatal("This is a ClientConsoleLogger");
-    delete log;
-    PrintToServer("========== Test Static Factory End ==========");
 }
 
 void ApplyAll()

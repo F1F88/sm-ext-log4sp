@@ -98,28 +98,6 @@ methodmap Logger < Handle
     public static native Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false);
 
     /**
-     * Create a logger handle that outputs to the client chat.
-     *
-     * @param name      The name of the new logger.
-     * @param filter    Filter function called when logging a message to a client.
-     *                  If INVALID_FUNCTION then no filtering, logging to all clients.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
-     */
-    public static native Logger CreateClientChatLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION);
-
-    /**
-     * Create a logger handle that outputs to the client console.
-     *
-     * @param name      The name of the new logger.
-     * @param filter    Filter function called when logging a message to a client.
-     *                  If INVALID_FUNCTION then no filtering, logging to all clients.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
-     */
-    public static native Logger CreateClientConsoleLogger(const char[] name, SinkClientFilter filter = INVALID_FUNCTION);
-
-    /**
      * Create a logger handle that outputs to a file and rotates the file based on size.
      *
      * @param name          The name of the logger.
