@@ -38,6 +38,7 @@ typeset LoggerErrorHandler
  *      }
  *
  * @param logger    Logger handle.
+ * @param data      Data value passed to Logger.ApplyAll().
  */
 typeset LoggerApplyAllCallback
 {
