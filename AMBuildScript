@@ -85,8 +85,9 @@ class ExtensionConfig(object):
       cxx.defines += [
         'NDEBUG',
         'SPDLOG_NO_SOURCE_LOC',
-        'SPDLOG_NO_ATOMIC_LEVELS',
+        'SPDLOG_NO_THREAD_ID',
         'SPDLOG_NO_TLS',
+        'SPDLOG_NO_ATOMIC_LEVELS',
         'SPDLOG_DISABLE_DEFAULT_LOGGER',
         'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_OFF',
       ]
