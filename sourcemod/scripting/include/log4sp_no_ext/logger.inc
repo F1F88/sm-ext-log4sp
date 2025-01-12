@@ -25,7 +25,7 @@ static char __message[2048];
 
 methodmap Logger < Handle
 {
-    public Logger(const char[] name, Sink[] sinks, int numSinks, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+    public Logger(const char[] name, Sink[] sinks, int numSinks) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 
@@ -35,27 +35,19 @@ methodmap Logger < Handle
 
     public static void ApplyAll(LoggerApplyAllCallback callback, any data = 0) {}
 
-    public static Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+    public static Logger CreateServerConsoleLogger(const char[] name) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+    public static Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+    public static Logger CreateRotatingFileLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
-    public static Logger CreateRotatingFileLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
-    public static Logger CreateDailyFileLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block) {
+    public static Logger CreateDailyFileLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 

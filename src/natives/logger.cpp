@@ -1,21 +1,16 @@
-#include "spdlog/async.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
-#include "spdlog/sinks/dist_sink.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
 
 #include "log4sp/utils.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
-#include "log4sp/proxy/async_logger_proxy.h"
 #include "log4sp/proxy/logger_proxy.h"
-#include "log4sp/sinks/client_chat_sink.h"
-#include "log4sp/sinks/client_console_sink.h"
 
 
 /**
- * public native Logger(const char[] name, Sink[] sinks, int numSinks, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ * public native Logger(const char[] name, Sink[] sinks, int numSinks);
  */
 static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 {
@@ -50,33 +45,15 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
         sinkVector[i] = sink;
     }
 
-    auto async = static_cast<bool>(params[4]);
-    if (!async)
+    auto logger = std::make_shared<log4sp::logger_proxy>(name, sinkVector.begin(), sinkVector.end());
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
     {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sinkVector.begin(), sinkVector.end());
-        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
     }
-    else
-    {
-        auto policy     = log4sp::cell_to_policy(params[5]);
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(sinkVector);
-        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create asynchronous logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
 
-        return handle;
-    }
+    return handle;
 }
 
 /**
@@ -134,7 +111,7 @@ static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public static native Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ * public static native Logger CreateServerConsoleLogger(const char[] name);
  */
 static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *params)
 {
@@ -160,37 +137,19 @@ static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *param
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
-    auto async = static_cast<bool>(params[2]);
-    if (!async)
+    auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
     {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
     }
-    else
-    {
-        auto policy     = log4sp::cell_to_policy(params[3]);
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
-        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create asynchronous logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
 
-        return handle;
-    }
+    return handle;
 }
 
 /**
- * public static native Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ * public static native Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false);
  */
 static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
 {
@@ -224,131 +183,19 @@ static cell_t CreateBaseFileLogger(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
-    auto async = static_cast<bool>(params[4]);
-    if (!async)
+    auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
     {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
-    }
-    else
-    {
-        auto policy     = log4sp::cell_to_policy(params[5]);
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
-        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create asynchronous logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
-    }
-}
-
-/**
- * public static native Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
- */
-static cell_t CreateClientChatLogger(IPluginContext *ctx, const cell_t *params)
-{
-    char *name;
-    ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
         return BAD_HANDLE;
     }
 
-    auto sink = std::make_shared<log4sp::sinks::client_chat_sink_st>();
-
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
-
-    auto async = static_cast<bool>(params[2]);
-    if (!async)
-    {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
-    }
-    else
-    {
-        auto policy     = log4sp::cell_to_policy(params[3]);
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
-        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create asynchronous logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
-    }
+    return handle;
 }
 
 /**
- * public static native Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
- */
-static cell_t CreateClientConsoleLogger(IPluginContext *ctx, const cell_t *params)
-{
-    char *name;
-    ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    auto sink = std::make_shared<log4sp::sinks::client_console_sink_st>();
-
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
-
-    auto async = static_cast<bool>(params[2]);
-    if (!async)
-    {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
-    }
-    else
-    {
-        auto policy     = log4sp::cell_to_policy(params[3]);
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
-        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create asynchronous logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
-    }
-}
-
-/**
- * public static native Logger CreateRotatingFileLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+ * public static native Logger CreateRotatingFileLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false);
  */
 static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params)
 {
@@ -384,37 +231,19 @@ static cell_t CreateRotatingFileLogger(IPluginContext *ctx, const cell_t *params
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
-    auto async = static_cast<bool>(params[6]);
-    if (!async)
+    auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
     {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
     }
-    else
-    {
-        auto policy     = log4sp::cell_to_policy(params[7]);
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
-        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create asynchronous logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
 
-        return handle;
-    }
+    return handle;
 }
 
 /**
- * public static native Logger CreateDailyFileLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block );
+ * public static native Logger CreateDailyFileLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0);
  */
 static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
 {
@@ -451,33 +280,15 @@ static cell_t CreateDailyFileLogger(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
-    auto async = static_cast<bool>(params[7]);
-    if (!async)
+    auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
     {
-        auto logger = std::make_shared<log4sp::logger_proxy>(name, sink);
-        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
-
-        return handle;
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
     }
-    else
-    {
-        auto policy     = log4sp::cell_to_policy(params[8]);
-        auto distSink   = std::make_shared<spdlog::sinks::dist_sink_mt>(std::vector<spdlog::sink_ptr>{sink});
-        auto logger     = std::make_shared<log4sp::async_logger_proxy>(name, distSink, spdlog::thread_pool(), policy);
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-        if (handle == BAD_HANDLE)
-        {
-            ctx->ReportError("SM error! Could not create asynchronous logger handle (error: %d)", error);
-            return BAD_HANDLE;
-        }
 
-        return handle;
-    }
+    return handle;
 }
 
 /**
@@ -1924,8 +1735,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Get",                              Get},
     {"Logger.CreateServerConsoleLogger",        CreateServerConsoleLogger},
     {"Logger.CreateBaseFileLogger",             CreateBaseFileLogger},
-    {"Logger.CreateClientChatLogger",           CreateClientChatLogger},
-    {"Logger.CreateClientConsoleLogger",        CreateClientConsoleLogger},
     {"Logger.CreateRotatingFileLogger",         CreateRotatingFileLogger},
     {"Logger.CreateDailyFileLogger",            CreateDailyFileLogger},
     {"Logger.ApplyAll",                         ApplyAll},

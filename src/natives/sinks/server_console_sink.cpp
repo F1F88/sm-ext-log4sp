@@ -7,23 +7,14 @@
 // *                                 ServerConsoleSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native ServerConsoleSink(bool multiThread = false);
+ * public native ServerConsoleSink();
  */
 static cell_t ServerConsoleSink(IPluginContext *ctx, const cell_t *params)
 {
-    bool multiThread = static_cast<bool>(params[1]);
-
     spdlog::sink_ptr sink;
     try
     {
-        if (!multiThread)
-        {
-            sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
-        }
-        else
-        {
-            sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
-        }
+        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
     }
     catch(const std::exception &ex)
     {

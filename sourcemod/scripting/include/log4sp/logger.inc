@@ -38,6 +38,7 @@ typeset LoggerErrorHandler
  *      }
  *
  * @param logger    Logger handle.
+ * @param data      Data value passed to Logger.ApplyAll().
  */
 typeset LoggerApplyAllCallback
 {
@@ -54,13 +55,10 @@ methodmap Logger < Handle
      * @param name      The name of the new logger.
      * @param sinks     The sinks array to be added to the new logger.
      * @param numSinks  The number of slots in the sinks array.
-     * @param async     If true, Log operations will be pushed to background threads for processing,
-     *                  which can avoid blocking the main thread.
-     * @param policy    Message queue overflow policy. (Only used when async = true)
      * @return          Logger handle.
      * @error           Logger name already exits, or the sinks has an invalid handle.
      */
-    public native Logger(const char[] name, Sink[] sinks, int numSinks, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public native Logger(const char[] name, Sink[] sinks, int numSinks);
 
     /**
      * Gets a logger handle by logger name.
@@ -83,13 +81,10 @@ methodmap Logger < Handle
      * Create a logger handle that outputs to the server console.
      *
      * @param name      The name of the new logger.
-     * @param async     If true, Log operations will be pushed to background threads for processing,
-     *                  which can avoid blocking the main thread.
-     * @param policy    Message queue overflow policy. (Only used when async = true)
      * @return          Logger handle.
      * @error           Logger name already exits.
      */
-    public static native Logger CreateServerConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public static native Logger CreateServerConsoleLogger(const char[] name);
 
     /**
      * Create a logger handle that outputs to a file.
@@ -97,42 +92,10 @@ methodmap Logger < Handle
      * @param name      The name of the new logger.
      * @param file      The file path where the log messages will be written.
      * @param truncate  If true, the created file will be truncated.
-     * @param async     If true, Log operations will be pushed to background threads for processing,
-     *                  which can avoid blocking the main thread.
-     * @param policy    Message queue overflow policy. (Only used when async = true)
      * @return          Logger handle.
      * @error           Logger name already exits.
      */
-    public static native Logger CreateBaseFileLogger(
-        const char[] name,
-        const char[] file,
-        bool truncate = false,
-        bool async = false,
-        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
-
-    /**
-     * Create a logger handle that outputs to the client chat.
-     *
-     * @param name      The name of the new logger.
-     * @param async     If true, Log operations will be pushed to background threads for processing,
-     *                  which can avoid blocking the main thread.
-     * @param policy    Message queue overflow policy. (Only used when async = true)
-     * @return          Logger handle.
-     * @error           Logger name already exits.
-     */
-    public static native Logger CreateClientChatLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
-
-    /**
-     * Create a logger handle that outputs to the client console.
-     *
-     * @param name      The name of the new logger.
-     * @param async     If true, Log operations will be pushed to background threads for processing,
-     *                  which can avoid blocking the main thread.
-     * @param policy    Message queue overflow policy. (Only used when async = true)
-     * @return          Logger handle.
-     * @error           Logger name already exits.
-     */
-    public static native Logger CreateClientConsoleLogger(const char[] name, bool async = false, AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+    public static native Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false);
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on size.
@@ -142,9 +105,6 @@ methodmap Logger < Handle
      * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  If true, the log file will be rotated when opened.
-     * @param async         If true, Log operations will be pushed to background threads for processing,
-     *                      which can avoid blocking the main thread.
-     * @param policy        Message queue overflow policy. (Only used when async = true)
      * @return              Logger handle.
      * @error               Logger name already exits, or maxFileSize == 0, or maxFiles > 200000.
      */
@@ -153,9 +113,7 @@ methodmap Logger < Handle
         const char[] file,
         int maxFileSize,
         int maxFiles,
-        bool rotateOnOpen = false,
-        bool async = false,
-        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+        bool rotateOnOpen = false);
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on date.
@@ -166,9 +124,6 @@ methodmap Logger < Handle
      * @param minute    The minute of the hour when the log file should be rotated. (0-59)
      * @param truncate  If true, the created file will be truncated.
      * @param maxFiles  If max_files > 0, retain only the last max_files and delete previous.
-     * @param async     If true, Log operations will be pushed to background threads for processing,
-     *                  which can avoid blocking the main thread.
-     * @param policy    Message queue overflow policy. (Only used when async = true)
      * @return          Logger handle.
      * @error           Logger name already exits, or invalid rotation time.
      */
@@ -178,9 +133,7 @@ methodmap Logger < Handle
         int hour = 0,
         int minute = 0,
         bool truncate = false,
-        int maxFiles = 0,
-        bool async = false,
-        AsyncOverflowPolicy policy = AsyncOverflowPolicy_Block);
+        int maxFiles = 0);
 
     /**
      * Gets the logger name.

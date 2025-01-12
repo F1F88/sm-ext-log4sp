@@ -34,6 +34,4 @@ methodmap Sink < Handle
 typeset SinkClientFilter
 {
     function Action (int client);
-    function Action (int client, const char[] name, LogLevel lvl);
-    function Action (int client, const char[] name, LogLevel lvl, const char[] msg);
 };

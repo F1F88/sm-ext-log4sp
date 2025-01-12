@@ -22,7 +22,6 @@ methodmap DailyFileSink < Sink
      * @param rotationMinute The minute of the hour when the log file should be rotated. (0-59)
      * @param truncate      If true, the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
-     * @param multiThread   If true, the created sink will be multi threaded and thread safe.
      * @return              DailyFileSink handle.
      * @error               Invalid rotation time in ctor.
      */
@@ -30,8 +29,7 @@ methodmap DailyFileSink < Sink
                                 int rotationHour = 0,
                                 int rotationMinute = 0,
                                 bool truncate = false,
-                                int maxFiles = 0,
-                                bool multiThread = false);
+                                int maxFiles = 0);
 
     /**
      * Get the current filename being used by the file sink.

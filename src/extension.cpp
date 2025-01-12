@@ -29,7 +29,6 @@
  * Version: $Id$
  */
 
-#include "spdlog/async.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
 
@@ -60,39 +59,8 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     }
     catch(const std::exception &ex)
     {
-        snprintf(error, maxlen, "Initialization failure: %s", ex.what());
+        snprintf(error, maxlen, "Initialization failure (reason: %s)", ex.what());
         return false;
-    }
-
-    // Init Global Thread Pool
-    {
-        const char *queueSizeStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolQueueSize");
-        auto queueSize = queueSizeStr != nullptr ? static_cast<size_t>(atoll(queueSizeStr)) : static_cast<size_t>(8192);
-
-        if (queueSize == 0 || queueSize > 1024 * 1024 * 10)
-        {
-            snprintf(error, maxlen, "Invalid configuration \"Log4sp_ThreadPoolQueueSize\" (%s), valid range is 1-10485760.", queueSizeStr);
-            return false;
-        }
-
-        const char *threadCountStr = smutils->GetCoreConfigValue("Log4sp_ThreadPoolThreadCount");
-        auto threadCount = threadCountStr != nullptr ? static_cast<size_t>(atoll(threadCountStr)) : static_cast<size_t>(1);
-
-        if (threadCount == 0 || threadCount > 1000)
-        {
-            snprintf(error, maxlen, "Invalid configuration \"Log4sp_ThreadPoolThreadCount\" (%s), valid range is 1-1000.", threadCountStr);
-            return false;
-        }
-
-        try
-        {
-            spdlog::init_thread_pool(queueSize, threadCount);
-        }
-        catch(const std::exception &ex)
-        {
-            snprintf(error, maxlen, "Could not create global thread pool, reason : %s", ex.what());
-            return false;
-        }
     }
 
     // Init Global Logger
@@ -104,7 +72,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         }
         catch(const std::exception &ex)
         {
-            snprintf(error, maxlen, "Could not create global logger handle, reason : %s", ex.what());
+            snprintf(error, maxlen, "Could not create global logger handle (reason: %s)", ex.what());
             return false;
         }
 
@@ -122,7 +90,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &err);
         if (handle == BAD_HANDLE)
         {
-            snprintf(error, maxlen, "Could not create global logger handle. (err: %d)", err);
+            snprintf(error, maxlen, "Could not create global logger handle (err: %d)", err);
             return false;
         }
     }
@@ -132,8 +100,6 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, SinkNatives);
     sharesys->AddNatives(myself, BaseFileSinkNatives);
     sharesys->AddNatives(myself, CallbackSinkNatives);
-    sharesys->AddNatives(myself, ClientChatSinkNatives);
-    sharesys->AddNatives(myself, ClientConsoleSinkNatives);
     sharesys->AddNatives(myself, DailyFileSinkNatives);
     sharesys->AddNatives(myself, RotatingFileSinkNatives);
     sharesys->AddNatives(myself, ServerConsoleSinkNatives);

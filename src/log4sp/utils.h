@@ -8,14 +8,6 @@
 #include "extension.h"
 
 
-namespace spdlog {
-
-enum class async_overflow_policy;
-
-} // namespace spdlog
-
-
-
 namespace log4sp {
 
 /**
@@ -23,12 +15,6 @@ namespace log4sp {
  * 如果 cell_t 越界，则返回最近的边界值
  */
 [[nodiscard]] spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept;
-
-/**
- * 将 cell_t 转为 spdlog::async_overflow_policy
- * 如果 cell_t 越界，则返回最近的边界值
- */
-[[nodiscard]] spdlog::async_overflow_policy cell_to_policy(cell_t policy) noexcept;
 
 /**
  * 将 cell_t 转为 spdlog::pattern_time_type

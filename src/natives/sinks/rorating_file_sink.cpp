@@ -11,8 +11,7 @@
  *     const char[] file,
  *     const int maxFileSize,
  *     const int maxFiles,
- *     bool rotateOnOpen = false,
- *     bool multiThread = false
+ *     bool rotateOnOpen = false
  * );
  */
 static cell_t RotatingFileSink(IPluginContext *ctx, const cell_t *params)
@@ -25,19 +24,11 @@ static cell_t RotatingFileSink(IPluginContext *ctx, const cell_t *params)
     auto maxFileSize  = static_cast<size_t>(params[2]);
     auto maxFiles     = static_cast<size_t>(params[3]);
     auto rotateOnOpen = static_cast<bool>(params[4]);
-    bool multiThread  = static_cast<bool>(params[5]);
 
     spdlog::sink_ptr sink;
     try
     {
-        if (!multiThread)
-        {
-            sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
-        }
-        else
-        {
-            sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(path, maxFileSize, maxFiles, rotateOnOpen);
-        }
+        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
     catch(const std::exception &ex)
     {
@@ -75,28 +66,15 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
         return 0;
     }
 
+    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
+    if (realSink == nullptr)
     {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
-        if (realSink != nullptr)
-        {
-            size_t bytes;
-            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-            return bytes;
-        }
+        ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
     }
 
-    {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(sink);
-        if (realSink != nullptr)
-        {
-            size_t bytes;
-            ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-            return bytes;
-        }
-    }
-
-    ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
-    return 0;
+    size_t bytes;
+    ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+    return bytes;
 }
 
 /**
@@ -116,39 +94,21 @@ static cell_t RotatingFileSink_RotateNow(IPluginContext *ctx, const cell_t *para
         return 0;
     }
 
+    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
+    if (realSink == nullptr)
     {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
-        if (realSink != nullptr)
-        {
-            try
-            {
-                realSink->rotate_now();
-            }
-            catch(const std::exception &ex)
-            {
-                ctx->ReportError(ex.what());
-            }
-            return 0;
-        }
+        ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
     }
 
+    try
     {
-        auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_mt>(sink);
-        if (realSink != nullptr)
-        {
-            try
-            {
-                realSink->rotate_now();
-            }
-            catch(const std::exception &ex)
-            {
-                ctx->ReportError(ex.what());
-            }
-            return 0;
-        }
+        realSink->rotate_now();
     }
-
-    ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+    }
     return 0;
 }
 
