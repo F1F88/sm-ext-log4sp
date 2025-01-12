@@ -13,24 +13,18 @@
  */
 static cell_t CallbackSink(IPluginContext *ctx, const cell_t *params)
 {
-    auto logFunctionId   = static_cast<funcid_t>(params[1]);
-    auto flushFunctionId = static_cast<funcid_t>(params[2]);
+    auto logFunctionId     = static_cast<funcid_t>(params[1]);
+    auto logPostFunctionId = static_cast<funcid_t>(params[2]);
+    auto flushFunctionId   = static_cast<funcid_t>(params[3]);
 
-    auto logFunction = ctx->GetFunctionById(logFunctionId);
-    if (logFunction == nullptr)
-    {
-        ctx->ReportError("Invalid callback sink log callback function id (%X)", static_cast<int>(logFunctionId));
-        return 0;
-    }
-
-    auto flushFunction = ctx->GetFunctionById(flushFunctionId);
+    auto logFunction       = ctx->GetFunctionById(logFunctionId);
+    auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
+    auto flushFunction     = ctx->GetFunctionById(flushFunctionId);
 
     spdlog::sink_ptr sink;
     try
     {
-        sink = flushFunction == nullptr ?
-                std::make_shared<log4sp::sinks::callback_sink>(logFunction):
-                std::make_shared<log4sp::sinks::callback_sink>(logFunction, flushFunction);
+        sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);
     }
     catch(const std::exception &ex)
     {
@@ -71,12 +65,7 @@ static cell_t SetLogCallback(IPluginContext *ctx, const cell_t *params)
     }
 
     auto logFunctionId = static_cast<funcid_t>(params[2]);
-    auto logFunction = ctx->GetFunctionById(logFunctionId);
-    if (logFunction == nullptr)
-    {
-        ctx->ReportError("Invalid callback sink log callback function id (%X)", static_cast<int>(logFunctionId));
-        return 0;
-    }
+    auto logFunction   = ctx->GetFunctionById(logFunctionId);
 
     assert(std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink) != nullptr);
     auto realSink = std::static_pointer_cast<log4sp::sinks::callback_sink>(sink);
@@ -84,6 +73,44 @@ static cell_t SetLogCallback(IPluginContext *ctx, const cell_t *params)
     try
     {
         realSink->set_log_callback(logFunction);
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return 0;
+    }
+
+    return 0;
+}
+
+/**
+ * public native void SetLogPostCallback(CustomLogCallback logPostCallback);
+ *
+ * function void(const char[] msg);
+ */
+static cell_t SetLogPostCallback(IPluginContext *ctx, const cell_t *params)
+{
+    auto handle = static_cast<Handle_t>(params[1]);
+
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (sink == nullptr)
+    {
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+        return 0;
+    }
+
+    auto logPostFunctionId = static_cast<funcid_t>(params[2]);
+    auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
+
+    assert(std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink) != nullptr);
+    auto realSink = std::static_pointer_cast<log4sp::sinks::callback_sink>(sink);
+
+    try
+    {
+        realSink->set_log_post_callback(logPostFunction);
     }
     catch(const std::exception &ex)
     {
@@ -118,11 +145,6 @@ static cell_t SetFlushCallback(IPluginContext *ctx, const cell_t *params)
 
     auto flushFunctionId = static_cast<funcid_t>(params[2]);
     auto flushFunction = ctx->GetFunctionById(flushFunctionId);
-    if (flushFunction == nullptr)
-    {
-        ctx->ReportError("Invalid callback sink flush callback function id (%X)", static_cast<int>(flushFunctionId));
-        return 0;
-    }
 
     try
     {
@@ -205,7 +227,7 @@ static cell_t FormatPattern(IPluginContext *ctx, const cell_t *params)
     std::string formatted;
     try
     {
-        formatted = realSink->format({logTime, loc, name, lvl, msg});
+        formatted = realSink->format_pattern({logTime, loc, name, lvl, msg});
     }
     catch(const std::exception &ex)
     {
@@ -222,6 +244,7 @@ const sp_nativeinfo_t CallbackSinkNatives[] =
 {
     {"CallbackSink.CallbackSink",                   CallbackSink},
     {"CallbackSink.SetLogCallback",                 SetLogCallback},
+    {"CallbackSink.SetLogPostCallback",             SetLogPostCallback},
     {"CallbackSink.SetFlushCallback",               SetFlushCallback},
     {"CallbackSink.FormatPattern",                  FormatPattern},
 

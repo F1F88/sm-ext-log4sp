@@ -12,9 +12,9 @@ namespace sinks {
 
 class callback_sink final : public spdlog::sinks::sink {
 public:
-    explicit callback_sink(IPluginFunction *log_function);
-    callback_sink(IPluginFunction *log_function, IPluginFunction *flush_function);
-
+    callback_sink(IPluginFunction *log_function = nullptr,
+                  IPluginFunction *log_post_function = nullptr,
+                  IPluginFunction *flush_function = nullptr);
     ~callback_sink() override;
 
     callback_sink(const callback_sink &) = delete;
@@ -24,6 +24,7 @@ public:
     callback_sink &operator=(callback_sink &&) = delete;
 
     void set_log_callback(IPluginFunction *log_function);
+    void set_log_post_callback(IPluginFunction *log_post_function);
     void set_flush_callback(IPluginFunction *flush_function);
 
     void log(const spdlog::details::log_msg &msg) override;
@@ -37,7 +38,7 @@ public:
         formatter_ = std::move(sink_formatter);
     }
 
-    std::string format(const spdlog::details::log_msg &msg) {
+    std::string format_pattern(const spdlog::details::log_msg &msg) {
         spdlog::memory_buf_t formatted;
         formatter_->format(msg, formatted);
         return spdlog::fmt_lib::to_string(formatted);
@@ -46,7 +47,10 @@ public:
 private:
     std::unique_ptr<spdlog::formatter> formatter_{nullptr};
     IChangeableForward *log_callback_{nullptr};
+    IChangeableForward *log_post_callback_{nullptr};
     IChangeableForward *flush_callback_{nullptr};
+
+    void release_forwards();
 };
 
 
