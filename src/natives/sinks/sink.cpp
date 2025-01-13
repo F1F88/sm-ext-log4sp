@@ -17,7 +17,7 @@ static cell_t GetLevel(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle_raw(handle, &security, &error);
     if (sink == nullptr)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
@@ -37,7 +37,7 @@ static cell_t SetLevel(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle_raw(handle, &security, &error);
     if (sink == nullptr)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
@@ -60,7 +60,7 @@ static cell_t SetPattern(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle_raw(handle, &security, &error);
     if (sink == nullptr)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
@@ -84,7 +84,7 @@ static cell_t ShouldLog(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle_raw(handle, &security, &error);
     if (sink == nullptr)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
@@ -106,7 +106,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle_raw(handle, &security, &error);
     if (sink == nullptr)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
@@ -142,7 +142,7 @@ static cell_t Flush(IPluginContext *ctx, const cell_t *params)
     HandleSecurity security{nullptr, myself->GetIdentity()};
     HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle_raw(handle, &security, &error);
     if (sink == nullptr)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);

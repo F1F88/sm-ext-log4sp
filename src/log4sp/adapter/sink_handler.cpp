@@ -1,15 +1,14 @@
 #include <cassert>
 #include <string>
 
-#include "spdlog/spdlog.h"  // SPDLOG_TRACE 和 SPDLOG_DEBUG 需要
-// #include "spdlog/sinks/sink.h"
+#include "spdlog/sinks/sink.h"
 
 #include "log4sp/adapter/sink_hanlder.h"
 
 
 namespace log4sp {
 
-sink_handler &sink_handler::instance() noexcept {
+[[nodiscard]] sink_handler &sink_handler::instance() noexcept {
     static sink_handler instance;
     return instance;
 }
@@ -23,11 +22,11 @@ void sink_handler::destroy() noexcept {
 }
 
 
-HandleType_t sink_handler::handle_type() const noexcept {
+[[nodiscard]] HandleType_t sink_handler::handle_type() const noexcept {
     return handle_type_;
 }
 
-Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) noexcept {
+[[nodiscard]] Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) noexcept {
     Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
@@ -39,11 +38,10 @@ Handle_t sink_handler::create_handle(std::shared_ptr<spdlog::sinks::sink> object
     handles_[object.get()] = handle;
     sinks_[object.get()] = object;
 
-    SPDLOG_TRACE("A sink handle created. (obj: {}, hdl: {})", spdlog::fmt_lib::ptr(object.get()), handle);
     return handle;
 }
 
-std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) noexcept {
+[[nodiscard]] std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) const noexcept {
     spdlog::sinks::sink *object;
     HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
 
@@ -60,9 +58,23 @@ std::shared_ptr<spdlog::sinks::sink> sink_handler::read_handle(Handle_t handle, 
     return found->second;
 }
 
-void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
-    SPDLOG_TRACE("A sink handle destroyed. (obj: {})", spdlog::fmt_lib::ptr(object));
+[[nodiscard]] spdlog::sinks::sink *sink_handler::read_handle_raw(Handle_t handle, HandleSecurity *security, HandleError *error) const noexcept {
+    spdlog::sinks::sink *object;
+    HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
 
+    if (err != HandleError_None) {
+        if (error) {
+            *error = static_cast<HandleError>(err);
+        }
+        return nullptr;
+    }
+
+    assert(sinks_.find(object) != sinks_.end());
+
+    return object;
+}
+
+void sink_handler::OnHandleDestroy(HandleType_t type, void *object) {
     auto sink = static_cast<spdlog::sinks::sink *>(object);
 
     assert(handles_.find(sink) != handles_.end());

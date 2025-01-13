@@ -12,7 +12,7 @@
 
 namespace log4sp {
 
-class logger_proxy;
+class logger;
 
 class command {
 public:
@@ -31,7 +31,7 @@ public:
     virtual void execute(const std::vector<std::string> &args) = 0;
 
 protected:
-    [[nodiscard]] std::shared_ptr<logger_proxy> arg_to_logger(const std::string &arg);
+    [[nodiscard]] std::shared_ptr<logger> arg_to_logger(const std::string &arg);
 
     [[nodiscard]] spdlog::level::level_enum arg_to_level(const std::string &arg);
 };

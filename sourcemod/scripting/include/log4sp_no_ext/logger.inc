@@ -13,6 +13,8 @@
 typeset LoggerErrorHandler
 {
     function void (const char[] msg);
+    function void (const char[] msg, const char[] name);
+    function void (const char[] msg, const char[] name, const char[] file, int line, const char[] func);
 };
 
 typeset LoggerApplyAllCallback

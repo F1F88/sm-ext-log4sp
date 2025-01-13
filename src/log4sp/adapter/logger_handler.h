@@ -12,7 +12,7 @@
 
 namespace log4sp {
 
-class logger_proxy;
+class logger;
 
 
 /**
@@ -62,7 +62,7 @@ public:
      * @param error     Optional pointer to store an error code on failure (undefined on success).
      * @return          object 对象的 handle 或 BAD_HANDLE 表示创建失败
      */
-    [[nodiscard]] Handle_t create_handle(std::shared_ptr<logger_proxy> object,
+    [[nodiscard]] Handle_t create_handle(std::shared_ptr<logger> object,
                                          const HandleSecurity *security,
                                          const HandleAccess *access,
                                          HandleError *error) noexcept;
@@ -75,9 +75,21 @@ public:
      * @param error     HandleError error code.
      * @return          object 智能指针或 nullptr 表示读取失败.
      */
-    [[nodiscard]] std::shared_ptr<logger_proxy> read_handle(Handle_t handle,
-                                                            HandleSecurity *security,
-                                                            HandleError *error) noexcept;
+    [[nodiscard]] std::shared_ptr<logger> read_handle(Handle_t handle,
+                                                      HandleSecurity *security,
+                                                      HandleError *error) const noexcept;
+
+    /**
+     * @brief handlesys->ReadHandle 的适配器
+     *
+     * @param handle    Handle_t from which to retrieve contents.
+     * @param security  Security information struct (may be NULL).
+     * @param error     HandleError error code.
+     * @return          object 智能指针或 nullptr 表示读取失败.
+     */
+    [[nodiscard]] logger *read_handle_raw(Handle_t handle,
+                                          HandleSecurity *security,
+                                          HandleError *error) const noexcept;
 
     /**
      * @brief 根据 name 查找 handle
@@ -85,7 +97,7 @@ public:
      * @param name      logger 对象的名称
      * @return          logger 对象的 handle 或 BAD_HANDLE 表示不存在
      */
-    [[nodiscard]] Handle_t find_handle(const std::string &name) noexcept;
+    [[nodiscard]] Handle_t find_handle(const std::string &name) const noexcept;
 
     /**
      * @brief 根据 name 查找 logger
@@ -93,7 +105,7 @@ public:
      * @param name      logger 对象的名称
      * @return          logger 对象的智能指针或 nullptr 表示不存在
      */
-    [[nodiscard]] std::shared_ptr<logger_proxy> find_logger(const std::string &name) noexcept;
+    [[nodiscard]] std::shared_ptr<logger> find_logger(const std::string &name) const noexcept;
 
     /**
      * Apply a user defined function on all logger handles.
@@ -105,7 +117,7 @@ public:
      * Example:
      *      apply_all([&](std::shared_ptr<spdlog::logger> l) {l->flush();});
      */
-    void apply_all(const std::function<void(std::shared_ptr<logger_proxy>)> &fun);
+    void apply_all(const std::function<void(std::shared_ptr<logger>)> &fun);
 
     /**
      * @brief Called when destroying a handle.  Must be implemented.
@@ -127,7 +139,7 @@ private:
 
     HandleType_t handle_type_{NO_HANDLE_TYPE};
     std::unordered_map<std::string, Handle_t> handles_;
-    std::unordered_map<std::string, std::shared_ptr<logger_proxy>> loggers_;
+    std::unordered_map<std::string, std::shared_ptr<logger>> loggers_;
 };
 
 

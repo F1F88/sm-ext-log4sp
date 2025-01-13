@@ -371,9 +371,9 @@ void ApplyAll_LogSomeMessage(Logger logger)
     logger.InfoEx("ajdh%d%d");
 }
 
-void LogToSM(const char[] msg)
+void LogToSM(const char[] msg, const char[] name, const char[] file, int line, const char[] func)
 {
-    LogError(msg);
+    LogError("LogToSM | %s | %s | %s | %d | %s |", msg, name, file, line, func);
 }
 
 void ApplyAll_GetNames(Logger logger, ArrayList names)

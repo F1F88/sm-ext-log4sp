@@ -82,7 +82,19 @@ public:
      */
     [[nodiscard]] std::shared_ptr<spdlog::sinks::sink> read_handle(Handle_t handle,
                                                                    HandleSecurity *security,
-                                                                   HandleError *error) noexcept;
+                                                                   HandleError *error) const noexcept;
+
+    /**
+     * @brief handlesys->ReadHandle 的适配器
+     *
+     * @param handle    Handle_t from which to retrieve contents.
+     * @param security  Security information struct (may be NULL).
+     * @param error     HandleError error code.
+     * @return          object 智能指针或 nullptr 表示读取失败.
+     */
+    [[nodiscard]] spdlog::sinks::sink *read_handle_raw(Handle_t handle,
+                                                       HandleSecurity *security,
+                                                       HandleError *error) const noexcept;
 
     /**
      * @brief Called when destroying a handle.  Must be implemented.

@@ -22,10 +22,16 @@
  *      }
  *
  * @param msg       Error message.
+ * @param name      The name of the error origin.
+ * @param file      The file name of the source code location.
+ * @param line      The line number of the source code location.
+ * @param func      The function name of the source code location.
  */
 typeset LoggerErrorHandler
 {
     function void (const char[] msg);
+    function void (const char[] msg, const char[] name);
+    function void (const char[] msg, const char[] name, const char[] file, int line, const char[] func);
 };
 
 
