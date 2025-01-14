@@ -19,7 +19,7 @@ void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum l
     }
 }
 
-void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const {
+void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept {
     bool log_enabled = should_log(lvl);
     bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
 
@@ -54,7 +54,7 @@ void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum l
     }
 }
 
-// void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const char *format, const cell_t *params, const unsigned int param) const {
+// void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const char *format, const cell_t *params, const unsigned int param) const noexcept {
 //     if (should_log(lvl)) {
 //         int lparam{param};
 //         spdlog::fmt_lib::memory_buffer buffer;
@@ -131,7 +131,7 @@ void logger::log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string
     }
 }
 
-void logger::log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const {
+void logger::log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
     bool log_enabled = should_log(lvl);
     bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
 
@@ -170,7 +170,7 @@ void logger::log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext
     }
 }
 
-void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept  {
+void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
     bool log_enabled = should_log(lvl);
     bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
 
@@ -205,7 +205,7 @@ void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPlugi
     }
 }
 
-void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept  {
+void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept {
     ctx->ReportError(msg.data());
 
     bool log_enabled = should_log(lvl);
@@ -234,7 +234,7 @@ void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_vie
     }
 }
 
-void logger::throw_error(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept  {
+void logger::throw_error(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
     std::string msg;
     try {
         msg = format_cell_to_string(ctx, params, param);
@@ -276,7 +276,7 @@ void logger::throw_error(const spdlog::level::level_enum lvl, IPluginContext *ct
     }
 }
 
-void logger::throw_error_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept  {
+void logger::throw_error_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
     char msg[2048];
     DetectExceptions eh(ctx);
 
