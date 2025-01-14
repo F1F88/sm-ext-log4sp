@@ -238,7 +238,9 @@ methodmap Logger < Handle
      * Aborts the current callback and throws an error.
      * This function does not return in that no code is executed following it.
      *
-     * @note The only difference from ThorwError() is that it also log the message into the logger's sinks.
+     * @note This will first log a log message using ThorwError() and stop code
+     *       execution, then log the same log message using the logger.
+     * @note A low log level will not prevent ThorwError() from executing!
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.

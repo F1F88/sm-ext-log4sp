@@ -60,23 +60,3 @@ methodmap Sink < Handle
      */
     public native void Flush();
 }
-
-
-/**
- * The filter is called at sink::sink_it_.
- * filter return Plugin_Continue to allow sink it, others skip sink it to this client.
- *
- * extension only call filter when the client in game, so you don't need this code: "if (IsClientInGame(client)) ".
- * By default (no filter is set), the sink will sink to all in game clients.
- *
- * Param msg is a message that has been formatted but not yet formatted by a pattern.
- *
- * For example, only sink to alive client
- *      Action FilterAlivePlayer(int client) {
- *          return IsPlayerAlive(client) ? Plugin_Continue : Plugin_Handled;
- *      }
- */
-typeset SinkClientFilter
-{
-    function Action (int client);
-};
