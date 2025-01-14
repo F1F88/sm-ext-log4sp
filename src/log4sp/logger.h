@@ -102,7 +102,7 @@ private:
     };
 
     std::string name_;
-    std::vector<spdlog::sink_ptr> sinks_{nullptr};
+    std::vector<spdlog::sink_ptr> sinks_;
     spdlog::level::level_enum level_{spdlog::level::info};
     spdlog::level::level_enum flush_level_{spdlog::level::off};
     std::shared_ptr<spdlog::sinks::ringbuffer_sink_st> tracer_{nullptr};

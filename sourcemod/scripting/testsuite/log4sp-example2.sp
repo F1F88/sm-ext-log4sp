@@ -38,13 +38,10 @@ public void OnPluginStart()
      * 每个手动创建的 sink 都会注册到拓展内部的 sink register, 即引用数至少为 1
      */
     // 创建一个 Sink 对象, 用于输出到玩家控制台
-    ClientConsoleSink mySink = new ClientConsoleSink();
+    ClientConsoleAllSink mySink = new ClientConsoleAllSink();
 
     // 修改 mySink 的级别. 默认为 LogLevel_Trace
     mySink.SetLevel(LogLevel_Info);
-
-    // 修改 mySink 过滤器. 默认输出给所有在游戏内的玩家
-    mySink.SetFilter(FilterAlivePlater);
 
     // 添加 mySink 到 myLogger 的 Sink 列表里
     myLogger.AddSink(mySink);
