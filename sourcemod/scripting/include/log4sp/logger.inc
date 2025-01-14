@@ -326,6 +326,16 @@ methodmap Logger < Handle
     public native void AddSink(Sink sink);
 
     /**
+     * Add a new sink to sinks.
+     *
+     * @note The sink is automatically freed when successfully added.
+     *
+     * @param sink      Sink handle.
+     * @error           Invalid sink handle.
+     */
+    public native void AddSinkEx(Sink &sink);
+
+    /**
      * Remove a sink from the sinks.
      *
      * @param sink      Sink handle.

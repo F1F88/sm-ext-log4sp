@@ -1374,6 +1374,38 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
+ * public native void AddSinkEx(Sink &sink);
+ */
+static cell_t AddSinkEx(IPluginContext *ctx, const cell_t *params)
+{
+    auto loggerHandle = static_cast<Handle_t>(params[1]);
+
+    HandleSecurity security{nullptr, myself->GetIdentity()};
+    HandleError error;
+
+    auto logger = log4sp::logger_handler::instance().read_handle_raw(loggerHandle, &security, &error);
+    if (logger == nullptr)
+    {
+        ctx->ReportError("Invalid logger handle %x (error: %d)", loggerHandle, error);
+        return 0;
+    }
+
+    cell_t *sinkHandle;
+    ctx->LocalToPhysAddr(params[2], &sinkHandle);
+    auto sink = log4sp::sink_handler::instance().read_handle(*sinkHandle, &security, &error);
+    if (sink == nullptr)
+    {
+        ctx->ReportError("Invalid sink handle %x (error: %d)", sinkHandle, error);
+        return 0;
+    }
+
+    logger->add_sink(sink);
+    handlesys->FreeHandle(*sinkHandle, &security);
+    *sinkHandle = BAD_HANDLE;
+    return 0;
+}
+
+/**
  * public native void DropSink(Sink sink);
  */
 static cell_t DropSink(IPluginContext *ctx, const cell_t *params)
@@ -1507,6 +1539,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.DisableBacktrace",                 DisableBacktrace},
     {"Logger.DumpBacktrace",                    DumpBacktrace},
     {"Logger.AddSink",                          AddSink},
+    {"Logger.AddSinkEx",                        AddSinkEx},
     {"Logger.DropSink",                         DropSink},
     {"Logger.SetErrorHandler",                  SetErrorHandler},
 
