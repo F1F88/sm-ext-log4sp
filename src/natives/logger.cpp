@@ -138,6 +138,59 @@ static cell_t CreateLoggerWith(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
+ * public native CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
+ */
+static cell_t CreateLoggerWithEx(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    {
+        ctx->ReportError("Logger with name \"%s\" already exists.", name);
+        return BAD_HANDLE;
+    }
+
+    cell_t *sinks;
+    ctx->LocalToPhysAddr(params[2], &sinks);
+
+    auto numSinks = static_cast<size_t>(params[3]);
+    auto sinkVector{std::vector<spdlog::sink_ptr>(numSinks, nullptr)};
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    for (size_t i = 0; i < numSinks; ++i)
+    {
+        auto handle = static_cast<Handle_t>(sinks[i]);
+
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+        if (sink == nullptr)
+        {
+            ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        sinkVector[i] = sink;
+    }
+
+    auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+
+    for (size_t i = 0; i < numSinks; ++i)
+    {
+        auto handle = static_cast<Handle_t>(sinks[i]);
+        handlesys->FreeHandle(handle, &security);
+    }
+
+    return handle;
+}
+
+/**
  * public static native Logger CreateServerConsoleLogger(const char[] name);
  */
 static cell_t CreateServerConsoleLogger(IPluginContext *ctx, const cell_t *params)
@@ -1510,6 +1563,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Get",                              Get},
     {"Logger.ApplyAll",                         ApplyAll},
     {"Logger.CreateLoggerWith",                 CreateLoggerWith},
+    {"Logger.CreateLoggerWithEx",               CreateLoggerWithEx},
     {"Logger.CreateServerConsoleLogger",        CreateServerConsoleLogger},
     {"Logger.CreateBaseFileLogger",             CreateBaseFileLogger},
     {"Logger.CreateRotatingFileLogger",         CreateRotatingFileLogger},

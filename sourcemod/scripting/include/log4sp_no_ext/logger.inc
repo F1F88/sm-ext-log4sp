@@ -41,6 +41,10 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
+    public static Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks) {
+        return view_as<Logger>(INVALID_HANDLE);
+    }
+
     public static Logger CreateServerConsoleLogger(const char[] name) {
         return view_as<Logger>(INVALID_HANDLE);
     }

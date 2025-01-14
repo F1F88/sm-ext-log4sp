@@ -93,6 +93,19 @@ methodmap Logger < Handle
     public static native Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
 
     /**
+     * Creating a logger handle with an array of sink handles.
+     *
+     * @note The sinks array is automatically freed when successfully added.
+     *
+     * @param name      The name of the new logger.
+     * @param sinks     The sinks array to be added to the new logger.
+     * @param numSinks  The number of slots in the sinks array.
+     * @return          Logger handle.
+     * @error           Logger name already exits, or the sinks has an invalid handle.
+     */
+    public static native Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
+
+    /**
      * Create a logger handle that outputs to the server console.
      *
      * @param name      The name of the new logger.
