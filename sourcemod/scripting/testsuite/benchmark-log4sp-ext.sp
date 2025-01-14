@@ -106,9 +106,9 @@ Action Command_BenchCallback(int client, int args)
         iters = GetCmdArgInt(1);
     }
 
-    Sink sinks[1];
-    sinks[0] = new CallbackSink(CallBackSink_CB);
-    Logger logger = new Logger("name-E", sinks, 1);
+    Logger logger = new Logger("name-E");
+    logger.AddSinkEx(new CallbackSink(CallBackSink_CB));
+
     float delta = BenchLogger(iters, client, logger);
 
     PrintToServer("");

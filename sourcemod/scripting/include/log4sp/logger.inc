@@ -22,10 +22,16 @@
  *      }
  *
  * @param msg       Error message.
+ * @param name      The name of the error origin.
+ * @param file      The file name of the source code location.
+ * @param line      The line number of the source code location.
+ * @param func      The function name of the source code location.
  */
 typeset LoggerErrorHandler
 {
     function void (const char[] msg);
+    function void (const char[] msg, const char[] name);
+    function void (const char[] msg, const char[] name, const char[] file, int line, const char[] func);
 };
 
 
@@ -53,12 +59,10 @@ methodmap Logger < Handle
      * Creating a logger handle manually.
      *
      * @param name      The name of the new logger.
-     * @param sinks     The sinks array to be added to the new logger.
-     * @param numSinks  The number of slots in the sinks array.
      * @return          Logger handle.
-     * @error           Logger name already exits, or the sinks has an invalid handle.
+     * @error           Logger name already exits.
      */
-    public native Logger(const char[] name, Sink[] sinks, int numSinks);
+    public native Logger(const char[] name);
 
     /**
      * Gets a logger handle by logger name.
@@ -76,6 +80,30 @@ methodmap Logger < Handle
      * @error           Invalid apply all callback.
      */
     public static native void ApplyAll(LoggerApplyAllCallback callback, any data = 0);
+
+    /**
+     * Creating a logger handle with an array of sink handles.
+     *
+     * @param name      The name of the new logger.
+     * @param sinks     The sinks array to be added to the new logger.
+     * @param numSinks  The number of slots in the sinks array.
+     * @return          Logger handle.
+     * @error           Logger name already exits, or the sinks has an invalid handle.
+     */
+    public static native Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
+
+    /**
+     * Creating a logger handle with an array of sink handles.
+     *
+     * @note The sinks array is automatically freed when successfully added.
+     *
+     * @param name      The name of the new logger.
+     * @param sinks     The sinks array to be added to the new logger.
+     * @param numSinks  The number of slots in the sinks array.
+     * @return          Logger handle.
+     * @error           Logger name already exits, or the sinks has an invalid handle.
+     */
+    public static native Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
 
     /**
      * Create a logger handle that outputs to the server console.
@@ -232,7 +260,9 @@ methodmap Logger < Handle
      * Aborts the current callback and throws an error.
      * This function does not return in that no code is executed following it.
      *
-     * @note The only difference from ThorwError() is that it also log the message into the logger's sinks.
+     * @note This will first log a log message using ThorwError() and stop code
+     *       execution, then log the same log message using the logger.
+     * @note A low log level will not prevent ThorwError() from executing!
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.
@@ -316,6 +346,16 @@ methodmap Logger < Handle
      * @error           Invalid sink handle.
      */
     public native void AddSink(Sink sink);
+
+    /**
+     * Add a new sink to sinks.
+     *
+     * @note The sink is automatically freed when successfully added.
+     *
+     * @param sink      Sink handle.
+     * @error           Invalid sink handle.
+     */
+    public native void AddSinkEx(Sink sink);
 
     /**
      * Remove a sink from the sinks.

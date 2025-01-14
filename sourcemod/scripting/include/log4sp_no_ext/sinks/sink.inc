@@ -30,8 +30,3 @@ methodmap Sink < Handle
 
     public void Flush() {}
 }
-
-typeset SinkClientFilter
-{
-    function Action (int client);
-};

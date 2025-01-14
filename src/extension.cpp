@@ -29,15 +29,14 @@
  * Version: $Id$
  */
 
-#include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
 
 #include "extension.h"
 
+#include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/command/root_console_command_handler.h"
-#include "log4sp/proxy/logger_proxy.h"
 
 
 /**
@@ -76,8 +75,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
             return false;
         }
 
-        auto logger = std::make_shared<log4sp::logger_proxy>(SMEXT_CONF_LOGTAG, sink);
-        spdlog::set_default_logger(logger);
+        auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
 
         // 全局 logger 属于拓展，不应该被任何插件释放
         HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
@@ -115,6 +113,4 @@ void Log4sp::SDK_OnUnload()
     log4sp::root_console_command_handler::destroy();
     log4sp::sink_handler::destroy();
     log4sp::logger_handler::destroy();
-
-    spdlog::shutdown();
 }

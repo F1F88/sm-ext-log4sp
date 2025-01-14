@@ -1,12 +1,11 @@
 #include <regex>
 #include <stdlib.h>
 
-#include "spdlog/spdlog.h"
 #include "spdlog/fmt/xchar.h"
 
 #include "log4sp/utils.h"
 #include "log4sp/adapter/logger_handler.h"
-#include "log4sp/proxy/logger_proxy.h"
+#include "log4sp/logger.h"
 
 #include "log4sp/command/root_console_command.h"
 #include "log4sp/command/root_console_command_handler.h"
@@ -14,7 +13,7 @@
 
 namespace log4sp {
 
-std::shared_ptr<logger_proxy> command::arg_to_logger(const std::string &arg) {
+std::shared_ptr<logger> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
     auto logger = logger_handler::instance().find_logger(arg);
     if (logger == nullptr) {
@@ -44,7 +43,7 @@ spdlog::level::level_enum command::arg_to_level(const std::string &arg) {
 void list_command::execute(const std::vector<std::string> &args) {
     std::vector<std::string> names;
     log4sp::logger_handler::instance().apply_all(
-        [&names](std::shared_ptr<logger_proxy> logger) {
+        [&names](std::shared_ptr<logger> logger) {
             names.push_back(logger->name());
         }
     );
@@ -71,7 +70,7 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
     std::vector<std::string> arguments{args};
 
     logger_handler::instance().apply_all(
-        [&function_name, &arguments](std::shared_ptr<logger_proxy> logger) {
+        [&function_name, &arguments](std::shared_ptr<logger> logger) {
             arguments[0] = logger->name();
 
             try {
@@ -160,7 +159,7 @@ void log_command::execute(const std::vector<std::string> &args) {
     auto msg    = args[2];
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will log a message '%s' with log level '%s'.", logger->name().c_str(), msg.c_str(), spdlog::level::to_string_view(level).data());
-    logger->log(level, msg);
+    logger->log({__FILE__, __LINE__, __FUNCTION__}, level, msg, nullptr);
 }
 
 
@@ -172,7 +171,7 @@ void flush_command::execute(const std::vector<std::string> &args) {
     auto logger = arg_to_logger(args[0]);
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will flush its contents.", logger->name().c_str());
-    logger->flush();
+    logger->flush({__FILE__, __LINE__, __FUNCTION__}, nullptr);
 }
 
 
@@ -266,7 +265,7 @@ void dump_bt_command::execute(const std::vector<std::string> &args) {
     }
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will dump backtrace logging message.", logger->name().c_str());
-    logger->dump_backtrace();
+    logger->dump_backtrace(nullptr);
 }
 
 

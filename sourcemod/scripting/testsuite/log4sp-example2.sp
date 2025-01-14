@@ -38,13 +38,10 @@ public void OnPluginStart()
      * 每个手动创建的 sink 都会注册到拓展内部的 sink register, 即引用数至少为 1
      */
     // 创建一个 Sink 对象, 用于输出到玩家控制台
-    ClientConsoleSink mySink = new ClientConsoleSink();
+    ClientConsoleAllSink mySink = new ClientConsoleAllSink();
 
     // 修改 mySink 的级别. 默认为 LogLevel_Trace
     mySink.SetLevel(LogLevel_Info);
-
-    // 修改 mySink 过滤器. 默认输出给所有在游戏内的玩家
-    mySink.SetFilter(FilterAlivePlater);
 
     // 添加 mySink 到 myLogger 的 Sink 列表里
     myLogger.AddSink(mySink);
@@ -76,18 +73,6 @@ public void OnPluginStart()
     RegConsoleCmd("sm_log4sp_example2", CommandCallback);
 
     myLogger.Info("===== Example 2 code initialization is complete! =====");
-}
-
-/**
- * ClientConsoleSink 的过滤器
- * 用于过滤掉死亡的玩家, 我们只输出日志信息给活着的玩家
- *
- * 只有 (IsClientInGame(client) && !IsFakeClient(client)) == true 时, 拓展才会调用 filter
- * 所以不必在 filter 内重复 IsClientInGame(client) 或 IsFakeClient(client)
- */
-Action FilterAlivePlater(int client)
-{
-    return IsPlayerAlive(client) ? Plugin_Continue : Plugin_Handled;
 }
 
 Action CommandCallback(int client, int args)

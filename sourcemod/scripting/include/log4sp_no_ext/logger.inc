@@ -13,6 +13,8 @@
 typeset LoggerErrorHandler
 {
     function void (const char[] msg);
+    function void (const char[] msg, const char[] name);
+    function void (const char[] msg, const char[] name, const char[] file, int line, const char[] func);
 };
 
 typeset LoggerApplyAllCallback
@@ -25,7 +27,7 @@ static char __message[2048];
 
 methodmap Logger < Handle
 {
-    public Logger(const char[] name, Sink[] sinks, int numSinks) {
+    public Logger(const char[] name) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 
@@ -34,6 +36,14 @@ methodmap Logger < Handle
     }
 
     public static void ApplyAll(LoggerApplyAllCallback callback, any data = 0) {}
+
+    public static Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks) {
+        return view_as<Logger>(INVALID_HANDLE);
+    }
+
+    public static Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks) {
+        return view_as<Logger>(INVALID_HANDLE);
+    }
 
     public static Logger CreateServerConsoleLogger(const char[] name) {
         return view_as<Logger>(INVALID_HANDLE);
@@ -201,6 +211,7 @@ methodmap Logger < Handle
     public void DumpBacktrace() {}
 
     public void AddSink(Sink sink) {}
+    public void AddSinkEx(Sink sink) {}
     public void DropSink(Sink sink) {}
 
     public void SetErrorHandler(LoggerErrorHandler handler) {}
