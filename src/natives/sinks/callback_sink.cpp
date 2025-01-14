@@ -67,8 +67,12 @@ static cell_t SetLogCallback(IPluginContext *ctx, const cell_t *params)
     auto logFunctionId = static_cast<funcid_t>(params[2]);
     auto logFunction   = ctx->GetFunctionById(logFunctionId);
 
-    assert(std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink) != nullptr);
-    auto realSink = std::static_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    if (realSink == nullptr)
+    {
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
+    }
 
     try
     {
@@ -105,8 +109,12 @@ static cell_t SetLogPostCallback(IPluginContext *ctx, const cell_t *params)
     auto logPostFunctionId = static_cast<funcid_t>(params[2]);
     auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
 
-    assert(std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink) != nullptr);
-    auto realSink = std::static_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    if (realSink == nullptr)
+    {
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
+    }
 
     try
     {
@@ -140,8 +148,12 @@ static cell_t SetFlushCallback(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    assert(std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink) != nullptr);
-    auto realSink = std::static_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    if (realSink == nullptr)
+    {
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
+    }
 
     auto flushFunctionId = static_cast<funcid_t>(params[2]);
     auto flushFunction = ctx->GetFunctionById(flushFunctionId);
@@ -179,8 +191,12 @@ static cell_t FormatPattern(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    assert(std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink) != nullptr);
-    auto realSink = std::static_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    if (realSink == nullptr)
+    {
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        return 0;
+    }
 
     char *name, *msg;
     ctx->LocalToString(params[4], &name);

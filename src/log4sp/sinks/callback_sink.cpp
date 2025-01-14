@@ -25,14 +25,17 @@ callback_sink::~callback_sink() {
 void callback_sink::release_forwards() {
     if (log_callback_ != nullptr) {
         forwards->ReleaseForward(log_callback_);
+        log_callback_ = nullptr;
     }
 
     if (log_post_callback_ != nullptr) {
         forwards->ReleaseForward(log_post_callback_);
+        log_post_callback_ = nullptr;
     }
 
     if (flush_callback_ != nullptr) {
         forwards->ReleaseForward(flush_callback_);
+        flush_callback_ = nullptr;
     }
 }
 
