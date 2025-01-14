@@ -27,7 +27,7 @@ static char __message[2048];
 
 methodmap Logger < Handle
 {
-    public Logger(const char[] name, Sink[] sinks, int numSinks) {
+    public Logger(const char[] name) {
         return view_as<Logger>(INVALID_HANDLE);
     }
 
@@ -36,6 +36,10 @@ methodmap Logger < Handle
     }
 
     public static void ApplyAll(LoggerApplyAllCallback callback, any data = 0) {}
+
+    public static Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks) {
+        return view_as<Logger>(INVALID_HANDLE);
+    }
 
     public static Logger CreateServerConsoleLogger(const char[] name) {
         return view_as<Logger>(INVALID_HANDLE);

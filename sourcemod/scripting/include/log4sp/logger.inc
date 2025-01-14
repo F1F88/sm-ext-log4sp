@@ -59,12 +59,10 @@ methodmap Logger < Handle
      * Creating a logger handle manually.
      *
      * @param name      The name of the new logger.
-     * @param sinks     The sinks array to be added to the new logger.
-     * @param numSinks  The number of slots in the sinks array.
      * @return          Logger handle.
-     * @error           Logger name already exits, or the sinks has an invalid handle.
+     * @error           Logger name already exits.
      */
-    public native Logger(const char[] name, Sink[] sinks, int numSinks);
+    public native Logger(const char[] name);
 
     /**
      * Gets a logger handle by logger name.
@@ -82,6 +80,17 @@ methodmap Logger < Handle
      * @error           Invalid apply all callback.
      */
     public static native void ApplyAll(LoggerApplyAllCallback callback, any data = 0);
+
+    /**
+     * Creating a logger handle with an array of sink handles.
+     *
+     * @param name      The name of the new logger.
+     * @param sinks     The sinks array to be added to the new logger.
+     * @param numSinks  The number of slots in the sinks array.
+     * @return          Logger handle.
+     * @error           Logger name already exits, or the sinks has an invalid handle.
+     */
+    public static native Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
 
     /**
      * Create a logger handle that outputs to the server console.

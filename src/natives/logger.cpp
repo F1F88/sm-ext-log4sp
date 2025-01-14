@@ -10,7 +10,7 @@
 
 
 /**
- * public native Logger(const char[] name, Sink[] sinks, int numSinks);
+ * public native Logger(const char[] name);
  */
 static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 {
@@ -22,30 +22,10 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    cell_t *sinks;
-    ctx->LocalToPhysAddr(params[2], &sinks);
-
-    auto numSinks = static_cast<size_t>(params[3]);
-    std::vector<spdlog::sink_ptr> sinkVector(numSinks, nullptr);
-
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
 
-    for (size_t i = 0; i < numSinks; ++i)
-    {
-        auto handle = static_cast<Handle_t>(sinks[i]);
-
-        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-        if (sink == nullptr)
-        {
-            ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
-            return BAD_HANDLE;
-        }
-
-        sinkVector[i] = sink;
-    }
-
-    auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
+    auto logger = std::make_shared<log4sp::logger>(name);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
@@ -108,6 +88,56 @@ static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
 
     forwards->ReleaseForward(forward);
     return 0;
+}
+
+/**
+ * public native CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
+ */
+static cell_t CreateLoggerWith(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    {
+        ctx->ReportError("Logger with name \"%s\" already exists.", name);
+        return BAD_HANDLE;
+    }
+
+    cell_t *sinks;
+    ctx->LocalToPhysAddr(params[2], &sinks);
+
+    auto numSinks = static_cast<size_t>(params[3]);
+    std::vector<spdlog::sink_ptr> sinkVector(numSinks, nullptr);
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    for (size_t i = 0; i < numSinks; ++i)
+    {
+        auto handle = static_cast<Handle_t>(sinks[i]);
+
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+        if (sink == nullptr)
+        {
+            ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+            return BAD_HANDLE;
+        }
+
+        sinkVector[i] = sink;
+    }
+
+    std::vector<std::string> vec{nullptr};
+    vec.push_back("Hello");
+
+    auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+
+    return handle;
 }
 
 /**
@@ -1483,11 +1513,12 @@ const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
     {"Logger.Get",                              Get},
+    {"Logger.ApplyAll",                         ApplyAll},
+    {"Logger.CreateLoggerWith",                 CreateLoggerWith},
     {"Logger.CreateServerConsoleLogger",        CreateServerConsoleLogger},
     {"Logger.CreateBaseFileLogger",             CreateBaseFileLogger},
     {"Logger.CreateRotatingFileLogger",         CreateRotatingFileLogger},
     {"Logger.CreateDailyFileLogger",            CreateDailyFileLogger},
-    {"Logger.ApplyAll",                         ApplyAll},
 
     {"Logger.GetName",                          GetName},
     {"Logger.GetNameLength",                    GetNameLength},
