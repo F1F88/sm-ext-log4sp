@@ -122,12 +122,8 @@ void Test_ClientConsoleAllLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    Sink sinks[1];
-    sinks[0] = new ClientConsoleAllSink();
-
-    log = new Logger("test-client-console-all-logger", sinks, sizeof(sinks));
-
-    delete sinks[0];
+    log = new Logger("test-client-console-all-logger");
+    log.AddSinkEx(new ClientConsoleAllSink());
 
     Test_Logger(log, "test-client-console-all-logger");
     delete log;
@@ -143,12 +139,8 @@ void Test_ClientChatAllLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    Sink sinks[1];
-    sinks[0] = new ClientChatAllSink();
-
-    log = new Logger("test-client-chat-all-logger", sinks, sizeof(sinks));
-
-    delete sinks[0];
+    log = new Logger("test-client-chat-all-logger");
+    log.AddSinkEx(new ClientChatAllSink());
 
     Test_Logger(log, "test-client-chat-all-logger");
     delete log;

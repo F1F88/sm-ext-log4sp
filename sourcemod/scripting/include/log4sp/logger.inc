@@ -342,7 +342,7 @@ methodmap Logger < Handle
      * @param sink      Sink handle.
      * @error           Invalid sink handle.
      */
-    public native void AddSinkEx(Sink &sink);
+    public native void AddSinkEx(Sink sink);
 
     /**
      * Remove a sink from the sinks.

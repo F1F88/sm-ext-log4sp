@@ -75,18 +75,6 @@ public void OnPluginStart()
     myLogger.Info("===== Example 2 code initialization is complete! =====");
 }
 
-/**
- * ClientConsoleSink 的过滤器
- * 用于过滤掉死亡的玩家, 我们只输出日志信息给活着的玩家
- *
- * 只有 (IsClientInGame(client) && !IsFakeClient(client)) == true 时, 拓展才会调用 filter
- * 所以不必在 filter 内重复 IsClientInGame(client) 或 IsFakeClient(client)
- */
-Action FilterAlivePlater(int client)
-{
-    return IsPlayerAlive(client) ? Plugin_Continue : Plugin_Handled;
-}
-
 Action CommandCallback(int client, int args)
 {
     static int count = 0;

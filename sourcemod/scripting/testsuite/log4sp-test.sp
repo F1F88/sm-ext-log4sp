@@ -335,9 +335,7 @@ Action CB_CMD_ThrowError2(int client, int args)
 void TestNullSink()
 {
     PrintToServer("========== Test Null Sink ==========");
-    Sink sinks[1];
-    Logger log = new Logger("test-null-sink", sinks, 0);
-
+    Logger log = new Logger("test-null-sink");
     log.Info("lalala");
     delete log;
     PrintToServer("========== Test Null Sink End ==========");
@@ -389,9 +387,10 @@ void ApplyAll_GetNames(Logger logger, ArrayList names)
 CallbackSink g_hCallbackSink[1];
 void Test_CallbackSink()
 {
+    PrintToServer("========== Test Callback Sink ==========");
     g_hCallbackSink[0] = new CallbackSink();
 
-    Logger logger = new Logger("test-callback-sink", g_hCallbackSink, sizeof(g_hCallbackSink));
+    Logger logger = Logger.CreateLoggerWith("test-callback-sink", g_hCallbackSink, sizeof(g_hCallbackSink));
 
     logger.LogSrc(LogLevel_Warn, "Hello callback sink! 11111");
     logger.Flush();
@@ -421,6 +420,7 @@ void Test_CallbackSink()
 
     delete g_hCallbackSink[0];
     delete logger;
+    PrintToServer("========== Test Callback End ==========");
 }
 
 void CBSink_Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2])

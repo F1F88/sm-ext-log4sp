@@ -107,7 +107,7 @@ static cell_t CreateLoggerWith(IPluginContext *ctx, const cell_t *params)
     ctx->LocalToPhysAddr(params[2], &sinks);
 
     auto numSinks = static_cast<size_t>(params[3]);
-    std::vector<spdlog::sink_ptr> sinkVector(numSinks, nullptr);
+    auto sinkVector{std::vector<spdlog::sink_ptr>(numSinks, nullptr)};
 
     HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     HandleError error;
@@ -125,9 +125,6 @@ static cell_t CreateLoggerWith(IPluginContext *ctx, const cell_t *params)
 
         sinkVector[i] = sink;
     }
-
-    std::vector<std::string> vec{nullptr};
-    vec.push_back("Hello");
 
     auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
@@ -1404,7 +1401,7 @@ static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native void AddSinkEx(Sink &sink);
+ * public native void AddSinkEx(Sink sink);
  */
 static cell_t AddSinkEx(IPluginContext *ctx, const cell_t *params)
 {
@@ -1420,9 +1417,8 @@ static cell_t AddSinkEx(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    cell_t *sinkHandle;
-    ctx->LocalToPhysAddr(params[2], &sinkHandle);
-    auto sink = log4sp::sink_handler::instance().read_handle(*sinkHandle, &security, &error);
+    auto sinkHandle = static_cast<Handle_t>(params[2]);
+    auto sink = log4sp::sink_handler::instance().read_handle(sinkHandle, &security, &error);
     if (sink == nullptr)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", sinkHandle, error);
@@ -1430,8 +1426,7 @@ static cell_t AddSinkEx(IPluginContext *ctx, const cell_t *params)
     }
 
     logger->add_sink(sink);
-    handlesys->FreeHandle(*sinkHandle, &security);
-    *sinkHandle = BAD_HANDLE;
+    handlesys->FreeHandle(sinkHandle, &security);
     return 0;
 }
 

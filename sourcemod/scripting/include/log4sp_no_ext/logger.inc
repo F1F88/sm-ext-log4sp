@@ -207,7 +207,7 @@ methodmap Logger < Handle
     public void DumpBacktrace() {}
 
     public void AddSink(Sink sink) {}
-    public void AddSinkEx(Sink &sink) {}
+    public void AddSinkEx(Sink sink) {}
     public void DropSink(Sink sink) {}
 
     public void SetErrorHandler(LoggerErrorHandler handler) {}
