@@ -12,6 +12,7 @@ sourceFiles = [
   'src/log4sp/adapter/sink_handler.cpp',
   'src/log4sp/command/root_console_command.cpp',
   'src/log4sp/command/root_console_command_handler.cpp',
+  'src/log4sp/sinks/base_sink.cpp',
   'src/log4sp/sinks/callback_sink.cpp',
   'src/natives/common.cpp',
   'src/natives/logger.cpp',
