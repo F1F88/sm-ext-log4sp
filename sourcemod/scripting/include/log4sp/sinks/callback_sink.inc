@@ -9,32 +9,34 @@
 #include <log4sp/sinks/sink>
 
 
+/**
+ * Callback function called when Sink.Log() is called.
+ *
+ * @param name          The name of a logger.
+ * @param lvl           Log level enum.
+ * @param msg           Pre formatted log message.
+ * @param file          The file name of the source code location.
+ * @param line          The line number of the source code location.
+ * @param func          The function name of the source code location.
+ * @param seconds       The log message timestamp in seconds.
+ * @param nanoseconds   The log message timestamp in nanoseconds.
+ */
 typeset CustomLogCallback
 {
-    /**
-     * Callback function called when Sink.Log() is called.
-     *
-     * @param name          The name of a logger.
-     * @param lvl           Log level enum.
-     * @param msg           Pre formatted log message.
-     * @param file          The file name of the source code location.
-     * @param line          The line number of the source code location.
-     * @param func          The function name of the source code location.
-     * @param seconds       The log message timestamp in seconds.
-     * @param nanoseconds   The log message timestamp in nanoseconds.
-     */
     function void (const char[] name, LogLevel lvl, const char[] msg);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2]);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2]);
-
-    /**
-     * Callback function called after Sink.Log() is called.
-     *
-     * @param msg           Log messages that have been formatted in a pre-set pattern.
-     */
-    function void (const char[] msg);
 }
+
+
+/**
+ * Callback function called after Sink.Log() is called.
+ *
+ * @param msg           Log messages that have been formatted in a pre-set pattern.
+ */
+typedef CustomLogPostCallback = function void (const char[] msg);
+
 
 /**
  * Callback function called when Sink.Flush() is called.
@@ -57,7 +59,7 @@ methodmap CallbackSink < Sink
      */
     public native CallbackSink(
         CustomLogCallback logCallback = INVALID_FUNCTION,
-        CustomLogCallback logPostCallback = INVALID_FUNCTION,
+        CustomLogPostCallback logPostCallback = INVALID_FUNCTION,
         CustomFlushCallback flushCallback = INVALID_FUNCTION);
 
     /**
@@ -72,7 +74,7 @@ methodmap CallbackSink < Sink
      *
      * @param logPostCallback   Callback function called after Sink.Log() is called.
      */
-    public native void SetLogPostCallback(CustomLogCallback logPostCallback);
+    public native void SetLogPostCallback(CustomLogPostCallback logPostCallback);
 
     /**
      * Set the callback sink flush callback.
