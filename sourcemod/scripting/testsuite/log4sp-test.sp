@@ -431,17 +431,17 @@ void CBSink_Log(const char[] name, LogLevel lvl, const char[] msg, const char[] 
 
     int length;
     char buffer[512];
-    length = g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg);
+    length = g_hCallbackSink[0].ToPattern(buffer, sizeof(buffer), name, lvl, msg);
     buffer[length - 1] = '\0';
-    PrintToServer("Callback Sink 4 | FormatPattern 1 | name, lvl, msg = %s", buffer);
+    PrintToServer("Callback Sink 4 | ToPattern 1 | name, lvl, msg = %s", buffer);
 
-    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg, file, 222, "MyFunc2", seconds);
+    g_hCallbackSink[0].ToPattern(buffer, sizeof(buffer), name, lvl, msg, file, 222, "MyFunc2", seconds);
     buffer[length - 1] = '\0';
-    PrintToServer("Callback Sink 5 | FormatPattern 2 | name, lvl, msg, file, line, func, seconds = %s", buffer);
+    PrintToServer("Callback Sink 5 | ToPattern 2 | name, lvl, msg, file, line, func, seconds = %s", buffer);
 
-    g_hCallbackSink[0].FormatPattern(buffer, sizeof(buffer), name, lvl, msg, file, 333, "MyFunc3", _, nanoseconds);
+    g_hCallbackSink[0].ToPattern(buffer, sizeof(buffer), name, lvl, msg, file, 333, "MyFunc3", _, nanoseconds);
     buffer[length - 1] = '\0';
-    PrintToServer("Callback Sink 6 | FormatPattern 3 | name, lvl, msg, file, line, func, nanoseconds = %s", buffer);
+    PrintToServer("Callback Sink 6 | ToPattern 3 | name, lvl, msg, file, line, func, nanoseconds = %s", buffer);
 }
 
 void CBSink_LogPost(const char[] msg)

@@ -172,12 +172,12 @@ static cell_t SetFlushCallback(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native int FormatPattern(char[] buffer, int maxlen,
+ * public native int ToPattern(char[] buffer, int maxlen,
  *      const char[] name, LogLevel lvl, const char[] msg,
  *      const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
  *      int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
  */
-static cell_t FormatPattern(IPluginContext *ctx, const cell_t *params)
+static cell_t ToPattern(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -211,7 +211,7 @@ static cell_t FormatPattern(IPluginContext *ctx, const cell_t *params)
     auto line = static_cast<int>(params[8]);
 
     spdlog::source_loc loc{};
-    if (file != nullptr && line > 0 && func != nullptr)
+    if (file && line > 0 && func)
     {
         loc = {file, line, func};
     }
@@ -247,7 +247,7 @@ static cell_t FormatPattern(IPluginContext *ctx, const cell_t *params)
     std::string formatted;
     try
     {
-        formatted = realSink->format_pattern({logTime, loc, name, lvl, msg});
+        formatted = realSink->to_pattern({logTime, loc, name, lvl, msg});
     }
     catch(const std::exception &ex)
     {
@@ -266,7 +266,7 @@ const sp_nativeinfo_t CallbackSinkNatives[] =
     {"CallbackSink.SetLogCallback",                 SetLogCallback},
     {"CallbackSink.SetLogPostCallback",             SetLogPostCallback},
     {"CallbackSink.SetFlushCallback",               SetFlushCallback},
-    {"CallbackSink.FormatPattern",                  FormatPattern},
+    {"CallbackSink.ToPattern",                      ToPattern},
 
     {nullptr,                                       nullptr}
 };
