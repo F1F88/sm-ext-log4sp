@@ -1,5 +1,4 @@
-#ifndef _LOG4SP_UTILS_H_
-#define _LOG4SP_UTILS_H_
+#pragma once
 
 #include <vector>
 
@@ -51,4 +50,3 @@ namespace log4sp {
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_UTILS_H_

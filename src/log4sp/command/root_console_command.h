@@ -1,6 +1,5 @@
 
-#ifndef _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_
-#define _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -139,4 +138,3 @@ public:
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_COMMAND_ROOT_CONSOLE_COMMAND_H_
