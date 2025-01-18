@@ -1,7 +1,7 @@
-#if defined _log_for_sourcepawn_sinks_callback_sink_included
+#if defined _log_for_sourcepawn_sinks_ringbuffer_sink_included
  #endinput
 #endif
-#define _log_for_sourcepawn_sinks_callback_sink_included
+#define _log_for_sourcepawn_sinks_ringbuffer_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -10,7 +10,7 @@
 
 
 /**
- * Callback function called when Sink.Log() is called.
+ * Callback function called on DrainCallback.Drain().
  *
  * @param name          The name of a logger.
  * @param lvl           Log level enum.
@@ -21,67 +21,63 @@
  * @param seconds       The log message timestamp in seconds.
  * @param nanoseconds   The log message timestamp in nanoseconds.
  */
-typeset CustomLogCallback
+typeset DrainCallback
 {
     function void (const char[] name, LogLevel lvl, const char[] msg);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2]);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2]);
+    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2], any data);
 }
 
 
 /**
- * Callback function called after Sink.Log() is called.
+ * Callback function called on DrainCallback.DrainFormatted().
  *
  * @param msg           Log messages that have been formatted in a pre-set pattern.
+ * @param data          Data value passed to Logger.ApplyAll().
  */
-typedef CustomLogPostCallback = function void (const char[] msg);
+typeset DrainFormattedCallback
+{
+    function void (const char[] msg);
+    function void (const char[] msg, any data);
+}
 
 
 /**
- * Callback function called when Sink.Flush() is called.
+ * Ring buffer sink. Holds fixed amount of log messages in memory.
+ * When the buffer is full, new messages override the old ones.
+ * Useful for storing debug data in memory in case of error.
  */
-typedef CustomFlushCallback = function void ();
-
-
-/**
- * Trivial callback sink, gets a callback function and calls it on each log or flush.
- */
-methodmap CallbackSink < Sink
+methodmap RingBufferSink < Sink
 {
     /**
-     * Trivial callback sink, gets a callback function and calls it on each log or flush.
+     * Ring buffer sink. Holds fixed amount of log messages in memory.
+     * When the buffer is full, new messages override the old ones.
+     * Useful for storing debug data in memory in case of error.
      *
-     * @param logCallback       Callback function called when Sink.Log() is called.
-     * @param logPostCallback   Callback function called after Sink.Log() is called.
-     * @param flushCallback     Callback function called when Sink.Flush() is called.
-     * @return                  CallbackSink handle.
+     * @param                   Amount of log messages in memory.
+     * @return                  RingBufferSink handle.
      */
-    public native CallbackSink(
-        CustomLogCallback logCallback = INVALID_FUNCTION,
-        CustomLogPostCallback logPostCallback = INVALID_FUNCTION,
-        CustomFlushCallback flushCallback = INVALID_FUNCTION);
+    public native RingBufferSink(int amount);
 
     /**
-     * Set the callback sink log callback.
+     * Apply a user defined function on all buffered log messages.
      *
-     * @param logCallback       Callback function called when Sink.Log() is called.
+     * @param callback  A callback that apply a user defined function on all buffered log messages.
+     * @param data      Extra data value to pass to the callback.
+     * @error           Invalid drain callback.
      */
-    public native void SetLogCallback(CustomLogCallback logCallback);
+    public native void Drain(DrainCallback callback, any data = 0);
 
     /**
-     * Set the callback sink log post callback.
+     * Apply a user defined function on all buffered log messages.
      *
-     * @param logPostCallback   Callback function called after Sink.Log() is called.
+     * @param callback  A callback that apply a user defined function on all buffered log messages.
+     * @param data      Extra data value to pass to the callback.
+     * @error           Invalid drain formatted callback.
      */
-    public native void SetLogPostCallback(CustomLogPostCallback logPostCallback);
-
-    /**
-     * Set the callback sink flush callback.
-     *
-     * @param flushCallback     Callback function called when Sink.Flush() is called.
-     */
-    public native void SetFlushCallback(CustomFlushCallback flushCallback);
+    public native void DrainFormatted(DrainFormattedCallback callback, any data = 0);
 
     /**
      * Format log message in a pre-set pattern.

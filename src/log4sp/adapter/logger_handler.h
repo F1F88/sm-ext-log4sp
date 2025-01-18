@@ -1,5 +1,4 @@
-#ifndef _LOG4SP_ADAPTER_LOGGER_HANDLER_H_
-#define _LOG4SP_ADAPTER_LOGGER_HANDLER_H_
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -144,4 +143,3 @@ private:
 
 
 }       // namespace log4sp
-#endif  // _LOG4SP_ADAPTER_LOGGER_HANDLER_H_

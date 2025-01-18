@@ -6,34 +6,33 @@ namespace sinks {
 
 callback_sink::callback_sink(IPluginFunction *log_function,
                              IPluginFunction *log_post_function,
-                             IPluginFunction *flush_function)
-    : formatter_{spdlog::details::make_unique<spdlog::pattern_formatter>()} {
+                             IPluginFunction *flush_function) {
     set_log_callback(log_function);
     try {
         set_log_post_callback(log_post_function);
         set_flush_callback(flush_function);
     } catch(const std::exception &ex) {
-        release_forwards();
+        release_forwards_();
         throw;
     }
 }
 
 callback_sink::~callback_sink() {
-    release_forwards();
+    release_forwards_();
 }
 
-void callback_sink::release_forwards() {
-    if (log_callback_ != nullptr) {
+void callback_sink::release_forwards_() {
+    if (log_callback_) {
         forwards->ReleaseForward(log_callback_);
         log_callback_ = nullptr;
     }
 
-    if (log_post_callback_ != nullptr) {
+    if (log_post_callback_) {
         forwards->ReleaseForward(log_post_callback_);
         log_post_callback_ = nullptr;
     }
 
-    if (flush_callback_ != nullptr) {
+    if (flush_callback_) {
         forwards->ReleaseForward(flush_callback_);
         flush_callback_ = nullptr;
     }
@@ -42,12 +41,12 @@ void callback_sink::release_forwards() {
 void callback_sink::set_log_callback(IPluginFunction *log_function) {
     IChangeableForward *cb{nullptr};
 
-    if (log_function != nullptr) {
+    if (log_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
                                        Param_String, Param_Cell, Param_String,
                                        Param_String, Param_Cell, Param_String,
                                        Param_Array, Param_Array);
-        if (cb == nullptr) {
+        if (!cb) {
             throw std::runtime_error{"SM error! Could not create callback sink log forward."};
         }
 
@@ -57,7 +56,7 @@ void callback_sink::set_log_callback(IPluginFunction *log_function) {
         }
     }
 
-    if (log_callback_ != nullptr) {
+    if (log_callback_) {
         forwards->ReleaseForward(log_callback_);
     }
     log_callback_ = cb;
@@ -66,9 +65,9 @@ void callback_sink::set_log_callback(IPluginFunction *log_function) {
 void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
     IChangeableForward *cb{nullptr};
 
-    if (log_post_function != nullptr) {
+    if (log_post_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (cb == nullptr) {
+        if (!cb) {
             throw std::runtime_error{"SM error! Could not create callback sink log post forward."};
         }
 
@@ -78,7 +77,7 @@ void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
         }
     }
 
-    if (log_post_callback_ != nullptr) {
+    if (log_post_callback_) {
         forwards->ReleaseForward(log_post_callback_);
     }
     log_post_callback_ = cb;
@@ -87,9 +86,9 @@ void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
 void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
     IChangeableForward *cb{nullptr};
 
-    if (flush_function != nullptr) {
+    if (flush_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 0, nullptr);
-        if (cb == nullptr) {
+        if (!cb) {
             throw std::runtime_error{"SM error! Could not create callback sink flush forward."};
         }
 
@@ -99,14 +98,14 @@ void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
         }
     }
 
-    if (flush_callback_ != nullptr) {
+    if (flush_callback_) {
         forwards->ReleaseForward(flush_callback_);
     }
     flush_callback_ = cb;
 }
 
-void callback_sink::log(const spdlog::details::log_msg &msg) {
-    if (log_callback_ != nullptr) {
+void callback_sink::sink_it_(const spdlog::details::log_msg &msg) {
+    if (log_callback_) {
         int64_t sec = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::seconds>(msg.time.time_since_epoch()).count());
         int64_t ns  = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(msg.time.time_since_epoch()).count());
 
@@ -127,15 +126,15 @@ void callback_sink::log(const spdlog::details::log_msg &msg) {
         log_callback_->Execute();
     }
 
-    if (log_post_callback_ != nullptr) {
-        std::string formatted = format_pattern(msg);
+    if (log_post_callback_) {
+        std::string formatted = to_pattern(msg);
         log_post_callback_->PushString(formatted.c_str());
         log_post_callback_->Execute();
     }
 }
 
-void callback_sink::flush() {
-    if (flush_callback_ != nullptr) {
+void callback_sink::flush_() {
+    if (flush_callback_) {
         flush_callback_->Execute();
     }
 }
