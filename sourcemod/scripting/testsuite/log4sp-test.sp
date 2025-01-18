@@ -80,6 +80,8 @@ Action CB_CMD(int client, int args)
 
     Test_CallbackSink();
 
+    Test_RingBufferSink();
+
     return Plugin_Handled;
 }
 
@@ -456,4 +458,41 @@ void CBSink_LogPost(const char[] msg)
 void CBSink_Flush()
 {
     PrintToServer("Callback Sink 8 | Flush |");
+}
+
+void Test_RingBufferSink()
+{
+    PrintToServer("========== Test RingBuffer Sink ==========");
+    RingBufferSink sink = new RingBufferSink(3);
+
+    sink.Log("RingBufferSink", LogLevel_Trace, "Hello callback sink! 11111");
+    sink.Log("RingBufferSink", LogLevel_Debug, "Hello callback sink! 22222");
+    sink.Log("RingBufferSink", LogLevel_Info, "Hello callback sink! 33333");
+    sink.Log("RingBufferSink", LogLevel_Warn, "Hello callback sink! 44444");
+    sink.Log("RingBufferSink", LogLevel_Error, "Hello callback sink! 55555");
+
+    sink.Drain(DrainCallback, 111);
+
+    sink.Log("RingBufferSink", LogLevel_Trace, "Hello callback sink! 66666");
+    sink.Log("RingBufferSink", LogLevel_Debug, "Hello callback sink! 77777");
+    sink.Log("RingBufferSink", LogLevel_Info, "Hello callback sink! 88888");
+    sink.Log("RingBufferSink", LogLevel_Warn, "Hello callback sink! 99999");
+    sink.Log("RingBufferSink", LogLevel_Error, "Hello callback sink! 00000");
+    sink.DrainFormatted(DrainFormattedCallback, 222);
+
+    delete sink;
+    PrintToServer("========== Test RingBuffer Sink End ==========");
+}
+
+void DrainCallback(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2], any data)
+{
+    PrintToServer("RingBuffer Sink 1 | Drain 1 | name = %s, lvl = %d, payload = %s", name, lvl, msg);
+    PrintToServer("RingBuffer Sink 2 | Drain 2 | source loc = %s::%d::%s", file, line, func);
+    PrintToServer("RingBuffer Sink 3 | Drain 3 | seconds = %b %b, nanoseconds = %b %b", seconds[1], seconds[0], nanoseconds[1], nanoseconds[0]);
+    PrintToServer("RingBuffer Sink Data = %d", data);
+}
+
+void DrainFormattedCallback(const char[] msg, any data)
+{
+    PrintToServer("RingBuffer Sink | DrainFormatted | msg = %s, data = %d", msg, data);
 }

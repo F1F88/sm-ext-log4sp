@@ -56,6 +56,7 @@
 #include <log4sp/sinks/client_chat_all_sink>
 #include <log4sp/sinks/client_console_all_sink>
 #include <log4sp/sinks/daily_file_sink>
+#include <log4sp/sinks/ringbuffer_sink>
 #include <log4sp/sinks/rotating_file_sink>
 #include <log4sp/sinks/server_console_sink>
 
@@ -69,6 +70,7 @@
 #include <log4sp_no_ext/sinks/client_chat_all_sink>
 #include <log4sp_no_ext/sinks/client_console_all_sink>
 #include <log4sp_no_ext/sinks/daily_file_sink>
+#include <log4sp_no_ext/sinks/ringbuffer_sink>
 #include <log4sp_no_ext/sinks/rotating_file_sink>
 #include <log4sp_no_ext/sinks/server_console_sink>
 
