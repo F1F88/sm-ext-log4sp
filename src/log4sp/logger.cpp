@@ -1,29 +1,18 @@
-#include "log4sp/adapter/logger_handler.h"
-
-#include "log4sp/utils.h"
 #include "log4sp/logger.h"
+#include "log4sp/utils.h"
+#include "log4sp/adapter/logger_handler.h"
 
 
 namespace log4sp {
 
 void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, const spdlog::string_view_t msg, IPluginContext *ctx) const noexcept {
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled) {
+    if (should_log(lvl)) {
         sink_it_(spdlog::details::log_msg{loc, name_, lvl, msg}, ctx);
-    }
-
-    if (traceback_enabled) {
-        tracer_->log(spdlog::details::log_msg{loc, name_, lvl, msg});
     }
 }
 
 void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept {
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         std::string msg;
 
         try {
@@ -44,13 +33,7 @@ void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum l
             return;
         }
 
-        if (log_enabled) {
-            sink_it_(spdlog::details::log_msg{loc, name_, lvl, msg}, ctx);
-        }
-
-        if (traceback_enabled) {
-            tracer_->log(spdlog::details::log_msg{loc, name_, lvl, msg});
-        }
+        sink_it_(spdlog::details::log_msg{loc, name_, lvl, msg}, ctx);
     }
 }
 
@@ -82,10 +65,7 @@ void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum l
 // }
 
 void logger::log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept {
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         char msg[2048];
         DetectExceptions eh(ctx);
 
@@ -94,21 +74,12 @@ void logger::log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::leve
             return;
         }
 
-        if (log_enabled) {
-            sink_it_(spdlog::details::log_msg{loc, name_, lvl, msg}, ctx);
-        }
-
-        if (traceback_enabled) {
-            tracer_->log(spdlog::details::log_msg{loc, name_, lvl, msg});
-        }
+        sink_it_(spdlog::details::log_msg{loc, name_, lvl, msg}, ctx);
     }
 }
 
 void logger::log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept {
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         std::vector<std::string> messages{
             spdlog::fmt_lib::format("Stack trace requested: {}", msg),
             spdlog::fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
@@ -117,25 +88,14 @@ void logger::log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string
         std::vector<std::string> stack_trace{get_stack_trace(ctx)};
         messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
 
-        if (log_enabled) {
-            for (auto &iter : messages) {
-                sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
-            }
-        }
-
-        if (traceback_enabled) {
-            for (auto &iter : messages) {
-                tracer_->log(spdlog::details::log_msg{name_, lvl, iter});
-            }
+        for (auto &iter : messages) {
+            sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
         }
     }
 }
 
 void logger::log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         std::string msg;
 
         try {
@@ -156,25 +116,14 @@ void logger::log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext
         std::vector<std::string> stack_trace{get_stack_trace(ctx)};
         messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
 
-        if (log_enabled) {
-            for (auto &iter : messages) {
-                sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
-            }
-        }
-
-        if (traceback_enabled) {
-            for (auto &iter : messages) {
-                tracer_->log(spdlog::details::log_msg{name_, lvl, iter});
-            }
+        for (auto &iter : messages) {
+            sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
         }
     }
 }
 
 void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         char msg[2048];
         DetectExceptions eh(ctx);
 
@@ -191,16 +140,8 @@ void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPlugi
         std::vector<std::string> stack_trace{get_stack_trace(ctx)};
         messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
 
-        if (log_enabled) {
-            for (auto &iter : messages) {
-                sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
-            }
-        }
-
-        if (traceback_enabled) {
-            for (auto &iter : messages) {
-                tracer_->log(spdlog::details::log_msg{name_, lvl, iter});
-            }
+        for (auto &iter : messages) {
+            sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
         }
     }
 }
@@ -208,10 +149,7 @@ void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPlugi
 void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept {
     ctx->ReportError(msg.data());
 
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         std::vector<std::string> messages{
             spdlog::fmt_lib::format("Exception reported: {}", msg),
             spdlog::fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
@@ -220,16 +158,8 @@ void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_vie
         std::vector<std::string> stack_trace{get_stack_trace(ctx)};
         messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
 
-        if (log_enabled) {
-            for (auto &iter : messages) {
-                sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
-            }
-        }
-
-        if (traceback_enabled) {
-            for (auto &iter : messages) {
-                tracer_->log(spdlog::details::log_msg{name_, lvl, iter});
-            }
+        for (auto &iter : messages) {
+            sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
         }
     }
 }
@@ -250,10 +180,7 @@ void logger::throw_error(const spdlog::level::level_enum lvl, IPluginContext *ct
 
     ctx->ReportError(msg.c_str());
 
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         std::vector<std::string> messages{
             spdlog::fmt_lib::format("Exception reported: {}", msg),
             spdlog::fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
@@ -262,16 +189,8 @@ void logger::throw_error(const spdlog::level::level_enum lvl, IPluginContext *ct
         std::vector<std::string> stack_trace{get_stack_trace(ctx)};
         messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
 
-        if (log_enabled) {
-            for (auto &iter : messages) {
-                sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
-            }
-        }
-
-        if (traceback_enabled) {
-            for (auto &iter : messages) {
-                tracer_->log(spdlog::details::log_msg{name_, lvl, iter});
-            }
+        for (auto &iter : messages) {
+            sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
         }
     }
 }
@@ -287,10 +206,7 @@ void logger::throw_error_amx_tpl(const spdlog::level::level_enum lvl, IPluginCon
 
     ctx->ReportError(msg);
 
-    bool log_enabled = should_log(lvl);
-    bool traceback_enabled = (tracer_ && lvl <= spdlog::level::debug);
-
-    if (log_enabled || traceback_enabled) {
+    if (should_log(lvl)) {
         std::vector<std::string> messages{
             spdlog::fmt_lib::format("Exception reported: {}", msg),
             spdlog::fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
@@ -299,16 +215,8 @@ void logger::throw_error_amx_tpl(const spdlog::level::level_enum lvl, IPluginCon
         std::vector<std::string> stack_trace{get_stack_trace(ctx)};
         messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
 
-        if (log_enabled) {
-            for (auto &iter : messages) {
-                sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
-            }
-        }
-
-        if (traceback_enabled) {
-            for (auto &iter : messages) {
-                tracer_->log(spdlog::details::log_msg{name_, lvl, iter});
-            }
+        for (auto &iter : messages) {
+            sink_it_(spdlog::details::log_msg{name_, lvl, iter}, ctx);
         }
     }
 }
@@ -374,29 +282,6 @@ void logger::add_sink(spdlog::sink_ptr sink) noexcept {
 
 void logger::remove_sink(spdlog::sink_ptr sink) noexcept {
     sinks_.erase(std::remove(sinks_.begin(), sinks_.end(), sink), sinks_.end());
-}
-
-[[nodiscard]] bool logger::should_backtrace() const noexcept {
-    return tracer_ != nullptr;
-}
-
-void logger::enable_backtrace(size_t num) noexcept {
-    tracer_ = std::make_shared<spdlog::sinks::ringbuffer_sink_st>(num);
-    add_sink(tracer_);
-}
-
-void logger::disable_backtrace() noexcept {
-    remove_sink(tracer_);
-    tracer_.reset();
-}
-
-void logger::dump_backtrace(IPluginContext *ctx) const noexcept {
-    if (tracer_) {
-        auto messages = tracer_->last_raw();
-        for (auto &msg : messages) {
-            sink_it_(msg, ctx);
-        }
-    }
 }
 
 void logger::set_error_handler(IChangeableForward *handler) noexcept {

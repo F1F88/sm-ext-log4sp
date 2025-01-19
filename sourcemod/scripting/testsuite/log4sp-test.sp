@@ -48,10 +48,6 @@ Action CB_CMD(int client, int args)
     TestLoggerFlush(logger4);
     delete logger4;
 
-    Logger logger5 = ServerConsoleSink.CreateLogger("logger-test-5");
-    TestLoggerBacktrace(logger5);
-    delete logger5;
-
     Logger logger6 = ServerConsoleSink.CreateLogger("logger-test-6");
     TestLoggerSink(logger6);
     delete logger6;
@@ -185,42 +181,6 @@ void TestLoggerFlush(Logger logger)
     PrintToServer(" | oldLvl=%d | newLvl=%d |", oldLvl, newLvl);
 
     PrintToServer("========== Test Logger Flush End | name=%s | ==========", name);
-}
-
-void TestLoggerBacktrace(Logger logger)
-{
-    char name[64];
-    logger.GetName(name, sizeof(name));
-    PrintToServer("========== Test Logger Backtrace Start | name=%s |==========", name);
-
-    bool oldShouldBT, newShouldBT, endShouldBT;
-
-    oldShouldBT = logger.ShouldBacktrace();
-    logger.Trace("This message should be ignored. 1");
-    logger.Debug("This message should be ignored. 2");
-
-    logger.EnableBacktrace(3);
-    newShouldBT = logger.ShouldBacktrace();
-    logger.Trace("This message will not log immediately. 3");
-    logger.Trace("This message will not log immediately. 4");
-    logger.Debug("This message will not log immediately. 5");
-    logger.Debug("This message will not log immediately. 6");
-    logger.Info("This message will log immediately. 7");
-    logger.DumpBacktrace();     // This will output
-    // [trace] This message will not log immediately. 4
-    // [debug] This message will not log immediately. 5
-    // [debug] This message will not log immediately. 6
-
-    logger.DisableBacktrace();
-    endShouldBT = logger.ShouldBacktrace();
-    logger.Trace("This message should be ignored. 8");
-    logger.Debug("This message should be ignored. 9");
-    logger.DumpBacktrace();     // This will not output
-
-    PrintToServer(" | oldShouldBT=%s | newShouldBT=%s | endShouldBT=%s |"
-        , oldShouldBT ? "true" : "false", newShouldBT ? "true" : "false", endShouldBT ? "true" : "false");
-
-    PrintToServer("========== Test Logger Backtrace End | name=%s | ==========", name);
 }
 
 void TestLoggerSink(Logger logger)

@@ -165,7 +165,6 @@ void Test_Logger(Logger logger, const char[] name)
 {
     Test_Logger_Log(logger);
     Test_Logger_Member(logger, name);
-    Test_Logger_Backtrace(logger);
     Test_Logger_Update_Sinks(logger);
     Test_Logger_Error_Handler(logger);
 }
@@ -262,53 +261,6 @@ void Test_Logger_Member(Logger logger, const char[] name)
 
     // Restore flush level
     logger.FlushOn(oriFlushLvl);
-
-    // ShouldBacktrace
-    AssertFalse("ShouldBacktrace()", logger.ShouldBacktrace());
-
-    // EnableBacktrace
-    logger.EnableBacktrace(32);
-    AssertTrue("EnableBacktrace(32)", logger.ShouldBacktrace());
-
-    // DisableBacktrace
-    logger.DisableBacktrace();
-    AssertFalse("DisableBacktrace()", logger.ShouldBacktrace());
-}
-
-void Test_Logger_Backtrace(Logger logger)
-{
-    // 传入的 logger 不应该开启 backtrace
-    AssertFalse("Init check - ShouldBacktrace()", logger.ShouldBacktrace());
-
-    // 保存原来的属性值以在测试结束后恢复
-    LogLevel originLogLevel = logger.GetLevel();
-
-    // 初始化
-    logger.DisableBacktrace();
-    AssertFalse("DisableBacktrace()", logger.ShouldBacktrace());
-
-    logger.SetLevel(LogLevel_Info);
-    AssertEq("SetLevel(info)", logger.GetLevel(), LogLevel_Info);
-
-    logger.EnableBacktrace(2);
-    AssertTrue("EnableBacktrace(2)", logger.ShouldBacktrace());
-
-    // 此处的 trace 和 debug 应该被忽略
-    logger.Trace("Trace() | 1 | not log");
-    logger.Debug("Debug() | 2 | not log");
-    logger.Trace("Trace() | 3 | log");
-    logger.Debug("Debug() | 4 | log");
-
-    // dump 3, 4 日志
-    logger.DumpBacktrace();
-
-    // 结束测试
-    logger.DisableBacktrace();
-    AssertFalse("DisableBacktrace()", logger.ShouldBacktrace());
-
-    // 恢复属性值
-    logger.SetLevel(originLogLevel);
-    AssertEq("SetLevel(origin)", logger.GetLevel(), originLogLevel);
 }
 
 void Test_Logger_Update_Sinks(Logger logger)

@@ -258,30 +258,6 @@ methodmap Logger < Handle
     public native void FlushOn(LogLevel lvl);
 
     /**
-     * Gets whether backtrace logging is enabled.
-     *
-     * @return          True if backtrace logging is enabled.
-     */
-    public native bool ShouldBacktrace();
-
-    /**
-     * Create new backtrace sink and move to it all our child sinks.
-     *
-     * @param num       Number of log messages stored.
-     */
-    public native void EnableBacktrace(int num);
-
-    /**
-     * Restore original sinks and level and delete the backtrace sink.
-     */
-    public native void DisableBacktrace();
-
-    /**
-     * Dump log messages stored in the backtrace ring buffer.
-     */
-    public native void DumpBacktrace();
-
-    /**
      * Add a new sink to sinks.
      *
      * @param sink      Sink handle.

@@ -1154,91 +1154,6 @@ static cell_t FlushOn(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public native bool ShouldBacktrace();
- */
-static cell_t ShouldBacktrace(IPluginContext *ctx, const cell_t *params)
-{
-    auto handle = static_cast<Handle_t>(params[1]);
-
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(handle, &security, &error);
-    if (logger == nullptr)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", handle, error);
-        return 0;
-    }
-
-    return static_cast<cell_t>(logger->should_backtrace());
-}
-
-/**
- * public native void EnableBacktrace(int num);
- */
-static cell_t EnableBacktrace(IPluginContext *ctx, const cell_t *params)
-{
-    auto handle = static_cast<Handle_t>(params[1]);
-
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(handle, &security, &error);
-    if (logger == nullptr)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", handle, error);
-        return 0;
-    }
-
-    auto num = static_cast<size_t>(params[2]);
-
-    logger->enable_backtrace(num);
-    return 0;
-}
-
-/**
- * public native void DisableBacktrace();
- */
-static cell_t DisableBacktrace(IPluginContext *ctx, const cell_t *params)
-{
-    auto handle = static_cast<Handle_t>(params[1]);
-
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(handle, &security, &error);
-    if (logger == nullptr)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", handle, error);
-        return 0;
-    }
-
-    logger->disable_backtrace();
-    return 0;
-}
-
-/**
- * public native void DumpBacktrace();
- */
-static cell_t DumpBacktrace(IPluginContext *ctx, const cell_t *params)
-{
-    auto handle = static_cast<Handle_t>(params[1]);
-
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(handle, &security, &error);
-    if (logger == nullptr)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", handle, error);
-        return 0;
-    }
-
-    logger->dump_backtrace();
-    return 0;
-}
-
-/**
  * public native void AddSink(Sink sink);
  */
 static cell_t AddSink(IPluginContext *ctx, const cell_t *params)
@@ -1424,10 +1339,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},
     {"Logger.FlushOn",                          FlushOn},
-    {"Logger.ShouldBacktrace",                  ShouldBacktrace},
-    {"Logger.EnableBacktrace",                  EnableBacktrace},
-    {"Logger.DisableBacktrace",                 DisableBacktrace},
-    {"Logger.DumpBacktrace",                    DumpBacktrace},
     {"Logger.AddSink",                          AddSink},
     {"Logger.AddSinkEx",                        AddSinkEx},
     {"Logger.DropSink",                         DropSink},

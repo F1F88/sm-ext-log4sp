@@ -187,13 +187,6 @@ methodmap Logger < Handle
     }
     public void FlushOn(LogLevel lvl) {}
 
-    public bool ShouldBacktrace() {
-        return false;
-    }
-    public void EnableBacktrace(int num) {}
-    public void DisableBacktrace() {}
-    public void DumpBacktrace() {}
-
     public void AddSink(Sink sink) {}
     public void AddSinkEx(Sink sink) {}
     public void DropSink(Sink sink) {}

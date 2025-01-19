@@ -1,8 +1,8 @@
 #pragma once
 
-#include "spdlog/common.h"
+#include "spdlog/pattern_formatter.h"
 #include "spdlog/details/log_msg.h"
-#include "spdlog/sinks/ringbuffer_sink.h"
+#include "spdlog/sinks/sink.h"
 
 #include "extension.h"
 
@@ -26,16 +26,22 @@ public:
 
     ~logger() = default;
 
-    // ctx 用于发生异常且消息 loc 为空时，获取插件源码位置。如果 nullptr 则保持为 nullptr
+    // loc 是可选项，用于标记源代码位置，出于性能考虑可以为空，出现异常的时候会尝试通过 ctx 获取
+    // ctx 是可选项，用于发生异常且消息 loc 为空时，获取插件源码位置。如果 nullptr 则保持 loc 为空
+    // 当调用者是 SourcePawn 时，ctx 不为 nullptr，所以总是能获取源代码位置
+    // 当调用者是其他时，例如 控制台指令模块，ctx 为 nullptr，但 loc 是相应的代码位置
+    // lvl, msg 为必选项
     void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, const spdlog::string_view_t msg, IPluginContext *ctx) const noexcept;
     void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept;
     // void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const char *format, const cell_t *params, const unsigned int param) const noexcept;
     void log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept;
 
+    // 所有参数都是必选项，ctx 用于获取堆栈信息
     void log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept;
     void log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
     void log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
 
+    // 所有参数都是必选项，ctx 用于获取堆栈信息
     void throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept;
     void throw_error(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
     void throw_error_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
@@ -76,12 +82,6 @@ public:
     void add_sink(spdlog::sink_ptr sink) noexcept;
     void remove_sink(spdlog::sink_ptr sink) noexcept;
 
-    // backtrace
-    [[nodiscard]] bool should_backtrace() const noexcept;
-    void enable_backtrace(size_t num) noexcept;
-    void disable_backtrace() noexcept;
-    void dump_backtrace(IPluginContext *ctx = nullptr) const noexcept;
-
     // error handler
     void set_error_handler(IChangeableForward *handler) noexcept;
 
@@ -105,7 +105,6 @@ private:
     std::vector<spdlog::sink_ptr> sinks_;
     spdlog::level::level_enum level_{spdlog::level::info};
     spdlog::level::level_enum flush_level_{spdlog::level::off};
-    std::shared_ptr<spdlog::sinks::ringbuffer_sink_st> tracer_{nullptr};
     err_helper err_helper_;
 };
 

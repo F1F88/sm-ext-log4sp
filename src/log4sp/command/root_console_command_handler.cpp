@@ -36,10 +36,6 @@ void root_console_command_handler::draw_menu() {
     rootconsole->DrawGenericOption("flush",         "Manual flush a logger contents.");
     rootconsole->DrawGenericOption("get_flush_lvl", "Gets the minimum log level that will trigger automatic flush.");
     rootconsole->DrawGenericOption("set_flush_lvl", "Sets the minimum log level that will trigger automatic flush.");
-    rootconsole->DrawGenericOption("should_bt",     "Gets a logger whether backtrace logging is enabled.");
-    rootconsole->DrawGenericOption("enable_bt",     "Enable a logger backtrace logging.");
-    rootconsole->DrawGenericOption("disable_bt",    "Disaable a logger backtrace logging.");
-    rootconsole->DrawGenericOption("dump_bt",       "Dump a logger backtrace logging messages.");
 }
 
 
@@ -77,7 +73,7 @@ void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, con
 
 root_console_command_handler::root_console_command_handler() {
     commands_["list"]           = std::make_unique<list_command>();
-    commands_["apply_all"]      = std::make_unique<apply_all_command>(std::unordered_set<std::string>{"get_lvl", "set_lvl", "set_pattern", "should_log", "log", "flush", "get_flush_lvl", "set_flush_lvl", "should_bt", "enable_bt", "disable_bt", "dump_bt"});
+    commands_["apply_all"]      = std::make_unique<apply_all_command>(std::unordered_set<std::string>{"get_lvl", "set_lvl", "set_pattern", "should_log", "log", "flush", "get_flush_lvl", "set_flush_lvl"});
     commands_["get_lvl"]        = std::make_unique<get_lvl_command>();
     commands_["set_lvl"]        = std::make_unique<set_lvl_command>();
     commands_["set_pattern"]    = std::make_unique<set_pattern_command>();
@@ -86,10 +82,6 @@ root_console_command_handler::root_console_command_handler() {
     commands_["flush"]          = std::make_unique<flush_command>();
     commands_["get_flush_lvl"]  = std::make_unique<get_flush_lvl_command>();
     commands_["set_flush_lvl"]  = std::make_unique<set_flush_lvl_command>();
-    commands_["should_bt"]      = std::make_unique<should_bt_command>();
-    commands_["enable_bt"]      = std::make_unique<enable_bt_command>();
-    commands_["disable_bt"]     = std::make_unique<disable_bt_command>();
-    commands_["dump_bt"]        = std::make_unique<dump_bt_command>();
 }
 
 void root_console_command_handler::initialize_() {

@@ -21,7 +21,6 @@ public:
      * 命令模式抽象类
      *
      * 重复操作不算失败，不需要抛出异常，但可能响应一条消息
-     * 例如：多次启用 backtrace
      *
      * @param args      参数列表
      * @exception       指令执行失败时抛出异常，消息为失败原因
@@ -105,34 +104,6 @@ public:
 class set_flush_lvl_command final : public command {
 public:
     set_flush_lvl_command() = default;
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class should_bt_command final : public command {
-public:
-    should_bt_command() = default;
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class enable_bt_command final : public command {
-public:
-    enable_bt_command() = default;
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class disable_bt_command final : public command {
-public:
-    disable_bt_command() = default;
-    void execute(const std::vector<std::string> &args) override;
-};
-
-
-class dump_bt_command final : public command {
-public:
-    dump_bt_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
