@@ -28,7 +28,7 @@ public void OnPluginStart()
 {
     // Default LogLevel: LogLevel_Info
     // Default Pattern: [%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v
-    myLogger = Logger.CreateServerConsoleLogger("logger-example-1");
+    myLogger = ServerConsoleSink.CreateLogger("logger-example-1");
 
     RegConsoleCmd("sm_log4sp_example1", CommandCallback);
 

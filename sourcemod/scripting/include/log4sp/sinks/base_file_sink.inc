@@ -29,5 +29,19 @@ methodmap BaseFileSink < Sink
      */
     public native int GetFilename(char[] buffer, int maxlen);
 
+    /**
+     * Truncate log files on demand.
+     */
     public native void Truncate();
+
+    /**
+     * Create a logger handle that outputs to a file.
+     *
+     * @param name      The name of the new logger.
+     * @param file      The file path where the log messages will be written.
+     * @param truncate  If true, the created file will be truncated.
+     * @return          Logger handle.
+     * @error           Logger name already exits.
+     */
+    public static native Logger CreateLogger(const char[] name, const char[] file, bool truncate = false);
 }

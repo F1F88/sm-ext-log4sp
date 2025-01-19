@@ -45,7 +45,7 @@ Action Command_BenchBaseFiles(int client, int args)
         iters = GetCmdArgInt(1);
     }
 
-    float delta = BenchLogger(iters, client, Logger.CreateBaseFileLogger("name-A", "logs/benchmark/file-A.log", .truncate=true));
+    float delta = BenchLogger(iters, client, BaseFileSink.CreateLogger("name-A", "logs/benchmark/file-A.log", .truncate=true));
 
     PrintToServer("");
     PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "base-file", iters, delta, RoundToFloor(iters / delta));
@@ -60,7 +60,7 @@ Action Command_BenchDailyFiles(int client, int args)
         iters = GetCmdArgInt(1);
     }
 
-    float delta = BenchLogger(iters, client, Logger.CreateDailyFileLogger("name-B", "logs/benchmark/file-B.log", .truncate=true));
+    float delta = BenchLogger(iters, client, DailyFileSink.CreateLogger("name-B", "logs/benchmark/file-B.log", .truncate=true));
 
     PrintToServer("");
     PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "daily-file", iters, delta, RoundToFloor(iters / delta));
@@ -75,7 +75,7 @@ Action Command_BenchRotatingFile(int client, int args)
         iters = GetCmdArgInt(1);
     }
 
-    float delta = BenchLogger(iters, client, Logger.CreateRotatingFileLogger("name-C", "logs/benchmark/file-C.log", g_iFileSize, g_iRotatingFiles));
+    float delta = BenchLogger(iters, client, RotatingFileSink.CreateLogger("name-C", "logs/benchmark/file-C.log", g_iFileSize, g_iRotatingFiles));
 
     PrintToServer("");
     PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "rotating-file", iters, delta, RoundToFloor(iters / delta));
@@ -90,7 +90,7 @@ Action Command_BenchServerConsole(int client, int args)
         iters = GetCmdArgInt(1);
     }
 
-    float delta = BenchLogger(iters, client, Logger.CreateServerConsoleLogger("name-D"));
+    float delta = BenchLogger(iters, client, ServerConsoleSink.CreateLogger("name-D"));
 
     PrintToServer("");
     PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "server-console", iters, delta, RoundToFloor(iters / delta));

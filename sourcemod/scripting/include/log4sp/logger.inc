@@ -106,64 +106,6 @@ methodmap Logger < Handle
     public static native Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
 
     /**
-     * Create a logger handle that outputs to the server console.
-     *
-     * @param name      The name of the new logger.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
-     */
-    public static native Logger CreateServerConsoleLogger(const char[] name);
-
-    /**
-     * Create a logger handle that outputs to a file.
-     *
-     * @param name      The name of the new logger.
-     * @param file      The file path where the log messages will be written.
-     * @param truncate  If true, the created file will be truncated.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
-     */
-    public static native Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false);
-
-    /**
-     * Create a logger handle that outputs to a file and rotates the file based on size.
-     *
-     * @param name          The name of the logger.
-     * @param file          The file path where the log messages will be written.
-     * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
-     * @param maxFiles      The maximum number of rotated log files to keep.
-     * @param rotateOnOpen  If true, the log file will be rotated when opened.
-     * @return              Logger handle.
-     * @error               Logger name already exits, or maxFileSize == 0, or maxFiles > 200000.
-     */
-    public static native Logger CreateRotatingFileLogger(
-        const char[] name,
-        const char[] file,
-        int maxFileSize,
-        int maxFiles,
-        bool rotateOnOpen = false);
-
-    /**
-     * Create a logger handle that outputs to a file and rotates the file based on date.
-     *
-     * @param name      The name of the logger.
-     * @param file      The file path where the log messages will be written.
-     * @param hour      The hour of the day when the log file should be rotated. (0-23)
-     * @param minute    The minute of the hour when the log file should be rotated. (0-59)
-     * @param truncate  If true, the created file will be truncated.
-     * @param maxFiles  If max_files > 0, retain only the last max_files and delete previous.
-     * @return          Logger handle.
-     * @error           Logger name already exits, or invalid rotation time.
-     */
-    public static native Logger CreateDailyFileLogger(
-        const char[] name,
-        const char[] file,
-        int hour = 0,
-        int minute = 0,
-        bool truncate = false,
-        int maxFiles = 0);
-
-    /**
      * Gets the logger name.
      *
      * @param buffer    Buffer to store logger name.

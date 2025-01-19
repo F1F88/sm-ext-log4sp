@@ -1,5 +1,7 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 
+#include "log4sp/logger.h"
+#include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
 
@@ -127,12 +129,62 @@ static cell_t RotatingFileSink_CalcFilename(IPluginContext *ctx, const cell_t *p
     return bytes;
 }
 
+/**
+ * public static native Logger CreateLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false);
+ */
+static cell_t RotatingFileSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    {
+        ctx->ReportError("Logger with name \"%s\" already exists.", name);
+        return BAD_HANDLE;
+    }
+
+    char *file;
+    ctx->LocalToString(params[2], &file);
+
+    char path[PLATFORM_MAX_PATH];
+    smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
+
+    auto maxFileSize  = static_cast<size_t>(params[3]);
+    auto maxFiles     = static_cast<size_t>(params[4]);
+    auto rotateOnOpen = static_cast<bool>(params[5]);
+
+    spdlog::sink_ptr sink;
+    try
+    {
+        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    auto logger = std::make_shared<log4sp::logger>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+
+    return handle;
+}
+
 const sp_nativeinfo_t RotatingFileSinkNatives[] =
 {
     {"RotatingFileSink.RotatingFileSink",       RotatingFileSink},
     {"RotatingFileSink.GetFilename",            RotatingFileSink_GetFilename},
     {"RotatingFileSink.RotateNow",              RotatingFileSink_RotateNow},
+
     {"RotatingFileSink.CalcFilename",           RotatingFileSink_CalcFilename},
+    {"RotatingFileSink.CreateLogger",           RotatingFileSink_CreateLogger},
 
     {nullptr,                                   nullptr}
 };

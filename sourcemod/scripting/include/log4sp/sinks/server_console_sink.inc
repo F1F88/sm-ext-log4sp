@@ -17,4 +17,13 @@ methodmap ServerConsoleSink < Sink
      * @return              ServerConsoleSink handle.
      */
     public native ServerConsoleSink();
+
+    /**
+     * Create a logger handle that outputs to the server console.
+     *
+     * @param name      The name of the new logger.
+     * @return          Logger handle.
+     * @error           Logger name already exits.
+     */
+    public static native Logger CreateLogger(const char[] name);
 }

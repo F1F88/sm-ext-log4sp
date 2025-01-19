@@ -26,7 +26,7 @@ Logger myLogger;
 public void OnPluginStart()
 {
     // 创建一个 单线程的, 名为 "myLogger" 的 Logger 对象
-    myLogger = Logger.CreateServerConsoleLogger("logger-example-2");
+    myLogger = ServerConsoleSink.CreateLogger("logger-example-2");
 
     // 配置 myLogger 的输出级别. 默认级别: LogLevel_Info
     myLogger.SetLevel(LogLevel_Debug);
@@ -48,7 +48,7 @@ public void OnPluginStart()
 
     /**
      * 现在 myLogger 有 2 个 Sink
-     * 1 个是 "Logger.CreateServerConsoleLogger()" 时, 添加的 ServerConsoleSink
+     * 1 个是 "ServerConsoleSink.CreateServerConsoleLogger()" 时, 添加的 ServerConsoleSink
      * 1 个是 "myLogger.AddSink()" 时, 添加的 ClientConsoleSink
      *
      * 现在 mySink 的引用数为 2

@@ -1,5 +1,7 @@
 #include "spdlog/sinks/daily_file_sink.h"
 
+#include "log4sp/logger.h"
+#include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
 
@@ -81,10 +83,61 @@ static cell_t DailyFileSink_GetFilename(IPluginContext *ctx, const cell_t *param
     return bytes;
 }
 
+/**
+ * public static native Logger CreateLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0);
+ */
+static cell_t DailyFileSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    {
+        ctx->ReportError("Logger with name \"%s\" already exists.", name);
+        return BAD_HANDLE;
+    }
+
+    char *file;
+    ctx->LocalToString(params[2], &file);
+
+    char path[PLATFORM_MAX_PATH];
+    smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
+
+    auto hour     = static_cast<int>(params[3]);
+    auto minute   = static_cast<int>(params[4]);
+    auto truncate = static_cast<bool>(params[5]);
+    auto maxFiles = static_cast<uint16_t>(params[6]);
+
+    spdlog::sink_ptr sink;
+    try
+    {
+        sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    auto logger = std::make_shared<log4sp::logger>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+
+    return handle;
+}
+
 const sp_nativeinfo_t DailyFileSinkNatives[] =
 {
     {"DailyFileSink.DailyFileSink",             DailyFileSink},
     {"DailyFileSink.GetFilename",               DailyFileSink_GetFilename},
+
+    {"DailyFileSink.CreateLogger",              DailyFileSink_CreateLogger},
 
     {nullptr,                                   nullptr}
 };

@@ -16,4 +16,8 @@ methodmap DailyFileSink < Sink
     }
 
     public int GetFilename(char[] buffer, int maxlength) {}
+
+    public Logger CreateLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0) {
+        return null;
+    }
 }

@@ -18,4 +18,8 @@ methodmap BaseFileSink < Sink
     public int GetFilename(char[] buffer, int maxlen) {}
 
     public void Truncate() {}
+
+    public static Logger CreateLogger(const char[] name, const char[] file, bool truncate = false) {
+        return null;
+    }
 }

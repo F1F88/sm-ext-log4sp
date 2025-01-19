@@ -77,7 +77,7 @@ void Test_ServerConsoleLogger()
 
     Logger log;
 
-    log = Logger.CreateServerConsoleLogger("test-server-console-logger");
+    log = ServerConsoleSink.CreateLogger("test-server-console-logger");
     Test_Logger(log, "test-server-console-logger");
     delete log;
 }
@@ -92,7 +92,7 @@ void Test_RotatingFileLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.CreateRotatingFileLogger("test-rotate-file-logger", "logs/test/rotate.log", 1024 * 1024, 3);
+    log = RotatingFileSink.CreateLogger("test-rotate-file-logger", "logs/test/rotate.log", 1024 * 1024, 3);
     Test_Logger(log, "test-rotate-file-logger");
     delete log;
 }
@@ -107,7 +107,7 @@ void Test_DailyFileLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.CreateDailyFileLogger("test-daily-file-logger", "logs/test/daily.log", .truncate=true);
+    log = DailyFileSink.CreateLogger("test-daily-file-logger", "logs/test/daily.log", .truncate=true);
     Test_Logger(log, "test-daily-file-logger");
     delete log;
 }
@@ -156,7 +156,7 @@ void Test_BaseFileLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = Logger.CreateBaseFileLogger("test-base-file-logger", "logs/test/base.log", .truncate=true);
+    log = BaseFileSink.CreateLogger("test-base-file-logger", "logs/test/base.log", .truncate=true);
     Test_Logger(log, "test-base-file-logger");
     delete log;
 }

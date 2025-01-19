@@ -32,27 +32,27 @@ public void OnPluginStart()
 
 Action CB_CMD(int client, int args)
 {
-    Logger logger1 = Logger.CreateServerConsoleLogger("logger-test-1");
+    Logger logger1 = ServerConsoleSink.CreateLogger("logger-test-1");
     TestLoggerLvl(logger1);
     delete logger1;
 
-    Logger logger2 = Logger.CreateServerConsoleLogger("logger-test-2");
+    Logger logger2 = ServerConsoleSink.CreateLogger("logger-test-2");
     TestLoggerLog(logger2);
     delete logger2;
 
-    Logger logger3 = Logger.CreateServerConsoleLogger("logger-test-3");
+    Logger logger3 = ServerConsoleSink.CreateLogger("logger-test-3");
     TestLoggerPattern(logger3);
     delete logger3;
 
-    Logger logger4 = Logger.CreateServerConsoleLogger("logger-test-4");
+    Logger logger4 = ServerConsoleSink.CreateLogger("logger-test-4");
     TestLoggerFlush(logger4);
     delete logger4;
 
-    Logger logger5 = Logger.CreateServerConsoleLogger("logger-test-5");
+    Logger logger5 = ServerConsoleSink.CreateLogger("logger-test-5");
     TestLoggerBacktrace(logger5);
     delete logger5;
 
-    Logger logger6 = Logger.CreateServerConsoleLogger("logger-test-6");
+    Logger logger6 = ServerConsoleSink.CreateLogger("logger-test-6");
     TestLoggerSink(logger6);
     delete logger6;
 
@@ -313,7 +313,7 @@ Action CB_CMD_ThrowError1(int client, int args)
     // 由于会被中断，所以存在内存泄漏
     static Logger log;
     if (log == INVALID_HANDLE)
-        log = Logger.CreateServerConsoleLogger("logger-test-thorw-error-1");
+        log = ServerConsoleSink.CreateLogger("logger-test-thorw-error-1");
 
     log.ThrowError(LogLevel_Fatal, "--- 测试 ThrowError 效果 1 ---");
     PrintToServer("--- 测试是否继续执行 1 ---");
@@ -326,7 +326,7 @@ Action CB_CMD_ThrowError2(int client, int args)
     // 由于会被中断，所以存在内存泄漏
     static Logger log;
     if (log == INVALID_HANDLE)
-        log = Logger.CreateServerConsoleLogger("logger-test-thorw-error-2");
+        log = ServerConsoleSink.CreateLogger("logger-test-thorw-error-2");
 
     log.ThrowErrorAmxTpl(LogLevel_Warn, "--- 测试 ThrowError 效果 %d---", 2);
     PrintToServer("--- 测试是否继续执行 2 ---");

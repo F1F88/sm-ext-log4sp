@@ -45,22 +45,6 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger CreateServerConsoleLogger(const char[] name) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
-    public static Logger CreateBaseFileLogger(const char[] name, const char[] file, bool truncate = false) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
-    public static Logger CreateRotatingFileLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
-    public static Logger CreateDailyFileLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
     public int GetName(char[] buffer, int maxlen) {
         return 0;
     }
