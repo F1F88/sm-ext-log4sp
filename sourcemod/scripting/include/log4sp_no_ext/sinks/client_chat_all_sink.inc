@@ -14,6 +14,10 @@ methodmap ClientChatAllSink < CallbackSink
     public ClientChatAllSink() {
         return view_as<ClientChatAllSink>(INVALID_HANDLE);
     }
+
+    public static Logger CreateLogger(const char[] name) {
+        return null;
+    }
 }
 
 // static void __CBSink_PrintToClientChatAll(const char[] msg)

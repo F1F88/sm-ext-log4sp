@@ -109,4 +109,20 @@ methodmap CallbackSink < Sink
         const char[] name, LogLevel lvl, const char[] msg,
         const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
         int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
+
+    /**
+     * Create a logger handle that gets a callback function and calls it on each log or flush.
+     *
+     * @param name              The name of the new logger.
+     * @param logCallback       Callback function called when Sink.Log() is called.
+     * @param logPostCallback   Callback function called after Sink.Log() is called.
+     * @param flushCallback     Callback function called when Sink.Flush() is called.
+     * @return                  Logger handle.
+     * @error                   Logger name already exits.
+     */
+    public static native Logger CreateLogger(
+        const char[] name,
+        CustomLogCallback logCallback = INVALID_FUNCTION,
+        CustomLogPostCallback logPostCallback = INVALID_FUNCTION,
+        CustomFlushCallback flushCallback = INVALID_FUNCTION);
 }

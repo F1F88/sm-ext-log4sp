@@ -15,6 +15,10 @@ methodmap ClientConsoleAllSink < CallbackSink
     {
         return view_as<ClientConsoleAllSink>(INVALID_HANDLE);
     }
+
+    public static Logger CreateLogger(const char[] name) {
+        return null;
+    }
 }
 
 // static void __CBSink_PrintToClientConsoleAll(const char[] msg)

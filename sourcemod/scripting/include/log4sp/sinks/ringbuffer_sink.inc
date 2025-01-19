@@ -56,8 +56,8 @@ methodmap RingBufferSink < Sink
      * When the buffer is full, new messages override the old ones.
      * Useful for storing debug data in memory in case of error.
      *
-     * @param                   Amount of log messages in memory.
-     * @return                  RingBufferSink handle.
+     * @param           Amount of log messages in memory.
+     * @return          RingBufferSink handle.
      */
     public native RingBufferSink(int amount);
 
@@ -105,4 +105,14 @@ methodmap RingBufferSink < Sink
         const char[] name, LogLevel lvl, const char[] msg,
         const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
         int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
+
+    /**
+     * Create a logger handle that holds fixed amount of log messages in memory.
+     *
+     * @param name      The name of the new logger.
+     * @param           Amount of log messages in memory.
+     * @return          Logger handle.
+     * @error           Logger name already exits.
+     */
+    public static native Logger CreateLogger(const char[] name, int amount);
 }

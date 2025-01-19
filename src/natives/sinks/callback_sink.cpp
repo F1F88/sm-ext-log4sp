@@ -1,8 +1,8 @@
-#include "log4sp/sinks/callback_sink.h"
-
-#include "log4sp/adapter/sink_hanlder.h"
-
+#include "log4sp/logger.h"
 #include "log4sp/utils.h"
+#include "log4sp/adapter/logger_handler.h"
+#include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/sinks/callback_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ static cell_t CallbackSink(IPluginContext *ctx, const cell_t *params)
  *
  * function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int sec[2], int ns[2]);
  */
-static cell_t SetLogCallback(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetLogCallback(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -92,7 +92,7 @@ static cell_t SetLogCallback(IPluginContext *ctx, const cell_t *params)
  *
  * function void(const char[] msg);
  */
-static cell_t SetLogPostCallback(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetLogPostCallback(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -134,7 +134,7 @@ static cell_t SetLogPostCallback(IPluginContext *ctx, const cell_t *params)
  *
  * function void();
  */
-static cell_t SetFlushCallback(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetFlushCallback(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -177,7 +177,7 @@ static cell_t SetFlushCallback(IPluginContext *ctx, const cell_t *params)
  *      const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
  *      int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
  */
-static cell_t ToPattern(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_ToPattern(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -260,13 +260,60 @@ static cell_t ToPattern(IPluginContext *ctx, const cell_t *params)
     return bytes;
 }
 
+/**
+ * public static native Logger CreateLogger(const char[] name, CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
+ */
+static cell_t CallbackSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    {
+        ctx->ReportError("Logger with name \"%s\" already exists.", name);
+        return BAD_HANDLE;
+    }
+
+    auto logFunctionId     = static_cast<funcid_t>(params[2]);
+    auto logPostFunctionId = static_cast<funcid_t>(params[3]);
+    auto flushFunctionId   = static_cast<funcid_t>(params[4]);
+
+    auto logFunction       = ctx->GetFunctionById(logFunctionId);
+    auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
+    auto flushFunction     = ctx->GetFunctionById(flushFunctionId);
+
+    spdlog::sink_ptr sink;
+    try
+    {
+        sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);
+    }
+    catch(const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return BAD_HANDLE;
+    }
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    auto logger = std::make_shared<log4sp::logger>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+
+    return handle;
+}
+
 const sp_nativeinfo_t CallbackSinkNatives[] =
 {
     {"CallbackSink.CallbackSink",                   CallbackSink},
-    {"CallbackSink.SetLogCallback",                 SetLogCallback},
-    {"CallbackSink.SetLogPostCallback",             SetLogPostCallback},
-    {"CallbackSink.SetFlushCallback",               SetFlushCallback},
-    {"CallbackSink.ToPattern",                      ToPattern},
+    {"CallbackSink.SetLogCallback",                 CallbackSink_SetLogCallback},
+    {"CallbackSink.SetLogPostCallback",             CallbackSink_SetLogPostCallback},
+    {"CallbackSink.SetFlushCallback",               CallbackSink_SetFlushCallback},
+    {"CallbackSink.ToPattern",                      CallbackSink_ToPattern},
+    {"CallbackSink.CreateLogger",                   CallbackSink_CreateLogger},
 
     {nullptr,                                       nullptr}
 };

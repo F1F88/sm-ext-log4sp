@@ -1,8 +1,8 @@
-#include "log4sp/sinks/ringbuffer_sink.h"
-
-#include "log4sp/adapter/sink_hanlder.h"
-
+#include "log4sp/logger.h"
 #include "log4sp/utils.h"
+#include "log4sp/adapter/logger_handler.h"
+#include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/sinks/ringbuffer_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ static cell_t RingBufferSink(IPluginContext *ctx, const cell_t *params)
  *
  * function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2], any data);
  */
-static cell_t Drain(IPluginContext *ctx, const cell_t *params)
+static cell_t RingBufferSink_Drain(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -113,7 +113,7 @@ static cell_t Drain(IPluginContext *ctx, const cell_t *params)
  *
  * function void (const char[] msg, any data);
  */
-static cell_t DrainFormatted(IPluginContext *ctx, const cell_t *params)
+static cell_t RingBufferSink_DrainFormatted(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -174,7 +174,7 @@ static cell_t DrainFormatted(IPluginContext *ctx, const cell_t *params)
  *      const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
  *      int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
  */
-static cell_t ToPattern(IPluginContext *ctx, const cell_t *params)
+static cell_t RingBufferSink_ToPattern(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -257,12 +257,44 @@ static cell_t ToPattern(IPluginContext *ctx, const cell_t *params)
     return bytes;
 }
 
+/**
+ * public static native Logger CreateLogger(const char[] name, int amount);
+ */
+static cell_t RingBufferSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    {
+        ctx->ReportError("Logger with name \"%s\" already exists.", name);
+        return BAD_HANDLE;
+    }
+
+    auto amount = static_cast<size_t>(params[2]);
+
+    spdlog::sink_ptr sink = std::make_shared<log4sp::sinks::ringbuffer_sink>(amount);
+
+    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    HandleError error;
+
+    auto logger = std::make_shared<log4sp::logger>(name, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+
+    return handle;
+}
+
 const sp_nativeinfo_t RingBufferSinkNatives[] =
 {
     {"RingBufferSink.RingBufferSink",               RingBufferSink},
-    {"RingBufferSink.Drain",                        Drain},
-    {"RingBufferSink.DrainFormatted",               DrainFormatted},
-    {"RingBufferSink.ToPattern",                    ToPattern},
+    {"RingBufferSink.Drain",                        RingBufferSink_Drain},
+    {"RingBufferSink.DrainFormatted",               RingBufferSink_DrainFormatted},
+    {"RingBufferSink.ToPattern",                    RingBufferSink_ToPattern},
+    {"RingBufferSink.CreateLogger",                 RingBufferSink_CreateLogger},
 
     {nullptr,                                       nullptr}
 };

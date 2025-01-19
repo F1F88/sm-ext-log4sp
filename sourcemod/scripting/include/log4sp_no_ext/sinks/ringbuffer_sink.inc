@@ -38,4 +38,8 @@ methodmap RingBufferSink < Sink
     public int ToPattern(char[] buffer, int maxlen, const char[] name, LogLevel lvl, const char[] msg, const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING, int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0}) {
         return 0;
     }
+
+    public static Logger CreateLogger(const char[] name, int amount) {
+        return null;
+    }
 }
