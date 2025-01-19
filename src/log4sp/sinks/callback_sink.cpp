@@ -11,7 +11,7 @@ callback_sink::callback_sink(IPluginFunction *log_function,
     try {
         set_log_post_callback(log_post_function);
         set_flush_callback(flush_function);
-    } catch(const std::exception &ex) {
+    } catch(...) {
         release_forwards_();
         throw;
     }
