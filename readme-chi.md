@@ -42,21 +42,17 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
    - `Logger.FlushOn()` 可以自定义触发自动刷新的最低日志级别
 
-5. 支持 "回溯" 日志消息
+5. 支持服务器控制台菜单
 
-   - 将 `trace` 和 `debug` 日志消息存储在环形缓冲区中，后续按需输出
+   - 控制台指令 **"sm log4sp"** 能够动态修改：日志级别、刷新级别、日志模板、等
 
-6. 支持服务器控制台菜单
-
-   - 服务器控制台指令 **"sm log4sp"** 可以动态的修改 日志级别、刷新级别、日志模板、"回溯" 等
-
-7. 支持 "无限长度" 的日志消息
+6. 支持 "无限长度" 的日志消息
 
    - 对于 `Logger.LogAmxTpl()` 方法，日志消息的最大长度为 2048 字符，超出的部分会被截断
 
    - 对于 `Logger.Log()` 和 `Logger.LogEx()`方法，日志消息的长度不受限制（理论上取决于可用内存）
 
-8. 支持一次日志操作写入多个输出源
+7. 支持一次日志操作写入多个输出源
 
    - 每一个记录器 (Logger) 都可以拥有多个输出源 (Sink)
 
@@ -64,15 +60,13 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
       例如：当 Logger 拥有 `ServerConsoleSink` 和 `DailyFileSink` 时，相当于 `sv_logecho 1` 时的 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)
 
-9. 支持多种输出源
+8. 支持多种输出源
 
     - BaseFileSink （类似于 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
 
-    - CallbackSink
+    - ClientChatAllSink（类似于 [PrintToChatAll](https://sm.alliedmods.net/new-api/halflife/PrintToChatAll)）
 
-    - ClientChatSink（类似于 [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
-
-    - ClientConsoleSink（类似于 [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
+    - ClientConsoleAllSink（类似于 [PrintToConsoleAll](https://sm.alliedmods.net/new-api/console/PrintToConsoleAll)）
 
     - DailyFileSink（类似于 [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage)，基于日期更替日志文件）
 
@@ -80,9 +74,13 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
     - ServerConsoleSink（类似于 [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
+    - 完整的 Sink 列表请查看：[sinks 文件夹](./sourcemod/scripting/include/log4sp/sinks/)
+
 ## 文档
 
-详细的使用文档可以在这里查看：[wiki pages](https://github.com/F1F88/sm-ext-log4sp/wiki)
+API 文档：[Native API Reference](./sourcemod/scripting/include/log4sp/)
+
+使用文档：[Wiki Pages](https://github.com/F1F88/sm-ext-log4sp/wiki)
 
 ## 支持的游戏
 
@@ -125,5 +123,7 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 - Fyren, nosoop, Deathreus 为拓展管理 Sink Handle 提供了解决思路
 
 - [blueblur0730](https://github.com/blueblur0730), Digby 帮助改进了遍历操作所有 logger
+
+- Bakugo, Anonymous Player, Fyren 帮助解决异步调用 SourcePawn 导致崩溃的问题
 
 如有遗漏，请联系我

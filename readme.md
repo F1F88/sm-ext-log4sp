@@ -44,21 +44,17 @@ With log4sp, plugin developers no longer need to write complex logging code, so 
 
    - `Logger.FlushOn()` can set the minimum log level that will trigger automatic flush.
 
-5. Support "backtrace" log messages.
+5. Support server console commands.
 
-   - store `trace` and `debug` messages in a ring buffer and display them later on demand.
+   - The server console command **"sm log4sp"** can dynamically modify the log level, flush level, log pattern, etc.
 
-6. Support server console commands.
-
-   - The server console command **"sm log4sp"** can dynamically modify the log level, flush level, log pattern, backtrace, etc.
-
-7. Support for "unlimited size" logging messages.
+6. Support for "unlimited size" logging messages.
 
    - For `Logger.LogAmxTpl()` method, the maximum length of the log message is 2048 characters, and the excess will be truncated.
 
    - For `Logger.Log()` and `Logger.LogEx()` methods, the length of the log message is not limited (theoretically subject to available memory)
 
-8. Supports logging to multiple sinks at once.
+7. Supports logging to multiple sinks at once.
 
    - Each Logger can have multiple Sinks.
 
@@ -66,11 +62,9 @@ With log4sp, plugin developers no longer need to write complex logging code, so 
 
       For example: When the Logger has `ServerConsoleSink` and `DailyFileSink`, it is equivalent to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage) when `sv_logecho 1`.
 
-9. Various log targets
+8. Various log targets
 
     - BaseFileSink （Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
-
-    - CallbackSink
 
     - ClientChatSink（Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
 
@@ -82,7 +76,11 @@ With log4sp, plugin developers no longer need to write complex logging code, so 
 
     - ServerConsoleSink（Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
 
+    - For the full list of sinks please visit the [sinks folder.](./sourcemod/scripting/include/log4sp/sinks/)
+
 ## Documentation
+
+[Native API Reference](./sourcemod/scripting/include/log4sp/)
 
 Documentation can be found in the [wiki pages](https://github.com/F1F88/sm-ext-log4sp/wiki).
 
@@ -128,6 +126,8 @@ Test case: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.
 - Fyren, nosoop, Deathreus provides solution for managing the Sink Handle
 
 - [blueblur0730](https://github.com/blueblur0730), Digby helped improve the traversal operation of all loggers
+
+- Bakugo, Anonymous Player, Fyren Help Fix Crash with Asynchronous Calls to SourcePawn
 
 If I missed anyone, please contact me.
 
