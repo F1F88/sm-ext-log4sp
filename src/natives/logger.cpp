@@ -32,60 +32,6 @@ static cell_t Logger(IPluginContext *ctx, const cell_t *params)
 }
 
 /**
- * public static native Logger Get(const char[] name);
- */
-static cell_t Get(IPluginContext *ctx, const cell_t *params)
-{
-    char *name;
-    ctx->LocalToString(params[1], &name);
-
-    return log4sp::logger_handler::instance().find_handle(name);
-}
-
-/**
- * public static native void ApplyAll(LoggerApplyCallback callback);
- *
- * function void (Logger logger, any data = 0);
- */
-static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
-{
-    auto funcID   = static_cast<funcid_t>(params[1]);
-    auto function = ctx->GetFunctionById(funcID);
-    if (function == nullptr)
-    {
-        ctx->ReportError("Invalid apply all function. (funcID: %d)", static_cast<int>(funcID));
-        return 0;
-    }
-
-    IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_Cell, Param_Cell);
-    if (forward == nullptr)
-    {
-        ctx->ReportError("SM error! Create apply all forward failure.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Adding error handler function failed.");
-        return 0;
-    }
-
-    auto data = params[2];
-
-    log4sp::logger_handler::instance().apply_all(
-        [forward, data](const Handle_t handle) {
-            forward->PushCell(handle);
-            forward->PushCell(data);
-            forward->Execute();
-        }
-    );
-
-    forwards->ReleaseForward(forward);
-    return 0;
-}
-
-/**
  * public native CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
  */
 static cell_t CreateLoggerWith(IPluginContext *ctx, const cell_t *params)
@@ -183,6 +129,60 @@ static cell_t CreateLoggerWithEx(IPluginContext *ctx, const cell_t *params)
     }
 
     return handle;
+}
+
+/**
+ * public static native Logger Get(const char[] name);
+ */
+static cell_t Get(IPluginContext *ctx, const cell_t *params)
+{
+    char *name;
+    ctx->LocalToString(params[1], &name);
+
+    return log4sp::logger_handler::instance().find_handle(name);
+}
+
+/**
+ * public static native void ApplyAll(LoggerApplyCallback callback);
+ *
+ * function void (Logger logger, any data = 0);
+ */
+static cell_t ApplyAll(IPluginContext *ctx, const cell_t *params)
+{
+    auto funcID   = static_cast<funcid_t>(params[1]);
+    auto function = ctx->GetFunctionById(funcID);
+    if (function == nullptr)
+    {
+        ctx->ReportError("Invalid apply all function. (funcID: %d)", static_cast<int>(funcID));
+        return 0;
+    }
+
+    IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_Cell, Param_Cell);
+    if (forward == nullptr)
+    {
+        ctx->ReportError("SM error! Create apply all forward failure.");
+        return 0;
+    }
+
+    if (!forward->AddFunction(function))
+    {
+        forwards->ReleaseForward(forward);
+        ctx->ReportError("SM error! Adding error handler function failed.");
+        return 0;
+    }
+
+    auto data = params[2];
+
+    log4sp::logger_handler::instance().apply_all(
+        [forward, data](const Handle_t handle) {
+            forward->PushCell(handle);
+            forward->PushCell(data);
+            forward->Execute();
+        }
+    );
+
+    forwards->ReleaseForward(forward);
+    return 0;
 }
 
 /**
@@ -1289,10 +1289,10 @@ static cell_t SetErrorHandler(IPluginContext *ctx, const cell_t *params)
 const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
-    {"Logger.Get",                              Get},
-    {"Logger.ApplyAll",                         ApplyAll},
     {"Logger.CreateLoggerWith",                 CreateLoggerWith},
     {"Logger.CreateLoggerWithEx",               CreateLoggerWithEx},
+    {"Logger.Get",                              Get},
+    {"Logger.ApplyAll",                         ApplyAll},
 
     {"Logger.GetName",                          GetName},
     {"Logger.GetNameLength",                    GetNameLength},

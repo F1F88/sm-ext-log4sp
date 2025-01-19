@@ -31,12 +31,6 @@ methodmap Logger < Handle
         return view_as<Logger>(INVALID_HANDLE);
     }
 
-    public static Logger Get(const char[] name) {
-        return view_as<Logger>(INVALID_HANDLE);
-    }
-
-    public static void ApplyAll(LoggerApplyAllCallback callback, any data = 0) {}
-
     public static Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks) {
         return view_as<Logger>(INVALID_HANDLE);
     }
@@ -44,6 +38,12 @@ methodmap Logger < Handle
     public static Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks) {
         return view_as<Logger>(INVALID_HANDLE);
     }
+
+    public static Logger Get(const char[] name) {
+        return view_as<Logger>(INVALID_HANDLE);
+    }
+
+    public static void ApplyAll(LoggerApplyAllCallback callback, any data = 0) {}
 
     public int GetName(char[] buffer, int maxlen) {
         return 0;
