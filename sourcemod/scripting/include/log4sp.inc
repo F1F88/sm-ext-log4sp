@@ -86,7 +86,7 @@
 /**
  * Do not edit below this line!
  */
-#define LOG4SP_EXT_VERSION              "1.6.0"
+#define LOG4SP_EXT_VERSION              "1.7.0"
 
 public Extension __ext_log4sp =
 {
