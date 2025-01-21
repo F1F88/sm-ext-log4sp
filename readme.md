@@ -64,19 +64,19 @@ With log4sp, plugin developers no longer need to write complex logging code, so 
 
 8. Various log targets
 
-    - BaseFileSink （Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+    - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile))
 
-    - ClientChatSink（Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
+    - ClientChatAllSink (Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChatAll))
 
-    - ClientConsoleSink（Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
+    - ClientConsoleAllSink (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsoleAll))
 
-    - DailyFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on date.）
+    - DailyFileSink (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on date.)
 
-    - RotatingFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on file size.）
+    - RotatingFileSink (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on file size.)
 
-    - ServerConsoleSink（Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+    - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
 
-    - For the full list of sinks please visit the [sinks folder.](./sourcemod/scripting/include/log4sp/sinks/)
+    - For the full list of sinks please visit the [sinks folder](./sourcemod/scripting/include/log4sp/sinks/).
 
 ## Documentation
 
