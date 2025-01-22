@@ -62,7 +62,7 @@ methodmap Logger < Handle
     public void SetPattern(const char[] pattern, PatternTimeType type = PatternTimeType_Local) {}
 
     public bool ShouldLog(LogLevel lvl) {
-        return lvl >= this.GetLevel() && lvl < LogLevel_Off;
+        return lvl >= this.GetLevel();
     }
 
     public void Log(LogLevel lvl, const char[] msg) {
