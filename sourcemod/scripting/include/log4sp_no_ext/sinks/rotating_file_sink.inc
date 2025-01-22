@@ -19,7 +19,7 @@ methodmap RotatingFileSink < Sink
 
     public void RotateNow() {}
 
-    public static int CalcFilename(const char[] file, int index, char[] buffer, int maxlength) {}
+    public static int CalcFilename(char[] buffer, int maxlength, const char[] file, int index) {}
 
     public static Logger CreateLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false) {
         return null;

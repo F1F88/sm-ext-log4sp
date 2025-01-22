@@ -57,7 +57,7 @@ methodmap RotatingFileSink < Sink
      * @param maxlen        Maximum length of the buffer.
      * @return              Number of characters written to the buffer, not including the null terminator.
      */
-    public static native int CalcFilename(const char[] file, int index, char[] buffer, int maxlength);
+    public static native int CalcFilename(char[] buffer, int maxlength, const char[] file, int index);
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on size.

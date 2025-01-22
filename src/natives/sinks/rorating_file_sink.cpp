@@ -120,12 +120,12 @@ static cell_t RotatingFileSink_RotateNow(IPluginContext *ctx, const cell_t *para
 static cell_t RotatingFileSink_CalcFilename(IPluginContext *ctx, const cell_t *params)
 {
     char *file;
-    ctx->LocalToString(params[1], &file);
-    auto index = static_cast<size_t>(params[2]);
+    ctx->LocalToString(params[3], &file);
+    auto index = static_cast<size_t>(params[4]);
 
     auto filename = spdlog::sinks::rotating_file_sink_st::calc_filename(file, index);
     size_t bytes;
-    ctx->StringToLocalUTF8(params[3], params[4], filename.c_str(), &bytes);
+    ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes);
     return bytes;
 }
 
