@@ -1105,8 +1105,7 @@ static cell_t Flush(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    // TODO
-    // logger->flush();
+    logger->flush({}, ctx);
     return 0;
 }
 
