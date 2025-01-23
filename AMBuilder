@@ -16,6 +16,7 @@ sourceFiles = [
   'src/log4sp/sinks/basic_file_sink.cpp',
   'src/log4sp/sinks/callback_sink.cpp',
   'src/log4sp/sinks/ringbuffer_sink.cpp',
+  "src/log4sp/sinks/rotating_file_sink.cpp",
   'src/natives/common.cpp',
   'src/natives/logger.cpp',
   'src/natives/sinks/sink.cpp',

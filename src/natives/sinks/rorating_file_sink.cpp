@@ -1,8 +1,7 @@
-#include "spdlog/sinks/rotating_file_sink.h"
-
 #include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/sinks/rotating_file_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +29,7 @@ static cell_t RotatingFileSink(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
     catch(const std::exception &ex)
     {
@@ -68,7 +67,7 @@ static cell_t RotatingFileSink_GetFilename(IPluginContext *ctx, const cell_t *pa
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::rotating_file_sink>(sink);
     if (realSink == nullptr)
     {
         ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
@@ -96,7 +95,7 @@ static cell_t RotatingFileSink_RotateNow(IPluginContext *ctx, const cell_t *para
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::rotating_file_sink>(sink);
     if (realSink == nullptr)
     {
         ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, HandleError_Parameter);
@@ -123,7 +122,7 @@ static cell_t RotatingFileSink_CalcFilename(IPluginContext *ctx, const cell_t *p
     ctx->LocalToString(params[3], &file);
     auto index = static_cast<size_t>(params[4]);
 
-    auto filename = spdlog::sinks::rotating_file_sink_st::calc_filename(file, index);
+    auto filename = log4sp::sinks::rotating_file_sink::calc_filename(file, index);
     size_t bytes;
     ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes);
     return bytes;
@@ -155,7 +154,7 @@ static cell_t RotatingFileSink_CreateLogger(IPluginContext *ctx, const cell_t *p
     spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
     catch(const std::exception &ex)
     {
