@@ -18,7 +18,7 @@ sourceFiles = [
   'src/natives/common.cpp',
   'src/natives/logger.cpp',
   'src/natives/sinks/sink.cpp',
-  'src/natives/sinks/base_file_sink.cpp',
+  'src/natives/sinks/basic_file_sink.cpp',
   'src/natives/sinks/callback_sink.cpp',
   'src/natives/sinks/daily_file_sink.cpp',
   'src/natives/sinks/ringbuffer_sink.cpp',

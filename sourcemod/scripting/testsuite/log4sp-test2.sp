@@ -156,7 +156,7 @@ void Test_BaseFileLogger()
     if (log != INVALID_HANDLE)
         delete log;
 
-    log = BaseFileSink.CreateLogger("test-base-file-logger", "logs/test/base.log", .truncate=true);
+    log = BasicFileSink.CreateLogger("test-base-file-logger", "logs/test/base.log", .truncate=true);
     Test_Logger(log, "test-base-file-logger");
     delete log;
 }
@@ -265,7 +265,7 @@ void Test_Logger_Member(Logger logger, const char[] name)
 
 void Test_Logger_Update_Sinks(Logger logger)
 {
-    Sink sink = new BaseFileSink("addons/sourcemod/logs/log4sp-test-logger-sinks.log");
+    Sink sink = new BasicFileSink("addons/sourcemod/logs/log4sp-test-logger-sinks.log");
     logger.AddSink(sink);
     Test_Logger_Log(logger);
     logger.DropSink(sink);

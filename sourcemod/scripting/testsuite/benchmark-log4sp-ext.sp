@@ -45,7 +45,7 @@ Action Command_BenchBaseFiles(int client, int args)
         iters = GetCmdArgInt(1);
     }
 
-    float delta = BenchLogger(iters, client, BaseFileSink.CreateLogger("name-A", "logs/benchmark/file-A.log", .truncate=true));
+    float delta = BenchLogger(iters, client, BasicFileSink.CreateLogger("name-A", "logs/benchmark/file-A.log", .truncate=true));
 
     PrintToServer("");
     PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "base-file", iters, delta, RoundToFloor(iters / delta));
