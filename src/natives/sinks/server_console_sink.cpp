@@ -1,8 +1,7 @@
-#include "spdlog/sinks/stdout_sinks.h"
-
 #include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/sinks/server_console_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +15,7 @@ static cell_t ServerConsoleSink(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        sink = std::make_shared<log4sp::sinks::server_console_sink>();
     }
     catch(const std::exception &ex)
     {
@@ -53,7 +52,7 @@ static cell_t ServerConsoleSink_CreateLogger(IPluginContext *ctx, const cell_t *
     spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        sink = std::make_shared<log4sp::sinks::server_console_sink>();
     }
     catch(const std::exception &ex)
     {
