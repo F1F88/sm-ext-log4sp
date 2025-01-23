@@ -1,7 +1,7 @@
-#if defined _log_for_sourcepawn_sinks_base_file_sink_included
+#if defined _log_for_sourcepawn_sinks_basic_file_sink_included
  #endinput
 #endif
-#define _log_for_sourcepawn_sinks_base_file_sink_included
+#define _log_for_sourcepawn_sinks_basic_file_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -9,7 +9,10 @@
 #include <log4sp/sinks/sink>
 
 
-methodmap BaseFileSink < Sink
+/**
+ * Trivial file sink with single file as target.
+ */
+methodmap BasicFileSink < Sink
 {
     /**
      * Trivial file sink with single file as target.
@@ -18,7 +21,7 @@ methodmap BaseFileSink < Sink
      * @param truncate      If true, the created file will be truncated.
      * @return              BaseFileSink handle.
      */
-    public native BaseFileSink(const char[] file, bool truncate = false);
+    public native BasicFileSink(const char[] file, bool truncate = false);
 
     /**
      * Get the current filename being used by the file sink.

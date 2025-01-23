@@ -1,7 +1,7 @@
-#if defined _log_for_sourcepawn_sinks_base_file_sink_included
+#if defined _log_for_sourcepawn_sinks_basic_file_sink_included
  #endinput
 #endif
-#define _log_for_sourcepawn_sinks_base_file_sink_included
+#define _log_for_sourcepawn_sinks_basic_file_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -9,10 +9,10 @@
 #include <log4sp_no_ext/sinks/sink>
 
 
-methodmap BaseFileSink < Sink
+methodmap BasicFileSink < Sink
 {
-    public BaseFileSink(const char[] file, bool truncate = false) {
-        return view_as<BaseFileSink>(INVALID_HANDLE);
+    public BasicFileSink(const char[] file, bool truncate = false) {
+        return null;
     }
 
     public int GetFilename(char[] buffer, int maxlen) {}

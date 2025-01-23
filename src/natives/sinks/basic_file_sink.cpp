@@ -6,12 +6,12 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// *                                   BaseFileSink Functions
+// *                                  BasicFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native BaseFileSink(const char[] file, bool truncate = false);
+ * public native BasicFileSink(const char[] file, bool truncate = false);
  */
-static cell_t BaseFileSink(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink(IPluginContext *ctx, const cell_t *params)
 {
     char *file;
     ctx->LocalToString(params[1], &file);
@@ -48,7 +48,7 @@ static cell_t BaseFileSink(IPluginContext *ctx, const cell_t *params)
 /**
  * public native void GetFilename(char[] buffer, int maxlen);
  */
-static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_GetFilename(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -77,7 +77,7 @@ static cell_t BaseFileSink_GetFilename(IPluginContext *ctx, const cell_t *params
 /**
  * public native void Truncate();
  */
-static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
 {
     auto handle = static_cast<Handle_t>(params[1]);
 
@@ -113,7 +113,7 @@ static cell_t BaseFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
 /**
  * public static native Logger CreateLogger(const char[] name, const char[] file, bool truncate = false);
  */
-static cell_t BaseFileSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -158,11 +158,11 @@ static cell_t BaseFileSink_CreateLogger(IPluginContext *ctx, const cell_t *param
 
 const sp_nativeinfo_t BaseFileSinkNatives[] =
 {
-    {"BaseFileSink.BaseFileSink",               BaseFileSink},
-    {"BaseFileSink.GetFilename",                BaseFileSink_GetFilename},
-    {"BaseFileSink.Truncate",                   BaseFileSink_Truncate},
+    {"BasicFileSink.BaseFileSink",              BasicFileSink},
+    {"BasicFileSink.GetFilename",               BasicFileSink_GetFilename},
+    {"BasicFileSink.Truncate",                  BasicFileSink_Truncate},
 
-    {"BaseFileSink.CreateLogger",               BaseFileSink_CreateLogger},
+    {"BasicFileSink.CreateLogger",              BasicFileSink_CreateLogger},
 
     {nullptr,                                   nullptr}
 };
