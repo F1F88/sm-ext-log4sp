@@ -104,22 +104,22 @@ void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
     flush_callback_ = cb;
 }
 
-void callback_sink::sink_it_(const spdlog::details::log_msg &msg) {
+void callback_sink::sink_it_(const details::log_msg &log_msg) {
     if (log_callback_) {
-        int64_t sec = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::seconds>(msg.time.time_since_epoch()).count());
-        int64_t ns  = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(msg.time.time_since_epoch()).count());
+        int64_t sec = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch()).count());
+        int64_t ns  = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(log_msg.time.time_since_epoch()).count());
 
         // See SMCore::GetTime
         cell_t pSec[]{static_cast<cell_t>(sec & 0xFFFFFFFF), static_cast<cell_t>((sec >> 32) & 0xFFFFFFFF)};
         cell_t pNs[]{static_cast<cell_t>(ns & 0xFFFFFFFF), static_cast<cell_t>((ns >> 32) & 0xFFFFFFFF)};
 
-        log_callback_->PushString(msg.logger_name.data());
-        log_callback_->PushCell(msg.level);
-        log_callback_->PushString(msg.payload.data());
+        log_callback_->PushString(log_msg.logger_name.data());
+        log_callback_->PushCell(log_msg.level);
+        log_callback_->PushString(log_msg.payload.data());
 
-        log_callback_->PushString(msg.source.filename);
-        log_callback_->PushCell(msg.source.line);
-        log_callback_->PushString(msg.source.funcname);
+        log_callback_->PushString(log_msg.source.filename);
+        log_callback_->PushCell(log_msg.source.line);
+        log_callback_->PushString(log_msg.source.funcname);
 
         log_callback_->PushArray(pSec, sizeof(pSec));
         log_callback_->PushArray(pNs, sizeof(pNs));
@@ -127,7 +127,7 @@ void callback_sink::sink_it_(const spdlog::details::log_msg &msg) {
     }
 
     if (log_post_callback_) {
-        std::string formatted = to_pattern(msg);
+        std::string formatted = to_pattern(log_msg);
         log_post_callback_->PushString(formatted.c_str());
         log_post_callback_->Execute();
     }

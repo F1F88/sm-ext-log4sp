@@ -16,13 +16,13 @@ public:
         : q_{n_items} {}
     ~ringbuffer_sink() override = default;
 
-    void drain(std::function<void(const spdlog::details::log_msg_buffer &)> callback);
+    void drain(std::function<void(const details::log_msg_buffer &)> callback);
     void drain_formatted(std::function<void(std::string_view)> callback);
 
 private:
-    spdlog::details::circular_q<spdlog::details::log_msg_buffer> q_;
+    details::circular_q<details::log_msg_buffer> q_;
 
-    void sink_it_(const spdlog::details::log_msg &log_msg) override;
+    void sink_it_(const details::log_msg &log_msg) override;
     void flush_() override {}
 };
 

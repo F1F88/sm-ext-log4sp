@@ -24,7 +24,7 @@ private:
     IChangeableForward *log_post_callback_{nullptr};
     IChangeableForward *flush_callback_{nullptr};
 
-    void sink_it_(const spdlog::details::log_msg &log_msg) override;
+    void sink_it_(const details::log_msg &log_msg) override;
     void flush_() override;
 
     void release_forwards_();
