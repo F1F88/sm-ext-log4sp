@@ -12,7 +12,7 @@
 methodmap ServerConsoleSink < Sink
 {
     public ServerConsoleSink() {
-        return view_as<ServerConsoleSink>(INVALID_HANDLE);
+        return null;
     }
 
     public static Logger CreateLogger(const char[] name) {

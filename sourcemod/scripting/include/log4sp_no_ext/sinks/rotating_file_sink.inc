@@ -12,7 +12,7 @@
 methodmap RotatingFileSink < Sink
 {
     public RotatingFileSink(const char[] file, const int maxFileSize, const int maxFiles, bool rotateOnOpen = false) {
-        return view_as<RotatingFileSink>(INVALID_HANDLE);
+        return null;
     }
 
     public int GetFilename(char[] buffer, int maxlength) {}

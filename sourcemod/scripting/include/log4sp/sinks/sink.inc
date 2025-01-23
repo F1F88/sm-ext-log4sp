@@ -63,7 +63,7 @@ methodmap Sink < Handle
         int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
 
     /**
-     * Manual flush logger contents.
+     * Manual flush sink contents.
      */
     public native void Flush();
 }

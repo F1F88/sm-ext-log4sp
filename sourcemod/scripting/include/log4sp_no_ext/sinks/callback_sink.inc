@@ -25,7 +25,7 @@ typedef CustomFlushCallback = function void();
 methodmap CallbackSink < Sink
 {
     public CallbackSink(CustomLogCallback logCallback = INVALID_FUNCTION, CustomLogPostCallback logPostCallback = INVALID_FUNCTION, CustomFlushCallback flushCallback = INVALID_FUNCTION) {
-        return view_as<CallbackSink>(INVALID_HANDLE);
+        return null;
     }
 
     public void SetLogCallback(CustomLogCallback logCallback) {}

@@ -12,7 +12,7 @@
 methodmap ClientChatAllSink < CallbackSink
 {
     public ClientChatAllSink() {
-        return view_as<ClientChatAllSink>(INVALID_HANDLE);
+        return null;
     }
 
     public static Logger CreateLogger(const char[] name) {

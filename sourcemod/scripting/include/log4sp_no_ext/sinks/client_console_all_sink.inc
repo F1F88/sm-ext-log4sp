@@ -13,7 +13,7 @@ methodmap ClientConsoleAllSink < CallbackSink
 {
     public ClientConsoleAllSink()
     {
-        return view_as<ClientConsoleAllSink>(INVALID_HANDLE);
+        return null;
     }
 
     public static Logger CreateLogger(const char[] name) {

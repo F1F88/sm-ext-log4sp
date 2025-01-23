@@ -57,8 +57,7 @@ methodmap CallbackSink < Sink
      * @param flushCallback     Callback function called when Sink.Flush() is called.
      * @return                  CallbackSink handle.
      */
-    public native CallbackSink(
-        CustomLogCallback logCallback = INVALID_FUNCTION,
+    public native CallbackSink(CustomLogCallback logCallback = INVALID_FUNCTION,
         CustomLogPostCallback logPostCallback = INVALID_FUNCTION,
         CustomFlushCallback flushCallback = INVALID_FUNCTION);
 
@@ -120,8 +119,7 @@ methodmap CallbackSink < Sink
      * @return                  Logger handle.
      * @error                   Logger name already exits.
      */
-    public static native Logger CreateLogger(
-        const char[] name,
+    public static native Logger CreateLogger(const char[] name,
         CustomLogCallback logCallback = INVALID_FUNCTION,
         CustomLogPostCallback logPostCallback = INVALID_FUNCTION,
         CustomFlushCallback flushCallback = INVALID_FUNCTION);

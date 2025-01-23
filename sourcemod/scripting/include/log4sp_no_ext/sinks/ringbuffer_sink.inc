@@ -28,7 +28,7 @@ typeset DrainFormattedCallback
 methodmap RingBufferSink < Sink
 {
     public RingBufferSink(int amount) {
-        return view_as<RingBufferSink>(INVALID_HANDLE);
+        return null;
     }
 
     public void Drain(DrainCallback callback, any data = 0) {}

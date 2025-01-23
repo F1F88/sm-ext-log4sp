@@ -239,7 +239,7 @@ methodmap Logger < Handle
     public native void FatalAmxTpl(const char[] fmt, any ...);
 
     /**
-     * Manual flush logger contents.
+     * Manual flush the contents for the sinks in the logger.
      */
     public native void Flush();
 
