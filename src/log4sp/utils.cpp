@@ -5,6 +5,10 @@
 namespace log4sp {
 
 
+[[nodiscard]] int64_t cell_to_int64(const cell_t arr[2]) noexcept {
+    return (static_cast<int64_t>(static_cast<uint32_t>(arr[1])) << 32) | static_cast<uint32_t>(arr[0]);
+}
+
 spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept {
     if (lvl < 0) {
         return static_cast<spdlog::level::level_enum>(0);

@@ -10,6 +10,11 @@
 namespace log4sp {
 
 /**
+ * 将一个长度为 2 的 cell_t 数组转换为 int64
+ */
+[[nodiscard]] int64_t cell_to_int64(const cell_t arr[2]) noexcept;
+
+/**
  * 将 cell_t 转为 spdlog::level::level_enum
  * 如果 cell_t 越界，则返回最近的边界值
  */

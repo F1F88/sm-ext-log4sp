@@ -140,10 +140,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     {
         logTime = std::chrono::system_clock::time_point{
             std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::nanoseconds{
-                    (static_cast<int64_t>(static_cast<uint32_t>(nanoseconds[1])) << 32) |
-                    static_cast<uint32_t>(nanoseconds[0])
-                }
+                std::chrono::nanoseconds{log4sp::cell_to_int64(nanoseconds)}
             )
         };
     }
@@ -151,10 +148,7 @@ static cell_t Log(IPluginContext *ctx, const cell_t *params)
     {
         logTime = std::chrono::system_clock::time_point{
             std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::seconds{
-                    (static_cast<int64_t>(static_cast<uint32_t>(seconds[1])) << 32) |
-                    static_cast<uint32_t>(seconds[0])
-                }
+                std::chrono::seconds{log4sp::cell_to_int64(seconds)}
             )
         };
     }
