@@ -1,8 +1,7 @@
-#include "spdlog/sinks/basic_file_sink.h"
-
 #include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/sinks/basic_file_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +23,7 @@ static cell_t BasicFileSink(IPluginContext *ctx, const cell_t *params)
     spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        sink = std::make_shared<log4sp::sinks::basic_file_sink>(path, truncate);
     }
     catch(const std::exception &ex)
     {
@@ -62,7 +61,7 @@ static cell_t BasicFileSink_GetFilename(IPluginContext *ctx, const cell_t *param
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::basic_file_sink>(sink);
     if (realSink == nullptr)
     {
         ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
@@ -91,7 +90,7 @@ static cell_t BasicFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::basic_file_sink>(sink);
     if (realSink == nullptr)
     {
         ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
@@ -134,7 +133,7 @@ static cell_t BasicFileSink_CreateLogger(IPluginContext *ctx, const cell_t *para
     spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        sink = std::make_shared<log4sp::sinks::basic_file_sink>(path, truncate);
     }
     catch(const std::exception &ex)
     {
