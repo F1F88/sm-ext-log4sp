@@ -29,14 +29,13 @@
  * Version: $Id$
  */
 
-#include "spdlog/sinks/stdout_sinks.h"
-
 #include "extension.h"
 
 #include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/command/root_console_command_handler.h"
+#include "log4sp/sinks/server_console_sink.h"
 
 
 /**
@@ -64,10 +63,10 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
     // Init Global Logger
     {
-        spdlog::sink_ptr sink;
+        log4sp::sink_ptr sink;
         try
         {
-            sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+            sink = std::make_shared<log4sp::sinks::server_console_sink>();
         }
         catch(const std::exception &ex)
         {
