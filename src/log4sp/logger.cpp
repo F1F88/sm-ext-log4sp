@@ -1,17 +1,19 @@
-#include "log4sp/logger.h"
-#include "log4sp/utils.h"
+#include <cassert>
+
 #include "log4sp/adapter/logger_handler.h"
 
 
 namespace log4sp {
 
-void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, const spdlog::string_view_t msg, IPluginContext *ctx) const noexcept {
+void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, const spdlog::string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
+    assert(!loc.empty() || ctx);
+
     if (should_log(lvl)) {
         sink_it_(spdlog::details::log_msg{loc, name_, lvl, msg}, ctx);
     }
 }
 
-void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept {
+void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept {
     if (should_log(lvl)) {
         std::string msg;
 
@@ -37,7 +39,7 @@ void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum l
     }
 }
 
-// void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const char *format, const cell_t *params, const unsigned int param) const noexcept {
+// void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, const uint32_t param) const noexcept {
 //     if (should_log(lvl)) {
 //         int lparam{param};
 //         spdlog::fmt_lib::memory_buffer buffer;
@@ -64,7 +66,9 @@ void logger::log(const spdlog::source_loc loc, const spdlog::level::level_enum l
 //     }
 // }
 
-void logger::log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept {
+void logger::log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept {
+    assert(ctx && params);
+
     if (should_log(lvl)) {
         char msg[2048];
         DetectExceptions eh(ctx);
@@ -78,7 +82,9 @@ void logger::log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::leve
     }
 }
 
-void logger::log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept {
+void logger::log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
+    assert(ctx);
+
     if (should_log(lvl)) {
         std::vector<std::string> messages{
             spdlog::fmt_lib::format("Stack trace requested: {}", msg),
@@ -94,7 +100,7 @@ void logger::log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string
     }
 }
 
-void logger::log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
+void logger::log_stack_trace(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
     if (should_log(lvl)) {
         std::string msg;
 
@@ -122,7 +128,9 @@ void logger::log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext
     }
 }
 
-void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
+void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
+    assert(ctx && params);
+
     if (should_log(lvl)) {
         char msg[2048];
         DetectExceptions eh(ctx);
@@ -146,7 +154,9 @@ void logger::log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPlugi
     }
 }
 
-void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept {
+void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
+    assert(ctx);
+
     ctx->ReportError(msg.data());
 
     if (should_log(lvl)) {
@@ -164,7 +174,7 @@ void logger::throw_error(const spdlog::level::level_enum lvl, spdlog::string_vie
     }
 }
 
-void logger::throw_error(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
+void logger::throw_error(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
     std::string msg;
     try {
         msg = format_cell_to_string(ctx, params, param);
@@ -195,7 +205,9 @@ void logger::throw_error(const spdlog::level::level_enum lvl, IPluginContext *ct
     }
 }
 
-void logger::throw_error_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept {
+void logger::throw_error_amx_tpl(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
+    assert(ctx && params);
+
     char msg[2048];
     DetectExceptions eh(ctx);
 
@@ -256,7 +268,7 @@ void logger::set_pattern(std::string pattern, spdlog::pattern_time_type type) no
     set_formatter(std::make_unique<spdlog::pattern_formatter>(pattern, type));
 }
 
-void logger::flush(const spdlog::source_loc loc, IPluginContext *ctx) noexcept {
+void logger::flush(const spdlog::source_loc loc, SourcePawn::IPluginContext *ctx) noexcept {
     flush_(loc, ctx);
 }
 
@@ -284,12 +296,11 @@ void logger::remove_sink(spdlog::sink_ptr sink) noexcept {
     sinks_.erase(std::remove(sinks_.begin(), sinks_.end(), sink), sinks_.end());
 }
 
-void logger::set_error_handler(IChangeableForward *handler) noexcept {
+void logger::set_error_handler(SourceMod::IChangeableForward *handler) noexcept {
     err_helper_.set_err_handler(handler);
 }
 
-void logger::sink_it_(const spdlog::details::log_msg &msg, IPluginContext *ctx) const noexcept {
-    spdlog::source_loc loc{msg.source};
+void logger::sink_it_(const spdlog::details::log_msg &msg, SourcePawn::IPluginContext *ctx) const noexcept {
     for (auto &sink : sinks_) {
         if (sink->should_log(msg.level)) {
             try {
@@ -313,7 +324,7 @@ void logger::sink_it_(const spdlog::details::log_msg &msg, IPluginContext *ctx) 
     }
 }
 
-void logger::flush_(const spdlog::source_loc &loc, IPluginContext *ctx) const noexcept {
+void logger::flush_(const spdlog::source_loc loc, SourcePawn::IPluginContext *ctx) const noexcept {
     spdlog::source_loc source_location{loc};
     for (auto &sink : sinks_) {
         try {
@@ -358,7 +369,7 @@ void logger::err_helper::handle_unknown_ex(const std::string &origin, const spdl
     handle_ex(origin, loc, std::runtime_error{"unknown exception"});
 }
 
-void logger::err_helper::set_err_handler(IChangeableForward *handler) noexcept {
+void logger::err_helper::set_err_handler(SourceMod::IChangeableForward *handler) noexcept {
     assert(handler);
     release_forward();
     custom_error_handler_ = handler;

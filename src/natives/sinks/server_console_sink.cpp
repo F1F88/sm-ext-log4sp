@@ -1,4 +1,3 @@
-#include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/sinks/server_console_sink.h"
@@ -10,7 +9,7 @@
 /**
  * public native ServerConsoleSink();
  */
-static cell_t ServerConsoleSink(IPluginContext *ctx, const cell_t *params)
+static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     spdlog::sink_ptr sink;
     try
@@ -23,10 +22,10 @@ static cell_t ServerConsoleSink(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    Handle_t handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
         ctx->ReportError("SM error! Could not create server console sink handle (error: %d)", error);
@@ -39,7 +38,7 @@ static cell_t ServerConsoleSink(IPluginContext *ctx, const cell_t *params)
 /**
  * public static native Logger CreateLogger(const char[] name);
  */
-static cell_t ServerConsoleSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -60,8 +59,8 @@ static cell_t ServerConsoleSink_CreateLogger(IPluginContext *ctx, const cell_t *
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);

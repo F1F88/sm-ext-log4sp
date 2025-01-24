@@ -39,7 +39,7 @@ void callback_sink::release_forwards_() {
 }
 
 void callback_sink::set_log_callback(IPluginFunction *log_function) {
-    IChangeableForward *cb{nullptr};
+    SourceMod::IChangeableForward *cb{nullptr};
 
     if (log_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
@@ -63,7 +63,7 @@ void callback_sink::set_log_callback(IPluginFunction *log_function) {
 }
 
 void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
-    IChangeableForward *cb{nullptr};
+    SourceMod::IChangeableForward *cb{nullptr};
 
     if (log_post_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
@@ -84,7 +84,7 @@ void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
 }
 
 void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
-    IChangeableForward *cb{nullptr};
+    SourceMod::IChangeableForward *cb{nullptr};
 
     if (flush_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 0, nullptr);

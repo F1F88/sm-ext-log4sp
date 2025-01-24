@@ -202,9 +202,9 @@ methodmap Logger < Handle
      * Aborts the current callback and throws an error.
      * This function does not return in that no code is executed following it.
      *
-     * @note This will first log a log message using ThorwError() and stop code
+     * @note This will first log a log message using ThrowError() and stop code
      *       execution, then log the same log message using the logger.
-     * @note A low log level will not prevent ThorwError() from executing!
+     * @note A low log level will not prevent ThrowError() from executing!
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.

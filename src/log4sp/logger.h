@@ -29,22 +29,21 @@ public:
     // loc 是可选项，用于标记源代码位置，出于性能考虑可以为空，出现异常的时候会尝试通过 ctx 获取
     // ctx 是可选项，用于发生异常且消息 loc 为空时，获取插件源码位置。如果 nullptr 则保持 loc 为空
     // 当调用者是 SourcePawn 时，ctx 不为 nullptr，所以总是能获取源代码位置
-    // 当调用者是其他时，例如 控制台指令模块，ctx 为 nullptr，但 loc 是相应的代码位置
-    // lvl, msg 为必选项
-    void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, const spdlog::string_view_t msg, IPluginContext *ctx) const noexcept;
-    void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept;
-    // void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const char *format, const cell_t *params, const unsigned int param) const noexcept;
-    void log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, const unsigned int param) const noexcept;
+    // 当调用者是其他时，例如 控制台指令模块，ctx 可以为 null，但 loc 必须是相应的代码位置
+    void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, const spdlog::string_view_t msg, SourcePawn::IPluginContext *ctx = nullptr) const noexcept;
+    void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept;
+    // void log(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, const uint32_t param) const noexcept;
+    void log_amx_tpl(const spdlog::source_loc loc, const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept;
 
     // 所有参数都是必选项，ctx 用于获取堆栈信息
-    void log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept;
-    void log_stack_trace(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
-    void log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
+    void log_stack_trace(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept;
+    void log_stack_trace(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
+    void log_stack_trace_amx_tpl(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
 
     // 所有参数都是必选项，ctx 用于获取堆栈信息
-    void throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, IPluginContext *ctx) const noexcept;
-    void throw_error(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
-    void throw_error_amx_tpl(const spdlog::level::level_enum lvl, IPluginContext *ctx, const cell_t *params, unsigned int param) const noexcept;
+    void throw_error(const spdlog::level::level_enum lvl, spdlog::string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept;
+    void throw_error(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
+    void throw_error_amx_tpl(const spdlog::level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
 
     // return true if logging is enabled for the given level.
     [[nodiscard]] bool should_log(spdlog::level::level_enum msg_level) const noexcept;
@@ -72,7 +71,7 @@ public:
     void set_pattern(std::string pattern, spdlog::pattern_time_type type = spdlog::pattern_time_type::local) noexcept;
 
     // flush
-    void flush(const spdlog::source_loc loc, IPluginContext *ctx) noexcept;
+    void flush(const spdlog::source_loc loc, SourcePawn::IPluginContext *ctx) noexcept;
     void flush_on(spdlog::level::level_enum level) noexcept;
     [[nodiscard]] spdlog::level::level_enum flush_level() const noexcept;
 
@@ -83,22 +82,22 @@ public:
     void remove_sink(spdlog::sink_ptr sink) noexcept;
 
     // error handler
-    void set_error_handler(IChangeableForward *handler) noexcept;
+    void set_error_handler(SourceMod::IChangeableForward *handler) noexcept;
 
 private:
-    void sink_it_(const spdlog::details::log_msg &msg, IPluginContext *ctx = nullptr) const noexcept;
-    void flush_(const spdlog::source_loc &loc = {}, IPluginContext *ctx = nullptr) const noexcept;
+    void sink_it_(const spdlog::details::log_msg &msg, SourcePawn::IPluginContext *ctx = nullptr) const noexcept;
+    void flush_(const spdlog::source_loc loc = {}, SourcePawn::IPluginContext *ctx = nullptr) const noexcept;
 
     class err_helper final {
     public:
         void handle_ex(const std::string &origin, const spdlog::source_loc &loc, const std::exception &ex) const noexcept;
         void handle_unknown_ex(const std::string &origin, const spdlog::source_loc &loc) const noexcept;
-        void set_err_handler(IChangeableForward *handler) noexcept;
+        void set_err_handler(SourceMod::IChangeableForward *handler) noexcept;
         ~err_helper() noexcept;
     private:
         void release_forward() noexcept;
 
-        IChangeableForward *custom_error_handler_{nullptr};
+        SourceMod::IChangeableForward *custom_error_handler_{nullptr};
     };
 
     std::string name_;

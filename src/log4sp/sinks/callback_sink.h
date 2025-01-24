@@ -20,9 +20,9 @@ public:
     void set_flush_callback(IPluginFunction *flush_function);
 
 private:
-    IChangeableForward *log_callback_{nullptr};
-    IChangeableForward *log_post_callback_{nullptr};
-    IChangeableForward *flush_callback_{nullptr};
+    SourceMod::IChangeableForward *log_callback_{nullptr};
+    SourceMod::IChangeableForward *log_post_callback_{nullptr};
+    SourceMod::IChangeableForward *flush_callback_{nullptr};
 
     void sink_it_(const details::log_msg &log_msg) override;
     void flush_() override;

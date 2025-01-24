@@ -1,6 +1,5 @@
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
@@ -17,7 +16,7 @@
  *     int maxFiles = 0
  * );
  */
-static cell_t DailyFileSink(IPluginContext *ctx, const cell_t *params)
+static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     char *file;
     ctx->LocalToString(params[1], &file);
@@ -41,10 +40,10 @@ static cell_t DailyFileSink(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    Handle_t handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
         ctx->ReportError("SM error! Could not create daily file sink handle (error: %d)", error);
@@ -57,24 +56,24 @@ static cell_t DailyFileSink(IPluginContext *ctx, const cell_t *params)
 /**
  * public native void GetFilename(char[] buffer, int maxlen);
  */
-static cell_t DailyFileSink_GetFilename(IPluginContext *ctx, const cell_t *params)
+static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (sink == nullptr)
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
     auto realSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
-    if (realSink == nullptr)
+    if (!realSink)
     {
-        ctx->ReportError("Invalid daily file sink handle %x (error: %d)", handle, HandleError_Parameter);
+        ctx->ReportError("Invalid daily file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -86,7 +85,7 @@ static cell_t DailyFileSink_GetFilename(IPluginContext *ctx, const cell_t *param
 /**
  * public static native Logger CreateLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0);
  */
-static cell_t DailyFileSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -118,8 +117,8 @@ static cell_t DailyFileSink_CreateLogger(IPluginContext *ctx, const cell_t *para
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);

@@ -1,4 +1,3 @@
-#include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/sinks/basic_file_sink.h"
@@ -10,7 +9,7 @@
 /**
  * public native BasicFileSink(const char[] file, bool truncate = false);
  */
-static cell_t BasicFileSink(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     char *file;
     ctx->LocalToString(params[1], &file);
@@ -18,7 +17,7 @@ static cell_t BasicFileSink(IPluginContext *ctx, const cell_t *params)
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    auto truncate    = static_cast<bool>(params[2]);
+    auto truncate = static_cast<bool>(params[2]);
 
     spdlog::sink_ptr sink;
     try
@@ -31,10 +30,10 @@ static cell_t BasicFileSink(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    Handle_t handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
         ctx->ReportError("SM error! Could not create base file sink handle (error: %d)", error);
@@ -47,24 +46,24 @@ static cell_t BasicFileSink(IPluginContext *ctx, const cell_t *params)
 /**
  * public native void GetFilename(char[] buffer, int maxlen);
  */
-static cell_t BasicFileSink_GetFilename(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (sink == nullptr)
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::basic_file_sink>(sink);
-    if (realSink == nullptr)
+    if (!realSink)
     {
-        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
+        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -76,24 +75,24 @@ static cell_t BasicFileSink_GetFilename(IPluginContext *ctx, const cell_t *param
 /**
  * public native void Truncate();
  */
-static cell_t BasicFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (sink == nullptr)
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::basic_file_sink>(sink);
-    if (realSink == nullptr)
+    if (!realSink)
     {
-        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, HandleError_Parameter);
+        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -112,7 +111,7 @@ static cell_t BasicFileSink_Truncate(IPluginContext *ctx, const cell_t *params)
 /**
  * public static native Logger CreateLogger(const char[] name, const char[] file, bool truncate = false);
  */
-static cell_t BasicFileSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -141,8 +140,8 @@ static cell_t BasicFileSink_CreateLogger(IPluginContext *ctx, const cell_t *para
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);

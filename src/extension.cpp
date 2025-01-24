@@ -31,7 +31,6 @@
 
 #include "extension.h"
 
-#include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/command/root_console_command_handler.h"
@@ -57,7 +56,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     }
     catch(const std::exception &ex)
     {
-        snprintf(error, maxlen, "Initialization failure (reason: %s)", ex.what());
+        smutils->Format(error, maxlen, "Initialization failure (reason: %s)", ex.what());
         return false;
     }
 
@@ -70,21 +69,21 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         }
         catch(const std::exception &ex)
         {
-            snprintf(error, maxlen, "Could not create global logger handle (reason: %s)", ex.what());
+            smutils->Format(error, maxlen, "Could not create global logger handle (reason: %s)", ex.what());
             return false;
         }
 
         auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
 
         // 全局 logger 属于拓展，不应该被任何插件释放
-        HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
-        HandleAccess access;
-        HandleError err;
+        SourceMod::HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
+        SourceMod::HandleAccess access;
+        SourceMod::HandleError err;
 
         handlesys->InitAccessDefaults(nullptr, &access);
-        access.access[HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
+        access.access[SourceMod::HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
 
-        Handle_t handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &err);
+        auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &err);
         if (handle == BAD_HANDLE)
         {
             snprintf(error, maxlen, "Could not create global logger handle (err: %d)", err);

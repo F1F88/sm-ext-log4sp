@@ -1,4 +1,3 @@
-#include "log4sp/logger.h"
 #include "log4sp/utils.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
@@ -11,7 +10,7 @@
 /**
  * public native CallbackSink(CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
  */
-static cell_t CallbackSink(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     auto logFunctionId     = static_cast<funcid_t>(params[1]);
     auto logPostFunctionId = static_cast<funcid_t>(params[2]);
@@ -32,10 +31,10 @@ static cell_t CallbackSink(IPluginContext *ctx, const cell_t *params)
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    Handle_t handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (handle == BAD_HANDLE)
     {
         ctx->ReportError("SM error! Could not create callback sink handle (error: %d)", error);
@@ -50,15 +49,15 @@ static cell_t CallbackSink(IPluginContext *ctx, const cell_t *params)
  *
  * function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int sec[2], int ns[2]);
  */
-static cell_t CallbackSink_SetLogCallback(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (sink == nullptr)
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
@@ -68,9 +67,9 @@ static cell_t CallbackSink_SetLogCallback(IPluginContext *ctx, const cell_t *par
     auto logFunction   = ctx->GetFunctionById(logFunctionId);
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
-    if (realSink == nullptr)
+    if (!realSink)
     {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -92,15 +91,15 @@ static cell_t CallbackSink_SetLogCallback(IPluginContext *ctx, const cell_t *par
  *
  * function void(const char[] msg);
  */
-static cell_t CallbackSink_SetLogPostCallback(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (sink == nullptr)
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
@@ -110,9 +109,9 @@ static cell_t CallbackSink_SetLogPostCallback(IPluginContext *ctx, const cell_t 
     auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
-    if (realSink == nullptr)
+    if (!realSink)
     {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -134,24 +133,24 @@ static cell_t CallbackSink_SetLogPostCallback(IPluginContext *ctx, const cell_t 
  *
  * function void();
  */
-static cell_t CallbackSink_SetFlushCallback(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (sink == nullptr)
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
-    if (realSink == nullptr)
+    if (!realSink)
     {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -177,24 +176,24 @@ static cell_t CallbackSink_SetFlushCallback(IPluginContext *ctx, const cell_t *p
  *      const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
  *      int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
  */
-static cell_t CallbackSink_ToPattern(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto handle = static_cast<Handle_t>(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    HandleSecurity security{nullptr, myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    spdlog::sink_ptr sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (sink == nullptr)
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
-    if (realSink == nullptr)
+    if (!realSink)
     {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, HandleError_Parameter);
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -257,7 +256,7 @@ static cell_t CallbackSink_ToPattern(IPluginContext *ctx, const cell_t *params)
 /**
  * public static native Logger CreateLogger(const char[] name, CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
  */
-static cell_t CallbackSink_CreateLogger(IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -286,8 +285,8 @@ static cell_t CallbackSink_CreateLogger(IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
-    HandleError error;
+    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);

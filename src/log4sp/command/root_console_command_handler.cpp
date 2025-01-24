@@ -49,7 +49,7 @@ void root_console_command_handler::execute(const std::string &cmdname, const std
 }
 
 
-void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args) {
+void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const SourceMod::ICommandArgs *args) {
     // 0-sm  |  1-log4sp  |  2-function name  |  3-logger name  |  x-params
     int argCnt = args->ArgC();
     if (argCnt <= 2) {
