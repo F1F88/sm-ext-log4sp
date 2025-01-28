@@ -8,7 +8,7 @@
 
 public Plugin myinfo =
 {
-	name = "[Any] Logger Manager",
+	name = "[Any] Logger Manager for Log4sp",
 	author = "blueblur",
 	description = "Instance manager for log4sp.",
 	version = PLUGIN_VERSION,
@@ -97,13 +97,24 @@ void MenuHandler_LoggerList(Menu menu, MenuAction action, int param1, int param2
                 Logger logger = Logger.Get(sInfo);
                 if (!logger)
                 {
-                    ReplyToCommand(param1, "[SM] Logger %s not found.", sInfo);
+                    ReplyToCommand(param1, "[SM] Logger '%s' not found.", sInfo);
                     return;
                 }
 
+                LogLevel lvl = logger.GetLevel();
+                LogLevel lvl_flush = logger.GetFlushLevel();
+
+                char sLevel[64], sFlushLevel[64];
+                LogLevelToName(lvl, sLevel, sizeof(sLevel));
+                LogLevelToName(lvl_flush, sFlushLevel, sizeof(sFlushLevel));
+                Format(sLevel, sizeof(sLevel), "Current LogLevel: %s", sLevel);
+                Format(sFlushLevel, sizeof(sFlushLevel), "Current Flush Level: %s", sFlushLevel);
+
                 Menu submenu = new Menu(MenuHandler_ManageLogger);
                 submenu.SetTitle("Manage Logger: %s", sInfo);
-                submenu.AddItem(sInfo, sInfo, ITEMDRAW_IGNORE);
+                submenu.AddItem(sInfo, "", ITEMDRAW_IGNORE);
+                submenu.AddItem("", sLevel, ITEMDRAW_DISABLED);
+                submenu.AddItem("", sFlushLevel, ITEMDRAW_DISABLED);
                 submenu.AddItem("1", "Set log level");
                 submenu.AddItem("2", "Flush");
                 submenu.AddItem("3", "Set flush level");
@@ -208,7 +219,7 @@ void MenuHandler_SetAllLoggerFlushLevel(Menu menu, MenuAction action, int param1
             menu.GetItem(param2, sLevel, sizeof(sLevel));
             LogLevel lvl = NameToLogLevel(sLevel);
             Logger.ApplyAll(ApplyAllLogger_SetFlushLevel, lvl);
-            ReplyToCommand(param1, "[SM] All loggers have set to flush level %s.", sLevel);
+            ReplyToCommand(param1, "[SM] All loggers' flush level have set to '%s.'", sLevel);
         }
 
         case MenuAction_End:
@@ -252,7 +263,7 @@ void MenuHandler_ManageLogger(Menu menu, MenuAction action, int param1, int para
                 {
                     Menu submenu = new Menu(MenuHandler_SetLoggerLevel);
                     submenu.SetTitle("Set log level for %s", sLoggerName);
-                    submenu.AddItem(sLoggerName, sLoggerName, ITEMDRAW_IGNORE);
+                    submenu.AddItem(sLoggerName, "", ITEMDRAW_IGNORE);
                     submenu.AddItem(LOG4SP_LEVEL_NAME_OFF, "Off");
                     submenu.AddItem(LOG4SP_LEVEL_NAME_FATAL, "Fatal");
                     submenu.AddItem(LOG4SP_LEVEL_NAME_ERROR, "Error");
@@ -268,14 +279,14 @@ void MenuHandler_ManageLogger(Menu menu, MenuAction action, int param1, int para
                 {
                     Logger logger = Logger.Get(sLoggerName);
                     logger.Flush();
-                    ReplyToCommand(param1, "[SM] Logger %s flushed.", sLoggerName);
+                    ReplyToCommand(param1, "[SM] Logger '%s' flushed.", sLoggerName);
                 }
 
                 case 3:
                 {
                     Menu submenu = new Menu(MenuHandler_SetLoggerFlushLevel);
-                    submenu.SetTitle("Set logger auto flush level for %s", sLoggerName);
-                    submenu.AddItem(sLoggerName, sLoggerName, ITEMDRAW_IGNORE);
+                    submenu.SetTitle("Set logger flush level for %s", sLoggerName);
+                    submenu.AddItem(sLoggerName, "", ITEMDRAW_IGNORE);
                     submenu.AddItem(LOG4SP_LEVEL_NAME_OFF, "Off");
                     submenu.AddItem(LOG4SP_LEVEL_NAME_FATAL, "Fatal");
                     submenu.AddItem(LOG4SP_LEVEL_NAME_ERROR, "Error");
@@ -285,19 +296,6 @@ void MenuHandler_ManageLogger(Menu menu, MenuAction action, int param1, int para
                     submenu.AddItem(LOG4SP_LEVEL_NAME_TRACE, "Trace");
                     submenu.ExitBackButton = true;
                     submenu.Display(param1, MENU_TIME_FOREVER);
-                }
-
-                case 4:
-                {
-                    Logger logger = Logger.Get(sLoggerName);
-                    if (!logger)
-                    {
-                        ReplyToCommand(param1, "[SM] Logger %s not found or already deleted.", sLoggerName);
-                        return;
-                    }
-
-                    delete logger;
-                    ReplyToCommand(param1, "[SM] Logger %s deleted.", sLoggerName);
                 }
             }
         }
@@ -329,7 +327,7 @@ void MenuHandler_SetLoggerLevel(Menu menu, MenuAction action, int param1, int pa
             LogLevel lvl = NameToLogLevel(sName);
             logger.SetLevel(lvl);
 
-            ReplyToCommand(param1, "[SM] Logger %s level set to %s.", sLoggerName, sName);
+            ReplyToCommand(param1, "[SM] Logger '%s' level set to '%s'.", sLoggerName, sName);
         }
 
         case MenuAction_End:
@@ -358,7 +356,7 @@ void MenuHandler_SetLoggerFlushLevel(Menu menu, MenuAction action, int param1, i
 
             LogLevel lvl = NameToLogLevel(sName);
             logger.FlushOn(lvl);
-            ReplyToCommand(param1, "[SM] Logger %s auto flush level set to %s.", sLoggerName, sName);
+            ReplyToCommand(param1, "[SM] Logger '%s' flush level set to '%s'.", sLoggerName, sName);
         }
 
         case MenuAction_End:
@@ -447,19 +445,19 @@ void ApplyAllLogger_Excute(Logger logger, DataPack dp)
         lvl = NameToLogLevel(sArg);
         logger.SetLevel(lvl);
     }
-    else if (!strcmp(sFunctionName, "set_pattern"))
+    else if (!strcmp(sFunctionName, "set_pattern", false))
     {
         logger.SetPattern(sArg);
     }
-    else if (!strcmp(sFunctionName, "log"))
+    else if (!strcmp(sFunctionName, "log", false))
     {
         logger.Log(lvl, sArg);
     }
-    else if (!strcmp(sFunctionName, "flush"))
+    else if (!strcmp(sFunctionName, "flush", false))
     {
         logger.Flush();
     }
-    else if (!strcmp(sFunctionName, "set_flush_lvl"))
+    else if (!strcmp(sFunctionName, "set_flush_lvl", false))
     {
         lvl = NameToLogLevel(sArg);
         logger.FlushOn(lvl);
