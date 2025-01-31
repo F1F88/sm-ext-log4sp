@@ -1,20 +1,19 @@
-#include "spdlog/sinks/daily_file_sink.h"
-
+#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/sinks/daily_file_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                   DailyFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * public native DailyFileSink(
- *     const char[] file,
- *     int rotationHour = 0,
- *     int rotationMinute = 0,
- *     bool truncate = false,
- *     int maxFiles = 0
- * );
+ * public native DailyFileSink(const char[] file,
+ *                             int hour = 0,
+ *                             int minute = 0,
+ *                             bool truncate = false,
+ *                             int maxFiles = 0,
+ *                             DailyFileCalculator callback = INVALID_FUNCTION);
  */
 static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
@@ -24,15 +23,39 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
-    auto rotationHour   = static_cast<int>(params[2]);
-    auto rotationMinute = static_cast<int>(params[3]);
-    auto truncate       = static_cast<bool>(params[4]);
-    auto maxFiles       = static_cast<uint16_t>(params[5]);
+    auto hour     = static_cast<int>(params[2]);
+    auto minute   = static_cast<int>(params[3]);
+    auto truncate = static_cast<bool>(params[4]);
+    auto maxFiles = static_cast<uint16_t>(params[5]);
+    auto funcID   = static_cast<funcid_t>(params[6]);
+    auto function = ctx->GetFunctionById(funcID);
 
-    spdlog::sink_ptr sink;
+    auto calculator = [function](const log4sp::filename_t &filename, const tm &now_tm)
+    {
+        if (!function)
+            return log4sp::sinks::daily_filename_default_calculator(filename, now_tm);
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create daily file calculator forward.");
+
+        if (!forward->AddFunction(function))
+            log4sp::throw_log4sp_ex("SM error! Could not add daily file calculator function.");
+
+        char buffer[PLATFORM_MAX_PATH];
+        forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+        forward->PushCell(sizeof(buffer));
+        forward->PushCell(now_tm.tm_sec);
+        forward->Execute();
+
+        forwards->ReleaseForward(forward);
+        return log4sp::filename_t{buffer};
+    };
+
+    log4sp::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, rotationHour, rotationMinute, truncate, maxFiles);
+        sink = std::make_shared<log4sp::sinks::daily_file_sink>(path, hour, minute, truncate, maxFiles, calculator);
     }
     catch(const std::exception &ex)
     {
@@ -70,7 +93,7 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);
+    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::daily_file_sink>(sink);
     if (!realSink)
     {
         ctx->ReportError("Invalid daily file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
@@ -105,11 +128,35 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     auto minute   = static_cast<int>(params[4]);
     auto truncate = static_cast<bool>(params[5]);
     auto maxFiles = static_cast<uint16_t>(params[6]);
+    auto funcID   = static_cast<funcid_t>(params[7]);
+    auto function = ctx->GetFunctionById(funcID);
 
-    spdlog::sink_ptr sink;
+    auto calculator = [function](const log4sp::filename_t &filename, const tm &now_tm)
+    {
+        if (!function)
+            return log4sp::sinks::daily_filename_default_calculator(filename, now_tm);
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create daily file calculator forward.");
+
+        if (!forward->AddFunction(function))
+            log4sp::throw_log4sp_ex("SM error! Could not add daily file calculator function.");
+
+        char buffer[PLATFORM_MAX_PATH];
+        forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+        forward->PushCell(sizeof(buffer));
+        forward->PushCell(now_tm.tm_sec);
+        forward->Execute();
+
+        forwards->ReleaseForward(forward);
+        return log4sp::filename_t{buffer};
+    };
+
+    log4sp::sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(path, hour, minute, truncate, maxFiles);
+        sink = std::make_shared<log4sp::sinks::daily_file_sink>(path, hour, minute, truncate, maxFiles);
     }
     catch(const std::exception &ex)
     {
