@@ -11,7 +11,7 @@
  */
 static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::server_console_sink>();
@@ -48,7 +48,7 @@ static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, co
         return BAD_HANDLE;
     }
 
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::server_console_sink>();

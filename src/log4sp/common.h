@@ -3,55 +3,164 @@
 #include <vector>
 
 #include "spdlog/common.h"
+#include "spdlog/pattern_formatter.h"
 
 #include "extension.h"
 
 
 namespace log4sp {
 
-/**
- * 将一个长度为 2 的 cell_t 数组转换为 int64
- */
-[[nodiscard]] int64_t cell_to_int64(const cell_t arr[2]) noexcept;
+namespace sinks {
+class base_sink;
+}
 
-/**
- * 将 cell_t 转为 spdlog::level::level_enum
- * 如果 cell_t 越界，则返回最近的边界值
- */
-[[nodiscard]] spdlog::level::level_enum cell_to_level(cell_t lvl) noexcept;
+namespace details       = spdlog::details;
+namespace fmt_lib       = spdlog::fmt_lib;
 
-/**
- * 将 cell_t 转为 spdlog::pattern_time_type
- * 如果 cell_t 越界，则返回最近的边界值
- */
-[[nodiscard]] spdlog::pattern_time_type cell_to_pattern_time_type(cell_t type) noexcept;
+using memory_buf_t      = fmt_lib::basic_memory_buffer<char, 250>;
 
-/**
- * 获取插件调用 native 的源代码位置
- * 如果找不到返回空，可以用 empty() 判断是否为空
- */
-[[nodiscard]] spdlog::source_loc get_plugin_source_loc(IPluginContext *ctx);
+using level_t           = spdlog::level_t;
+using formatter         = spdlog::formatter;
+using pattern_formatter = spdlog::pattern_formatter;
+using string_view_t     = spdlog::string_view_t;
+using log4sp_ex         = spdlog::spdlog_ex;
+using pattern_time_type = spdlog::pattern_time_type;
+using filename_t        = spdlog::filename_t;
+using file_event_handlers = spdlog::file_event_handlers;
 
-/**
- * 获取堆栈信息
- * 参考自: sourcemod DebugReport::GetStackTrace
- */
-[[nodiscard]] std::vector<std::string> get_stack_trace(IPluginContext *ctx);
+using log_clock         = std::chrono::system_clock;
+using sink_ptr          = std::shared_ptr<sinks::base_sink>;
+using sinks_init_list   = std::initializer_list<sink_ptr>;
 
-/**
- * 格式化 params 数组，风格与 AMXTpl 一致，但是格式化长度不受限制
- * param 指向的参数是格式模板，后面的参数是可变参数
- * 当格式与参数不匹配时抛出异常
- * 这是 format_cell_to_memory_buf 的包装器
- */
-[[nodiscard]] std::string format_cell_to_string(IPluginContext *ctx, const cell_t *params, unsigned int param);
+#define LOG4SP_LEVEL_TRACE          SPDLOG_LEVEL_TRACE
+#define LOG4SP_LEVEL_DEBUG          SPDLOG_LEVEL_DEBUG
+#define LOG4SP_LEVEL_INFO           SPDLOG_LEVEL_INFO
+#define LOG4SP_LEVEL_WARN           SPDLOG_LEVEL_WARN
+#define LOG4SP_LEVEL_ERROR          SPDLOG_LEVEL_ERROR
+#define LOG4SP_LEVEL_FATAL          SPDLOG_LEVEL_CRITICAL
+#define LOG4SP_LEVEL_OFF            SPDLOG_LEVEL_OFF
 
-/**
- * 格式化 params 数组，风格与 AMXTpl 一致，但是格式化长度不受限制
- * param 指向的参数是可变参数
- * 当格式与参数不匹配时抛出异常
- */
-[[nodiscard]] spdlog::fmt_lib::memory_buffer format_cell_to_memory_buf(const char *format, IPluginContext *ctx, const cell_t *params, int *param);
+#define LOG4SP_LEVEL_NAMES          SPDLOG_LEVEL_NAMES
+#define LOG4SP_SHORT_LEVEL_NAMES    SPDLOG_SHORT_LEVEL_NAMES
+
+namespace level {
+using level_enum = spdlog::level::level_enum;
+using level_enum::trace;
+using level_enum::debug;
+using level_enum::info;
+using level_enum::warn;
+using level_enum::err;
+using level_enum::critical;
+using level_enum::off;
+using level_enum::n_levels;
+
+[[nodiscard]] constexpr size_t to_number(const level_enum lvl) noexcept {
+    return static_cast<size_t>(lvl);
+}
+
+constexpr auto levels_count = to_number(level_enum::n_levels);
+
+constexpr string_view_t level_string_views[] LOG4SP_LEVEL_NAMES;
+constexpr const char   *short_level_names[]  LOG4SP_SHORT_LEVEL_NAMES;
+
+[[nodiscard]] constexpr string_view_t to_string_view(const level_enum lvl) noexcept {
+    return level_string_views[to_number(lvl)];
+}
+
+[[nodiscard]] constexpr const char *to_short_string_view(const level_enum lvl) noexcept {
+    return short_level_names[to_number(lvl)];
+}
+
+[[nodiscard]] constexpr level_enum from_number(const uint32_t value) noexcept {
+    switch (value) {
+        case LOG4SP_LEVEL_TRACE:    return level_enum::trace;
+        case LOG4SP_LEVEL_DEBUG:    return level_enum::debug;
+        case LOG4SP_LEVEL_INFO:     return level_enum::info;
+        case LOG4SP_LEVEL_WARN:     return level_enum::warn;
+        case LOG4SP_LEVEL_ERROR:    return level_enum::err;
+        case LOG4SP_LEVEL_FATAL:    return level_enum::critical;
+        default:                    return level_enum::off;
+    }
+}
+
+[[nodiscard]] constexpr level_enum from_str(const char *name) noexcept {
+    for (size_t i = 0; i < sizeof(level_string_views); ++i) {
+        if (!strcmp(name, level_string_views[i].data())) {
+            return from_number(i);
+        }
+    }
+
+    if (!strcmp(name, "warning")) {
+        return level_enum::warn;
+    }
+
+    if (!strcmp(name, "err")) {
+        return level_enum::err;
+    }
+
+    if (!strcmp(name, "critical")) {
+        return level_enum::critical;
+    }
+
+    return level_enum::off;
+}
+
+[[nodiscard]] constexpr level_enum from_short_str(const char *name) noexcept {
+    for (size_t i = 0; i < sizeof(short_level_names); ++i) {
+        if (!strcmp(name, short_level_names[i])) {
+            return from_number(i);
+        }
+    }
+    return level_enum::off;
+}
+
+}   // namespace level
 
 
-}       // namespace log4sp
+
+[[nodiscard]] constexpr int64_t int32_to_int64(const uint32_t high, const uint32_t low) noexcept {
+    return (static_cast<int64_t>(static_cast<uint32_t>(high)) << 32) | static_cast<uint32_t>(low);
+}
+
+[[nodiscard]] constexpr pattern_time_type number_to_pattern_time_type(const uint32_t type) noexcept {
+    return type == 0 ? pattern_time_type::local : pattern_time_type::utc;
+}
+
+[[noreturn]] void throw_log4sp_ex(std::string msg);
+[[noreturn]] void throw_log4sp_ex(const std::string &msg, int last_errno);
+
+struct source_loc final : public spdlog::source_loc {
+    constexpr source_loc() = default;
+    constexpr source_loc(const char *filename_in, uint32_t line_in, const char *funcname_in)
+        : spdlog::source_loc(filename_in, line_in, funcname_in) {}
+
+    [[nodiscard]] constexpr bool empty() const noexcept {
+        return !filename || line <= 0 || !funcname;
+    }
+
+    // return filename without the leading path
+    [[nodiscard]] static constexpr const char *basename(const char *path) {
+        if (!path) {
+            return path;
+        }
+
+        const char *file{path};
+        while (*path) {
+            if (*path == '\\' || *path == '/') {
+                file = path + 1;
+            }
+            ++path;
+        }
+        return file;
+    }
+
+    [[nodiscard]] static source_loc from_plugin_ctx(SourcePawn::IPluginContext *ctx) noexcept;
+};
+
+[[nodiscard]] std::vector<std::string> get_plugin_ctx_stack_trace(SourcePawn::IPluginContext *ctx) noexcept;
+
+[[nodiscard]] std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param);
+[[nodiscard]] memory_buf_t format_cell_to_mem_buf(SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, uint32_t *param);
+
+
+}   // namespace log4sp

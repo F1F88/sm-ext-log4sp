@@ -17,8 +17,8 @@ void basic_file_sink::truncate() {
     file_helper_.reopen(true);
 }
 
-void basic_file_sink::sink_it_(const spdlog::details::log_msg &msg) {
-    spdlog::memory_buf_t formatted;
+void basic_file_sink::sink_it_(const details::log_msg &msg) {
+    memory_buf_t formatted;
     base_sink::formatter_->format(msg, formatted);
     file_helper_.write(formatted);
 }

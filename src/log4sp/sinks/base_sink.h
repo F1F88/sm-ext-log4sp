@@ -3,13 +3,16 @@
 #include "spdlog/pattern_formatter.h"
 #include "spdlog/sinks/sink.h"
 
+#include "log4sp/common.h"
+
 
 namespace log4sp {
-using formatter = spdlog::formatter;
-namespace details = spdlog::details;
-
 namespace sinks {
-
+/**
+ * 虽然原生 spdlog::sinks::sink 可以满足大部分需求
+ * 但没有对外暴露 formatter 接口
+ * 自己实现以方便更多自定义
+ */
 class base_sink : public spdlog::sinks::sink {
 public:
     base_sink();

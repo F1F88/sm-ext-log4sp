@@ -7,10 +7,6 @@
 
 namespace log4sp {
 namespace sinks {
-
-using filename_t = spdlog::filename_t;
-using file_event_handlers = spdlog::file_event_handlers;
-
 /**
  * Rotating file sink based on size
  */
@@ -46,7 +42,7 @@ private:
     std::size_t max_size_;
     std::size_t max_files_;
     std::size_t current_size_;
-    spdlog::details::file_helper file_helper_;
+    details::file_helper file_helper_;
 };
 
 }   // namespace sinks

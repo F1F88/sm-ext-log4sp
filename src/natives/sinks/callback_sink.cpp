@@ -1,4 +1,4 @@
-#include "log4sp/utils.h"
+#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/sinks/callback_sink.h"
@@ -20,7 +20,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
     auto flushFunction     = ctx->GetFunctionById(flushFunctionId);
 
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);
@@ -201,46 +201,42 @@ static cell_t CallbackSink_ToPattern(SourcePawn::IPluginContext *ctx, const cell
     ctx->LocalToString(params[4], &name);
     ctx->LocalToString(params[6], &msg);
 
-    auto lvl = log4sp::cell_to_level(params[5]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[5]));
 
     char *file, *func;
     ctx->LocalToStringNULL(params[7], &file);
     ctx->LocalToStringNULL(params[9], &func);
 
-    auto line = static_cast<int>(params[8]);
+    auto line = static_cast<uint32_t>(params[8]);
 
-    spdlog::source_loc loc{};
-    if (file && line > 0 && func)
-    {
-        loc = {file, line, func};
-    }
+    log4sp::source_loc loc{file, line, func};
 
     cell_t *seconds, *nanoseconds;
     ctx->LocalToPhysAddr(params[10], &seconds);
     ctx->LocalToPhysAddr(params[11], &nanoseconds);
 
-    std::chrono::system_clock::time_point logTime{spdlog::details::os::now()};
+    std::chrono::system_clock::time_point logTime{log4sp::details::os::now()};
     if (nanoseconds[0] != 0 || nanoseconds[1] != 0)
     {
         logTime = std::chrono::system_clock::time_point{
             std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::nanoseconds{log4sp::cell_to_int64(nanoseconds)}
-            )
-        };
+                std::chrono::nanoseconds{
+                    log4sp::int32_to_int64(static_cast<uint32_t>(nanoseconds[1]),
+                                           static_cast<uint32_t>(nanoseconds[0]))})};
     }
     else if (seconds[0] != 0 || seconds[1] != 0)
     {
         logTime = std::chrono::system_clock::time_point{
             std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::seconds{log4sp::cell_to_int64(seconds)}
-            )
-        };
+                std::chrono::seconds{
+                    log4sp::int32_to_int64(static_cast<uint32_t>(seconds[1]),
+                                           static_cast<uint32_t>(seconds[0]))})};
     }
 
     std::string formatted;
     try
     {
-        formatted = realSink->to_pattern(spdlog::details::log_msg{logTime, loc, name, lvl, msg});
+        formatted = realSink->to_pattern(log4sp::details::log_msg{logTime, loc, name, lvl, msg});
     }
     catch(const std::exception &ex)
     {
@@ -274,7 +270,7 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
     auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
     auto flushFunction     = ctx->GetFunctionById(flushFunctionId);
 
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);

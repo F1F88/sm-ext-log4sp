@@ -1,3 +1,4 @@
+#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/sinks/rotating_file_sink.h"
@@ -25,7 +26,7 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     auto maxFiles     = static_cast<size_t>(params[3]);
     auto rotateOnOpen = static_cast<bool>(params[4]);
 
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);
@@ -150,7 +151,7 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     auto maxFiles     = static_cast<size_t>(params[4]);
     auto rotateOnOpen = static_cast<bool>(params[5]);
 
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);

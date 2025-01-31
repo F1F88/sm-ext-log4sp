@@ -34,9 +34,7 @@ stdout_sink_base::stdout_sink_base(FILE *file)
     // and let the log method to do nothing if (handle_ == INVALID_HANDLE_VALUE).
     // throw only if non stdout/stderr target is requested (probably regular file and not console).
     if (handle_ == INVALID_HANDLE_VALUE && file != stdout && file != stderr) {
-        spdlog::memory_buf_t outbuf;
-        spdlog::fmt_lib::format_system_error(outbuf, errno, "spdlog::stdout_sink_base: _get_osfhandle() failed");
-        throw spdlog::fmt_lib::to_string(outbuf);
+        throw_log4sp_ex("log4sp::stdout_sink_base: _get_osfhandle() failed", errno);
     }
 #endif  // _WIN32
 }
@@ -47,19 +45,16 @@ void stdout_sink_base::sink_it_(const details::log_msg &msg) {
         return;
     }
 
-    spdlog::memory_buf_t formatted;
+    memory_buf_t formatted;
     base_sink::formatter_->format(msg, formatted);
     auto size = static_cast<DWORD>(formatted.size());
     DWORD bytes_written = 0;
     bool ok = ::WriteFile(handle_, formatted.data(), size, &bytes_written, nullptr) != 0;
     if (!ok) {
-        auto msg{spdlog::fmt_lib::format("stdout_sink_base: WriteFile() failed. GetLastError(): {}", std::to_string(::GetLastError()))};
-        spdlog::memory_buf_t outbuf;
-        spdlog::fmt_lib::format_system_error(outbuf, errno, msg.c_str());
-        throw spdlog::fmt_lib::to_string(outbuf);
+        throw_log4sp_ex("stdout_sink_base: WriteFile() failed. GetLastError(): " + std::to_string(::GetLastError()));
     }
 #else
-    spdlog::memory_buf_t formatted;
+    memory_buf_t formatted;
     base_sink::formatter_->format(msg, formatted);
     details::os::fwrite_bytes(formatted.data(), formatted.size(), file_);
 #endif                // _WIN32

@@ -7,8 +7,6 @@
 
 namespace log4sp {
 
-namespace details = spdlog::details;
-
 namespace sinks {
 
 rotating_file_sink::rotating_file_sink(filename_t base_filename, std::size_t max_size, std::size_t max_files, bool rotate_on_open, const file_event_handlers &event_handlers)
@@ -37,7 +35,7 @@ filename_t rotating_file_sink::calc_filename(const filename_t &filename, std::si
 
     filename_t basename, ext;
     std::tie(basename, ext) = details::file_helper::split_by_extension(filename);
-    return spdlog::fmt_lib::format(SPDLOG_FMT_STRING(SPDLOG_FILENAME_T("{}.{}{}")), basename, index, ext);
+    return fmt_lib::format(SPDLOG_FMT_STRING(SPDLOG_FILENAME_T("{}.{}{}")), basename, index, ext);
 }
 
 filename_t rotating_file_sink::filename() {
@@ -49,7 +47,7 @@ void rotating_file_sink::rotate_now() {
 }
 
 void rotating_file_sink::sink_it_(const details::log_msg &msg) {
-    spdlog::memory_buf_t formatted;
+    memory_buf_t formatted;
     base_sink::formatter_->format(msg, formatted);
     auto new_size = current_size_ + formatted.size();
 
@@ -97,11 +95,9 @@ void rotating_file_sink::rotate_() {
                 file_helper_.reopen(
                     true);  // truncate the log file anyway to prevent it to grow beyond its limit!
                 current_size_ = 0;
-
-                auto msg{spdlog::fmt_lib::format("rotating_file_sink: failed renaming {} to {}", src, target)};
-                spdlog::memory_buf_t outbuf;
-                spdlog::fmt_lib::format_system_error(outbuf, errno, msg.c_str());
-                throw spdlog::fmt_lib::to_string(outbuf);
+                throw_log4sp_ex("rotating_file_sink: failed renaming " + filename_to_str(src) +
+                                    " to " + filename_to_str(target),
+                                errno);
             }
         }
     }
@@ -110,7 +106,7 @@ void rotating_file_sink::rotate_() {
 
 // delete the target if exists, and rename the src file  to target
 // return true on success, false otherwise.
-SPDLOG_INLINE bool rotating_file_sink::rename_file_(const filename_t &src_filename,
+bool rotating_file_sink::rename_file_(const filename_t &src_filename,
                                                            const filename_t &target_filename) {
     // try to delete the target file in case it already exists.
     (void)details::os::remove(target_filename);

@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "extension.h"
+#include "log4sp/common.h"
 
 
 namespace log4sp {
@@ -31,7 +31,7 @@ public:
 protected:
     [[nodiscard]] std::shared_ptr<logger> arg_to_logger(const std::string &arg);
 
-    [[nodiscard]] spdlog::level::level_enum arg_to_level(const std::string &arg);
+    [[nodiscard]] level::level_enum arg_to_level(const std::string &arg);
 };
 
 

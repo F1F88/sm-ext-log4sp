@@ -5,7 +5,7 @@ namespace log4sp {
 namespace sinks {
 
 base_sink::base_sink()
-    : formatter_{spdlog::details::make_unique<spdlog::pattern_formatter>()} {}
+    : formatter_{details::make_unique<pattern_formatter>()} {}
 
 
 base_sink::base_sink(std::unique_ptr<formatter> formatter)
@@ -28,7 +28,7 @@ void base_sink::set_formatter(std::unique_ptr<formatter> sink_formatter) {
 }
 
 void base_sink::set_pattern_(const std::string &pattern) {
-    set_formatter_(spdlog::details::make_unique<spdlog::pattern_formatter>(pattern));
+    set_formatter_(details::make_unique<pattern_formatter>(pattern));
 }
 
 void base_sink::set_formatter_(std::unique_ptr<formatter> sink_formatter) {
@@ -36,9 +36,9 @@ void base_sink::set_formatter_(std::unique_ptr<formatter> sink_formatter) {
 }
 
 [[nodiscard]] std::string base_sink::to_pattern(const details::log_msg &log_msg) {
-    spdlog::memory_buf_t formatted;
+    memory_buf_t formatted;
     formatter_->format(log_msg, formatted);
-    return spdlog::fmt_lib::to_string(formatted);
+    return fmt_lib::to_string(formatted);
 }
 
 

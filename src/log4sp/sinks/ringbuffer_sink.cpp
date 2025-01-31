@@ -12,7 +12,7 @@ void ringbuffer_sink::drain(std::function<void(const details::log_msg_buffer &)>
 }
 
 void ringbuffer_sink::drain_formatted(std::function<void(std::string_view)> callback) {
-    spdlog::memory_buf_t formatted;
+    memory_buf_t formatted;
     while (!q_.empty()) {
         std::string formatted = to_pattern(q_.front());
         callback(std::string_view{formatted.data(), formatted.size()});

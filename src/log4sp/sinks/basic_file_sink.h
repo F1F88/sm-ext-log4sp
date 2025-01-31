@@ -9,10 +9,6 @@
 
 namespace log4sp {
 namespace sinks {
-
-using filename_t = spdlog::filename_t;
-using file_event_handlers = spdlog::file_event_handlers;
-
 /*
  * Trivial file sink with single file as target
  */
@@ -26,11 +22,11 @@ public:
     void truncate();
 
 protected:
-    void sink_it_(const spdlog::details::log_msg &msg) override;
+    void sink_it_(const details::log_msg &msg) override;
     void flush_() override;
 
 private:
-    spdlog::details::file_helper file_helper_;
+    details::file_helper file_helper_;
 };
 
 

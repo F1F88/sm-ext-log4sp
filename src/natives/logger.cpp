@@ -1,4 +1,4 @@
-#include "log4sp/utils.h"
+#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
@@ -47,7 +47,7 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
     ctx->LocalToPhysAddr(params[2], &sinks);
 
     auto numSinks = static_cast<uint32_t>(params[3]);
-    auto sinkVector{std::vector<spdlog::sink_ptr>(numSinks, nullptr)};
+    auto sinkVector{std::vector<log4sp::sink_ptr>(numSinks, nullptr)};
 
     SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     SourceMod::HandleError error;
@@ -94,7 +94,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
     ctx->LocalToPhysAddr(params[2], &sinks);
 
     auto numSinks = static_cast<uint32_t>(params[3]);
-    auto sinkVector{std::vector<spdlog::sink_ptr>(numSinks, nullptr)};
+    auto sinkVector{std::vector<log4sp::sink_ptr>(numSinks, nullptr)};
 
     SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
     SourceMod::HandleError error;
@@ -263,7 +263,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->set_level(lvl);
     return 0;
@@ -289,7 +289,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
     char *pattern;
     ctx->LocalToString(params[2], &pattern);
 
-    auto type = log4sp::cell_to_pattern_time_type(params[3]);
+    auto type = log4sp::number_to_pattern_time_type(static_cast<uint32_t>(params[3]));
 
     logger->set_pattern(pattern, type);
     return 0;
@@ -312,7 +312,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     return logger->should_log(lvl);
 }
@@ -334,7 +334,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
@@ -360,7 +360,7 @@ static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->log({}, lvl, ctx, params, 3);
     return 0;
@@ -383,7 +383,7 @@ static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->log_amx_tpl({}, lvl, ctx, params, 3);
     return 0;
@@ -406,12 +406,12 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    logger->log(log4sp::get_plugin_source_loc(ctx), lvl, msg, ctx);
+    logger->log(log4sp::source_loc::from_plugin_ctx(ctx), lvl, msg, ctx);
     return 0;
 }
 
@@ -432,9 +432,9 @@ static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
-    logger->log(log4sp::get_plugin_source_loc(ctx), lvl, ctx, params, 3);
+    logger->log(log4sp::source_loc::from_plugin_ctx(ctx), lvl, ctx, params, 3);
     return 0;
 }
 
@@ -455,7 +455,7 @@ static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->log_amx_tpl({}, lvl, ctx, params, 3);
     return 0;
@@ -483,10 +483,10 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params)
     ctx->LocalToString(params[4], &func);
     ctx->LocalToString(params[6], &msg);
 
-    auto line = static_cast<int>(params[3]);
-    auto lvl  = log4sp::cell_to_level(params[5]);
+    auto line = static_cast<uint32_t>(params[3]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[5]));
 
-    logger->log(spdlog::source_loc{file, line, func}, lvl, msg, ctx);
+    logger->log(log4sp::source_loc{file, line, func}, lvl, msg, ctx);
     return 0;
 }
 
@@ -511,10 +511,10 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
     ctx->LocalToString(params[2], &file);
     ctx->LocalToString(params[4], &func);
 
-    auto line = static_cast<int>(params[3]);
-    auto lvl  = log4sp::cell_to_level(params[5]);
+    auto line = static_cast<uint32_t>(params[3]);
+    auto lvl  = log4sp::level::from_number(static_cast<uint32_t>(params[5]));
 
-    logger->log(spdlog::source_loc{file, line, func}, lvl, ctx, params, 6);
+    logger->log(log4sp::source_loc{file, line, func}, lvl, ctx, params, 6);
     return 0;
 }
 
@@ -539,10 +539,10 @@ static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
     ctx->LocalToString(params[2], &file);
     ctx->LocalToString(params[4], &func);
 
-    auto line = static_cast<int>(params[3]);
-    auto lvl  = log4sp::cell_to_level(params[5]);
+    auto line = static_cast<uint32_t>(params[3]);
+    auto lvl  = log4sp::level::from_number(static_cast<uint32_t>(params[5]));
 
-    logger->log_amx_tpl(spdlog::source_loc{file, line, func}, lvl, ctx, params, 6);
+    logger->log_amx_tpl(log4sp::source_loc{file, line, func}, lvl, ctx, params, 6);
     return 0;
 }
 
@@ -563,7 +563,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
@@ -589,7 +589,7 @@ static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *par
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->log_stack_trace(lvl, ctx, params, 3);
     return 0;
@@ -612,7 +612,7 @@ static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t 
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->log_stack_trace(lvl, ctx, params, 3);
     return 0;
@@ -635,7 +635,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     char *msg;
     ctx->LocalToString(params[3], &msg);
@@ -661,7 +661,7 @@ static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->throw_error(lvl, ctx, params, 3);
     return 0;
@@ -684,7 +684,7 @@ static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *pa
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->throw_error_amx_tpl(lvl, ctx, params, 3);
 
@@ -711,7 +711,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, spdlog::level::trace, msg, ctx);
+    logger->log({}, log4sp::level::trace, msg, ctx);
     return 0;
 }
 
@@ -732,7 +732,7 @@ static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log({}, spdlog::level::trace, ctx, params, 2);
+    logger->log({}, log4sp::level::trace, ctx, params, 2);
     return 0;
 }
 
@@ -753,7 +753,7 @@ static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, spdlog::level::trace, ctx, params, 2);
+    logger->log_amx_tpl({}, log4sp::level::trace, ctx, params, 2);
     return 0;
 }
 
@@ -777,7 +777,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, spdlog::level::debug, msg, ctx);
+    logger->log({}, log4sp::level::debug, msg, ctx);
     return 0;
 }
 
@@ -798,7 +798,7 @@ static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log({}, spdlog::level::debug, ctx, params, 2);
+    logger->log({}, log4sp::level::debug, ctx, params, 2);
     return 0;
 }
 
@@ -819,7 +819,7 @@ static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, spdlog::level::debug, ctx, params, 2);
+    logger->log_amx_tpl({}, log4sp::level::debug, ctx, params, 2);
     return 0;
 }
 
@@ -843,7 +843,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, spdlog::level::info, msg, ctx);
+    logger->log({}, log4sp::level::info, msg, ctx);
     return 0;
 }
 
@@ -864,7 +864,7 @@ static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log({}, spdlog::level::info, ctx, params, 2);
+    logger->log({}, log4sp::level::info, ctx, params, 2);
     return 0;
 }
 
@@ -885,7 +885,7 @@ static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, spdlog::level::info, ctx, params, 2);
+    logger->log_amx_tpl({}, log4sp::level::info, ctx, params, 2);
     return 0;
 }
 
@@ -909,7 +909,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, spdlog::level::warn, msg, ctx);
+    logger->log({}, log4sp::level::warn, msg, ctx);
     return 0;
 }
 
@@ -930,7 +930,7 @@ static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log({}, spdlog::level::warn, ctx, params, 2);
+    logger->log({}, log4sp::level::warn, ctx, params, 2);
     return 0;
 }
 
@@ -951,7 +951,7 @@ static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, spdlog::level::warn, ctx, params, 2);
+    logger->log_amx_tpl({}, log4sp::level::warn, ctx, params, 2);
     return 0;
 }
 
@@ -975,7 +975,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, spdlog::level::err, msg, ctx);
+    logger->log({}, log4sp::level::err, msg, ctx);
     return 0;
 }
 
@@ -996,7 +996,7 @@ static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log({}, spdlog::level::err, ctx, params, 2);
+    logger->log({}, log4sp::level::err, ctx, params, 2);
     return 0;
 }
 
@@ -1017,7 +1017,7 @@ static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, spdlog::level::err, ctx, params, 2);
+    logger->log_amx_tpl({}, log4sp::level::err, ctx, params, 2);
     return 0;
 }
 
@@ -1041,7 +1041,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params)
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, spdlog::level::critical, msg, ctx);
+    logger->log({}, log4sp::level::critical, msg, ctx);
     return 0;
 }
 
@@ -1062,7 +1062,7 @@ static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log({}, spdlog::level::critical, ctx, params, 2);
+    logger->log({}, log4sp::level::critical, ctx, params, 2);
     return 0;
 }
 
@@ -1083,7 +1083,7 @@ static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, spdlog::level::critical, ctx, params, 2);
+    logger->log_amx_tpl({}, log4sp::level::critical, ctx, params, 2);
     return 0;
 }
 
@@ -1145,7 +1145,7 @@ static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto lvl = log4sp::cell_to_level(params[2]);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
     logger->flush_on(lvl);
     return 0;

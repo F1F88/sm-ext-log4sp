@@ -3,16 +3,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "extension.h"
-
-
-namespace spdlog {
-namespace sinks {
-
-class sink;
-
-}       // namespace spdlog
-}       // namespace sinks
+#include "log4sp/common.h"
+#include "log4sp/sinks/base_sink.h"
 
 
 namespace log4sp {
@@ -64,7 +56,7 @@ public:
      * @param error     Optional pointer to store an error code on failure (undefined on success).
      * @return          object 对象的 handle 或 BAD_HANDLE 表示创建失败
      */
-    [[nodiscard]] SourceMod::Handle_t create_handle(std::shared_ptr<spdlog::sinks::sink> object,
+    [[nodiscard]] SourceMod::Handle_t create_handle(sink_ptr object,
                                                     const SourceMod::HandleSecurity *security,
                                                     const SourceMod::HandleAccess *access,
                                                     SourceMod::HandleError *error) noexcept;
@@ -77,9 +69,9 @@ public:
      * @param error     HandleError error code.
      * @return          object 智能指针或 nullptr 表示读取失败.
      */
-    [[nodiscard]] std::shared_ptr<spdlog::sinks::sink> read_handle(SourceMod::Handle_t handle,
-                                                                   SourceMod::HandleSecurity *security,
-                                                                   SourceMod::HandleError *error) const noexcept;
+    [[nodiscard]] sink_ptr read_handle(SourceMod::Handle_t handle,
+                                       SourceMod::HandleSecurity *security,
+                                       SourceMod::HandleError *error) const noexcept;
 
     /**
      * @brief handlesys->ReadHandle 的适配器
@@ -89,9 +81,9 @@ public:
      * @param error     HandleError error code.
      * @return          object 指针或 nullptr 表示读取失败.
      */
-    [[nodiscard]] spdlog::sinks::sink *read_handle_raw(SourceMod::Handle_t handle,
-                                                       SourceMod::HandleSecurity *security,
-                                                       SourceMod::HandleError *error) const noexcept;
+    [[nodiscard]] sinks::base_sink *read_handle_raw(SourceMod::Handle_t handle,
+                                                    SourceMod::HandleSecurity *security,
+                                                    SourceMod::HandleError *error) const noexcept;
 
     /**
      * @brief Called when destroying a handle.  Must be implemented.
@@ -112,8 +104,8 @@ private:
     void destroy_() noexcept;
 
     SourceMod::HandleType_t handle_type_{NO_HANDLE_TYPE};
-    std::unordered_map<spdlog::sinks::sink*, SourceMod::Handle_t> handles_;
-    std::unordered_map<spdlog::sinks::sink*, std::shared_ptr<spdlog::sinks::sink>> sinks_;
+    std::unordered_map<sinks::base_sink*, SourceMod::Handle_t> handles_;
+    std::unordered_map<sinks::base_sink*, sink_ptr> sinks_;
 };
 
 

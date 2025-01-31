@@ -1,3 +1,4 @@
+#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/sinks/basic_file_sink.h"
@@ -19,7 +20,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
     auto truncate = static_cast<bool>(params[2]);
 
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::basic_file_sink>(path, truncate);
@@ -129,7 +130,7 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
 
     auto truncate = static_cast<bool>(params[3]);
 
-    spdlog::sink_ptr sink;
+    log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::basic_file_sink>(path, truncate);
