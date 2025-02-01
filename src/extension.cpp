@@ -54,7 +54,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         log4sp::sink_handler::initialize();
         log4sp::root_console_command_handler::initialize();
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         smutils->Format(error, maxlen, "Initialization failure (reason: %s)", ex.what());
         return false;
@@ -67,7 +67,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
         {
             sink = std::make_shared<log4sp::sinks::server_console_sink>();
         }
-        catch(const std::exception &ex)
+        catch (const std::exception &ex)
         {
             smutils->Format(error, maxlen, "Could not create global logger handle (reason: %s)", ex.what());
             return false;

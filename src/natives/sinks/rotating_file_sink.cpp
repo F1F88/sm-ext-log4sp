@@ -31,7 +31,7 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     {
         sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;
@@ -73,7 +73,7 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
         ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
     }
 
-    size_t bytes;
+    size_t bytes{0};
     ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
     return bytes;
 }
@@ -106,7 +106,7 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
     {
         realSink->rotate_now();
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
     }
@@ -114,7 +114,7 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
 }
 
 /**
- * public native void CalcFilename(const char[] file, int index, char[] buffer, int maxlength);
+ * public native void CalcFilename(const char[] file, int index, char[] buffer, int maxlen);
  */
 static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
@@ -123,7 +123,8 @@ static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, con
     auto index = static_cast<size_t>(params[4]);
 
     auto filename = log4sp::sinks::rotating_file_sink::calc_filename(file, index);
-    size_t bytes;
+
+    size_t bytes{0};
     ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes);
     return bytes;
 }
@@ -156,7 +157,7 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     {
         sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;

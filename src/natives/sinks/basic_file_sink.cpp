@@ -25,7 +25,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     {
         sink = std::make_shared<log4sp::sinks::basic_file_sink>(path, truncate);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;
@@ -68,7 +68,7 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
         return 0;
     }
 
-    size_t bytes;
+    size_t bytes{0};
     ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
     return bytes;
 }
@@ -101,7 +101,7 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
     {
         realSink->truncate();
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
     }
@@ -135,7 +135,7 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     {
         sink = std::make_shared<log4sp::sinks::basic_file_sink>(path, truncate);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;
