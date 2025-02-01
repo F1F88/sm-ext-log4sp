@@ -36,9 +36,6 @@
 
 /**
  * Log level enum.
- *
- * @note If you pass an out-of-bounds value to native,
- *       native will modify it to the nearest boundary value.
  */
 enum LogLevel
 {
@@ -53,11 +50,7 @@ enum LogLevel
 }
 
 /**
- * Pattern time - specific time getting to use for pattern_formatter.
- * local time by default.
- *
- * @note If you pass an out-of-bounds value to native,
- *       native will modify it to the nearest boundary value.
+ * Specific time used for pattern formatting.
  */
 enum PatternTimeType
 {
@@ -68,22 +61,22 @@ enum PatternTimeType
 /**
  * Convert a logging level enum to name.
  *
- * @param lvl       Logging level enum.
  * @param buffer    Buffer to store log level name.
  * @param maxlen    Maximum length of the buffer.
+ * @param lvl       Logging level enum.
  * @return          Number of characters written to the buffer, not including the null terminator.
  */
-native int LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
+native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
 
 /**
  * Convert a logging level enum to short name.
  *
- * @param lvl       Logging level enum.
  * @param buffer    Buffer to store log level short name.
  * @param maxlen    Maximum length of the buffer.
+ * @param lvl       Logging level enum.
  * @return          Number of characters written to the buffer, not including the null terminator.
  */
-native int LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
+native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
 
 /**
  * Convert a logging level name to log level enum.

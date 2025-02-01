@@ -4,28 +4,28 @@
 #include "log4sp/common.h"
 
 /**
- * native void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
+ * native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
  */
 static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[1]));
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[3]));
     auto name = log4sp::level::to_string_view(lvl);
 
-    size_t bytes;
-    ctx->StringToLocalUTF8(params[2], params[3], name.data(), &bytes);
+    size_t bytes{0};
+    ctx->StringToLocalUTF8(params[1], params[2], name.data(), &bytes);
     return bytes;
 }
 
 /**
- * native void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
+ * native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
  */
 static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[1]));
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[3]));
     auto name = log4sp::level::to_short_string_view(lvl);
 
-    size_t bytes;
-    ctx->StringToLocalUTF8(params[2], params[3], name, &bytes);
+    size_t bytes{0};
+    ctx->StringToLocalUTF8(params[1], params[2], name, &bytes);
     return bytes;
 }
 
