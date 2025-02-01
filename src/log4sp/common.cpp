@@ -150,8 +150,8 @@ try_serverlang:
 
 static void AddString(memory_buf_t &out, const char *string, uint32_t width, int prec, int flags) {
     if (string == nullptr) {
-        const char nlstr[]{'(', 'n', 'u', 'l', 'l', ')', '\0'};
-        const uint32_t size{sizeof(nlstr)};
+        constexpr const char *nlstr{"(null)"};
+        constexpr const uint32_t size{sizeof(nlstr)};
 
         if (!(flags & LADJUST)) {
             while (size < width--) {
@@ -425,12 +425,12 @@ static void AddHex(memory_buf_t &out, uint32_t val, uint32_t width, int flags) {
     uint32_t digits{0};
 
     if (flags & UPPERDIGITS) {
-        const char hexAdjust[]{"0123456789ABCDEF"};
+        constexpr const char *hexAdjust{"0123456789ABCDEF"};
         do {
             text[digits++] = hexAdjust[val & 0xF];
         } while(val >>= 4);
     } else {
-        const char hexAdjust[]{"0123456789abcdef"};
+        constexpr const char *hexAdjust{"0123456789abcdef"};
         do {
             text[digits++] = hexAdjust[val & 0xF];
         } while(val >>= 4);
@@ -526,7 +526,7 @@ static bool DescribePlayer(int index, const char **namep, const char **authp, in
         prec = -1;
 
 rflag:
-		char ch = *fmt++;
+        char ch = *fmt++;
 reswitch:
         switch(ch) {
         case '-': {
