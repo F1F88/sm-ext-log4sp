@@ -1,7 +1,7 @@
 #include <sourcemod>
 #include <profiler>
 
-#define LOG4sp_NO_EXT
+#undef REQUIRE_EXTENSIONS
 #include <log4sp>
 
 #pragma semicolon 1
