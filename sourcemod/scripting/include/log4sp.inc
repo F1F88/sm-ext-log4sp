@@ -116,7 +116,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("CallbackSink.SetLogCallback");
     MarkNativeAsOptional("CallbackSink.SetLogPostCallback");
     MarkNativeAsOptional("CallbackSink.SetFlushCallback");
-    MarkNativeAsOptional("CallbackSink.ToPattern");
     MarkNativeAsOptional("CallbackSink.CreateLogger");
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
@@ -126,7 +125,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("RingBufferSink.RingBufferSink");
     MarkNativeAsOptional("RingBufferSink.Drain");
     MarkNativeAsOptional("RingBufferSink.DrainFormatted");
-    MarkNativeAsOptional("RingBufferSink.ToPattern");
     MarkNativeAsOptional("RingBufferSink.CreateLogger");
 
     MarkNativeAsOptional("RotatingFileSink.RotatingFileSink");
@@ -143,6 +141,7 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.ShouldLog");
     MarkNativeAsOptional("Sink.Log");
+    MarkNativeAsOptional("Sink.ToPattern");
     MarkNativeAsOptional("Sink.Flush");
 }
 #endif
