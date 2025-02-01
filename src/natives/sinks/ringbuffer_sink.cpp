@@ -54,11 +54,9 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         return 0;
     }
 
-    auto funcID   = static_cast<funcid_t>(params[2]);
-    auto function = ctx->GetFunctionById(funcID);
+    auto function = ctx->GetFunctionByIdOrError(static_cast<funcid_t>(params[2]));
     if (!function)
     {
-        ctx->ReportError("Invalid drain callback function id (%X)", static_cast<int>(funcID));
         return 0;
     }
 
@@ -133,11 +131,9 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
         return 0;
     }
 
-    auto funcID   = static_cast<funcid_t>(params[2]);
-    auto function = ctx->GetFunctionById(funcID);
+    auto function = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
     if (!function)
     {
-        ctx->ReportError("Invalid drain formatted callback function id (%X)", static_cast<int>(funcID));
         return 0;
     }
 
@@ -235,7 +231,7 @@ static cell_t RingBufferSink_ToPattern(SourcePawn::IPluginContext *ctx, const ce
     {
         formatted = realSink->to_pattern(log4sp::details::log_msg{logTime, loc, name, lvl, msg});
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return 0;

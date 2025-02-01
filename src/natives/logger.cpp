@@ -148,11 +148,9 @@ static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params)
  */
 static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto funcID   = static_cast<funcid_t>(params[1]);
-    auto function = ctx->GetFunctionById(funcID);
+    auto function = ctx->GetFunctionByIdOrError(static_cast<funcid_t>(params[1]));
     if (!function)
     {
-        ctx->ReportError("Invalid apply all function. (funcID: %d)", static_cast<int>(funcID));
         return 0;
     }
 
@@ -1258,11 +1256,9 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
         return 0;
     }
 
-    auto funcID   = static_cast<funcid_t>(params[2]);
-    auto function = ctx->GetFunctionById(funcID);
+    auto function = ctx->GetFunctionByIdOrError(static_cast<funcid_t>(params[2]));
     if (!function)
     {
-        ctx->ReportError("Invalid error handler function id (%X)", static_cast<int>(funcID));
         return 0;
     }
 

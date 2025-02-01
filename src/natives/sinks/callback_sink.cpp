@@ -12,20 +12,16 @@
  */
 static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    auto logFunctionId     = static_cast<funcid_t>(params[1]);
-    auto logPostFunctionId = static_cast<funcid_t>(params[2]);
-    auto flushFunctionId   = static_cast<funcid_t>(params[3]);
-
-    auto logFunction       = ctx->GetFunctionById(logFunctionId);
-    auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
-    auto flushFunction     = ctx->GetFunctionById(flushFunctionId);
+    auto logFunction       = ctx->GetFunctionById(static_cast<funcid_t>(params[1]));
+    auto logPostFunction   = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
+    auto flushFunction     = ctx->GetFunctionById(static_cast<funcid_t>(params[3]));
 
     log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;
@@ -63,8 +59,11 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
         return 0;
     }
 
-    auto logFunctionId = static_cast<funcid_t>(params[2]);
-    auto logFunction   = ctx->GetFunctionById(logFunctionId);
+    auto logFunction = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
+    if (!logFunction)
+    {
+        return 0;
+    }
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
     if (!realSink)
@@ -77,7 +76,7 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
     {
         realSink->set_log_callback(logFunction);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return 0;
@@ -105,8 +104,11 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
         return 0;
     }
 
-    auto logPostFunctionId = static_cast<funcid_t>(params[2]);
-    auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
+    auto logPostFunction = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
+    if (!logPostFunction)
+    {
+        return 0;
+    }
 
     auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
     if (!realSink)
@@ -119,7 +121,7 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
     {
         realSink->set_log_post_callback(logPostFunction);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return 0;
@@ -154,14 +156,17 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
         return 0;
     }
 
-    auto flushFunctionId = static_cast<funcid_t>(params[2]);
-    auto flushFunction = ctx->GetFunctionById(flushFunctionId);
+    auto flushFunction = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
+    if (!flushFunction)
+    {
+        return 0;
+    }
 
     try
     {
         realSink->set_flush_callback(flushFunction);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return 0;
@@ -238,7 +243,7 @@ static cell_t CallbackSink_ToPattern(SourcePawn::IPluginContext *ctx, const cell
     {
         formatted = realSink->to_pattern(log4sp::details::log_msg{logTime, loc, name, lvl, msg});
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return 0;
@@ -262,20 +267,16 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
         return BAD_HANDLE;
     }
 
-    auto logFunctionId     = static_cast<funcid_t>(params[2]);
-    auto logPostFunctionId = static_cast<funcid_t>(params[3]);
-    auto flushFunctionId   = static_cast<funcid_t>(params[4]);
-
-    auto logFunction       = ctx->GetFunctionById(logFunctionId);
-    auto logPostFunction   = ctx->GetFunctionById(logPostFunctionId);
-    auto flushFunction     = ctx->GetFunctionById(flushFunctionId);
+    auto logFunction       = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
+    auto logPostFunction   = ctx->GetFunctionById(static_cast<funcid_t>(params[3]));
+    auto flushFunction     = ctx->GetFunctionById(static_cast<funcid_t>(params[4]));
 
     log4sp::sink_ptr sink;
     try
     {
         sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;

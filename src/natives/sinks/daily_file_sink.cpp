@@ -27,8 +27,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto minute   = static_cast<int>(params[3]);
     auto truncate = static_cast<bool>(params[4]);
     auto maxFiles = static_cast<uint16_t>(params[5]);
-    auto funcID   = static_cast<funcid_t>(params[6]);
-    auto function = ctx->GetFunctionById(funcID);
+    auto function = ctx->GetFunctionById(static_cast<funcid_t>(params[6]));
 
     auto calculator = [function](const log4sp::filename_t &filename, const tm &now_tm)
     {
@@ -57,7 +56,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     {
         sink = std::make_shared<log4sp::sinks::daily_file_sink>(path, hour, minute, truncate, maxFiles, calculator);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;
@@ -128,8 +127,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     auto minute   = static_cast<int>(params[4]);
     auto truncate = static_cast<bool>(params[5]);
     auto maxFiles = static_cast<uint16_t>(params[6]);
-    auto funcID   = static_cast<funcid_t>(params[7]);
-    auto function = ctx->GetFunctionById(funcID);
+    auto function = ctx->GetFunctionById(static_cast<funcid_t>(params[7]));
 
     auto calculator = [function](const log4sp::filename_t &filename, const tm &now_tm)
     {
@@ -158,7 +156,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     {
         sink = std::make_shared<log4sp::sinks::daily_file_sink>(path, hour, minute, truncate, maxFiles);
     }
-    catch(const std::exception &ex)
+    catch (const std::exception &ex)
     {
         ctx->ReportError(ex.what());
         return BAD_HANDLE;
