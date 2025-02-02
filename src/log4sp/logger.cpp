@@ -38,10 +38,11 @@ void logger::log_amx_tpl(const source_loc loc, const level::level_enum lvl, Sour
 
     if (should_log(lvl)) {
         char msg[2048];
-        DetectExceptions eh(ctx);
+        DetectExceptions eh{ctx};
 
         smutils->FormatString(msg, sizeof(msg), ctx, params, param);
         if (eh.HasException()) {
+            sink_it_(details::log_msg{name_, lvl, eh.Message()});
             return;
         }
 
@@ -94,10 +95,11 @@ void logger::log_stack_trace_amx_tpl(const level::level_enum lvl, SourcePawn::IP
 
     if (should_log(lvl)) {
         char msg[2048];
-        DetectExceptions eh(ctx);
+        DetectExceptions eh{ctx};
 
         smutils->FormatString(msg, sizeof(msg), ctx, params, param);
         if (eh.HasException()) {
+            sink_it_(details::log_msg{name_, lvl, eh.Message()});
             return;
         }
 
@@ -160,10 +162,11 @@ void logger::throw_error_amx_tpl(const level::level_enum lvl, SourcePawn::IPlugi
     assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()) && params);
 
     char msg[2048];
-    DetectExceptions eh(ctx);
+    DetectExceptions eh{ctx};
 
     smutils->FormatString(msg, sizeof(msg), ctx, params, param);
     if (eh.HasException()) {
+        sink_it_(details::log_msg{name_, lvl, eh.Message()});
         return;
     }
 
