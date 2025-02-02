@@ -33,7 +33,6 @@ public:
     // 当调用者是其他时，例如 控制台指令模块，ctx 可以为 null，但 loc 必须是相应的代码位置
     void log(const source_loc loc, const level::level_enum lvl, const string_view_t msg, SourcePawn::IPluginContext *ctx = nullptr) const noexcept;
     void log(const source_loc loc, const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept;
-    // void log(const source_loc loc, const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, const uint32_t param) const noexcept;
     void log_amx_tpl(const source_loc loc, const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept;
 
     // 所有参数都是必选项，ctx 用于获取堆栈信息

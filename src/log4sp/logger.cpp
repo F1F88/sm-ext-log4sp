@@ -14,6 +14,8 @@ void logger::log(const source_loc loc, const level::level_enum lvl, const string
 }
 
 void logger::log(const source_loc loc, const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept {
+    assert(ctx && params);
+
     if (should_log(lvl)) {
         std::string msg;
 
@@ -30,25 +32,6 @@ void logger::log(const source_loc loc, const level::level_enum lvl, SourcePawn::
         sink_it_(details::log_msg{loc, name_, lvl, msg}, ctx);
     }
 }
-
-// void logger::log(const source_loc loc, const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, const uint32_t param) const noexcept {
-//     if (should_log(lvl)) {
-//         int lparam{param};
-//         memory_buf_t buffer;
-
-//         try {
-//             buffer = format_cell_to_mem_buf(ctx, format, params, &lparam);
-//         } catch (const std::exception &ex) {
-//             err_helper_.handle_ex(name_, loc.empty() ? source_loc::from_plugin_ctx(ctx) : loc, ex);
-//             return;
-//         } catch (...) {
-//            err_helper_.handle_unknown_ex(name_, loc.empty() ? source_loc::from_plugin_ctx(ctx) : loc);
-//             return;
-//         }
-
-//         sink_it_(details::log_msg{loc, name_, lvl, fmt_lib::to_string(buffer)}, ctx);
-//     }
-// }
 
 void logger::log_amx_tpl(const source_loc loc, const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept {
     assert(ctx && params);
@@ -67,17 +50,13 @@ void logger::log_amx_tpl(const source_loc loc, const level::level_enum lvl, Sour
 }
 
 void logger::log_stack_trace(const level::level_enum lvl, string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
-    assert(ctx);
+    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()));
 
     if (should_log(lvl)) {
-        std::vector<std::string> messages{
-            fmt_lib::format("Stack trace requested: {}", msg),
-            fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
-        };
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Stack trace requested: {}", msg)});
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
 
-        std::vector<std::string> stack_trace{get_plugin_ctx_stack_trace(ctx)};
-        messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
-
+        std::vector<std::string> messages{get_plugin_ctx_stack_trace(ctx)};
         for (auto &iter : messages) {
             sink_it_(details::log_msg{name_, lvl, iter}, ctx);
         }
@@ -85,6 +64,8 @@ void logger::log_stack_trace(const level::level_enum lvl, string_view_t msg, Sou
 }
 
 void logger::log_stack_trace(const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
+    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()));
+
     if (should_log(lvl)) {
         std::string msg;
 
@@ -98,14 +79,10 @@ void logger::log_stack_trace(const level::level_enum lvl, SourcePawn::IPluginCon
             return;
         }
 
-        std::vector<std::string> messages{
-            fmt_lib::format("Stack trace requested: {}", msg),
-            fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
-        };
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Stack trace requested: {}", msg)});
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
 
-        std::vector<std::string> stack_trace{get_plugin_ctx_stack_trace(ctx)};
-        messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
-
+        std::vector<std::string> messages{get_plugin_ctx_stack_trace(ctx)};
         for (auto &iter : messages) {
             sink_it_(details::log_msg{name_, lvl, iter}, ctx);
         }
@@ -113,7 +90,7 @@ void logger::log_stack_trace(const level::level_enum lvl, SourcePawn::IPluginCon
 }
 
 void logger::log_stack_trace_amx_tpl(const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
-    assert(ctx && params);
+    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()) && params);
 
     if (should_log(lvl)) {
         char msg[2048];
@@ -124,14 +101,10 @@ void logger::log_stack_trace_amx_tpl(const level::level_enum lvl, SourcePawn::IP
             return;
         }
 
-        std::vector<std::string> messages{
-            fmt_lib::format("Stack trace requested: {}", msg),
-            fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
-        };
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Stack trace requested: {}", msg)});
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
 
-        std::vector<std::string> stack_trace{get_plugin_ctx_stack_trace(ctx)};
-        messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
-
+        std::vector<std::string> messages{get_plugin_ctx_stack_trace(ctx)};
         for (auto &iter : messages) {
             sink_it_(details::log_msg{name_, lvl, iter}, ctx);
         }
@@ -139,19 +112,15 @@ void logger::log_stack_trace_amx_tpl(const level::level_enum lvl, SourcePawn::IP
 }
 
 void logger::throw_error(const level::level_enum lvl, string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
-    assert(ctx);
+    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()));
 
     ctx->ReportError(msg.data());
 
     if (should_log(lvl)) {
-        std::vector<std::string> messages{
-            fmt_lib::format("Exception reported: {}", msg),
-            fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
-        };
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Exception reported: {}", msg)});
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
 
-        std::vector<std::string> stack_trace{get_plugin_ctx_stack_trace(ctx)};
-        messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
-
+        std::vector<std::string> messages{get_plugin_ctx_stack_trace(ctx)};
         for (auto &iter : messages) {
             sink_it_(details::log_msg{name_, lvl, iter}, ctx);
         }
@@ -159,6 +128,8 @@ void logger::throw_error(const level::level_enum lvl, string_view_t msg, SourceP
 }
 
 void logger::throw_error(const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
+    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()) && params);
+
     std::string msg;
     try {
         msg = format_cell_to_string(ctx, params, param);
@@ -175,14 +146,10 @@ void logger::throw_error(const level::level_enum lvl, SourcePawn::IPluginContext
     ctx->ReportError(msg.c_str());
 
     if (should_log(lvl)) {
-        std::vector<std::string> messages{
-            fmt_lib::format("Exception reported: {}", msg),
-            fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
-        };
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Exception reported: {}", msg)});
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
 
-        std::vector<std::string> stack_trace{get_plugin_ctx_stack_trace(ctx)};
-        messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
-
+        std::vector<std::string> messages{get_plugin_ctx_stack_trace(ctx)};
         for (auto &iter : messages) {
             sink_it_(details::log_msg{name_, lvl, iter}, ctx);
         }
@@ -190,7 +157,7 @@ void logger::throw_error(const level::level_enum lvl, SourcePawn::IPluginContext
 }
 
 void logger::throw_error_amx_tpl(const level::level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
-    assert(ctx && params);
+    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()) && params);
 
     char msg[2048];
     DetectExceptions eh(ctx);
@@ -203,14 +170,10 @@ void logger::throw_error_amx_tpl(const level::level_enum lvl, SourcePawn::IPlugi
     ctx->ReportError(msg);
 
     if (should_log(lvl)) {
-        std::vector<std::string> messages{
-            fmt_lib::format("Exception reported: {}", msg),
-            fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())
-        };
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Exception reported: {}", msg)});
+        sink_it_(details::log_msg{name_, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
 
-        std::vector<std::string> stack_trace{get_plugin_ctx_stack_trace(ctx)};
-        messages.insert(messages.end(), stack_trace.begin(), stack_trace.end());
-
+        std::vector<std::string> messages{get_plugin_ctx_stack_trace(ctx)};
         for (auto &iter : messages) {
             sink_it_(details::log_msg{name_, lvl, iter}, ctx);
         }
