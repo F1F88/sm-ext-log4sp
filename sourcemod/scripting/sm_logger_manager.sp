@@ -54,6 +54,7 @@ void CreateLoggerListMenu(int client)
 
     Menu menu = new Menu(MenuHandler_LoggerList);
     menu.SetTitle("Select a logger to manager:");
+    menu.AddItem("", "Apply to all loggers");
 
     for (int i = 0; i < hArray.Length; i++)
     {
@@ -63,7 +64,6 @@ void CreateLoggerListMenu(int client)
     }
 
     delete hArray;
-    menu.AddItem("X", "Apply to all loggers");
     menu.Display(client, MENU_TIME_FOREVER);
 }
 
@@ -80,7 +80,7 @@ void MenuHandler_LoggerList(Menu menu, MenuAction action, int param1, int param2
     {
         case MenuAction_Select:
         {
-            if (param2 == menu.ItemCount - 1)
+            if (param2 == 0)
             {
                 Menu submenu = new Menu(MenuHandler_ApplyToAll);
                 submenu.SetTitle("Choose an action to apply to all loggers:");
@@ -101,14 +101,11 @@ void MenuHandler_LoggerList(Menu menu, MenuAction action, int param1, int param2
                     return;
                 }
 
-                LogLevel lvl = logger.GetLevel();
-                LogLevel lvl_flush = logger.GetFlushLevel();
-
                 char sLevel[64], sFlushLevel[64];
-                LogLevelToName(lvl, sLevel, sizeof(sLevel));
-                LogLevelToName(lvl_flush, sFlushLevel, sizeof(sFlushLevel));
-                Format(sLevel, sizeof(sLevel), "Current LogLevel: %s", sLevel);
-                Format(sFlushLevel, sizeof(sFlushLevel), "Current Flush Level: %s", sFlushLevel);
+                LogLevelToName(logger.GetLevel(), sLevel, sizeof(sLevel));
+                LogLevelToName(logger.GetFlushLevel(), sFlushLevel, sizeof(sFlushLevel));
+                Format(sLevel, sizeof(sLevel), "Current log level: %s", sLevel);
+                Format(sFlushLevel, sizeof(sFlushLevel), "Current flush level: %s", sFlushLevel);
 
                 Menu submenu = new Menu(MenuHandler_ManageLogger);
                 submenu.SetTitle("Manage Logger: %s", sInfo);
@@ -193,9 +190,8 @@ void MenuHandler_SetAllLoggerLevel(Menu menu, MenuAction action, int param1, int
         {
             char sLevel[32];
             menu.GetItem(param2, sLevel, sizeof(sLevel));
-            LogLevel lvl = NameToLogLevel(sLevel);
-            Logger.ApplyAll(ApplyAllLogger_SetLevel, lvl);
-            ReplyToCommand(param1, "[SM] All loggers have set to level %s.", sLevel);
+            Logger.ApplyAll(ApplyAllLogger_SetLevel, NameToLogLevel(sLevel));
+            ReplyToCommand(param1, "[SM] All loggers have been set to level %s.", sLevel);
         }
 
         case MenuAction_End:
@@ -217,9 +213,8 @@ void MenuHandler_SetAllLoggerFlushLevel(Menu menu, MenuAction action, int param1
         {
             char sLevel[32];
             menu.GetItem(param2, sLevel, sizeof(sLevel));
-            LogLevel lvl = NameToLogLevel(sLevel);
-            Logger.ApplyAll(ApplyAllLogger_SetFlushLevel, lvl);
-            ReplyToCommand(param1, "[SM] All loggers' flush level have set to '%s.'", sLevel);
+            Logger.ApplyAll(ApplyAllLogger_SetFlushLevel, NameToLogLevel(sLevel));
+            ReplyToCommand(param1, "[SM] All loggers' flush level have been set to '%s.'", sLevel);
         }
 
         case MenuAction_End:
@@ -324,10 +319,8 @@ void MenuHandler_SetLoggerLevel(Menu menu, MenuAction action, int param1, int pa
             char sName[32];
             menu.GetItem(param2, sName, sizeof(sName));
 
-            LogLevel lvl = NameToLogLevel(sName);
-            logger.SetLevel(lvl);
-
-            ReplyToCommand(param1, "[SM] Logger '%s' level set to '%s'.", sLoggerName, sName);
+            logger.SetLevel(NameToLogLevel(sName));
+            ReplyToCommand(param1, "[SM] Logger '%s' level has been set to '%s'.", sLoggerName, sName);
         }
 
         case MenuAction_End:
@@ -354,9 +347,8 @@ void MenuHandler_SetLoggerFlushLevel(Menu menu, MenuAction action, int param1, i
             char sName[32];
             menu.GetItem(param2, sName, sizeof(sName));
 
-            LogLevel lvl = NameToLogLevel(sName);
-            logger.FlushOn(lvl);
-            ReplyToCommand(param1, "[SM] Logger '%s' flush level set to '%s'.", sLoggerName, sName);
+            logger.FlushOn(NameToLogLevel(sName));
+            ReplyToCommand(param1, "[SM] Logger '%s' flush level has been set to '%s'.", sLoggerName, sName);
         }
 
         case MenuAction_End:
@@ -404,10 +396,9 @@ Action Cmd_Logger_ApplyAll(int client, int args)
         {
             char sLvl[16];
             GetCmdArg(3, sLvl, sizeof(sLvl));
-            LogLevel lvl = NameToLogLevel(sLvl);
             bHasLevel = true;
             dp.WriteCell(bHasLevel);
-            dp.WriteCell(lvl);
+            dp.WriteCell(NameToLogLevel(sLvl));
         }
         else
         {
@@ -416,14 +407,17 @@ Action Cmd_Logger_ApplyAll(int client, int args)
     }
 
     Logger.ApplyAll(ApplyAllLogger_Excute, dp);
+    delete dp;
+
     ReplyToCommand(client, "[SM] All loggers have been applied with command: '%s %s'.", sFunctionName, sArg);
     return Plugin_Handled;
 }
 
+// HACKHACK: Could we just only read once the datapack?
 void ApplyAllLogger_Excute(Logger logger, DataPack dp)
 {
-    static char sArg[32];
-    static char sFunctionName[16];
+    char sArg[32];
+    char sFunctionName[16];
     LogLevel lvl;
 
     if (dp)
@@ -436,8 +430,6 @@ void ApplyAllLogger_Excute(Logger logger, DataPack dp)
             bool bHasLevel = view_as<bool>(dp.ReadCell());
             if (bHasLevel) lvl = view_as<LogLevel>(dp.ReadCell());
         }
-
-        delete dp;
     }
 
     if (!strcmp(sFunctionName, "set_lvl", false))
@@ -489,8 +481,7 @@ Action Cmd_Logger_SetLevel(int client, int args)
     }
 
     GetCmdArg(2, sArg, sizeof(sArg));
-    LogLevel lvl = NameToLogLevel(sArg);
-    logger.SetLevel(lvl);
+    logger.SetLevel(NameToLogLevel(sArg));
 
     return Plugin_Handled;
 }
@@ -620,8 +611,7 @@ Action Cmd_Logger_SetFlushLevel(int client, int args)
     }
 
     GetCmdArg(2, sArg, sizeof(sArg));
-    LogLevel lvl = NameToLogLevel(sArg);
-    logger.FlushOn(lvl);
+    logger.FlushOn(NameToLogLevel(sArg));
 
     return Plugin_Handled;
 }
