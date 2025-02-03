@@ -254,7 +254,7 @@ void MenuHandler_ManageLogger(Menu menu, MenuAction action, int param1, int para
             
             switch (param2)
             {
-                case 1:
+                case 3:
                 {
                     Menu submenu = new Menu(MenuHandler_SetLoggerLevel);
                     submenu.SetTitle("Set log level for %s", sLoggerName);
@@ -270,14 +270,14 @@ void MenuHandler_ManageLogger(Menu menu, MenuAction action, int param1, int para
                     submenu.Display(param1, MENU_TIME_FOREVER);
                 }
 
-                case 2:
+                case 4:
                 {
                     Logger logger = Logger.Get(sLoggerName);
                     logger.Flush();
                     ReplyToCommand(param1, "[SM] Logger '%s' flushed.", sLoggerName);
                 }
 
-                case 3:
+                case 5:
                 {
                     Menu submenu = new Menu(MenuHandler_SetLoggerFlushLevel);
                     submenu.SetTitle("Set logger flush level for %s", sLoggerName);
