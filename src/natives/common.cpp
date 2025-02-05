@@ -6,7 +6,7 @@
 /**
  * native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
  */
-static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[3]));
     auto name = log4sp::level::to_string_view(lvl);
@@ -19,7 +19,7 @@ static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *para
 /**
  * native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
  */
-static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[3]));
     auto name = log4sp::level::to_short_string_view(lvl);
@@ -32,7 +32,7 @@ static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t 
 /**
  * native LogLevel NameToLogLevel(const char[] name);
  */
-static cell_t NameToLogLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t NameToLogLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);

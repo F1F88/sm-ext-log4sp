@@ -10,7 +10,7 @@
 /**
  * public native CallbackSink(CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
  */
-static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto logFunction       = ctx->GetFunctionById(static_cast<funcid_t>(params[1]));
     auto logPostFunction   = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
@@ -45,7 +45,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
  *
  * function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int sec[2], int ns[2]);
  */
-static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -90,7 +90,7 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
  *
  * function void(const char[] msg);
  */
-static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -135,7 +135,7 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
  *
  * function void();
  */
-static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -178,7 +178,7 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
 /**
  * public static native Logger CreateLogger(const char[] name, CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
  */
-static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);

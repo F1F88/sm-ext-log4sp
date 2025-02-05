@@ -15,7 +15,7 @@
  *     bool rotateOnOpen = false
  * );
  */
-static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
     ctx->LocalToString(params[1], &file);
@@ -53,7 +53,7 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
 /**
  * public native void GetFilename(char[] buffer, int maxlen);
  */
-static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -81,7 +81,7 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
 /**
  * public native void RotateNow();
  */
-static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -116,7 +116,7 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
 /**
  * public native void CalcFilename(const char[] file, int index, char[] buffer, int maxlen);
  */
-static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
     ctx->LocalToString(params[3], &file);
@@ -132,7 +132,7 @@ static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, con
 /**
  * public static native Logger CreateLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false);
  */
-static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);

@@ -9,7 +9,7 @@
 /**
  * public native LogLevel GetLevel();
  */
-static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -29,7 +29,7 @@ static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void SetLevel(LogLevel lvl);
  */
-static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -52,7 +52,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void SetPattern(const char[] pattern);
  */
-static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -76,7 +76,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native bool ShouldLog(LogLevel lvl);
  */
-static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -98,7 +98,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING, int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
  */
-static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -165,7 +165,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params)
  *      const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
  *      int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
  */
-static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -234,7 +234,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Flush();
  */
-static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 

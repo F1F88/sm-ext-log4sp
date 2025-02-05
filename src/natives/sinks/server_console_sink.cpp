@@ -9,7 +9,7 @@
 /**
  * public native ServerConsoleSink();
  */
-static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     log4sp::sink_ptr sink;
     try
@@ -38,7 +38,7 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
 /**
  * public static native Logger CreateLogger(const char[] name);
  */
-static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);

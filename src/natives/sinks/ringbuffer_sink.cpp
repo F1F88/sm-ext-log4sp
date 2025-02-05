@@ -10,7 +10,7 @@
 /**
  * public native RingBufferSink(int amount);
  */
-static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto amount = static_cast<size_t>(params[1]);
     log4sp::sink_ptr sink = std::make_shared<log4sp::sinks::ringbuffer_sink>(amount);
@@ -33,7 +33,7 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
  *
  * function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2], any data);
  */
-static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -110,7 +110,7 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
  *
  * function void (const char[] msg, any data);
  */
-static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -166,7 +166,7 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
 /**
  * public static native Logger CreateLogger(const char[] name, int amount);
  */
-static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);

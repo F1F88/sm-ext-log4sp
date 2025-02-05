@@ -90,7 +90,7 @@ namespace log4sp {
 #define ZEROPAD         0x00000002      /* zero (as opposed to blank) pad */
 #define UPPERDIGITS     0x00000004      /* make alpha digits uppercase */
 
-static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) {
+static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) noexcept {
     cell_t new_params[MAX_TRANSLATE_PARAMS];
     for (uint32_t i = 0; i < pTrans->fmt_count; i++) {
         new_params[i] = params[pTrans->fmt_order[i]];
@@ -148,7 +148,7 @@ try_serverlang:
     return format_cell_to_mem_buf(ctx, pTrans.szPhrase, params, arg);
 }
 
-static void AddString(memory_buf_t &out, const char *string, uint32_t width, int prec, int flags) {
+static void AddString(memory_buf_t &out, const char *string, uint32_t width, int prec, int flags) noexcept {
     if (string == nullptr) {
         constexpr const char *nlstr{"(null)"};
         constexpr const uint32_t size{sizeof(nlstr)};
@@ -188,7 +188,7 @@ static void AddString(memory_buf_t &out, const char *string, uint32_t width, int
     }
 }
 
-static void AddFloat(memory_buf_t &out, double fval, uint32_t width, int prec, int flags) {
+static void AddFloat(memory_buf_t &out, double fval, uint32_t width, int prec, int flags) noexcept {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
@@ -288,7 +288,7 @@ static void AddFloat(memory_buf_t &out, double fval, uint32_t width, int prec, i
     }
 }
 
-static void AddBinary(memory_buf_t &out, uint32_t val, uint32_t width, int flags) {
+static void AddBinary(memory_buf_t &out, uint32_t val, uint32_t width, int flags) noexcept {
     char text[32];
 
     int iter{31};
@@ -326,7 +326,7 @@ static void AddBinary(memory_buf_t &out, uint32_t val, uint32_t width, int flags
     }
 }
 
-static void AddUInt(memory_buf_t &out, uint32_t val, uint32_t width, int flags) {
+static void AddUInt(memory_buf_t &out, uint32_t val, uint32_t width, int flags) noexcept {
     char text[10];
     uint32_t digits{0};
     do {
@@ -365,7 +365,7 @@ static void AddUInt(memory_buf_t &out, uint32_t val, uint32_t width, int flags) 
     }
 }
 
-static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) {
+static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexcept {
     char text[10];
     uint32_t digits{0};
 
@@ -420,21 +420,16 @@ static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) {
     }
 }
 
-static void AddHex(memory_buf_t &out, uint32_t val, uint32_t width, int flags) {
+static void AddHex(memory_buf_t &out, uint32_t val, uint32_t width, int flags) noexcept {
+    constexpr const char *hexUpper{"0123456789ABCDEF"};
+    constexpr const char *hexlower{"0123456789abcdef"};
+    const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexlower;
     char text[8];
     uint32_t digits{0};
 
-    if (flags & UPPERDIGITS) {
-        constexpr const char *hexAdjust{"0123456789ABCDEF"};
-        do {
-            text[digits++] = hexAdjust[val & 0xF];
-        } while(val >>= 4);
-    } else {
-        constexpr const char *hexAdjust{"0123456789abcdef"};
-        do {
-            text[digits++] = hexAdjust[val & 0xF];
-        } while(val >>= 4);
-    }
+    do {
+        text[digits++] = hexAdjust[val & 0xF];
+    } while(val >>= 4);
 
     if (!(flags & LADJUST)) {
         if (flags & ZEROPAD) {
@@ -468,7 +463,7 @@ static void AddHex(memory_buf_t &out, uint32_t val, uint32_t width, int flags) {
     }
 }
 
-static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp) {
+static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp) noexcept {
     auto player = playerhelpers->GetGamePlayer(index);
     if (!player || !player->IsConnected()) {
         return false;
@@ -627,7 +622,7 @@ reswitch:
 
                 cell_t *value;
                 ctx->LocalToPhysAddr(params[arg], &value);
-                char buffer[255];
+
                 if (*value) {
                     const char *name;
                     const char *auth;
@@ -636,11 +631,10 @@ reswitch:
                         throw_log4sp_ex(fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                     }
 
-                    ke::SafeSprintf(buffer, sizeof(buffer), "%s<%d><%s><>", name, userid, auth);
+                    AddString(out, fmt_lib::format("{}<{}><{}><>", name, userid, auth).c_str(), width, prec, flags);
                 } else {
-                    ke::SafeStrcpy(buffer, sizeof(buffer), "Console<0><Console><Console>");
+                    AddString(out, "Console<0><Console><Console>", width, prec, flags);
                 }
-                AddString(out, buffer, width, prec, flags);
                 ++arg;
                 break;
             }
@@ -652,13 +646,16 @@ reswitch:
                 cell_t *value;
                 ctx->LocalToPhysAddr(params[arg], &value);
 
-                const char *name{"Console"};
                 if (*value) {
+                    const char *name;
                     if (!DescribePlayer(*value, &name, nullptr, nullptr)) {
                         throw_log4sp_ex(fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args));
                     }
+
+                    AddString(out, name, width, prec, flags);
+                } else {
+                    AddString(out, "Console", width, prec, flags);
                 }
-                AddString(out, name, width, prec, flags);
                 ++arg;
                 break;
             }
@@ -693,8 +690,7 @@ reswitch:
 
                 char *key;
                 ctx->LocalToString(params[arg++], &key);
-                auto target{static_cast<cell_t>(translator->GetGlobalTarget())};
-                auto phrase{Translate(ctx, key, target, params, &arg)};
+                auto phrase{Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg)};
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
@@ -705,8 +701,7 @@ reswitch:
 
                 cell_t *value;
                 ctx->LocalToPhysAddr(params[arg], &value);
-                flags |= UPPERDIGITS;
-                AddHex(out, static_cast<uint32_t>(*value), width, flags);
+                AddHex(out, static_cast<uint32_t>(*value), width, flags | UPPERDIGITS);
                 ++arg;
                 break;
             }

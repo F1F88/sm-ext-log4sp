@@ -6,7 +6,7 @@
 /**
  * public native Logger(const char[] name);
  */
-static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -33,7 +33,7 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
  */
-static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -80,7 +80,7 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
 /**
  * public native CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
  */
-static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -133,7 +133,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 /**
  * public static native Logger Get(const char[] name);
  */
-static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
@@ -146,7 +146,7 @@ static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params)
  *
  * function void (Logger logger, any data = 0);
  */
-static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto function = ctx->GetFunctionByIdOrError(static_cast<funcid_t>(params[1]));
     if (!function)
@@ -185,7 +185,7 @@ static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native int GetName(char[] buffer, int maxlen);
  */
-static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -207,7 +207,7 @@ static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native int GetNameLength();
  */
-static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -227,7 +227,7 @@ static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *param
 /**
  * public native LogLevel GetLevel();
  */
-static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -247,7 +247,7 @@ static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void SetLevel(LogLevel lvl);
  */
-static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -270,7 +270,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void SetPattern(const char[] pattern, PatternTimeType type = PatternTimeType_local);
  */
-static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -296,7 +296,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native bool ShouldLog(LogLevel lvl);
  */
-static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -318,7 +318,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Log(LogLevel lvl, const char[] msg);
  */
-static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -344,7 +344,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void LogEx(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -367,7 +367,7 @@ static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void LogAmxTpl(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -390,7 +390,7 @@ static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void LogSrc(LogLevel lvl, const char[] msg);
  */
-static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -416,7 +416,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void LogSrcEx(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -439,7 +439,7 @@ static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void LogSrcAmxTpl(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -462,7 +462,7 @@ static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 /**
  * public native void LogLoc(const char[] file, int line, const char[] func, LogLevel lvl, const char[] msg);
  */
-static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -491,7 +491,7 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void LogLocEx(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -519,7 +519,7 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -547,7 +547,7 @@ static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 /**
  * public native void LogStackTrace(LogLevel lvl, const char[] msg);
  */
-static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -573,7 +573,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
 /**
  * public native void LogStackTraceEx(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -596,7 +596,7 @@ static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *par
 /**
  * public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -619,7 +619,7 @@ static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t 
 /**
  * public native void ThrowError(LogLevel lvl, const char[] msg);
  */
-static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -645,7 +645,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void ThrowErrorEx(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -668,7 +668,7 @@ static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params
 /**
  * public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...);
  */
-static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -692,7 +692,7 @@ static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *pa
 /**
  * public native void Trace(const char[] msg);
  */
-static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -716,7 +716,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void TraceEx(const char[] fmt, any ...);
  */
-static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -737,7 +737,7 @@ static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void TraceAmxTpl(const char[] fmt, any ...);
  */
-static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -758,7 +758,7 @@ static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Debug(const char[] msg);
  */
-static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -782,7 +782,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void DebugEx(const char[] fmt, any ...);
  */
-static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -803,7 +803,7 @@ static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void DebugAmxTpl(const char[] fmt, any ...);
  */
-static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -824,7 +824,7 @@ static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Info(const char[] msg);
  */
-static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -848,7 +848,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void InfoEx(const char[] fmt, any ...);
  */
-static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -869,7 +869,7 @@ static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void InfoAmxTpl(const char[] fmt, any ...);
  */
-static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -890,7 +890,7 @@ static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Warn(const char[] msg);
  */
-static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -914,7 +914,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void WarnEx(const char[] fmt, any ...);
  */
-static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -935,7 +935,7 @@ static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void WarnAmxTpl(const char[] fmt, any ...);
  */
-static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -956,7 +956,7 @@ static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Error(const char[] msg);
  */
-static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -980,7 +980,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void ErrorEx(const char[] fmt, any ...);
  */
-static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1001,7 +1001,7 @@ static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void ErrorAmxTpl(const char[] fmt, any ...);
  */
-static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1022,7 +1022,7 @@ static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Fatal(const char[] msg);
  */
-static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1046,7 +1046,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void FatalEx(const char[] fmt, any ...);
  */
-static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1067,7 +1067,7 @@ static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void FatalAmxTpl(const char[] fmt, any ...);
  */
-static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1088,7 +1088,7 @@ static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void Flush();
  */
-static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1109,7 +1109,7 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native LogLevel GetFlushLevel();
  */
-static cell_t GetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t GetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1129,7 +1129,7 @@ static cell_t GetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *param
 /**
  * public native void FlushOn(LogLevel lvl);
  */
-static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1152,7 +1152,7 @@ static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void AddSink(Sink sink);
  */
-static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto loggerHandle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1181,7 +1181,7 @@ static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void AddSinkEx(Sink sink);
  */
-static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto loggerHandle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1211,7 +1211,7 @@ static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params)
 /**
  * public native void DropSink(Sink sink);
  */
-static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto loggerHandle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -1242,7 +1242,7 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
  *
  * function void (const char[] msg);
  */
-static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 

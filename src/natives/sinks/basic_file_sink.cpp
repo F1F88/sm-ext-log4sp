@@ -10,7 +10,7 @@
 /**
  * public native BasicFileSink(const char[] file, bool truncate = false);
  */
-static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
     ctx->LocalToString(params[1], &file);
@@ -47,7 +47,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 /**
  * public native void GetFilename(char[] buffer, int maxlen);
  */
-static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -76,7 +76,7 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
 /**
  * public native void Truncate();
  */
-static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
@@ -112,7 +112,7 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
 /**
  * public static native Logger CreateLogger(const char[] name, const char[] file, bool truncate = false);
  */
-static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
+static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
