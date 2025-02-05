@@ -31,7 +31,7 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
 /**
  * public native void Drain(DrainCallback callback, any data = 0);
  *
- * function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2], any data);
+ * function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int logTime, any data);
  */
 static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
@@ -80,12 +80,7 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
     auto data = params[3];
 
     realSink->drain([&forward, &data](const log4sp::details::log_msg_buffer &log_msg) {
-        int64_t sec = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch()).count());
-        int64_t ns  = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(log_msg.time.time_since_epoch()).count());
-
-        // See SMCore::GetTime
-        cell_t pSec[]{static_cast<cell_t>(sec & 0xFFFFFFFF), static_cast<cell_t>((sec >> 32) & 0xFFFFFFFF)};
-        cell_t pNs[]{static_cast<cell_t>(ns & 0xFFFFFFFF), static_cast<cell_t>((ns >> 32) & 0xFFFFFFFF)};
+        auto logTime{std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch())};
 
         forward->PushString(log_msg.logger_name.data());
         forward->PushCell(log_msg.level);
@@ -95,8 +90,7 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         forward->PushCell(log_msg.source.line);
         forward->PushString(log_msg.source.funcname);
 
-        forward->PushArray(pSec, sizeof(pSec));
-        forward->PushArray(pNs, sizeof(pNs));
+        forward->PushCell(static_cast<cell_t>(logTime.count()));
         forward->PushCell(data);
         forward->Execute();
     });

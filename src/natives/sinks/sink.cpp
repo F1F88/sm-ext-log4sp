@@ -96,7 +96,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 }
 
 /**
- * public native void Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING, int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
+ * public native void Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING, int logTime = -1);
  */
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
@@ -126,26 +126,12 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
     log4sp::source_loc loc{file, line, func};
 
-    cell_t *seconds, *nanoseconds;
-    ctx->LocalToPhysAddr(params[8], &seconds);
-    ctx->LocalToPhysAddr(params[9], &nanoseconds);
-
-    std::chrono::system_clock::time_point logTime{log4sp::details::os::now()};
-    if (nanoseconds[0] != 0 || nanoseconds[1] != 0)
+    using std::chrono::system_clock;
+    system_clock::time_point logTime{log4sp::details::os::now()};
+    if (params[8] != -1)
     {
-        logTime = std::chrono::system_clock::time_point{
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::nanoseconds{
-                    log4sp::int32_to_int64(static_cast<uint32_t>(nanoseconds[1]),
-                                           static_cast<uint32_t>(nanoseconds[0]))})};
-    }
-    else if (seconds[0] != 0 || seconds[1] != 0)
-    {
-        logTime = std::chrono::system_clock::time_point{
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::seconds{
-                    log4sp::int32_to_int64(static_cast<uint32_t>(seconds[1]),
-                                           static_cast<uint32_t>(seconds[0]))})};
+        logTime = system_clock::time_point{
+            std::chrono::duration_cast<system_clock::duration>(std::chrono::seconds{params[8]})};
     }
 
     try
@@ -160,10 +146,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 }
 
 /**
- * public native int ToPattern(char[] buffer, int maxlen,
- *      const char[] name, LogLevel lvl, const char[] msg,
- *      const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
- *      int seconds[2] = {0, 0}, int nanoseconds[2] = {0, 0});
+ * public native int ToPattern(char[] buffer, int maxlen, const char[] name, LogLevel lvl, const char[] msg, const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING, int logTime = -1);
  */
 static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
@@ -193,26 +176,12 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
     log4sp::source_loc loc{file, line, func};
 
-    cell_t *seconds, *nanoseconds;
-    ctx->LocalToPhysAddr(params[10], &seconds);
-    ctx->LocalToPhysAddr(params[11], &nanoseconds);
-
-    std::chrono::system_clock::time_point logTime{log4sp::details::os::now()};
-    if (nanoseconds[0] != 0 || nanoseconds[1] != 0)
+    using std::chrono::system_clock;
+    system_clock::time_point logTime{log4sp::details::os::now()};
+    if (params[10] != -1)
     {
-        logTime = std::chrono::system_clock::time_point{
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::nanoseconds{
-                    log4sp::int32_to_int64(static_cast<uint32_t>(nanoseconds[1]),
-                                           static_cast<uint32_t>(nanoseconds[0]))})};
-    }
-    else if (seconds[0] != 0 || seconds[1] != 0)
-    {
-        logTime = std::chrono::system_clock::time_point{
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::seconds{
-                    log4sp::int32_to_int64(static_cast<uint32_t>(seconds[1]),
-                                           static_cast<uint32_t>(seconds[0]))})};
+        logTime = system_clock::time_point{
+            std::chrono::duration_cast<system_clock::duration>(std::chrono::seconds{params[10]})};
     }
 
     std::string formatted;

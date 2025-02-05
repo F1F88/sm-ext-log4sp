@@ -18,15 +18,13 @@
  * @param file          The file name of the source code location.
  * @param line          The line number of the source code location.
  * @param func          The function name of the source code location.
- * @param seconds       The log message timestamp in seconds.
- * @param nanoseconds   The log message timestamp in nanoseconds.
+ * @param logTime       The log message time point in seconds.
  */
 typeset CustomLogCallback
 {
     function void (const char[] name, LogLevel lvl, const char[] msg);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2]);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2]);
+    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
 }
 
 

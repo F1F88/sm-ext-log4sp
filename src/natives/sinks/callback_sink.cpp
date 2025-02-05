@@ -43,7 +43,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
 /**
  * public native void SetLogCallback(CustomLogCallback logCallback);
  *
- * function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int sec[2], int ns[2]);
+ * function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
  */
 static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {

@@ -385,25 +385,20 @@ void Test_CallbackSink()
     PrintToServer("========== Test Callback End ==========");
 }
 
-void CBSink_Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2])
+void CBSink_Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime)
 {
     PrintToServer("Callback Sink 1 | Log 1 | name = %s, lvl = %d, payload = %s", name, lvl, msg);
-    PrintToServer("Callback Sink 2 | Log 2 | source loc = %s::%d::%s", file, line, func);
-    PrintToServer("Callback Sink 3 | Log 3 | seconds = %b %b, nanoseconds = %b %b", seconds[1], seconds[0], nanoseconds[1], nanoseconds[0]);
+    PrintToServer("Callback Sink 2 | Log 2 | source loc = %s::%d::%s, logTime = %d", file, line, func, logTime);
 
     int length;
     char buffer[512];
     length = g_hCallbackSink[0].ToPattern(buffer, sizeof(buffer), name, lvl, msg);
     buffer[length - 1] = '\0';
-    PrintToServer("Callback Sink 4 | ToPattern 1 | name, lvl, msg = %s", buffer);
+    PrintToServer("Callback Sink 3 | ToPattern 1 | name, lvl, msg = %s", buffer);
 
-    g_hCallbackSink[0].ToPattern(buffer, sizeof(buffer), name, lvl, msg, file, 222, "MyFunc2", seconds);
+    g_hCallbackSink[0].ToPattern(buffer, sizeof(buffer), name, lvl, msg, file, 222, "MyFunc2", logTime);
     buffer[length - 1] = '\0';
-    PrintToServer("Callback Sink 5 | ToPattern 2 | name, lvl, msg, file, line, func, seconds = %s", buffer);
-
-    g_hCallbackSink[0].ToPattern(buffer, sizeof(buffer), name, lvl, msg, file, 333, "MyFunc3", _, nanoseconds);
-    buffer[length - 1] = '\0';
-    PrintToServer("Callback Sink 6 | ToPattern 3 | name, lvl, msg, file, line, func, nanoseconds = %s", buffer);
+    PrintToServer("Callback Sink 4 | ToPattern 2 | name, lvl, msg, file, line, func, seconds = %s", buffer);
 }
 
 void CBSink_LogPost(const char[] msg)
@@ -444,11 +439,10 @@ void Test_RingBufferSink()
     PrintToServer("========== Test RingBuffer Sink End ==========");
 }
 
-void DrainCallback(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int nanoseconds[2], any data)
+void DrainCallback(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data)
 {
     PrintToServer("RingBuffer Sink 1 | Drain 1 | name = %s, lvl = %d, payload = %s", name, lvl, msg);
-    PrintToServer("RingBuffer Sink 2 | Drain 2 | source loc = %s::%d::%s", file, line, func);
-    PrintToServer("RingBuffer Sink 3 | Drain 3 | seconds = %b %b, nanoseconds = %b %b", seconds[1], seconds[0], nanoseconds[1], nanoseconds[0]);
+    PrintToServer("RingBuffer Sink 2 | Drain 2 | source loc = %s::%d::%s, logTime = %d", file, line, func, logTime);
     PrintToServer("RingBuffer Sink Data = %d", data);
 }
 
