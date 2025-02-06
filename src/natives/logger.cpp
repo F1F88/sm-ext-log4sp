@@ -148,9 +148,11 @@ static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
  */
 static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto function = ctx->GetFunctionByIdOrError(static_cast<funcid_t>(params[1]));
+    auto funcid   = static_cast<funcid_t>(params[1]);
+    auto function = ctx->GetFunctionById(funcid);
     if (!function)
     {
+        ctx->ReportError("Invalid function id: 0x%08x", funcid);
         return 0;
     }
 
@@ -1256,9 +1258,11 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
         return 0;
     }
 
-    auto function = ctx->GetFunctionByIdOrError(static_cast<funcid_t>(params[2]));
+    auto funcid   = static_cast<funcid_t>(params[2]);
+    auto function = ctx->GetFunctionById(funcid);
     if (!function)
     {
+        ctx->ReportError("Invalid function id: 0x%08x", funcid);
         return 0;
     }
 
