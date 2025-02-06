@@ -59,6 +59,22 @@ enum PatternTimeType
 };
 
 /**
+ * Source code location.
+ */
+enum struct SourceLoc
+{
+    char filename[PLATFORM_MAX_PATH];   // file name/path.
+    int line;                           // line number.
+    char funcname[PLATFORM_MAX_PATH];   // function name.
+
+    bool IsEmpty()
+    {
+        return !this.filename[0] || this.line <= 0 || !this.funcname[0];
+    }
+}
+
+
+/**
  * Convert a logging level enum to name.
  *
  * @param buffer    Buffer to store log level name.
