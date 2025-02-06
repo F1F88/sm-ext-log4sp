@@ -99,4 +99,10 @@ public:
 };
 
 
+class version_command final : public command {
+public:
+    void execute(const std::vector<std::string> &) override;
+};
+
+
 }       // namespace log4sp

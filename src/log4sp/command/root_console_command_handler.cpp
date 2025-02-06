@@ -37,6 +37,7 @@ void root_console_command_handler::draw_menu() {
     rootconsole->DrawGenericOption("flush",         "Manual flush a logger contents.");
     rootconsole->DrawGenericOption("get_flush_lvl", "Gets the minimum log level that will trigger automatic flush.");
     rootconsole->DrawGenericOption("set_flush_lvl", "Sets the minimum log level that will trigger automatic flush.");
+    rootconsole->DrawGenericOption("version",       "Display version information");
 }
 
 
@@ -83,6 +84,7 @@ root_console_command_handler::root_console_command_handler() {
     commands_["flush"]          = std::make_unique<flush_command>();
     commands_["get_flush_lvl"]  = std::make_unique<get_flush_lvl_command>();
     commands_["set_flush_lvl"]  = std::make_unique<set_flush_lvl_command>();
+    commands_["version"]        = std::make_unique<version_command>();
 }
 
 void root_console_command_handler::initialize_() {
