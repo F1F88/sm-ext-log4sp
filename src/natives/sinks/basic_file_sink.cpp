@@ -155,9 +155,9 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     return handle;
 }
 
-const sp_nativeinfo_t BaseFileSinkNatives[] =
+const sp_nativeinfo_t BasicFileSinkNatives[] =
 {
-    {"BasicFileSink.BaseFileSink",              BasicFileSink},
+    {"BasicFileSink.BasicFileSink",             BasicFileSink},
     {"BasicFileSink.GetFilename",               BasicFileSink_GetFilename},
     {"BasicFileSink.Truncate",                  BasicFileSink_Truncate},
 

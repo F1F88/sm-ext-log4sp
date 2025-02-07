@@ -64,7 +64,7 @@ With log4sp, plugin developers no longer need to write complex logging code, so 
 
 8. Various log targets
 
-    - BaseFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile))
+    - BasicFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile))
 
     - ClientChatAllSink (Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChatAll))
 

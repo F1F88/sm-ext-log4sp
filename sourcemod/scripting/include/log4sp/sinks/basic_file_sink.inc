@@ -19,7 +19,7 @@ methodmap BasicFileSink < Sink
      *
      * @param file          The file path where the log messages will be written.
      * @param truncate      If true, the created file will be truncated.
-     * @return              BaseFileSink handle.
+     * @return              BasicFileSink handle.
      */
     public native BasicFileSink(const char[] file, bool truncate = false);
 

@@ -62,7 +62,7 @@ Log4sp 是一个强大的 [SourceMod](https://www.sourcemod.net/about.php) 拓�
 
 8. 支持多种输出源
 
-    - BaseFileSink （类似于 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+    - BasicFileSink （类似于 [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
 
     - ClientChatAllSink（类似于 [PrintToChatAll](https://sm.alliedmods.net/new-api/halflife/PrintToChatAll)）
 
