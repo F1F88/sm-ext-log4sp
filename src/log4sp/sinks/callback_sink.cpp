@@ -43,7 +43,7 @@ void callback_sink::set_log_callback(IPluginFunction *log_function) {
     SourceMod::IChangeableForward *cb{nullptr};
 
     if (log_function) {
-        cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
+        cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 7, nullptr,
                                        Param_String, Param_Cell, Param_String,
                                        Param_String, Param_Cell, Param_String,
                                        Param_Cell);
@@ -117,7 +117,7 @@ void callback_sink::sink_it_(const details::log_msg &log_msg) {
         log_callback_->PushString(log_msg.source.funcname);
         log_callback_->PushCell(static_cast<cell_t>(logTime.count()));
 
-#ifndef NDEBUG
+#ifndef DEBUG
         log_callback_->Execute();
 #else
         assert(log_callback_->Execute() == SP_ERROR_NONE);
@@ -128,7 +128,7 @@ void callback_sink::sink_it_(const details::log_msg &log_msg) {
         std::string formatted = to_pattern(log_msg);
         log_post_callback_->PushString(formatted.c_str());
 
-#ifndef NDEBUG
+#ifndef DEBUG
         log_post_callback_->Execute();
 #else
         assert(log_post_callback_->Execute() == SP_ERROR_NONE);
@@ -138,7 +138,11 @@ void callback_sink::sink_it_(const details::log_msg &log_msg) {
 
 void callback_sink::flush_() {
     if (flush_callback_) {
+#ifndef DEBUG
         flush_callback_->Execute();
+#else
+        assert(flush_callback_->Execute() == SP_ERROR_NONE);
+#endif
     }
 }
 

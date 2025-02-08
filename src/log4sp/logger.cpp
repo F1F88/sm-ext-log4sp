@@ -290,7 +290,11 @@ void logger::err_helper::handle_ex(const std::string &origin, const source_loc &
             custom_error_handler_->PushString(loc.filename);
             custom_error_handler_->PushCell(loc.line);
             custom_error_handler_->PushString(loc.funcname);
+#ifndef DEBUG
             custom_error_handler_->Execute();
+#else
+            assert(custom_error_handler_->Execute() == SP_ERROR_NONE);
+#endif
             return;
         }
         smutils->LogError(myself, "[%s::%d] [%s] %s", source_loc::basename(loc.filename), loc.line, origin.c_str(), ex.what());

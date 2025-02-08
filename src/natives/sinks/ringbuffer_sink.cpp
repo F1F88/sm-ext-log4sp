@@ -31,7 +31,7 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
 /**
  * public native void Drain(DrainCallback callback, any data = 0);
  *
- * function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int seconds[2], int logTime, any data);
+ * function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data);
  */
 static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
@@ -62,10 +62,10 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         return 0;
     }
 
-    SourceMod::IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 9, nullptr,
+    SourceMod::IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
                                                                        Param_String, Param_Cell, Param_String,
                                                                        Param_String, Param_Cell, Param_String,
-                                                                       Param_Array, Param_Array, Param_Cell);
+                                                                       Param_Cell, Param_Cell);
     if (!forward)
     {
         ctx->ReportError("SM error! Could not create ring buffer sink drain forward.");
@@ -94,7 +94,11 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
 
         forward->PushCell(static_cast<cell_t>(logTime.count()));
         forward->PushCell(data);
+#ifndef DEBUG
         forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
     });
 
     forwards->ReleaseForward(forward);
@@ -152,7 +156,11 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     realSink->drain_formatted([&forward, &data](std::string_view msg) {
         forward->PushString(msg.data());
         forward->PushCell(data);
+#ifndef DEBUG
         forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
     });
 
     forwards->ReleaseForward(forward);

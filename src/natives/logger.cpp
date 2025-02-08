@@ -124,7 +124,11 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
     for (uint32_t i = 0; i < numSinks; ++i)
     {
         auto handle = static_cast<SourceMod::Handle_t>(sinks[i]);
+#ifndef DEBUG
         handlesys->FreeHandle(handle, &security);
+#else
+        assert(handlesys->FreeHandle(handle, &security) == SP_ERROR_NONE);
+#endif
     }
 
     return handle;
@@ -176,7 +180,11 @@ static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) no
         [forward, data](const SourceMod::Handle_t handle) {
             forward->PushCell(handle);
             forward->PushCell(data);
+#ifndef DEBUG
             forward->Execute();
+#else
+            assert(forward->Execute() == SP_ERROR_NONE);
+#endif
         }
     );
 

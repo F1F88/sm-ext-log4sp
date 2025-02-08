@@ -57,7 +57,11 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
         forward->PushCell(sizeof(buffer));
         forward->PushCell(stamp);
+#ifndef DEBUG
         forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
 
         forwards->ReleaseForward(forward);
         smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);
@@ -168,7 +172,11 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
         forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
         forward->PushCell(sizeof(buffer));
         forward->PushCell(stamp);
+#ifndef DEBUG
         forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
 
         forwards->ReleaseForward(forward);
         smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);
