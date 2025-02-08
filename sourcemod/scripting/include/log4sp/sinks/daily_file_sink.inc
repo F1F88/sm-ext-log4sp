@@ -96,5 +96,8 @@ methodmap DailyFileSink < Sink
  */
 stock void DailyFileFormatCalculator(char[] filename, int maxlen, int sec)
 {
-    FormatTime(filename, maxlen, filename, sec);
+    // FormatTime buffer cannot be the same as the format
+    char buffer[PLATFORM_MAX_PATH];
+    strcopy(buffer, sizeof(buffer), filename);
+    FormatTime(filename, maxlen, buffer, sec);
 }
