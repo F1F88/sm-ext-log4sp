@@ -13,13 +13,13 @@
 /**
  * Callback for user defined error handler.
  *
- * @note The default handler uses the global logger (log4sp) to log an error message
- *       containing the number of errors, the name of logger, and the error message.
+ * @note By default, the handler logs error messages using SourceMod's LogError.
  *
- * Example:
+ * @note e.g.
  *      void LogToSM(const char[] msg) {
  *          LogError(msg);
  *      }
+ *
  *
  * @param msg       Error message.
  * @param name      The name of the error origin.
@@ -38,7 +38,7 @@ typeset LoggerErrorHandler
 /**
  * Callback for apply a user defined function on all logger handles.
  *
- * Example:
+ * @note e.g.
  *      void FlushAllLoggers(Logger logger) {
  *          logger.Flush();
  *      }
@@ -56,7 +56,7 @@ typeset LoggerApplyAllCallback
 methodmap Logger < Handle
 {
     /**
-     * Creating a logger handle manually.
+     * Creating a logger handle.
      *
      * @param name      The name of the new logger.
      * @return          Logger handle.
@@ -78,7 +78,7 @@ methodmap Logger < Handle
     /**
      * Creating a logger handle with an array of sink handles.
      *
-     * @note The sinks array is automatically freed when successfully added.
+     * @note The sink handle in the array will be closed after successful addition.
      *
      * @param name      The name of the new logger.
      * @param sinks     The sinks array to be added to the new logger.
@@ -268,7 +268,7 @@ methodmap Logger < Handle
     /**
      * Add a new sink to sinks.
      *
-     * @note The sink is automatically freed when successfully added.
+     * @note The sink handle will be closed after successful addition.
      *
      * @param sink      Sink handle.
      * @error           Invalid sink handle.
