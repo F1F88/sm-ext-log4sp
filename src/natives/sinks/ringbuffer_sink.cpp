@@ -82,11 +82,13 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
     auto data = params[3];
 
     realSink->drain([&forward, &data](const log4sp::details::log_msg_buffer &log_msg) {
-        auto logTime{std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch())};
+        auto name = log4sp::fmt_lib::to_string(log_msg.logger_name);
+        auto payload = log4sp::fmt_lib::to_string(log_msg.payload);
+        auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
 
-        forward->PushString(log_msg.logger_name.data());
+        forward->PushString(name.c_str());
         forward->PushCell(log_msg.level);
-        forward->PushString(log_msg.payload.data());
+        forward->PushString(payload.c_str());
 
         forward->PushString(log_msg.source.filename);
         forward->PushCell(log_msg.source.line);
@@ -154,7 +156,9 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     auto data = params[3];
 
     realSink->drain_formatted([&forward, &data](std::string_view msg) {
-        forward->PushString(msg.data());
+        std::string message{msg};
+
+        forward->PushString(message.c_str());
         forward->PushCell(data);
 #ifndef DEBUG
         forward->Execute();

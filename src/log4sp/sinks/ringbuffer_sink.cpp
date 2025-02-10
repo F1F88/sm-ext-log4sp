@@ -14,7 +14,8 @@ void ringbuffer_sink::drain(std::function<void(const details::log_msg_buffer &)>
 void ringbuffer_sink::drain_formatted(std::function<void(std::string_view)> callback) {
     memory_buf_t formatted;
     while (!q_.empty()) {
-        std::string formatted = to_pattern(q_.front());
+        formatted.clear();
+        base_sink::formatter_->format(q_.front(), formatted);
         callback(std::string_view{formatted.data(), formatted.size()});
         q_.pop_front();
     }
