@@ -54,12 +54,12 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
 
     for (uint32_t i = 0; i < numSinks; ++i)
     {
-        auto handle = static_cast<SourceMod::Handle_t>(sinks[i]);
+        auto sinkHandle = static_cast<SourceMod::Handle_t>(sinks[i]);
 
-        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+        auto sink = log4sp::sink_handler::instance().read_handle(sinkHandle, &security, &error);
         if (!sink)
         {
-            ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+            ctx->ReportError("Invalid sink handle %x (error: %d)", sinkHandle, error);
             return BAD_HANDLE;
         }
 
@@ -101,12 +101,12 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 
     for (uint32_t i = 0; i < numSinks; ++i)
     {
-        auto handle = static_cast<SourceMod::Handle_t>(sinks[i]);
+        auto sinkHandle = static_cast<SourceMod::Handle_t>(sinks[i]);
 
-        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+        auto sink = log4sp::sink_handler::instance().read_handle(sinkHandle, &security, &error);
         if (!sink)
         {
-            ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+            ctx->ReportError("Invalid sink handle %x (error: %d)", sinkHandle, error);
             return BAD_HANDLE;
         }
 
@@ -123,11 +123,11 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 
     for (uint32_t i = 0; i < numSinks; ++i)
     {
-        auto handle = static_cast<SourceMod::Handle_t>(sinks[i]);
+        auto sinkHandle = static_cast<SourceMod::Handle_t>(sinks[i]);
 #ifndef DEBUG
-        handlesys->FreeHandle(handle, &security);
+        handlesys->FreeHandle(sinkHandle, &security);
 #else
-        assert(handlesys->FreeHandle(handle, &security) == SP_ERROR_NONE);
+        assert(handlesys->FreeHandle(sinkHandle, &security) == SP_ERROR_NONE);
 #endif
     }
 
