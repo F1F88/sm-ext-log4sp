@@ -6,20 +6,6 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_NAME             "Benchmark Log4sp.ext"
-#define PLUGIN_AUTHOR           "F1F88"
-#define PLUGIN_VERSION          LOG4SP_EXT_VERSION
-#define PLUGIN_DESCRIPTION      "Benchmark Log for SourcePawn extension api"
-#define PLUGIN_URL              "https://github.com/F1F88/sm-ext-log4sp"
-
-public Plugin myinfo = {
-    name        = PLUGIN_NAME,
-    author      = PLUGIN_AUTHOR,
-    description = PLUGIN_DESCRIPTION,
-    version     = PLUGIN_VERSION,
-    url         = PLUGIN_URL
-};
-
 
 static const int g_iFileSize      = 30 * 1024 * 1024;
 static const int g_iRotatingFiles = 5;

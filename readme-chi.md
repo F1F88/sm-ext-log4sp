@@ -97,10 +97,10 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 测试用例：[benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
 
 ```
-[benchmark] base-file         | Iters 1000000 | Elapsed  0.465 secs   2150463/sec
-[benchmark] daily-file        | Iters 1000000 | Elapsed  0.471 secs   2118729/sec
-[benchmark] rotating-file     | Iters 1000000 | Elapsed  0.482 secs   2073553/sec
-[benchmark] server-console    | Iters 1000000 | Elapsed  4.847 secs    206288/sec
+[benchmark] base-file         | Iters 1000000 | Elapsed  0.385 secs   2592735/sec
+[benchmark] daily-file        | Iters 1000000 | Elapsed  0.393 secs   2541238/sec
+[benchmark] rotating-file     | Iters 1000000 | Elapsed  0.406 secs   2462884/sec
+[benchmark] server-console    | Iters 1000000 | Elapsed  5.224 secs    191411/sec
 ```
 
 #### Sourcemod logging
@@ -110,10 +110,10 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 测试用例：[benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.sp)
 
 ```
-[benchmark] LogMessage    | Iters 1000000 | Elapsed  9.657 secs    103548/sec
-[benchmark] LogToFile     | Iters 1000000 | Elapsed  8.070 secs    123903/sec
-[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.959 secs    125637/sec
-[benchmark] PrintToServer | Iters 1000000 | Elapsed  4.718 secs    211920/sec
+[benchmark] LogMessage    | Iters 1000000 | Elapsed  8.862 secs    112829/sec
+[benchmark] LogToFile     | Iters 1000000 | Elapsed  7.392 secs    135267/sec
+[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.284 secs    137272/sec
+[benchmark] PrintToServer | Iters 1000000 | Elapsed  5.419 secs    184534/sec
 ```
 
 ## 制作人员

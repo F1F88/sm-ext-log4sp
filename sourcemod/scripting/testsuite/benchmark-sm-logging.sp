@@ -7,20 +7,6 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_NAME             "Benchmark-SMlogging"
-#define PLUGIN_AUTHOR           "F1F88"
-#define PLUGIN_VERSION          LOG4SP_EXT_VERSION
-#define PLUGIN_DESCRIPTION      "Benchmark sourcemod logging library"
-#define PLUGIN_URL              "https://github.com/F1F88/sm-ext-log4sp"
-
-public Plugin myinfo = {
-    name        = PLUGIN_NAME,
-    author      = PLUGIN_AUTHOR,
-    description = PLUGIN_DESCRIPTION,
-    version     = PLUGIN_VERSION,
-    url         = PLUGIN_URL
-};
-
 
 public void OnPluginStart()
 {
