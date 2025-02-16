@@ -84,7 +84,7 @@ constexpr const char   *short_level_names[]  LOG4SP_SHORT_LEVEL_NAMES;
 }
 
 [[nodiscard]] constexpr level_enum from_str(const char *name) noexcept {
-    for (size_t i = 0; i < sizeof(level_string_views); ++i) {
+    for (size_t i = 0; i < std::size(level_string_views); ++i) {
         if (!strcmp(name, level_string_views[i].data())) {
             return from_number(i);
         }
@@ -106,7 +106,7 @@ constexpr const char   *short_level_names[]  LOG4SP_SHORT_LEVEL_NAMES;
 }
 
 [[nodiscard]] constexpr level_enum from_short_str(const char *name) noexcept {
-    for (size_t i = 0; i < sizeof(short_level_names); ++i) {
+    for (size_t i = 0; i < std::size(short_level_names); ++i) {
         if (!strcmp(name, short_level_names[i])) {
             return from_number(i);
         }
