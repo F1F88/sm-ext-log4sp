@@ -331,7 +331,7 @@ class ExtensionConfig(object):
       command = "git rev-parse --short HEAD"
       result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
       return result.strip()
-    except subprocess.CalledProcessError:
+    except BaseException:
       return "unknown"
 
   # 获取最新的标签（例如：v1.0.0）
@@ -347,7 +347,7 @@ class ExtensionConfig(object):
 
       tag = tags[-1]
       return tag[1:].lstrip()
-    except subprocess.CalledProcessError:
+    except BaseException:
       return "unknown"
 
 Extension = ExtensionConfig()
