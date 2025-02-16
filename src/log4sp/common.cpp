@@ -348,7 +348,7 @@ static void AddUInt(memory_buf_t &out, uint32_t val, uint32_t width, int flags) 
             out.push_back(text[digits]);
         }
     } else {
-        width -= digits;
+        width = width <= digits ? 0u : width - digits;
         while (digits--) {
             out.push_back(text[digits]);
         }
@@ -403,7 +403,7 @@ static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexce
             out.push_back('-');
         }
 
-        width -= digits;
+        width = width <= digits ? 0u : width - digits;
         while (digits--) {
             out.push_back(text[digits]);
         }
@@ -446,7 +446,7 @@ static void AddHex(memory_buf_t &out, uint32_t val, uint32_t width, int flags) n
             out.push_back(text[digits]);
         }
     } else {
-        width -= digits;
+        width = width <= digits ? 0u : width - digits;
         while (digits--) {
             out.push_back(text[digits]);
         }
