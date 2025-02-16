@@ -380,6 +380,7 @@ static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexce
         if (flags & ZEROPAD) {
             if (negative) {
                 out.push_back('-');
+                width = (width >= 1u) ? width - 1u : 0u;
             }
 
             while (digits < width--) {
@@ -392,6 +393,7 @@ static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexce
 
             if (negative) {
                 out.push_back('-');
+                width = (width >= 1u) ? width - 1u : 0u;
             }
         }
 
@@ -401,6 +403,7 @@ static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexce
     } else {
         if (negative) {
             out.push_back('-');
+            width = (width >= 1u) ? width - 1u : 0u;
         }
 
         width = width <= digits ? 0u : width - digits;
