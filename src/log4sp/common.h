@@ -139,7 +139,7 @@ struct source_loc final : public spdlog::source_loc {
     }
 
     // return filename without the leading path
-    [[nodiscard]] static constexpr const char *basename(const char *path) {
+    [[nodiscard]] static constexpr const char *basename(const char *path) noexcept {
         if (!path) {
             return path;
         }
