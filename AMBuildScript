@@ -84,8 +84,7 @@ class ExtensionConfig(object):
 
     #* Make version *#
     cxx.defines += [
-      'LOG4SP_SHA="' + self.get_git_hash() + '"',
-      'LOG4SP_EXT_VERSION="' + self.get_git_tag_version() + '"'
+      'LOG4SP_SHA_SHORT="' + self.get_git_hash()[:6] + '"'
     ]
 
     # Optimization
@@ -325,28 +324,12 @@ class ExtensionConfig(object):
     binary = project.Configure(name, '{0}'.format(self.tag))
     return self.ConfigureForHL2(binary)
 
-  # 获取短提交哈希（例如：a1b2c3d）
+  # 获取最新 SHA（例如：a1b2c3d...）
   def get_git_hash(self):
     try:
-      command = "git rev-parse --short HEAD"
+      command = "git rev-parse HEAD"
       result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
       return result.strip()
-    except BaseException:
-      return "unknown"
-
-  # 获取最新的标签（例如：v1.0.0）
-  def get_git_tag_version(self):
-    try:
-      # 按创建时间倒序排序（版本号 "-v:refname"）
-      command = "git tag -l v* --sort=creatordate"
-      result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
-      tags = re.findall(r'v[0-9]+\.[0-9]+\.[0-9]+.*', result)
-
-      if not tags:
-        return "unknown"
-
-      tag = tags[-1]
-      return tag[1:].lstrip()
     except BaseException:
       return "unknown"
 

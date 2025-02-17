@@ -205,7 +205,7 @@ void version_command::execute(const std::vector<std::string> &) {
     rootconsole->ConsolePrint("Sourcemod extension Log4sp version information:");
     rootconsole->ConsolePrint("    Version         " SMEXT_CONF_VERSION);
     rootconsole->ConsolePrint("    Compiled on     " SMEXT_CONF_DATESTRING " - " SMEXT_CONF_TIMESTRING);
-    rootconsole->ConsolePrint("    Built from      https://github.com/F1F88/sm-ext-log4sp/commit/" SMEXT_CONF_SHA);
+    rootconsole->ConsolePrint("    Built from      https://github.com/F1F88/sm-ext-log4sp/commit/" SMEXT_CONF_SHA_SHORT);
 }
 
 
