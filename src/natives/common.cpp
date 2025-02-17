@@ -1,65 +1,43 @@
 #include <algorithm>
 #include <iterator>
 
-#include "log4sp/utils.h"
+#include "log4sp/common.h"
 
 /**
- * native void LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
+ * native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
  */
-static cell_t LogLevelToName(IPluginContext *ctx, const cell_t *params)
+static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto lvl = log4sp::cell_to_level(params[1]);
-    auto name = spdlog::level::to_string_view(lvl).data();
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[3]));
+    auto name = log4sp::level::to_string_view(lvl);
 
-    size_t bytes;
-    ctx->StringToLocalUTF8(params[2], params[3], name, &bytes);
+    size_t bytes{0};
+    ctx->StringToLocalUTF8(params[1], params[2], name.data(), &bytes);
     return bytes;
 }
 
 /**
- * native void LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
+ * native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
  */
-static cell_t LogLevelToShortName(IPluginContext *ctx, const cell_t *params)
+static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto lvl = log4sp::cell_to_level(params[1]);
-    auto name = spdlog::level::to_short_c_str(lvl);
+    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[3]));
+    auto name = log4sp::level::to_short_string_view(lvl);
 
-    size_t bytes;
-    ctx->StringToLocalUTF8(params[2], params[3], name, &bytes);
+    size_t bytes{0};
+    ctx->StringToLocalUTF8(params[1], params[2], name, &bytes);
     return bytes;
 }
 
 /**
  * native LogLevel NameToLogLevel(const char[] name);
  */
-static cell_t NameToLogLevel(IPluginContext *ctx, const cell_t *params)
+static cell_t NameToLogLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
 
-    // ref: <common-inl.h> - spdlog::level::from_str()
-    auto it = std::find(std::begin(spdlog::level::level_string_views), std::end(spdlog::level::level_string_views), name);
-    if (it != std::end(spdlog::level::level_string_views))
-    {
-        return static_cast<cell_t>(std::distance(std::begin(spdlog::level::level_string_views), it));
-    }
-
-    if (!strcmp(name, "warning"))
-    {
-        return static_cast<cell_t>(spdlog::level::warn);
-    }
-
-    if (!strcmp(name, "err"))
-    {
-        return static_cast<cell_t>(spdlog::level::err);
-    }
-
-    if (!strcmp(name, "critical"))
-    {
-        return static_cast<cell_t>(spdlog::level::critical);
-    }
-
-    return static_cast<cell_t>(spdlog::level::off);
+    return static_cast<cell_t>(log4sp::level::from_str(name));
 }
 
 const sp_nativeinfo_t CommonNatives[] =

@@ -1,3 +1,4 @@
+#include <cassert>
 #include "log4sp/sinks/callback_sink.h"
 
 
@@ -39,13 +40,13 @@ void callback_sink::release_forwards_() {
 }
 
 void callback_sink::set_log_callback(IPluginFunction *log_function) {
-    IChangeableForward *cb{nullptr};
+    SourceMod::IChangeableForward *cb{nullptr};
 
     if (log_function) {
-        cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
+        cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 7, nullptr,
                                        Param_String, Param_Cell, Param_String,
                                        Param_String, Param_Cell, Param_String,
-                                       Param_Array, Param_Array);
+                                       Param_Cell);
         if (!cb) {
             throw std::runtime_error{"SM error! Could not create callback sink log forward."};
         }
@@ -63,7 +64,7 @@ void callback_sink::set_log_callback(IPluginFunction *log_function) {
 }
 
 void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
-    IChangeableForward *cb{nullptr};
+    SourceMod::IChangeableForward *cb{nullptr};
 
     if (log_post_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
@@ -84,7 +85,7 @@ void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
 }
 
 void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
-    IChangeableForward *cb{nullptr};
+    SourceMod::IChangeableForward *cb{nullptr};
 
     if (flush_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 0, nullptr);
@@ -104,38 +105,44 @@ void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
     flush_callback_ = cb;
 }
 
-void callback_sink::sink_it_(const spdlog::details::log_msg &msg) {
+void callback_sink::sink_it_(const details::log_msg &log_msg) {
     if (log_callback_) {
-        int64_t sec = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::seconds>(msg.time.time_since_epoch()).count());
-        int64_t ns  = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(msg.time.time_since_epoch()).count());
+        auto logTime{std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch())};
 
-        // See SMCore::GetTime
-        cell_t pSec[]{static_cast<cell_t>(sec & 0xFFFFFFFF), static_cast<cell_t>((sec >> 32) & 0xFFFFFFFF)};
-        cell_t pNs[]{static_cast<cell_t>(ns & 0xFFFFFFFF), static_cast<cell_t>((ns >> 32) & 0xFFFFFFFF)};
+        log_callback_->PushString(log_msg.logger_name.data());
+        log_callback_->PushCell(log_msg.level);
+        log_callback_->PushString(log_msg.payload.data());
+        log_callback_->PushString(log_msg.source.filename);
+        log_callback_->PushCell(log_msg.source.line);
+        log_callback_->PushString(log_msg.source.funcname);
+        log_callback_->PushCell(static_cast<cell_t>(logTime.count()));
 
-        log_callback_->PushString(msg.logger_name.data());
-        log_callback_->PushCell(msg.level);
-        log_callback_->PushString(msg.payload.data());
-
-        log_callback_->PushString(msg.source.filename);
-        log_callback_->PushCell(msg.source.line);
-        log_callback_->PushString(msg.source.funcname);
-
-        log_callback_->PushArray(pSec, sizeof(pSec));
-        log_callback_->PushArray(pNs, sizeof(pNs));
+#ifndef DEBUG
         log_callback_->Execute();
+#else
+        assert(log_callback_->Execute() == SP_ERROR_NONE);
+#endif
     }
 
     if (log_post_callback_) {
-        std::string formatted = to_pattern(msg);
+        std::string formatted = to_pattern(log_msg);
         log_post_callback_->PushString(formatted.c_str());
+
+#ifndef DEBUG
         log_post_callback_->Execute();
+#else
+        assert(log_post_callback_->Execute() == SP_ERROR_NONE);
+#endif
     }
 }
 
 void callback_sink::flush_() {
     if (flush_callback_) {
+#ifndef DEBUG
         flush_callback_->Execute();
+#else
+        assert(flush_callback_->Execute() == SP_ERROR_NONE);
+#endif
     }
 }
 

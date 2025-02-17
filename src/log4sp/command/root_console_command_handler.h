@@ -12,7 +12,7 @@
 
 namespace log4sp {
 
-class root_console_command_handler final : public IRootConsoleCommand {
+class root_console_command_handler final : public SourceMod::IRootConsoleCommand {
 public:
     /**
      * @brief 全局单例对象
@@ -53,7 +53,7 @@ public:
     /**
      * @brief Handles a root console menu action.
      */
-    void OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args);
+    void OnRootConsoleCommand(const char *cmdname, const SourceMod::ICommandArgs *args) override;
 
     root_console_command_handler(const root_console_command_handler &) = delete;
     root_console_command_handler &operator=(const root_console_command_handler &) = delete;

@@ -64,19 +64,19 @@ With log4sp, plugin developers no longer need to write complex logging code, so 
 
 8. Various log targets
 
-    - BaseFileSink （Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile)）
+    - BasicFileSink  (Similar to [LogToFile](https://sm.alliedmods.net/new-api/logging/LogToFile))
 
-    - ClientChatSink（Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChat)）
+    - ClientChatAllSink (Similar to [PrintToChat](https://sm.alliedmods.net/new-api/halflife/PrintToChatAll))
 
-    - ClientConsoleSink（Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsole)）
+    - ClientConsoleAllSink (Similar to [PrintToConsole](https://sm.alliedmods.net/new-api/console/PrintToConsoleAll))
 
-    - DailyFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on date.）
+    - DailyFileSink (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on date.)
 
-    - RotatingFileSink（Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on file size.）
+    - RotatingFileSink (Similar to [LogMessage](https://sm.alliedmods.net/new-api/logging/LogMessage), Rotate log files based on file size.)
 
-    - ServerConsoleSink（Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer)）
+    - ServerConsoleSink (Similar to [PrintToServer](https://sm.alliedmods.net/new-api/console/PrintToServer))
 
-    - For the full list of sinks please visit the [sinks folder.](./sourcemod/scripting/include/log4sp/sinks/)
+    - For the full list of sinks please visit the [sinks folder](./sourcemod/scripting/include/log4sp/sinks/).
 
 ## Documentation
 
@@ -99,10 +99,10 @@ VM Ubuntu configuration: 1 CPU  + 8 kernel  + 8 GB Memory
 Test case: [benchmark-log4sp.sp](./sourcemod/scripting/benchmark-ext.sp)
 
 ```
-[benchmark] base-file         | Iters 1000000 | Elapsed  0.465 secs   2150463/sec
-[benchmark] daily-file        | Iters 1000000 | Elapsed  0.471 secs   2118729/sec
-[benchmark] rotating-file     | Iters 1000000 | Elapsed  0.482 secs   2073553/sec
-[benchmark] server-console    | Iters 1000000 | Elapsed  4.847 secs    206288/sec
+[benchmark] base-file         | Iters 1000000 | Elapsed  0.385 secs   2592735/sec
+[benchmark] daily-file        | Iters 1000000 | Elapsed  0.393 secs   2541238/sec
+[benchmark] rotating-file     | Iters 1000000 | Elapsed  0.406 secs   2462884/sec
+[benchmark] server-console    | Iters 1000000 | Elapsed  5.224 secs    191411/sec
 ```
 
 #### Sourcemod logging
@@ -113,10 +113,10 @@ Test case: [benchmark-sm-logging.sp](./sourcemod/scripting/benchmark-sm-logging.
 
 
 ```
-[benchmark] LogMessage    | Iters 1000000 | Elapsed  9.657 secs    103548/sec
-[benchmark] LogToFile     | Iters 1000000 | Elapsed  8.070 secs    123903/sec
-[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.959 secs    125637/sec
-[benchmark] PrintToServer | Iters 1000000 | Elapsed  4.718 secs    211920/sec
+[benchmark] LogMessage    | Iters 1000000 | Elapsed  8.862 secs    112829/sec
+[benchmark] LogToFile     | Iters 1000000 | Elapsed  7.392 secs    135267/sec
+[benchmark] LogToFileEx   | Iters 1000000 | Elapsed  7.284 secs    137272/sec
+[benchmark] PrintToServer | Iters 1000000 | Elapsed  5.419 secs    184534/sec
 ```
 
 ## Credits

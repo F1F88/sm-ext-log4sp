@@ -1,10 +1,11 @@
 #include <cassert>
 #include <exception>
 
-#include "spdlog/common.h"
 #include "spdlog/fmt/xchar.h"
 
+#include "log4sp/common.h"
 #include "log4sp/command/root_console_command_handler.h"
+
 
 namespace log4sp {
 
@@ -28,14 +29,15 @@ void root_console_command_handler::draw_menu() {
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
     rootconsole->DrawGenericOption("apply_all",     "Apply a command function on all loggers.");
-    rootconsole->DrawGenericOption("get_lvl",       spdlog::fmt_lib::format("Gets a logger log level. [{}]", spdlog::fmt_lib::join(spdlog::level::level_string_views, " < ")).c_str());
-    rootconsole->DrawGenericOption("set_lvl",       spdlog::fmt_lib::format("Sets a logger log level. [{}]", spdlog::fmt_lib::join(spdlog::level::level_string_views, " < ")).c_str());
+    rootconsole->DrawGenericOption("get_lvl",       fmt_lib::format("Gets a logger log level. [{}]", fmt_lib::join(level::level_string_views, " < ")).c_str());
+    rootconsole->DrawGenericOption("set_lvl",       fmt_lib::format("Sets a logger log level. [{}]", fmt_lib::join(level::level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_pattern",   "Sets a logger log pattern.");
     rootconsole->DrawGenericOption("should_log",    "Gets a logger whether logging is enabled for the given log level.");
     rootconsole->DrawGenericOption("log",           "Use a logger to log a message.");
     rootconsole->DrawGenericOption("flush",         "Manual flush a logger contents.");
     rootconsole->DrawGenericOption("get_flush_lvl", "Gets the minimum log level that will trigger automatic flush.");
     rootconsole->DrawGenericOption("set_flush_lvl", "Sets the minimum log level that will trigger automatic flush.");
+    rootconsole->DrawGenericOption("version",       "Display version information");
 }
 
 
@@ -44,12 +46,12 @@ void root_console_command_handler::execute(const std::string &cmdname, const std
     if (iter != commands_.end()) {
         iter->second->execute(args);
     } else {
-        throw std::runtime_error{spdlog::fmt_lib::format("Command function \"{}\" not found.", cmdname)};
+        throw_log4sp_ex("Command function \"" + cmdname + "\" not found.");
     }
 }
 
 
-void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const ICommandArgs *args) {
+void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const SourceMod::ICommandArgs *args) {
     // 0-sm  |  1-log4sp  |  2-function name  |  3-logger name  |  x-params
     int argCnt = args->ArgC();
     if (argCnt <= 2) {
@@ -82,11 +84,12 @@ root_console_command_handler::root_console_command_handler() {
     commands_["flush"]          = std::make_unique<flush_command>();
     commands_["get_flush_lvl"]  = std::make_unique<get_flush_lvl_command>();
     commands_["set_flush_lvl"]  = std::make_unique<set_flush_lvl_command>();
+    commands_["version"]        = std::make_unique<version_command>();
 }
 
 void root_console_command_handler::initialize_() {
     if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Log for SourcePawn command menu", this)) {
-        throw std::runtime_error{"SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\"."};
+        throw_log4sp_ex("SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\".");
     }
 }
 

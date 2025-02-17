@@ -40,7 +40,7 @@ methodmap RotatingFileSink < Sink
      * @param maxlen        Maximum length of the buffer.
      * @return              Number of characters written to the buffer, not including the null terminator.
      */
-    public native int GetFilename(char[] buffer, int maxlength);
+    public native int GetFilename(char[] buffer, int maxlen);
 
     /**
      * Rotate log files on demand.
@@ -51,13 +51,13 @@ methodmap RotatingFileSink < Sink
      * Calc filename according to index and file extension if exists.
      * e.g. calcFilename("logs/mylog.txt, 3) => "logs/mylog.3.txt".
      *
-     * @param file          Original file path.
-     * @param index         File index.
      * @param buffer        Buffer to store file name.
      * @param maxlen        Maximum length of the buffer.
+     * @param file          Original file path.
+     * @param index         File index.
      * @return              Number of characters written to the buffer, not including the null terminator.
      */
-    public static native int CalcFilename(const char[] file, int index, char[] buffer, int maxlength);
+    public static native int CalcFilename(char[] buffer, int maxlen, const char[] file, int index);
 
     /**
      * Create a logger handle that outputs to a file and rotates the file based on size.

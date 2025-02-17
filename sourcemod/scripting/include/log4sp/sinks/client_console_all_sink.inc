@@ -28,7 +28,8 @@ methodmap ClientConsoleAllSink < CallbackSink
      * @return          Logger handle.
      * @error           Logger name already exits.
      */
-    public static Logger CreateLogger(const char[] name) {
+    public static Logger CreateLogger(const char[] name)
+    {
         Logger logger = new Logger(name);
         logger.AddSinkEx(new ClientConsoleAllSink());
         return logger;

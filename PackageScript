@@ -11,8 +11,6 @@ folder_list = [
   'addons/sourcemod/scripting/include',
   'addons/sourcemod/scripting/include/log4sp',
   'addons/sourcemod/scripting/include/log4sp/sinks',
-  'addons/sourcemod/scripting/include/log4sp_no_ext',
-  'addons/sourcemod/scripting/include/log4sp_no_ext/sinks',
   #'addons/sourcemod/gamedata',
   #'addons/sourcemod/configs',
 ]
@@ -44,26 +42,7 @@ CopyFiles('sourcemod/scripting/include/log4sp', 'addons/sourcemod/scripting/incl
 )
 CopyFiles('sourcemod/scripting/include/log4sp/sinks', 'addons/sourcemod/scripting/include/log4sp/sinks',
  [
-   'base_file_sink.inc',
-   'callback_sink.inc',
-   'client_chat_all_sink.inc',
-   'client_console_all_sink.inc',
-   'daily_file_sink.inc',
-   'ringbuffer_sink.inc',
-   'rotating_file_sink.inc',
-   'server_console_sink.inc',
-   'sink.inc',
- ]
-)
-CopyFiles('sourcemod/scripting/include/log4sp_no_ext', 'addons/sourcemod/scripting/include/log4sp_no_ext',
- [
-   'common.inc',
-   'logger.inc'
- ]
-)
-CopyFiles('sourcemod/scripting/include/log4sp_no_ext/sinks', 'addons/sourcemod/scripting/include/log4sp_no_ext/sinks',
- [
-   'base_file_sink.inc',
+   'basic_file_sink.inc',
    'callback_sink.inc',
    'client_chat_all_sink.inc',
    'client_console_all_sink.inc',
