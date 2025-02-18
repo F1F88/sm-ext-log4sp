@@ -27,7 +27,8 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     // do not listen server console.
     if (!client) return Plugin_Continue;
 
-    if (StrContains(sArgs, "sm log4sp") != -1)
+    if (!!strncmp(sArgs, "sm log4sp", sizeof("sm log4sp") - 1))
+        return Plugin_Continue;
     {
         char sBuffer[1024];
         ServerCommandEx(sBuffer, sizeof(sBuffer), sArgs);
