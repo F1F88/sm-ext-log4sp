@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <log4sp>
 
-#define PLUGIN_VERSION "v1.0.0"
+#define PLUGIN_VERSION "v1.1.0"
 
 public Plugin myinfo =
 {
@@ -20,6 +20,32 @@ public void OnPluginStart()
     CreateConVar("log4sp_logger_manager_version", PLUGIN_VERSION, "The version of the Logger Manager plugin.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
     RegAdminCmd("sm_log4sp", Cmd_Logger, ADMFLAG_CONFIG, "Open logger menu.");
+}
+
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
+{
+    // do not listen server console.
+    if (!client) return Plugin_Continue;
+
+    if (StrContains(sArgs, "sm log4sp") != -1)
+    {
+        char sBuffer[1024];
+        ServerCommandEx(sBuffer, sizeof(sBuffer), sArgs);
+        if (!strcmp(sArgs, "sm log4sp") || !strcmp(sArgs, "sm log4sp list"))
+        {
+            PrintToChat(client, "[Log4sp] See console for the output.");
+            PrintToConsole(client, "%s", sBuffer);
+        }
+        else
+        {
+            PrintToChat(client, "%s", sBuffer);
+        }
+
+        // block this message from spamming public chat, the others won't see it.
+        return Plugin_Handled;
+    }
+
+    return Plugin_Continue;
 }
 
 Action Cmd_Logger(int client, int args)
