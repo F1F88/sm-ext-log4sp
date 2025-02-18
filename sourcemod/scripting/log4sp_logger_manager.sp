@@ -29,24 +29,40 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
     if (!!strncmp(sArgs, "sm log4sp", sizeof("sm log4sp") - 1))
         return Plugin_Continue;
+
+    // https://github.com/F1F88/sm-ext-log4sp/pull/27#discussion_r1959804023
+    DataPack dp = new DataPack();
+    dp.WriteCell(GetClientUserId(client));
+    dp.WriteString(sArgs);
+    RequestFrame(OnNextFrame_ExecuteCommand, dp);
+    
+    // block this message from spamming public chat, we won't see it.
+    return Plugin_Handled;
+}
+
+void OnNextFrame_ExecuteCommand(DataPack dp)
+{
+    char sArgs[64];
+    dp.Reset();
+    int userid = dp.ReadCell();
+    dp.ReadString(sArgs, sizeof(sArgs));
+    delete dp;
+
+    int client = GetClientOfUserId(userid);
+    if (!IsClientInGame(GetClientOfUserId(client)))
+        return;
+
+    char sBuffer[1024];
+    ServerCommandEx(sBuffer, sizeof(sBuffer), sArgs);
+    if (!strcmp(sArgs, "sm log4sp") || !strcmp(sArgs, "sm log4sp list"))
     {
-        char sBuffer[1024];
-        ServerCommandEx(sBuffer, sizeof(sBuffer), sArgs);
-        if (!strcmp(sArgs, "sm log4sp") || !strcmp(sArgs, "sm log4sp list"))
-        {
-            PrintToChat(client, "[Log4sp] See console for the output.");
-            PrintToConsole(client, "%s", sBuffer);
-        }
-        else
-        {
-            PrintToChat(client, "%s", sBuffer);
-        }
-
-        // block this message from spamming public chat, the others won't see it.
-        return Plugin_Handled;
+        PrintToChat(client, "[Log4sp] See console for the output.");
+        PrintToConsole(client, "%s", sBuffer);
     }
-
-    return Plugin_Continue;
+    else
+    {
+        PrintToChat(client, "%s", sBuffer);
+    }
 }
 
 Action Cmd_Logger(int client, int args)
