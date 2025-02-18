@@ -27,6 +27,12 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     // do not listen server console.
     if (!client) return Plugin_Continue;
 
+    // Admin only.
+    if (GetUserAdmin(client) == INVALID_ADMIN_ID || GetUserFlagBits(client) == 0)
+        return Plugin_Continue;
+
+    // check first 9 character of the command.
+    // https://github.com/F1F88/sm-ext-log4sp/pull/27#discussion_r1959784378
     if (!!strncmp(sArgs, "sm log4sp", sizeof("sm log4sp") - 1))
         return Plugin_Continue;
 
