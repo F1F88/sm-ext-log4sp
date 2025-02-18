@@ -55,7 +55,7 @@ void OnNextFrame_ExecuteCommand(DataPack dp)
     delete dp;
 
     int client = GetClientOfUserId(userid);
-    if (!IsClientInGame(GetClientOfUserId(client)))
+    if (!IsClientInGame(client))
         return;
 
     char sBuffer[1024];
