@@ -387,13 +387,18 @@ static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexce
                 out.push_back('0');
             }
         } else {
-            while (digits < width--) {
-                out.push_back(' ');
-            }
-
             if (negative) {
-                out.push_back('-');
                 width = (width >= 1u) ? width - 1u : 0u;
+
+                while (digits < width--) {
+                    out.push_back(' ');
+                }
+
+                out.push_back('-');
+            } else {
+                while (digits < width--) {
+                    out.push_back(' ');
+                }
             }
         }
 
