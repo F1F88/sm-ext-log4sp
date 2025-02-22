@@ -142,7 +142,7 @@ void RBSink_Drain(const char[] name, LogLevel lvl, const char[] msg, const char[
 
 void RBSink_DrainFormatted(const char[] msg, DataPack data)
 {
-    AssertStrRegexEq("Drain formatted msg", msg, "fmt [0-9]+\\s");
+    AssertStrMatch("Drain formatted msg", msg, "fmt [0-9]+\\s");
     AssertEq("Drain formatted data", data, 2);
 }
 

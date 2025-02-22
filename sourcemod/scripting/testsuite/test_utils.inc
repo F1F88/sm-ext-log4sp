@@ -7,6 +7,7 @@
 #pragma semicolon 1
 
 #define TEST_MAX_MSG_LENGTH      2048
+#define TEST_LOG4SP_LEVEL_TOTAL  view_as<int>(LogLevel_Total)
 
 #include <files>
 #include <regex>
@@ -81,35 +82,30 @@ stock int CountFiles(const char[] folder, any ...)
 }
 
 // 整个文件
-stock void AssertFileRegexEq(const char[] text, const char[] path, const char[] expectedPattern)
+stock void AssertFileMatch(const char[] text, const char[] path, const char[] expectedPattern)
 {
     File file = OpenFile(path, "r");
-    AssertFileRegexEq2(text, file, expectedPattern);
+    // AssertTrue(text, file != null);
+
+    char buffer[TEST_MAX_MSG_LENGTH * 10];
+    file.ReadString(buffer, sizeof(buffer));
+    AssertStrMatch(text, buffer, expectedPattern);
+
     delete file;
 }
 
-// 从 file 指针位置起始
-stock void AssertFileRegexEq2(const char[] text, File file, const char[] expectedPattern)
+stock void AssertStrMatch(const char[] text, const char[] str, const char[] expectedPattern)
 {
-    // AssertTrue(text, file != null);
-    char buffer[TEST_MAX_MSG_LENGTH * 10];
-    file.ReadString(buffer, sizeof(buffer));
-
-    AssertStrRegexEq(text, buffer, expectedPattern);
+    AssertTrue(text, StringMatch(str, expectedPattern) > 0);
 }
 
-stock void AssertStrRegexEq(const char[] text, const char[] str, const char[] expectedPattern)
-{
-    AssertTrue(text, StrRegexEq(str, expectedPattern) > 0);
-}
-
-stock int StrRegexEq(const char[] str, const char[] expectedPattern)
+stock int StringMatch(const char[] str, const char[] expectedPattern)
 {
     char err[128];
     Regex regex = new Regex(expectedPattern, _, err, sizeof(err));
     if (!regex)
     {
-        LogMessage("Invalid string regex handle: %s", err);
+        LogMessage("Invalid regex handle: %s", err);
         LogMessage("Str: '%s'", str);
         LogMessage("Exp: '%s'", expectedPattern);
         return -1;
@@ -121,7 +117,7 @@ stock int StrRegexEq(const char[] str, const char[] expectedPattern)
 
     if (code != REGEX_ERROR_NONE)
     {
-        LogMessage("String regex match failure: %d", code);
+        LogMessage("String match failure: %d", code);
         LogMessage("Str: '%s'", str);
         LogMessage("Exp: '%s'", expectedPattern);
         return count;
@@ -129,7 +125,7 @@ stock int StrRegexEq(const char[] str, const char[] expectedPattern)
 
     if (count <= 0)
     {
-        LogMessage("String regex match not found");
+        LogMessage("String match not found");
         LogMessage("Str: '%s'", str);
         LogMessage("Exp: '%s'", expectedPattern);
         return count;

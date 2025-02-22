@@ -72,18 +72,18 @@ void TestRotates()
 {
     SetTestContext("Test Daily File Rotate");
 
-    // TestRotate(1, 0, 1);
-    // TestRotate(1, 1, 1);
-    // TestRotate(1, 3, 1);
-    // TestRotate(1, 10, 1);
+    TestRotate(1, 0, 1);
+    TestRotate(1, 1, 1);
+    TestRotate(1, 3, 1);
+    TestRotate(1, 10, 1);
 
-    // TestRotate(10, 0, 10);
-    // TestRotate(10, 1, 1);
+    TestRotate(10, 0, 10);
+    TestRotate(10, 1, 1);
     TestRotate(10, 3, 3);
-    // TestRotate(10, 9, 9);
-    // TestRotate(10, 10, 10);
-    // TestRotate(10, 11, 10);
-    // TestRotate(10, 20, 10);
+    TestRotate(10, 9, 9);
+    TestRotate(10, 10, 10);
+    TestRotate(10, 11, 10);
+    TestRotate(10, 20, 10);
 }
 
 void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)

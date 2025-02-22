@@ -44,7 +44,7 @@ void TestFileLogger()
     delete logger;
 
     AssertEq("File line cnt", CountLines(path), 2);
-    AssertFileRegexEq("File contents", path, "Test message 1\\sTest message 2\\s");
+    AssertFileMatch("File contents", path, "Test message 1\\sTest message 2\\s");
 }
 
 void TestFlushOn()
@@ -63,13 +63,13 @@ void TestFlushOn()
 
     logger.Trace("Should not be flushed");
     AssertEq("Only info, file line cnt", CountLines(path), 1);
-    AssertFileRegexEq("Only info, file contents", path, "Test message 1\\s");
+    AssertFileMatch("Only info, file contents", path, "Test message 1\\s");
 
     logger.InfoAmxTpl("Test message %d", 2);
     delete logger;
 
     AssertEq("Contain trace, file line cnt", CountLines(path), 3);
-    AssertFileRegexEq("Contain trace, file contents", path, "Test message 1\\sShould not be flushed\\sTest message 2\\s");
+    AssertFileMatch("Contain trace, file contents", path, "Test message 1\\sShould not be flushed\\sTest message 2\\s");
 }
 
 void TestTruncate()

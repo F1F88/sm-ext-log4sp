@@ -130,7 +130,7 @@ void TestManualRotate()
     AssertTrue("Manual rotate, file size", 0 < GetFileSize(path) <= maxSize);
     AssertEq("Manual rotate, file line", CountLines(path), 1);
 
-    AssertFileRegexEq("Manual rotate, file 1 data", path, "Test message - post-rotation\n");
+    AssertFileMatch("Manual rotate, file 1 data", path, "Test message - post-rotation\n");
     AssertTrue("Manual rotate, file 1 size", 0 < GetFileSize(path) <= maxSize);
     AssertEq("Manual rotate, file 1 line", CountLines(path), 1);
 }

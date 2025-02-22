@@ -2,6 +2,12 @@
 
 #include "test_sink"
 
+/**
+ * Fix: "Not enough space on the heap"
+ * 似乎是由于 TestSink.GetLastLogMsg 的调用堆栈过深
+ */
+#pragma dynamic 131072
+
 #pragma semicolon 1
 #pragma newdecls required
 
@@ -12,19 +18,36 @@
  *      [-] / [0]
  * NOTE
  *      SM 1.13.0.7198 修复了左对齐溢出的 BUG
- *      SM String 总是左对齐
+ *      SM 的 %s 总是左对齐
+ *      SM 的 %0[width]d 在传递负数时, 负号会添加在填充符 0 之后 '-1' --> '000-1'
  *      Log4sp 不支持 %t（会使用全局替代）
  *      二者 Float 类型左对齐时都只会在后方添加 ' ' (不会添加 '0')
  */
 
 #define LOGGER_NAME             "test-format"
+
+// 不要忘记检查期望值
 #define TEST_STRING_TEXT        "Some String Text"
-#define TEST_FLOAT_VALUE        -12345.96875
-#define TEST_BINARY_VALUE       "1110111011101110111011101110111"
-#define TEST_UINT_VALUE         "1234567"
-#define TEST_INT_VALUE          "-1234567"
-#define TEST_HEX_UPPER_VALUE    "F1F88"
-#define TEST_HEX_LOWER_VALUE    "77777777"
+
+#define TEST_BINARY_VALUE1      "0000000000000000000000000000000"
+#define TEST_BINARY_VALUE2      "1110111011101110111011101110111"
+#define TEST_BINARY_VALUE3      "1111111111111111111111111111111"
+
+#define TEST_UINT_VALUE1        "0"
+#define TEST_UINT_VALUE2        "2147483647"
+#define TEST_UINT_VALUE3        "4294967295"
+
+#define TEST_INT_VALUE1         "0"
+#define TEST_INT_VALUE2         "2147483647"
+#define TEST_INT_VALUE3         "-2147483648"
+
+#define TEST_HEX_UPPER_VALUE1   "0"
+#define TEST_HEX_UPPER_VALUE2   "F1F88"
+#define TEST_HEX_UPPER_VALUE3   "FFFFFFFF"
+
+#define TEST_HEX_LOWER_VALUE1   "0"
+#define TEST_HEX_LOWER_VALUE2   "f1f88"
+#define TEST_HEX_LOWER_VALUE3   "ffffffff"
 
 #define TEST_TRANSLATES_KEY     "Unable to target"
 #define TEST_TRANSLATES_VALUE   "You cannot target this player."
@@ -82,29 +105,18 @@ void TestChar()
     // %c
     SetTestContext("Test Char");
 
-    // ServerConsoleSink sink = new ServerConsoleSink();
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.InfoAmxTpl("'%% %%- %%. %%0 %%7 %%07 %%F %%c %%d'");
+    AssertStrEq("AmxTpl", sink.GetLastLogMsg(), "'% %- %. %0 %7 %07 %F %c %d'");
+
     logger.InfoEx("'%% %%- %%. %%0 %%7 %%07 %%F %%c %%d'");
+    AssertStrEq("Ex", sink.GetLastLogMsg(), "'% %- %. %0 %7 %07 %F %c %d'");
 
-    delete logger;
-    // delete sink;
-
-    ArrayList expected = GetCharExpected();
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
-    TestSink.Destroy();
-    delete expected;
-}
-
-ArrayList GetCharExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    expected.PushString("'% %- %. %0 %7 %07 %F %c %d'");
-    expected.PushString("'% %- %. %0 %7 %07 %F %c %d'");
-    return expected;
+    logger.Close();
+    sink.Close();
 }
 
 
@@ -119,24 +131,34 @@ void TestStringAmxTpl()
     // %[width]s
     SetTestContext("Test String AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.InfoAmxTpl("'%s'", NULL_STRING);
+    AssertStrEq("%s", sink.GetLastLogMsg(), "''");
+
     logger.InfoAmxTpl("'%s'", TEST_STRING_TEXT);
+    AssertStrEq("%s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
     logger.InfoAmxTpl("'%-s'", TEST_STRING_TEXT);
+    AssertStrEq("%-s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
     logger.InfoAmxTpl("'%10s'", TEST_STRING_TEXT);
+    AssertStrEq("%10s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
+    // ! Warn 总是左对齐
     logger.InfoAmxTpl("'%20s'", TEST_STRING_TEXT);
+    AssertStrEq("%20s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "    '");
+
     logger.InfoAmxTpl("'%-10s'", TEST_STRING_TEXT);
+    AssertStrEq("%-10s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
     logger.InfoAmxTpl("'%-20s'", TEST_STRING_TEXT);
+    AssertStrEq("%-20s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "    '");
 
-    delete logger;
-
-    ArrayList expected = GetStringExpected(false);
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
-    TestSink.Destroy();
-    delete expected;
+    logger.Close();
+    sink.Close();
 }
 
 void TestStringEx()
@@ -145,43 +167,34 @@ void TestStringEx()
     // %[flags][width]s
     SetTestContext("Test String Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.InfoEx("'%s'", NULL_STRING);
+    AssertStrEq("%s", sink.GetLastLogMsg(), "''");
+
     logger.InfoEx("'%s'", TEST_STRING_TEXT);
+    AssertStrEq("%s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
     logger.InfoEx("'%-s'", TEST_STRING_TEXT);
+    AssertStrEq("%-s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
     logger.InfoEx("'%10s'", TEST_STRING_TEXT);
+    AssertStrEq("%10s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
     logger.InfoEx("'%20s'", TEST_STRING_TEXT);
+    AssertStrEq("%20s", sink.GetLastLogMsg(), "'    " ... TEST_STRING_TEXT ... "'");
+
     logger.InfoEx("'%-10s'", TEST_STRING_TEXT);
+    AssertStrEq("%-10s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "'");
+
     logger.InfoEx("'%-20s'", TEST_STRING_TEXT);
+    AssertStrEq("%-20s", sink.GetLastLogMsg(), "'" ... TEST_STRING_TEXT ... "    '");
 
-    delete logger;
-
-    ArrayList expected = GetStringExpected(true);
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
-    TestSink.Destroy();
-    delete expected;
+    logger.Close();
+    sink.Close();
 }
-
-ArrayList GetStringExpected(bool isEx)
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    expected.PushString("''");
-    expected.PushString("'" ... TEST_STRING_TEXT ... "'");
-    expected.PushString("'" ... TEST_STRING_TEXT ... "'");
-    expected.PushString("'" ... TEST_STRING_TEXT ... "'");
-
-    // AmxTpl 总是左对齐
-    if (isEx)   expected.PushString("'    " ... TEST_STRING_TEXT ... "'");
-    else        expected.PushString("'" ... TEST_STRING_TEXT ... "    '");
-
-    expected.PushString("'" ... TEST_STRING_TEXT ... "'");
-    expected.PushString("'" ... TEST_STRING_TEXT ... "    '");
-    return expected;
-}
-
 
 void TestFloat()
 {
@@ -192,269 +205,923 @@ void TestFloat()
 void TestFloatAmxTpl()
 {
     // flags: [-] / [0]
-    // %[flags][width][.precision]specifier
+    // %[flags][width][.precision]f
     SetTestContext("Test Float AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     // flag
-    logger.InfoAmxTpl("'%f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-f'", TEST_FLOAT_VALUE);
+    logger.InfoAmxTpl("'%f'", 12345.968750);
+    AssertStrEq("%f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%f'", 0.0);
+    AssertStrEq("%f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%f'", -12345.968750);
+    AssertStrEq("%f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%-f'", 12345.968750);
+    AssertStrEq("%-f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%-f'", 0.0);
+    AssertStrEq("%-f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%-f'", -12345.968750);
+    AssertStrEq("%-f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%0f'", 12345.968750);
+    AssertStrEq("%0f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%0f'", 0.0);
+    // AssertStrEq("%0f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%0f'", -12345.968750);
+    AssertStrEq("%0f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%-0f'", 12345.968750);
+    AssertStrEq("%-0f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%-0f'", 0.0);
+    AssertStrEq("%-0f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%-0f'", -12345.968750);
+    AssertStrEq("%-0f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%0-f'", 12345.968750);
+    AssertStrEq("%0-f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%0-f'", 0.0);
+    AssertStrEq("%0-f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%0-f'", -12345.968750);
+    AssertStrEq("%0-f", sink.GetLastLogMsg(), "'-12345.968750'");
+
     // width
-    logger.InfoAmxTpl("'%5f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%20f'", TEST_FLOAT_VALUE);
+    logger.InfoAmxTpl("'%3f'", 12345.968750);
+    AssertStrEq("%3f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%3f'", 0.0);
+    AssertStrEq("%3f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%3f'", -12345.968750);
+    AssertStrEq("%3f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%20f'", 12345.968750);
+    AssertStrEq("%20f", sink.GetLastLogMsg(), "'        12345.968750'");
+    logger.InfoAmxTpl("'%20f'", 0.0);
+    AssertStrEq("%20f", sink.GetLastLogMsg(), "'            0.000000'");
+    logger.InfoAmxTpl("'%20f'", -12345.968750);
+    AssertStrEq("%20f", sink.GetLastLogMsg(), "'       -12345.968750'");
+
     // flag & width
-    logger.InfoAmxTpl("'%-5f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-20f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%05f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%020f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-05f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-020f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-5f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-20f'", TEST_FLOAT_VALUE);
+    logger.InfoAmxTpl("'%-3f'", 12345.968750);
+    AssertStrEq("%-3f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%-3f'", 0.0);
+    AssertStrEq("%-3f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%-3f'", -12345.968750);
+    AssertStrEq("%-3f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%-20f'", 12345.968750);
+    AssertStrEq("%-20f", sink.GetLastLogMsg(), "'12345.968750        '");
+    logger.InfoAmxTpl("'%-20f'", 0.0);
+    AssertStrEq("%-20f", sink.GetLastLogMsg(), "'0.000000            '");
+    logger.InfoAmxTpl("'%-20f'", -12345.968750);
+    AssertStrEq("%-20f", sink.GetLastLogMsg(), "'-12345.968750       '");
+
+    logger.InfoAmxTpl("'%03f'", 12345.968750);
+    AssertStrEq("%03f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%03f'", 0.0);
+    AssertStrEq("%03f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%03f'", -12345.968750);
+    AssertStrEq("%03f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%020f'", 12345.968750);
+    AssertStrEq("%020f", sink.GetLastLogMsg(), "'0000000012345.968750'");
+    logger.InfoAmxTpl("'%020f'", 0.0);
+    AssertStrEq("%020f", sink.GetLastLogMsg(), "'0000000000000.000000'");
+    logger.InfoAmxTpl("'%020f'", -12345.968750);
+    AssertStrEq("%020f", sink.GetLastLogMsg(), "'-000000012345.968750'");
+
+    logger.InfoAmxTpl("'%-03f'", 12345.968750);
+    AssertStrEq("%-03f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%-03f'", 0.0);
+    AssertStrEq("%-03f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%-03f'", -12345.968750);
+    AssertStrEq("%-03f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%-020f'", 12345.968750);
+    AssertStrEq("%-020f", sink.GetLastLogMsg(), "'12345.968750        '");
+    logger.InfoAmxTpl("'%-020f'", 0.0);
+    AssertStrEq("%-020f", sink.GetLastLogMsg(), "'0.000000            '");
+    logger.InfoAmxTpl("'%-020f'", -12345.968750);
+    AssertStrEq("%-020f", sink.GetLastLogMsg(), "'-12345.968750       '");
+
+    logger.InfoAmxTpl("'%0-3f'", 12345.968750);
+    AssertStrEq("%0-3f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoAmxTpl("'%0-3f'", 0.0);
+    AssertStrEq("%0-3f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoAmxTpl("'%0-3f'", -12345.968750);
+    AssertStrEq("%0-3f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoAmxTpl("'%0-20f'", 12345.968750);
+    AssertStrEq("%0-20f", sink.GetLastLogMsg(), "'12345.968750        '");
+    logger.InfoAmxTpl("'%0-20f'", 0.0);
+    AssertStrEq("%0-20f", sink.GetLastLogMsg(), "'0.000000            '");
+    logger.InfoAmxTpl("'%0-20f'", -12345.968750);
+    AssertStrEq("%0-20f", sink.GetLastLogMsg(), "'-12345.968750       '");
+
     // prec
-    logger.InfoAmxTpl("'%.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%.7f'", TEST_FLOAT_VALUE);
+    logger.InfoAmxTpl("'%.f'", 12345.968750);
+    AssertStrEq("%.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%.f'", 0.0);
+    AssertStrEq("%.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%.f'", -12345.968750);
+    AssertStrEq("%.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%.0f'", 12345.968750);
+    AssertStrEq("%.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%.0f'", 0.0);
+    AssertStrEq("%.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%.0f'", -12345.968750);
+    AssertStrEq("%.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%.2f'", 12345.968750);
+    AssertStrEq("%.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%.2f'", 0.0);
+    AssertStrEq("%.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%.2f'", -12345.968750);
+    AssertStrEq("%.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoAmxTpl("'%.7f'", 12345.968750);
+    AssertStrEq("%.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%.7f'", 0.0);
+    AssertStrEq("%.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%.7f'", -12345.968750);
+    AssertStrEq("%.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
     // flag & prec
-    logger.InfoAmxTpl("'%-.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-0.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-0.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-0.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-0.7f'", TEST_FLOAT_VALUE);
+    logger.InfoAmxTpl("'%-.f'", 12345.968750);
+    AssertStrEq("%-.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-.f'", 0.0);
+    AssertStrEq("%-.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-.f'", -12345.968750);
+    AssertStrEq("%-.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%-.0f'", 12345.968750);
+    AssertStrEq("%-.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-.0f'", 0.0);
+    AssertStrEq("%-.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-.0f'", -12345.968750);
+    AssertStrEq("%-.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%-.2f'", 12345.968750);
+    AssertStrEq("%-.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%-.2f'", 0.0);
+    AssertStrEq("%-.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%-.2f'", -12345.968750);
+    AssertStrEq("%-.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoAmxTpl("'%-.7f'", 12345.968750);
+    AssertStrEq("%-.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%-.7f'", 0.0);
+    AssertStrEq("%-.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%-.7f'", -12345.968750);
+    AssertStrEq("%-.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoAmxTpl("'%0.f'", 12345.968750);
+    AssertStrEq("%0.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%0.f'", 0.0);
+    AssertStrEq("%0.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0.f'", -12345.968750);
+    AssertStrEq("%0.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%0.0f'", 12345.968750);
+    AssertStrEq("%0.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%0.0f'", 0.0);
+    AssertStrEq("%0.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0.0f'", -12345.968750);
+    AssertStrEq("%0.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%0.2f'", 12345.968750);
+    AssertStrEq("%0.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%0.2f'", 0.0);
+    AssertStrEq("%0.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%0.2f'", -12345.968750);
+    AssertStrEq("%0.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoAmxTpl("'%0.7f'", 12345.968750);
+    AssertStrEq("%0.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%0.7f'", 0.0);
+    AssertStrEq("%0.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%0.7f'", -12345.968750);
+    AssertStrEq("%0.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoAmxTpl("'%0-.f'", 12345.968750);
+    AssertStrEq("%0-.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%0-.f'", 0.0);
+    AssertStrEq("%0-.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0-.f'", -12345.968750);
+    AssertStrEq("%0-.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%0-.0f'", 12345.968750);
+    AssertStrEq("%0-.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%0-.0f'", 0.0);
+    AssertStrEq("%0-.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0-.0f'", -12345.968750);
+    AssertStrEq("%0-.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%0-.2f'", 12345.968750);
+    AssertStrEq("%0-.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%0-.2f'", 0.0);
+    AssertStrEq("%0-.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%0-.2f'", -12345.968750);
+    AssertStrEq("%0-.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoAmxTpl("'%0-.7f'", 12345.968750);
+    AssertStrEq("%0-.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%0-.7f'", 0.0);
+    AssertStrEq("%0-.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%0-.7f'", -12345.968750);
+    AssertStrEq("%0-.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoAmxTpl("'%-0.f'", 12345.968750);
+    AssertStrEq("%-0.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-0.f'", 0.0);
+    AssertStrEq("%-0.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-0.f'", -12345.968750);
+    AssertStrEq("%-0.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%-0.0f'", 12345.968750);
+    AssertStrEq("%-0.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-0.0f'", 0.0);
+    AssertStrEq("%-0.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-0.0f'", -12345.968750);
+    AssertStrEq("%-0.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%-0.2f'", 12345.968750);
+    AssertStrEq("%-0.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%-0.2f'", 0.0);
+    AssertStrEq("%-0.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%-0.2f'", -12345.968750);
+    AssertStrEq("%-0.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoAmxTpl("'%-0.7f'", 12345.968750);
+    AssertStrEq("%-0.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%-0.7f'", 0.0);
+    AssertStrEq("%-0.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%-0.7f'", -12345.968750);
+    AssertStrEq("%-0.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
     // flag & width & prec
-    logger.InfoAmxTpl("'%-5.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-5.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-5.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-5.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%05.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%05.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%05.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%05.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-5.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-5.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-5.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-5.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-05.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-05.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-05.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-05.7f'", TEST_FLOAT_VALUE);
+    logger.InfoAmxTpl("'%-3.f'", 12345.968750);
+    AssertStrEq("%-3.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-3.f'", 0.0);
+    AssertStrEq("%-3.f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoAmxTpl("'%-3.f'", -12345.968750);
+    AssertStrEq("%-3.f", sink.GetLastLogMsg(), "'-12345'");
 
-    logger.InfoAmxTpl("'%-20.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-20.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-20.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-20.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%020.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%020.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%020.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%020.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-20.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-20.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-20.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%0-20.7f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-020.f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-020.0f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-020.2f'", TEST_FLOAT_VALUE);
-    logger.InfoAmxTpl("'%-020.7f'", TEST_FLOAT_VALUE);
+    logger.InfoAmxTpl("'%-3.0f'", 12345.968750);
+    AssertStrEq("%-3.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-3.0f'", 0.0);
+    AssertStrEq("%-3.0f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoAmxTpl("'%-3.0f'", -12345.968750);
+    AssertStrEq("%-3.0f", sink.GetLastLogMsg(), "'-12345'");
 
-    ArrayList expected = GetFloatExpected();
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
+    logger.InfoAmxTpl("'%-3.2f'", 12345.968750);
+    AssertStrEq("%-3.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%-3.2f'", 0.0);
+    AssertStrEq("%-3.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%-3.2f'", -12345.968750);
+    AssertStrEq("%-3.2f", sink.GetLastLogMsg(), "'-12345.96'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-    // delete sink;
+    logger.InfoAmxTpl("'%-3.7f'", 12345.968750);
+    AssertStrEq("%-3.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%-3.7f'", 0.0);
+    AssertStrEq("%-3.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%-3.7f'", -12345.968750);
+    AssertStrEq("%-3.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoAmxTpl("'%-03.f'", 12345.968750);
+    AssertStrEq("%-03.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-03.f'", 0.0);
+    AssertStrEq("%-03.f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoAmxTpl("'%-03.f'", -12345.968750);
+    AssertStrEq("%-03.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%-03.0f'", 12345.968750);
+    AssertStrEq("%-03.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%-03.0f'", 0.0);
+    AssertStrEq("%-03.0f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoAmxTpl("'%-03.0f'", -12345.968750);
+    AssertStrEq("%-03.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%-03.2f'", 12345.968750);
+    AssertStrEq("%-03.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%-03.2f'", 0.0);
+    AssertStrEq("%-03.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%-03.2f'", -12345.968750);
+    AssertStrEq("%-03.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoAmxTpl("'%-03.7f'", 12345.968750);
+    AssertStrEq("%-03.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%-03.7f'", 0.0);
+    AssertStrEq("%-03.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%-03.7f'", -12345.968750);
+    AssertStrEq("%-03.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoAmxTpl("'%0-3.f'", 12345.968750);
+    AssertStrEq("%0-3.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%0-3.f'", 0.0);
+    AssertStrEq("%0-3.f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoAmxTpl("'%0-3.f'", -12345.968750);
+    AssertStrEq("%0-3.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%0-3.0f'", 12345.968750);
+    AssertStrEq("%0-3.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoAmxTpl("'%0-3.0f'", 0.0);
+    AssertStrEq("%0-3.0f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoAmxTpl("'%0-3.0f'", -12345.968750);
+    AssertStrEq("%0-3.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoAmxTpl("'%0-3.2f'", 12345.968750);
+    AssertStrEq("%0-3.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoAmxTpl("'%0-3.2f'", 0.0);
+    AssertStrEq("%0-3.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoAmxTpl("'%0-3.2f'", -12345.968750);
+    AssertStrEq("%0-3.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoAmxTpl("'%0-3.7f'", 12345.968750);
+    AssertStrEq("%0-3.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoAmxTpl("'%0-3.7f'", 0.0);
+    AssertStrEq("%0-3.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoAmxTpl("'%0-3.7f'", -12345.968750);
+    AssertStrEq("%0-3.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoAmxTpl("'%-20.f'", 12345.968750);
+    AssertStrEq("%-20.f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoAmxTpl("'%-20.f'", 0.0);
+    AssertStrEq("%-20.f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoAmxTpl("'%-20.f'", -12345.968750);
+    AssertStrEq("%-20.f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoAmxTpl("'%-20.0f'", 12345.968750);
+    AssertStrEq("%-20.0f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoAmxTpl("'%-20.0f'", 0.0);
+    AssertStrEq("%-20.0f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoAmxTpl("'%-20.0f'", -12345.968750);
+    AssertStrEq("%-20.0f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoAmxTpl("'%-20.2f'", 12345.968750);
+    AssertStrEq("%-20.2f", sink.GetLastLogMsg(), "'12345.96            '");
+    logger.InfoAmxTpl("'%-20.2f'", 0.0);
+    AssertStrEq("%-20.2f", sink.GetLastLogMsg(), "'0.00                '");
+    logger.InfoAmxTpl("'%-20.2f'", -12345.968750);
+    AssertStrEq("%-20.2f", sink.GetLastLogMsg(), "'-12345.96           '");
+
+    logger.InfoAmxTpl("'%-20.7f'", 12345.968750);
+    AssertStrEq("%-20.7f", sink.GetLastLogMsg(), "'12345.9687500       '");
+    logger.InfoAmxTpl("'%-20.7f'", 0.0);
+    AssertStrEq("%-20.7f", sink.GetLastLogMsg(), "'0.0000000           '");
+    logger.InfoAmxTpl("'%-20.7f'", -12345.968750);
+    AssertStrEq("%-20.7f", sink.GetLastLogMsg(), "'-12345.9687500      '");
+
+    logger.InfoAmxTpl("'%020.f'", 12345.968750);
+    AssertStrEq("%020.f", sink.GetLastLogMsg(), "'00000000000000012345'");
+    logger.InfoAmxTpl("'%020.f'", 0.0);
+    AssertStrEq("%020.f", sink.GetLastLogMsg(), "'00000000000000000000'");
+    logger.InfoAmxTpl("'%020.f'", -12345.968750);
+    AssertStrEq("%020.f", sink.GetLastLogMsg(), "'-0000000000000012345'");
+
+    logger.InfoAmxTpl("'%020.0f'", 12345.968750);
+    AssertStrEq("%020.0f", sink.GetLastLogMsg(), "'00000000000000012345'");
+    logger.InfoAmxTpl("'%020.0f'", 0.0);
+    AssertStrEq("%020.0f", sink.GetLastLogMsg(), "'00000000000000000000'");
+    logger.InfoAmxTpl("'%020.0f'", -12345.968750);
+    AssertStrEq("%020.0f", sink.GetLastLogMsg(), "'-0000000000000012345'");
+
+    logger.InfoAmxTpl("'%020.2f'", 12345.968750);
+    AssertStrEq("%020.2f", sink.GetLastLogMsg(), "'00000000000012345.96'");
+    logger.InfoAmxTpl("'%020.2f'", 0.0);
+    AssertStrEq("%020.2f", sink.GetLastLogMsg(), "'00000000000000000.00'");
+    logger.InfoAmxTpl("'%020.2f'", -12345.968750);
+    AssertStrEq("%020.2f", sink.GetLastLogMsg(), "'-0000000000012345.96'");
+
+    logger.InfoAmxTpl("'%020.7f'", 12345.968750);
+    AssertStrEq("%020.7f", sink.GetLastLogMsg(), "'000000012345.9687500'");
+    logger.InfoAmxTpl("'%020.7f'", 0.0);
+    AssertStrEq("%020.7f", sink.GetLastLogMsg(), "'000000000000.0000000'");
+    logger.InfoAmxTpl("'%020.7f'", -12345.968750);
+    AssertStrEq("%020.7f", sink.GetLastLogMsg(), "'-00000012345.9687500'");
+
+    logger.InfoAmxTpl("'%0-20.f'", 12345.968750);
+    AssertStrEq("%0-20.f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoAmxTpl("'%0-20.f'", 0.0);
+    AssertStrEq("%0-20.f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoAmxTpl("'%0-20.f'", -12345.968750);
+    AssertStrEq("%0-20.f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoAmxTpl("'%0-20.0f'", 12345.968750);
+    AssertStrEq("%0-20.0f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoAmxTpl("'%0-20.0f'", 0.0);
+    AssertStrEq("%0-20.0f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoAmxTpl("'%0-20.0f'", -12345.968750);
+    AssertStrEq("%0-20.0f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoAmxTpl("'%0-20.2f'", 12345.968750);
+    AssertStrEq("%0-20.2f", sink.GetLastLogMsg(), "'12345.96            '");
+    logger.InfoAmxTpl("'%0-20.2f'", 0.0);
+    AssertStrEq("%0-20.2f", sink.GetLastLogMsg(), "'0.00                '");
+    logger.InfoAmxTpl("'%0-20.2f'", -12345.968750);
+    AssertStrEq("%0-20.2f", sink.GetLastLogMsg(), "'-12345.96           '");
+
+    logger.InfoAmxTpl("'%0-20.7f'", 12345.968750);
+    AssertStrEq("%0-20.7f", sink.GetLastLogMsg(), "'12345.9687500       '");
+    logger.InfoAmxTpl("'%0-20.7f'", 0.0);
+    AssertStrEq("%0-20.7f", sink.GetLastLogMsg(), "'0.0000000           '");
+    logger.InfoAmxTpl("'%0-20.7f'", -12345.968750);
+    AssertStrEq("%0-20.7f", sink.GetLastLogMsg(), "'-12345.9687500      '");
+
+    logger.InfoAmxTpl("'%-020.f'", 12345.968750);
+    AssertStrEq("%-020.f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoAmxTpl("'%-020.f'", 0.0);
+    AssertStrEq("%-020.f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoAmxTpl("'%-020.f'", -12345.968750);
+    AssertStrEq("%-020.f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoAmxTpl("'%-020.0f'", 12345.968750);
+    AssertStrEq("%-020.0f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoAmxTpl("'%-020.0f'", 0.0);
+    AssertStrEq("%-020.0f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoAmxTpl("'%-020.0f'", -12345.968750);
+    AssertStrEq("%-020.0f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoAmxTpl("'%-020.2f'", 12345.968750);
+    AssertStrEq("%-020.2f", sink.GetLastLogMsg(), "'12345.96            '");
+    logger.InfoAmxTpl("'%-020.2f'", 0.0);
+    AssertStrEq("%-020.2f", sink.GetLastLogMsg(), "'0.00                '");
+    logger.InfoAmxTpl("'%-020.2f'", -12345.968750);
+    AssertStrEq("%-020.2f", sink.GetLastLogMsg(), "'-12345.96           '");
+
+    logger.InfoAmxTpl("'%-020.7f'", 12345.968750);
+    AssertStrEq("%-020.7f", sink.GetLastLogMsg(), "'12345.9687500       '");
+    logger.InfoAmxTpl("'%-020.7f'", 0.0);
+    AssertStrEq("%-020.7f", sink.GetLastLogMsg(), "'0.0000000           '");
+    logger.InfoAmxTpl("'%-020.7f'", -12345.968750);
+    AssertStrEq("%-020.7f", sink.GetLastLogMsg(), "'-12345.9687500      '");
+
+    logger.Close();
+    sink.Close();
 }
 
 void TestFloatEx()
 {
     // flags: [-] / [0]
-    // %[flags][width][.precision]specifier
+    // %[flags][width][.precision]f
     SetTestContext("Test Float Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     // flag
-    logger.InfoEx("'%f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-f'", TEST_FLOAT_VALUE);
+    logger.InfoEx("'%f'", 12345.968750);
+    AssertStrEq("%f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%f'", 0.0);
+    AssertStrEq("%f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%f'", -12345.968750);
+    AssertStrEq("%f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%-f'", 12345.968750);
+    AssertStrEq("%-f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%-f'", 0.0);
+    AssertStrEq("%-f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%-f'", -12345.968750);
+    AssertStrEq("%-f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%0f'", 12345.968750);
+    AssertStrEq("%0f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%0f'", 0.0);
+    AssertStrEq("%0f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%0f'", -12345.968750);
+    AssertStrEq("%0f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%-0f'", 12345.968750);
+    AssertStrEq("%-0f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%-0f'", 0.0);
+    AssertStrEq("%-0f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%-0f'", -12345.968750);
+    AssertStrEq("%-0f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%0-f'", 12345.968750);
+    AssertStrEq("%0-f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%0-f'", 0.0);
+    AssertStrEq("%0-f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%0-f'", -12345.968750);
+    AssertStrEq("%0-f", sink.GetLastLogMsg(), "'-12345.968750'");
+
     // width
-    logger.InfoEx("'%5f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%20f'", TEST_FLOAT_VALUE);
+    logger.InfoEx("'%3f'", 12345.968750);
+    AssertStrEq("%3f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%3f'", 0.0);
+    AssertStrEq("%3f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%3f'", -12345.968750);
+    AssertStrEq("%3f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%20f'", 12345.968750);
+    AssertStrEq("%20f", sink.GetLastLogMsg(), "'        12345.968750'");
+    logger.InfoEx("'%20f'", 0.0);
+    AssertStrEq("%20f", sink.GetLastLogMsg(), "'            0.000000'");
+    logger.InfoEx("'%20f'", -12345.968750);
+    AssertStrEq("%20f", sink.GetLastLogMsg(), "'       -12345.968750'");
+
     // flag & width
-    logger.InfoEx("'%-5f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-20f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%05f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%020f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-05f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-020f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-5f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-20f'", TEST_FLOAT_VALUE);
+    logger.InfoEx("'%-3f'", 12345.968750);
+    AssertStrEq("%-3f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%-3f'", 0.0);
+    AssertStrEq("%-3f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%-3f'", -12345.968750);
+    AssertStrEq("%-3f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%-20f'", 12345.968750);
+    AssertStrEq("%-20f", sink.GetLastLogMsg(), "'12345.968750        '");
+    logger.InfoEx("'%-20f'", 0.0);
+    AssertStrEq("%-20f", sink.GetLastLogMsg(), "'0.000000            '");
+    logger.InfoEx("'%-20f'", -12345.968750);
+    AssertStrEq("%-20f", sink.GetLastLogMsg(), "'-12345.968750       '");
+
+    logger.InfoEx("'%03f'", 12345.968750);
+    AssertStrEq("%03f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%03f'", 0.0);
+    AssertStrEq("%03f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%03f'", -12345.968750);
+    AssertStrEq("%03f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%020f'", 12345.968750);
+    AssertStrEq("%020f", sink.GetLastLogMsg(), "'0000000012345.968750'");
+    logger.InfoEx("'%020f'", 0.0);
+    AssertStrEq("%020f", sink.GetLastLogMsg(), "'0000000000000.000000'");
+    logger.InfoEx("'%020f'", -12345.968750);
+    AssertStrEq("%020f", sink.GetLastLogMsg(), "'-000000012345.968750'");
+
+    logger.InfoEx("'%-03f'", 12345.968750);
+    AssertStrEq("%-03f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%-03f'", 0.0);
+    AssertStrEq("%-03f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%-03f'", -12345.968750);
+    AssertStrEq("%-03f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%-020f'", 12345.968750);
+    AssertStrEq("%-020f", sink.GetLastLogMsg(), "'12345.968750        '");
+    logger.InfoEx("'%-020f'", 0.0);
+    AssertStrEq("%-020f", sink.GetLastLogMsg(), "'0.000000            '");
+    logger.InfoEx("'%-020f'", -12345.968750);
+    AssertStrEq("%-020f", sink.GetLastLogMsg(), "'-12345.968750       '");
+
+    logger.InfoEx("'%0-3f'", 12345.968750);
+    AssertStrEq("%0-3f", sink.GetLastLogMsg(), "'12345.968750'");
+    logger.InfoEx("'%0-3f'", 0.0);
+    AssertStrEq("%0-3f", sink.GetLastLogMsg(), "'0.000000'");
+    logger.InfoEx("'%0-3f'", -12345.968750);
+    AssertStrEq("%0-3f", sink.GetLastLogMsg(), "'-12345.968750'");
+
+    logger.InfoEx("'%0-20f'", 12345.968750);
+    AssertStrEq("%0-20f", sink.GetLastLogMsg(), "'12345.968750        '");
+    logger.InfoEx("'%0-20f'", 0.0);
+    AssertStrEq("%0-20f", sink.GetLastLogMsg(), "'0.000000            '");
+    logger.InfoEx("'%0-20f'", -12345.968750);
+    AssertStrEq("%0-20f", sink.GetLastLogMsg(), "'-12345.968750       '");
+
     // prec
-    logger.InfoEx("'%.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%.7f'", TEST_FLOAT_VALUE);
+    logger.InfoEx("'%.f'", 12345.968750);
+    AssertStrEq("%.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%.f'", 0.0);
+    AssertStrEq("%.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%.f'", -12345.968750);
+    AssertStrEq("%.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%.0f'", 12345.968750);
+    AssertStrEq("%.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%.0f'", 0.0);
+    AssertStrEq("%.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%.0f'", -12345.968750);
+    AssertStrEq("%.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%.2f'", 12345.968750);
+    AssertStrEq("%.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%.2f'", 0.0);
+    AssertStrEq("%.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%.2f'", -12345.968750);
+    AssertStrEq("%.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoEx("'%.7f'", 12345.968750);
+    AssertStrEq("%.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%.7f'", 0.0);
+    AssertStrEq("%.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%.7f'", -12345.968750);
+    AssertStrEq("%.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
     // flag & prec
-    logger.InfoEx("'%-.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-0.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-0.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-0.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-0.7f'", TEST_FLOAT_VALUE);
+    logger.InfoEx("'%-.f'", 12345.968750);
+    AssertStrEq("%-.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-.f'", 0.0);
+    AssertStrEq("%-.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-.f'", -12345.968750);
+    AssertStrEq("%-.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%-.0f'", 12345.968750);
+    AssertStrEq("%-.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-.0f'", 0.0);
+    AssertStrEq("%-.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-.0f'", -12345.968750);
+    AssertStrEq("%-.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%-.2f'", 12345.968750);
+    AssertStrEq("%-.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%-.2f'", 0.0);
+    AssertStrEq("%-.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%-.2f'", -12345.968750);
+    AssertStrEq("%-.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoEx("'%-.7f'", 12345.968750);
+    AssertStrEq("%-.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%-.7f'", 0.0);
+    AssertStrEq("%-.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%-.7f'", -12345.968750);
+    AssertStrEq("%-.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoEx("'%0.f'", 12345.968750);
+    AssertStrEq("%0.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%0.f'", 0.0);
+    AssertStrEq("%0.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0.f'", -12345.968750);
+    AssertStrEq("%0.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%0.0f'", 12345.968750);
+    AssertStrEq("%0.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%0.0f'", 0.0);
+    AssertStrEq("%0.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0.0f'", -12345.968750);
+    AssertStrEq("%0.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%0.2f'", 12345.968750);
+    AssertStrEq("%0.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%0.2f'", 0.0);
+    AssertStrEq("%0.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%0.2f'", -12345.968750);
+    AssertStrEq("%0.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoEx("'%0.7f'", 12345.968750);
+    AssertStrEq("%0.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%0.7f'", 0.0);
+    AssertStrEq("%0.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%0.7f'", -12345.968750);
+    AssertStrEq("%0.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoEx("'%0-.f'", 12345.968750);
+    AssertStrEq("%0-.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%0-.f'", 0.0);
+    AssertStrEq("%0-.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0-.f'", -12345.968750);
+    AssertStrEq("%0-.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%0-.0f'", 12345.968750);
+    AssertStrEq("%0-.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%0-.0f'", 0.0);
+    AssertStrEq("%0-.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0-.0f'", -12345.968750);
+    AssertStrEq("%0-.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%0-.2f'", 12345.968750);
+    AssertStrEq("%0-.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%0-.2f'", 0.0);
+    AssertStrEq("%0-.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%0-.2f'", -12345.968750);
+    AssertStrEq("%0-.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoEx("'%0-.7f'", 12345.968750);
+    AssertStrEq("%0-.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%0-.7f'", 0.0);
+    AssertStrEq("%0-.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%0-.7f'", -12345.968750);
+    AssertStrEq("%0-.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoEx("'%-0.f'", 12345.968750);
+    AssertStrEq("%-0.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-0.f'", 0.0);
+    AssertStrEq("%-0.f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-0.f'", -12345.968750);
+    AssertStrEq("%-0.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%-0.0f'", 12345.968750);
+    AssertStrEq("%-0.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-0.0f'", 0.0);
+    AssertStrEq("%-0.0f", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-0.0f'", -12345.968750);
+    AssertStrEq("%-0.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%-0.2f'", 12345.968750);
+    AssertStrEq("%-0.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%-0.2f'", 0.0);
+    AssertStrEq("%-0.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%-0.2f'", -12345.968750);
+    AssertStrEq("%-0.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoEx("'%-0.7f'", 12345.968750);
+    AssertStrEq("%-0.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%-0.7f'", 0.0);
+    AssertStrEq("%-0.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%-0.7f'", -12345.968750);
+    AssertStrEq("%-0.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
     // flag & width & prec
-    logger.InfoEx("'%-5.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-5.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-5.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-5.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%05.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%05.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%05.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%05.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-5.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-5.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-5.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-5.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-05.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-05.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-05.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-05.7f'", TEST_FLOAT_VALUE);
+    logger.InfoEx("'%-3.f'", 12345.968750);
+    AssertStrEq("%-3.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-3.f'", 0.0);
+    AssertStrEq("%-3.f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoEx("'%-3.f'", -12345.968750);
+    AssertStrEq("%-3.f", sink.GetLastLogMsg(), "'-12345'");
 
-    logger.InfoEx("'%-20.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-20.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-20.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-20.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%020.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%020.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%020.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%020.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-20.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-20.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-20.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%0-20.7f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-020.f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-020.0f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-020.2f'", TEST_FLOAT_VALUE);
-    logger.InfoEx("'%-020.7f'", TEST_FLOAT_VALUE);
+    logger.InfoEx("'%-3.0f'", 12345.968750);
+    AssertStrEq("%-3.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-3.0f'", 0.0);
+    AssertStrEq("%-3.0f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoEx("'%-3.0f'", -12345.968750);
+    AssertStrEq("%-3.0f", sink.GetLastLogMsg(), "'-12345'");
 
-    ArrayList expected = GetFloatExpected();
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
+    logger.InfoEx("'%-3.2f'", 12345.968750);
+    AssertStrEq("%-3.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%-3.2f'", 0.0);
+    AssertStrEq("%-3.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%-3.2f'", -12345.968750);
+    AssertStrEq("%-3.2f", sink.GetLastLogMsg(), "'-12345.96'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-    // delete sink;
-}
+    logger.InfoEx("'%-3.7f'", 12345.968750);
+    AssertStrEq("%-3.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%-3.7f'", 0.0);
+    AssertStrEq("%-3.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%-3.7f'", -12345.968750);
+    AssertStrEq("%-3.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
 
-ArrayList GetFloatExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-12345.968750'");
-    // width
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'       -12345.968750'");
-    // flag & width
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-12345.968750       '");
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-000000012345.968750'");
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-12345.968750       '");
-    expected.PushString("'-12345.968750'");
-    expected.PushString("'-12345.968750       '");
-    // prec
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    // flag & prec
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    // flag & width & prec
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345'");
-    expected.PushString("'-12345.96'");
-    expected.PushString("'-12345.9687500'");
+    logger.InfoEx("'%-03.f'", 12345.968750);
+    AssertStrEq("%-03.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-03.f'", 0.0);
+    AssertStrEq("%-03.f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoEx("'%-03.f'", -12345.968750);
+    AssertStrEq("%-03.f", sink.GetLastLogMsg(), "'-12345'");
 
-    expected.PushString("'-12345              '");
-    expected.PushString("'-12345              '");
-    expected.PushString("'-12345.96           '");
-    expected.PushString("'-12345.9687500      '");
-    expected.PushString("'-0000000000000012345'");
-    expected.PushString("'-0000000000000012345'");
-    expected.PushString("'-0000000000012345.96'");
-    expected.PushString("'-00000012345.9687500'");
-    expected.PushString("'-12345              '");
-    expected.PushString("'-12345              '");
-    expected.PushString("'-12345.96           '");
-    expected.PushString("'-12345.9687500      '");
-    expected.PushString("'-12345              '");
-    expected.PushString("'-12345              '");
-    expected.PushString("'-12345.96           '");
-    expected.PushString("'-12345.9687500      '");
-    return expected;
+    logger.InfoEx("'%-03.0f'", 12345.968750);
+    AssertStrEq("%-03.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%-03.0f'", 0.0);
+    AssertStrEq("%-03.0f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoEx("'%-03.0f'", -12345.968750);
+    AssertStrEq("%-03.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%-03.2f'", 12345.968750);
+    AssertStrEq("%-03.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%-03.2f'", 0.0);
+    AssertStrEq("%-03.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%-03.2f'", -12345.968750);
+    AssertStrEq("%-03.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoEx("'%-03.7f'", 12345.968750);
+    AssertStrEq("%-03.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%-03.7f'", 0.0);
+    AssertStrEq("%-03.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%-03.7f'", -12345.968750);
+    AssertStrEq("%-03.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoEx("'%0-3.f'", 12345.968750);
+    AssertStrEq("%0-3.f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%0-3.f'", 0.0);
+    AssertStrEq("%0-3.f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoEx("'%0-3.f'", -12345.968750);
+    AssertStrEq("%0-3.f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%0-3.0f'", 12345.968750);
+    AssertStrEq("%0-3.0f", sink.GetLastLogMsg(), "'12345'");
+    logger.InfoEx("'%0-3.0f'", 0.0);
+    AssertStrEq("%0-3.0f", sink.GetLastLogMsg(), "'0  '");
+    logger.InfoEx("'%0-3.0f'", -12345.968750);
+    AssertStrEq("%0-3.0f", sink.GetLastLogMsg(), "'-12345'");
+
+    logger.InfoEx("'%0-3.2f'", 12345.968750);
+    AssertStrEq("%0-3.2f", sink.GetLastLogMsg(), "'12345.96'");
+    logger.InfoEx("'%0-3.2f'", 0.0);
+    AssertStrEq("%0-3.2f", sink.GetLastLogMsg(), "'0.00'");
+    logger.InfoEx("'%0-3.2f'", -12345.968750);
+    AssertStrEq("%0-3.2f", sink.GetLastLogMsg(), "'-12345.96'");
+
+    logger.InfoEx("'%0-3.7f'", 12345.968750);
+    AssertStrEq("%0-3.7f", sink.GetLastLogMsg(), "'12345.9687500'");
+    logger.InfoEx("'%0-3.7f'", 0.0);
+    AssertStrEq("%0-3.7f", sink.GetLastLogMsg(), "'0.0000000'");
+    logger.InfoEx("'%0-3.7f'", -12345.968750);
+    AssertStrEq("%0-3.7f", sink.GetLastLogMsg(), "'-12345.9687500'");
+
+    logger.InfoEx("'%-20.f'", 12345.968750);
+    AssertStrEq("%-20.f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoEx("'%-20.f'", 0.0);
+    AssertStrEq("%-20.f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoEx("'%-20.f'", -12345.968750);
+    AssertStrEq("%-20.f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoEx("'%-20.0f'", 12345.968750);
+    AssertStrEq("%-20.0f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoEx("'%-20.0f'", 0.0);
+    AssertStrEq("%-20.0f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoEx("'%-20.0f'", -12345.968750);
+    AssertStrEq("%-20.0f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoEx("'%-20.2f'", 12345.968750);
+    AssertStrEq("%-20.2f", sink.GetLastLogMsg(), "'12345.96            '");
+    logger.InfoEx("'%-20.2f'", 0.0);
+    AssertStrEq("%-20.2f", sink.GetLastLogMsg(), "'0.00                '");
+    logger.InfoEx("'%-20.2f'", -12345.968750);
+    AssertStrEq("%-20.2f", sink.GetLastLogMsg(), "'-12345.96           '");
+
+    logger.InfoEx("'%-20.7f'", 12345.968750);
+    AssertStrEq("%-20.7f", sink.GetLastLogMsg(), "'12345.9687500       '");
+    logger.InfoEx("'%-20.7f'", 0.0);
+    AssertStrEq("%-20.7f", sink.GetLastLogMsg(), "'0.0000000           '");
+    logger.InfoEx("'%-20.7f'", -12345.968750);
+    AssertStrEq("%-20.7f", sink.GetLastLogMsg(), "'-12345.9687500      '");
+
+    logger.InfoEx("'%020.f'", 12345.968750);
+    AssertStrEq("%020.f", sink.GetLastLogMsg(), "'00000000000000012345'");
+    logger.InfoEx("'%020.f'", 0.0);
+    AssertStrEq("%020.f", sink.GetLastLogMsg(), "'00000000000000000000'");
+    logger.InfoEx("'%020.f'", -12345.968750);
+    AssertStrEq("%020.f", sink.GetLastLogMsg(), "'-0000000000000012345'");
+
+    logger.InfoEx("'%020.0f'", 12345.968750);
+    AssertStrEq("%020.0f", sink.GetLastLogMsg(), "'00000000000000012345'");
+    logger.InfoEx("'%020.0f'", 0.0);
+    AssertStrEq("%020.0f", sink.GetLastLogMsg(), "'00000000000000000000'");
+    logger.InfoEx("'%020.0f'", -12345.968750);
+    AssertStrEq("%020.0f", sink.GetLastLogMsg(), "'-0000000000000012345'");
+
+    logger.InfoEx("'%020.2f'", 12345.968750);
+    AssertStrEq("%020.2f", sink.GetLastLogMsg(), "'00000000000012345.96'");
+    logger.InfoEx("'%020.2f'", 0.0);
+    AssertStrEq("%020.2f", sink.GetLastLogMsg(), "'00000000000000000.00'");
+    logger.InfoEx("'%020.2f'", -12345.968750);
+    AssertStrEq("%020.2f", sink.GetLastLogMsg(), "'-0000000000012345.96'");
+
+    logger.InfoEx("'%020.7f'", 12345.968750);
+    AssertStrEq("%020.7f", sink.GetLastLogMsg(), "'000000012345.9687500'");
+    logger.InfoEx("'%020.7f'", 0.0);
+    AssertStrEq("%020.7f", sink.GetLastLogMsg(), "'000000000000.0000000'");
+    logger.InfoEx("'%020.7f'", -12345.968750);
+    AssertStrEq("%020.7f", sink.GetLastLogMsg(), "'-00000012345.9687500'");
+
+    logger.InfoEx("'%0-20.f'", 12345.968750);
+    AssertStrEq("%0-20.f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoEx("'%0-20.f'", 0.0);
+    AssertStrEq("%0-20.f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoEx("'%0-20.f'", -12345.968750);
+    AssertStrEq("%0-20.f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoEx("'%0-20.0f'", 12345.968750);
+    AssertStrEq("%0-20.0f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoEx("'%0-20.0f'", 0.0);
+    AssertStrEq("%0-20.0f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoEx("'%0-20.0f'", -12345.968750);
+    AssertStrEq("%0-20.0f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoEx("'%0-20.2f'", 12345.968750);
+    AssertStrEq("%0-20.2f", sink.GetLastLogMsg(), "'12345.96            '");
+    logger.InfoEx("'%0-20.2f'", 0.0);
+    AssertStrEq("%0-20.2f", sink.GetLastLogMsg(), "'0.00                '");
+    logger.InfoEx("'%0-20.2f'", -12345.968750);
+    AssertStrEq("%0-20.2f", sink.GetLastLogMsg(), "'-12345.96           '");
+
+    logger.InfoEx("'%0-20.7f'", 12345.968750);
+    AssertStrEq("%0-20.7f", sink.GetLastLogMsg(), "'12345.9687500       '");
+    logger.InfoEx("'%0-20.7f'", 0.0);
+    AssertStrEq("%0-20.7f", sink.GetLastLogMsg(), "'0.0000000           '");
+    logger.InfoEx("'%0-20.7f'", -12345.968750);
+    AssertStrEq("%0-20.7f", sink.GetLastLogMsg(), "'-12345.9687500      '");
+
+    logger.InfoEx("'%-020.f'", 12345.968750);
+    AssertStrEq("%-020.f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoEx("'%-020.f'", 0.0);
+    AssertStrEq("%-020.f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoEx("'%-020.f'", -12345.968750);
+    AssertStrEq("%-020.f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoEx("'%-020.0f'", 12345.968750);
+    AssertStrEq("%-020.0f", sink.GetLastLogMsg(), "'12345               '");
+    logger.InfoEx("'%-020.0f'", 0.0);
+    AssertStrEq("%-020.0f", sink.GetLastLogMsg(), "'0                   '");
+    logger.InfoEx("'%-020.0f'", -12345.968750);
+    AssertStrEq("%-020.0f", sink.GetLastLogMsg(), "'-12345              '");
+
+    logger.InfoEx("'%-020.2f'", 12345.968750);
+    AssertStrEq("%-020.2f", sink.GetLastLogMsg(), "'12345.96            '");
+    logger.InfoEx("'%-020.2f'", 0.0);
+    AssertStrEq("%-020.2f", sink.GetLastLogMsg(), "'0.00                '");
+    logger.InfoEx("'%-020.2f'", -12345.968750);
+    AssertStrEq("%-020.2f", sink.GetLastLogMsg(), "'-12345.96           '");
+
+    logger.InfoEx("'%-020.7f'", 12345.968750);
+    AssertStrEq("%-020.7f", sink.GetLastLogMsg(), "'12345.9687500       '");
+    logger.InfoEx("'%-020.7f'", 0.0);
+    AssertStrEq("%-020.7f", sink.GetLastLogMsg(), "'0.0000000           '");
+    logger.InfoEx("'%-020.7f'", -12345.968750);
+    AssertStrEq("%-020.7f", sink.GetLastLogMsg(), "'-12345.9687500      '");
+
+    logger.Close();
+    sink.Close();
 }
 
 
@@ -467,149 +1134,251 @@ void TestBinary()
 void TestBinaryAmxTpl()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]b
     SetTestContext("Test Binary AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoAmxTpl("'%b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%-b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%0b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%-0b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%0-b'", StringToInt(TEST_BINARY_VALUE, 2));
+    logger.InfoAmxTpl("'%b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0-b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0-b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-0b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-0b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-0b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-0b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+#endif
+
     // width
-    logger.InfoAmxTpl("'%5b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%35b'", StringToInt(TEST_BINARY_VALUE, 2));
+    logger.InfoAmxTpl("'%5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%5b", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoAmxTpl("'%5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%35b", sink.GetLastLogMsg(), "'                                  0'");
+    logger.InfoAmxTpl("'%35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%35b", sink.GetLastLogMsg(), "'    " ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%35b", sink.GetLastLogMsg(), "'    " ... TEST_BINARY_VALUE3 ... "'");
+
     // flag & width
-    logger.InfoAmxTpl("'%-5b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%-35b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%05b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%035b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%-05b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%-035b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%0-5b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoAmxTpl("'%0-35b'", StringToInt(TEST_BINARY_VALUE, 2));
+    logger.InfoAmxTpl("'%05b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%05b", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%05b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%05b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    ArrayList expected = GetBinaryAmxTplExpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoAmxTpl("'%035b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%035b", sink.GetLastLogMsg(), "'0000" ... TEST_BINARY_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%035b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%035b", sink.GetLastLogMsg(), "'0000" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%035b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%035b", sink.GetLastLogMsg(), "'0000" ... TEST_BINARY_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-5b", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoAmxTpl("'%-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-35b", sink.GetLastLogMsg(), "'0                                  '");
+    logger.InfoAmxTpl("'%-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "    '");
+    logger.InfoAmxTpl("'%-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "    '");
+
+    logger.InfoAmxTpl("'%-05b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-05b", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%-05b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-05b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-035b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-035b", sink.GetLastLogMsg(), "'00000000000000000000000000000000000'");
+    logger.InfoAmxTpl("'%-035b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-035b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "0000'");
+    logger.InfoAmxTpl("'%-035b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-035b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "0000'");
+
+    logger.InfoAmxTpl("'%0-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0-5b", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%0-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0-35b", sink.GetLastLogMsg(), "'00000000000000000000000000000000000'");
+    logger.InfoAmxTpl("'%0-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "0000'");
+    logger.InfoAmxTpl("'%0-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "0000'");
+#endif
+
+    logger.Close();
+    sink.Close();
 }
 
 void TestBinaryEx()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]b
     SetTestContext("Test Binary Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoEx("'%b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%-b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%0b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%-0b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%0-b'", StringToInt(TEST_BINARY_VALUE, 2));
-    // width
-    logger.InfoEx("'%5b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%35b'", StringToInt(TEST_BINARY_VALUE, 2));
-    // flag & width
-    logger.InfoEx("'%-5b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%-35b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%05b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%035b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%-05b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%-035b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%0-5b'", StringToInt(TEST_BINARY_VALUE, 2));
-    logger.InfoEx("'%0-35b'", StringToInt(TEST_BINARY_VALUE, 2));
+    logger.InfoEx("'%b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    ArrayList expected = GetBinaryExExpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoEx("'%0b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%0b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-}
+    logger.InfoEx("'%-b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%-b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
 
-ArrayList GetBinaryAmxTplExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "[0]+");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-#endif
-    // width
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'    " ... TEST_BINARY_VALUE ... "'\\s");
+    logger.InfoEx("'%0-b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0-b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0-b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%0-b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0-b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    // flag & width
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "    '\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'0000" ... TEST_BINARY_VALUE ... "'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "0000'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "0000'\\s");
-    return expected;
-}
-
-ArrayList GetBinaryExExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
+    logger.InfoEx("'%-0b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-0b", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-0b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%-0b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-0b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
 
     // width
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'    " ... TEST_BINARY_VALUE ... "'\\s");
+    logger.InfoEx("'%5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%5b", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoEx("'%5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoEx("'%35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%35b", sink.GetLastLogMsg(), "'                                  0'");
+    logger.InfoEx("'%35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%35b", sink.GetLastLogMsg(), "'    " ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%35b", sink.GetLastLogMsg(), "'    " ... TEST_BINARY_VALUE3 ... "'");
 
     // flag & width
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "    '\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'0000" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "0000'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_BINARY_VALUE ... "0000'\\s");
-    return expected;
+    logger.InfoEx("'%05b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%05b", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%05b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%05b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoEx("'%035b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%035b", sink.GetLastLogMsg(), "'0000" ... TEST_BINARY_VALUE1 ... "'");
+    logger.InfoEx("'%035b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%035b", sink.GetLastLogMsg(), "'0000" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%035b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%035b", sink.GetLastLogMsg(), "'0000" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoEx("'%-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-5b", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoEx("'%-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoEx("'%-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-35b", sink.GetLastLogMsg(), "'0                                  '");
+    logger.InfoEx("'%-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "    '");
+    logger.InfoEx("'%-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "    '");
+
+    logger.InfoEx("'%-05b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-05b", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%-05b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%-05b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-05b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoEx("'%-035b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%-035b", sink.GetLastLogMsg(), "'00000000000000000000000000000000000'");
+    logger.InfoEx("'%-035b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%-035b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "0000'");
+    logger.InfoEx("'%-035b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%-035b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "0000'");
+
+    logger.InfoEx("'%0-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0-5b", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%0-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "'");
+    logger.InfoEx("'%0-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0-5b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "'");
+
+    logger.InfoEx("'%0-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    AssertStrEq("%0-35b", sink.GetLastLogMsg(), "'00000000000000000000000000000000000'");
+    logger.InfoEx("'%0-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    AssertStrEq("%0-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE2 ... "0000'");
+    logger.InfoEx("'%0-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    AssertStrEq("%0-35b", sink.GetLastLogMsg(), "'" ... TEST_BINARY_VALUE3 ... "0000'");
+
+    logger.Close();
+    sink.Close();
 }
 
 
@@ -622,153 +1391,251 @@ void TestUInt()
 void TestUIntAmxTpl()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]u
     SetTestContext("Test UInt AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoAmxTpl("'%u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%-u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%0u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%-0u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%0-u'", StringToInt(TEST_UINT_VALUE));
+    logger.InfoAmxTpl("'%u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%0u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%-u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%0-u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-0u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%-0u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-0u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+#endif
+
     // width
-    logger.InfoAmxTpl("'%5u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%15u'", StringToInt(TEST_UINT_VALUE));
+    logger.InfoAmxTpl("'%5u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%5u", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoAmxTpl("'%5u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%5u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%15u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%15u", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoAmxTpl("'%15u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%15u", sink.GetLastLogMsg(), "'     " ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%15u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%15u", sink.GetLastLogMsg(), "'     " ... TEST_UINT_VALUE3 ... "'");
+
     // flag & width
-    logger.InfoAmxTpl("'%-5u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%-15u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%05u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%015u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%-05u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%-015u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%0-5u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoAmxTpl("'%0-15u'", StringToInt(TEST_UINT_VALUE));
+    logger.InfoAmxTpl("'%05u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%05u", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%05u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%05u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
-    ArrayList expected = GetUIntAmxTplExpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoAmxTpl("'%015u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%015u", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%015u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%015u", sink.GetLastLogMsg(), "'00000" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%015u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%015u", sink.GetLastLogMsg(), "'00000" ... TEST_UINT_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-5u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-5u", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoAmxTpl("'%-5u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-5u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-15u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-15u", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoAmxTpl("'%-15u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "     '");
+    logger.InfoAmxTpl("'%-15u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "     '");
+
+    logger.InfoAmxTpl("'%-05u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-05u", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%-05u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-05u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-015u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-015u", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%-015u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-015u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "00000'");
+    logger.InfoAmxTpl("'%-015u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-015u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "00000'");
+
+    logger.InfoAmxTpl("'%0-5u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0-5u", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%0-5u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-5u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-15u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0-15u", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%0-15u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "00000'");
+    logger.InfoAmxTpl("'%0-15u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "00000'");
+#endif
+
+    logger.Close();
+    sink.Close();
 }
 
 void TestUIntEx()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]u
     SetTestContext("Test UInt Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoEx("'%u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%-u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%0u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%-0u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%0-u'", StringToInt(TEST_UINT_VALUE));
-    // width
-    logger.InfoEx("'%5u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%15u'", StringToInt(TEST_UINT_VALUE));
-    // flag & width
-    logger.InfoEx("'%-5u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%-15u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%05u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%015u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%-05u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%-015u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%0-5u'", StringToInt(TEST_UINT_VALUE));
-    logger.InfoEx("'%0-15u'", StringToInt(TEST_UINT_VALUE));
+    logger.InfoEx("'%u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoEx("'%u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
-    ArrayList expected = GetUIntExEpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoEx("'%0u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoEx("'%0u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%0u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-}
+    logger.InfoEx("'%-u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoEx("'%-u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%-u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
-ArrayList GetUIntAmxTplExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
+    logger.InfoEx("'%0-u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoEx("'%0-u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%0-u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0-u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_UINT_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-#endif
-
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_UINT_VALUE ... "[0]+");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-#endif
+    logger.InfoEx("'%-0u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE1 ... "'");
+    logger.InfoEx("'%-0u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%-0u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-0u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
     // width
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'        " ... TEST_UINT_VALUE ... "'\\s");
+    logger.InfoEx("'%5u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%5u", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoEx("'%5u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%5u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoEx("'%15u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%15u", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoEx("'%15u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%15u", sink.GetLastLogMsg(), "'     " ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%15u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%15u", sink.GetLastLogMsg(), "'     " ... TEST_UINT_VALUE3 ... "'");
 
     // flag & width
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_UINT_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_UINT_VALUE ... "        '\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'00000000" ... TEST_UINT_VALUE ... "'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_UINT_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_UINT_VALUE ... "00000000'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_UINT_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_UINT_VALUE ... "00000000'\\s");
-    return expected;
-}
+    logger.InfoEx("'%05u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%05u", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%05u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%05u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
-ArrayList GetUIntExEpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
+    logger.InfoEx("'%015u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%015u", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%015u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%015u", sink.GetLastLogMsg(), "'00000" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%015u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%015u", sink.GetLastLogMsg(), "'00000" ... TEST_UINT_VALUE3 ... "'");
 
-    // width
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'        " ... TEST_UINT_VALUE ... "'\\s");
+    logger.InfoEx("'%-5u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-5u", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoEx("'%-5u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%-5u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
 
-    // flag & width
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "        '\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'00000000" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "00000000'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_UINT_VALUE ... "00000000'\\s");
-    return expected;
+    logger.InfoEx("'%-15u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-15u", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoEx("'%-15u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "     '");
+    logger.InfoEx("'%-15u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "     '");
+
+    logger.InfoEx("'%-05u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-05u", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%-05u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%-05u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-05u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoEx("'%-015u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%-015u", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%-015u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%-015u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "00000'");
+    logger.InfoEx("'%-015u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%-015u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "00000'");
+
+    logger.InfoEx("'%0-5u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0-5u", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%0-5u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "'");
+    logger.InfoEx("'%0-5u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0-5u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "'");
+
+    logger.InfoEx("'%0-15u'", StringToInt(TEST_UINT_VALUE1));
+    AssertStrEq("%0-15u", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%0-15u'", StringToInt(TEST_UINT_VALUE2));
+    AssertStrEq("%0-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE2 ... "00000'");
+    logger.InfoEx("'%0-15u'", StringToInt(TEST_UINT_VALUE3));
+    AssertStrEq("%0-15u", sink.GetLastLogMsg(), "'" ... TEST_UINT_VALUE3 ... "00000'");
+
+    logger.Close();
+    sink.Close();
 }
 
 
@@ -781,153 +1648,253 @@ void TestInt()
 void TestIntAmxTpl()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]d
     SetTestContext("Test Int AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoAmxTpl("'%d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%-d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%0d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%-0d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%0-d'", StringToInt(TEST_INT_VALUE));
+    logger.InfoAmxTpl("'%d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%0d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%-d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%0-d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-0d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoAmxTpl("'%-0d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-0d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+#endif
+
     // width
-    logger.InfoAmxTpl("'%5d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%15d'", StringToInt(TEST_INT_VALUE));
+    logger.InfoAmxTpl("'%5d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%5d", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoAmxTpl("'%5d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%5d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%15d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%15d", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoAmxTpl("'%15d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%15d", sink.GetLastLogMsg(), "'     " ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%15d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%15d", sink.GetLastLogMsg(), "'    " ... TEST_INT_VALUE3 ... "'");
+
     // flag & width
-    logger.InfoAmxTpl("'%-5d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%-15d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%05d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%015d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%-05d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%-015d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%0-5d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoAmxTpl("'%0-15d'", StringToInt(TEST_INT_VALUE));
+    logger.InfoAmxTpl("'%05d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%05d", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%05d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%05d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
-    ArrayList expected = GetIntAmxTplExpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoAmxTpl("'%015d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%015d", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%015d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%015d", sink.GetLastLogMsg(), "'00000" ... TEST_INT_VALUE2 ... "'");
+    // ! Warn 填充字符在符号之前
+    logger.InfoAmxTpl("'%015d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%015d", sink.GetLastLogMsg(), "'0000-2147483648'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-5d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-5d", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoAmxTpl("'%-5d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-5d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-15d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-15d", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoAmxTpl("'%-15d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "     '");
+    logger.InfoAmxTpl("'%-15d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "    '");
+
+    logger.InfoAmxTpl("'%-05d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-05d", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%-05d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-05d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-015d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-015d", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%-015d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-015d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "00000'");
+    logger.InfoAmxTpl("'%-015d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-015d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "0000'");
+
+    logger.InfoAmxTpl("'%0-5d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0-5d", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%0-5d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-5d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-15d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0-15d", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%0-15d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "00000'");
+    logger.InfoAmxTpl("'%0-15d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "0000'");
+#endif
+
+
+    logger.Close();
+    sink.Close();
 }
 
 void TestIntEx()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]d
     SetTestContext("Test Int Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoEx("'%d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%-d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%0d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%-0d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%0-d'", StringToInt(TEST_INT_VALUE));
-    // width
-    logger.InfoEx("'%5d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%15d'", StringToInt(TEST_INT_VALUE));
-    // flag & width
-    logger.InfoEx("'%-5d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%-15d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%05d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%015d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%-05d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%-015d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%0-5d'", StringToInt(TEST_INT_VALUE));
-    logger.InfoEx("'%0-15d'", StringToInt(TEST_INT_VALUE));
+    logger.InfoEx("'%d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoEx("'%d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
-    ArrayList expected = GetIntExEpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoEx("'%0d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoEx("'%0d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%0d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-}
+    logger.InfoEx("'%-d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoEx("'%-d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%-d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
-ArrayList GetIntAmxTplExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
+    logger.InfoEx("'%0-d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoEx("'%0-d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%0-d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0-d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_INT_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-#endif
-
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_INT_VALUE ... "[0]+");
-    expected.PushString("'" ... TEST_INT_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-#endif
+    logger.InfoEx("'%-0d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE1 ... "'");
+    logger.InfoEx("'%-0d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%-0d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-0d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
     // width
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'       " ... TEST_INT_VALUE ... "'\\s");
+    logger.InfoEx("'%5d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%5d", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoEx("'%5d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%5d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoEx("'%15d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%15d", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoEx("'%15d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%15d", sink.GetLastLogMsg(), "'     " ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%15d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%15d", sink.GetLastLogMsg(), "'    " ... TEST_INT_VALUE3 ... "'");
 
     // flag & width
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_INT_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_INT_VALUE ... "       '\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'0000000" ... TEST_INT_VALUE ... "'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_INT_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_INT_VALUE ... "0000000'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_INT_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_INT_VALUE ... "0000000'\\s");
-    return expected;
-}
+    logger.InfoEx("'%05d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%05d", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%05d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%05d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
-ArrayList GetIntExEpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
+    logger.InfoEx("'%015d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%015d", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%015d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%015d", sink.GetLastLogMsg(), "'00000" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%015d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%015d", sink.GetLastLogMsg(), "'-00002147483648'");
 
-    // width
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'       " ... TEST_INT_VALUE ... "'\\s");
+    logger.InfoEx("'%-5d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-5d", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoEx("'%-5d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%-5d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
 
-    // flag & width
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "       '\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'-00000001234567'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "0000000'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_INT_VALUE ... "0000000'\\s");
-    return expected;
+    logger.InfoEx("'%-15d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-15d", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoEx("'%-15d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "     '");
+    logger.InfoEx("'%-15d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "    '");
+
+    logger.InfoEx("'%-05d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-05d", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%-05d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%-05d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-05d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoEx("'%-015d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%-015d", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%-015d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%-015d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "00000'");
+    logger.InfoEx("'%-015d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%-015d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "0000'");
+
+    logger.InfoEx("'%0-5d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0-5d", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%0-5d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "'");
+    logger.InfoEx("'%0-5d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0-5d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "'");
+
+    logger.InfoEx("'%0-15d'", StringToInt(TEST_INT_VALUE1));
+    AssertStrEq("%0-15d", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%0-15d'", StringToInt(TEST_INT_VALUE2));
+    AssertStrEq("%0-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE2 ... "00000'");
+    logger.InfoEx("'%0-15d'", StringToInt(TEST_INT_VALUE3));
+    AssertStrEq("%0-15d", sink.GetLastLogMsg(), "'" ... TEST_INT_VALUE3 ... "0000'");
+
+    logger.Close();
+    sink.Close();
 }
 
 
@@ -943,306 +1910,502 @@ void TestHex()
 void TestHexUpperAmxTpl()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]X
     SetTestContext("Test Hex Upper AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoAmxTpl("'%X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
+    logger.InfoAmxTpl("'%X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0-X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-0X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+#endif
+
     // width
-    logger.InfoAmxTpl("'%3X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
+    logger.InfoAmxTpl("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%5X", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoAmxTpl("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%15X", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoAmxTpl("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%15X", sink.GetLastLogMsg(), "'          " ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%15X", sink.GetLastLogMsg(), "'       " ... TEST_HEX_UPPER_VALUE3 ... "'");
+
     // flag & width
-    logger.InfoAmxTpl("'%-3X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%03X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%-03X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%0-3X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoAmxTpl("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
+    logger.InfoAmxTpl("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%05X", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    ArrayList expected = GetHexUpperAmxTplExpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoAmxTpl("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%015X", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%015X", sink.GetLastLogMsg(), "'0000000000" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%015X", sink.GetLastLogMsg(), "'0000000" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-5X", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoAmxTpl("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-15X", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoAmxTpl("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "          '");
+    logger.InfoAmxTpl("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "       '");
+
+    logger.InfoAmxTpl("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-05X", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-015X", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-015X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "0000000000'");
+    logger.InfoAmxTpl("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-015X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "0000000'");
+
+    logger.InfoAmxTpl("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0-5X", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0-15X", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "0000000000'");
+    logger.InfoAmxTpl("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "0000000'");
+#endif
+
+    logger.Close();
+    sink.Close();
 }
 
 void TestHexUpperEx()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]X
     SetTestContext("Test Hex Upper Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoEx("'%X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    // width
-    logger.InfoEx("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    // flag & width
-    logger.InfoEx("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
-    logger.InfoEx("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE, 16));
+    logger.InfoEx("'%X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    ArrayList expected = GetHexUpperExEpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoEx("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-}
+    logger.InfoEx("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-ArrayList GetHexUpperAmxTplExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
+    logger.InfoEx("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0-X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0-X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-#endif
-
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "[0]+");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-#endif
+    logger.InfoEx("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-0X", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-0X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
     // width
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'          " ... TEST_HEX_UPPER_VALUE ... "'\\s");
+    logger.InfoEx("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%5X", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoEx("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoEx("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%15X", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoEx("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%15X", sink.GetLastLogMsg(), "'          " ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%15X", sink.GetLastLogMsg(), "'       " ... TEST_HEX_UPPER_VALUE3 ... "'");
 
     // flag & width
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "          '\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'0000000000" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "0000000000'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "0000000000'\\s");
-    return expected;
-}
+    logger.InfoEx("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%05X", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-ArrayList GetHexUpperExEpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
+    logger.InfoEx("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%015X", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%015X", sink.GetLastLogMsg(), "'0000000000" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%015X", sink.GetLastLogMsg(), "'0000000" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    // width
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'          " ... TEST_HEX_UPPER_VALUE ... "'\\s");
+    logger.InfoEx("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-5X", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoEx("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    // flag & width
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "          '\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'0000000000" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "0000000000'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_UPPER_VALUE ... "0000000000'\\s");
-    return expected;
+    logger.InfoEx("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-15X", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoEx("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "          '");
+    logger.InfoEx("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "       '");
+
+    logger.InfoEx("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-05X", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-05X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoEx("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%-015X", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%-015X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "0000000000'");
+    logger.InfoEx("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%-015X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "0000000'");
+
+    logger.InfoEx("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0-5X", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
+    logger.InfoEx("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0-5X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
+
+    logger.InfoEx("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    AssertStrEq("%0-15X", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    AssertStrEq("%0-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE2 ... "0000000000'");
+    logger.InfoEx("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    AssertStrEq("%0-15X", sink.GetLastLogMsg(), "'" ... TEST_HEX_UPPER_VALUE3 ... "0000000'");
+
+    logger.Close();
+    sink.Close();
 }
 
 
 void TestHexLowerAmxTpl()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]x
     SetTestContext("Test Hex Lower AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoAmxTpl("'%x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
+    logger.InfoAmxTpl("'%x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0-x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-0x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoAmxTpl("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+#endif
+
     // width
-    logger.InfoAmxTpl("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
+    logger.InfoAmxTpl("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%5x", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoAmxTpl("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%15x", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoAmxTpl("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%15x", sink.GetLastLogMsg(), "'          " ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%15x", sink.GetLastLogMsg(), "'       " ... TEST_HEX_LOWER_VALUE3 ... "'");
+
     // flag & width
-    logger.InfoAmxTpl("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoAmxTpl("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
+    logger.InfoAmxTpl("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%05x", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    ArrayList expected = GetHexLowerAmxTplExpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoAmxTpl("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%015x", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%015x", sink.GetLastLogMsg(), "'0000000000" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%015x", sink.GetLastLogMsg(), "'0000000" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
+#if SOURCEMOD_V_MINOR >= 13
+    // ! Warn https://github.com/alliedmodders/sourcemod/pull/2255
+    logger.InfoAmxTpl("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-5x", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoAmxTpl("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-15x", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoAmxTpl("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "          '");
+    logger.InfoAmxTpl("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "       '");
+
+    logger.InfoAmxTpl("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-05x", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-015x", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-015x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "0000000000'");
+    logger.InfoAmxTpl("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-015x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "0000000'");
+
+    logger.InfoAmxTpl("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0-5x", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoAmxTpl("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoAmxTpl("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoAmxTpl("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0-15x", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoAmxTpl("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "0000000000'");
+    logger.InfoAmxTpl("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "0000000'");
+#endif
+
+    logger.Close();
+    sink.Close();
 }
 
 void TestHexLowerEx()
 {
     // flags: [-] / [0]
-    // %[flags][width]specifier
+    // %[flags][width]x
     SetTestContext("Test Hex Lower Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     // flag
-    logger.InfoEx("'%x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    // width
-    logger.InfoEx("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    // flag & width
-    logger.InfoEx("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
-    logger.InfoEx("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE, 16));
+    logger.InfoEx("'%x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    ArrayList expected = GetHexLowerExEpected();
-    TestSink.AssertLinesRegex("Log lines", sink.GetLines(), expected);
+    logger.InfoEx("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-}
+    logger.InfoEx("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-ArrayList GetHexLowerAmxTplExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
+    logger.InfoEx("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0-x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0-x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-#endif
-
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "[0]+");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-#endif
+    logger.InfoEx("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-0x", sink.GetLastLogMsg(), "'0'");
+    logger.InfoEx("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-0x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
     // width
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'       " ... TEST_HEX_LOWER_VALUE ... "'\\s");
+    logger.InfoEx("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%5x", sink.GetLastLogMsg(), "'    0'");
+    logger.InfoEx("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoEx("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%15x", sink.GetLastLogMsg(), "'              0'");
+    logger.InfoEx("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%15x", sink.GetLastLogMsg(), "'          " ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%15x", sink.GetLastLogMsg(), "'       " ... TEST_HEX_LOWER_VALUE3 ... "'");
 
     // flag & width
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "[ ]+");
-#else
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "       '\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'0000000" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "0000000'\\s");
-#if SOURCEMOD_V_MINOR < 13
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "[0]+");
-#else
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-#endif
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "0000000'\\s");
-    return expected;
-}
+    logger.InfoEx("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%05x", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-ArrayList GetHexLowerExEpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    // flag
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
+    logger.InfoEx("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%015x", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%015x", sink.GetLastLogMsg(), "'0000000000" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%015x", sink.GetLastLogMsg(), "'0000000" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    // width
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'       " ... TEST_HEX_LOWER_VALUE ... "'\\s");
+    logger.InfoEx("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-5x", sink.GetLastLogMsg(), "'0    '");
+    logger.InfoEx("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    // flag & width
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "       '\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'0000000" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "0000000'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "'\\s");
-    expected.PushString("'" ... TEST_HEX_LOWER_VALUE ... "0000000'\\s");
-    return expected;
+    logger.InfoEx("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-15x", sink.GetLastLogMsg(), "'0              '");
+    logger.InfoEx("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "          '");
+    logger.InfoEx("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "       '");
+
+    logger.InfoEx("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-05x", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-05x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoEx("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%-015x", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%-015x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "0000000000'");
+    logger.InfoEx("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%-015x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "0000000'");
+
+    logger.InfoEx("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0-5x", sink.GetLastLogMsg(), "'00000'");
+    logger.InfoEx("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
+    logger.InfoEx("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0-5x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
+
+    logger.InfoEx("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    AssertStrEq("%0-15x", sink.GetLastLogMsg(), "'000000000000000'");
+    logger.InfoEx("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    AssertStrEq("%0-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE2 ... "0000000000'");
+    logger.InfoEx("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    AssertStrEq("%0-15x", sink.GetLastLogMsg(), "'" ... TEST_HEX_LOWER_VALUE3 ... "0000000'");
+
+    logger.Close();
+    sink.Close();
 }
 
 
@@ -1257,54 +2420,51 @@ void TestTranslatesAmxTpl()
     // %T, LANGID
     SetTestContext("Test Translates AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY, GetLanguageByCode("en"));
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE ... "'");
+
     logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY1, GetLanguageByCode("en"), TEST_TRANSLATES_DATA1);
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE1 ... "'");
+
     logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY2, GetLanguageByCode("en"), StringToInt(TEST_TRANSLATES_DATA2));
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE2 ... "'");
+
     logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY3, GetLanguageByCode("en"), TEST_TRANSLATES_DATA3_1, TEST_TRANSLATES_DATA3_2);
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE3 ... "'");
 
-    ArrayList expected = GetTranslatesExpected();
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
-
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
+    logger.Close();
+    sink.Close();
 }
 
 void TestTranslatesEx()
 {
-    // flags: [-] / [0]
-    // %[flags][width]specifier
+    // 内部是先获取 memory_buf 字符串，然后直接 append
+    // %T, LANGID
     SetTestContext("Test Translates Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY, GetLanguageByCode("en"));
-    logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY1, GetLanguageByCode("en"), TEST_TRANSLATES_DATA1);
-    logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY2, GetLanguageByCode("en"), StringToInt(TEST_TRANSLATES_DATA2));
-    logger.InfoAmxTpl("'%T'", TEST_TRANSLATES_KEY3, GetLanguageByCode("en"), TEST_TRANSLATES_DATA3_1, TEST_TRANSLATES_DATA3_2);
+    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY, GetLanguageByCode("en"));
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE ... "'");
 
-    ArrayList expected = GetTranslatesExpected();
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
+    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY1, GetLanguageByCode("en"), TEST_TRANSLATES_DATA1);
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE1 ... "'");
 
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-}
+    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY2, GetLanguageByCode("en"), StringToInt(TEST_TRANSLATES_DATA2));
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE2 ... "'");
 
-ArrayList GetTranslatesExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    expected.PushString("'" ... TEST_TRANSLATES_VALUE ... "'");
-    expected.PushString("'" ... TEST_TRANSLATES_VALUE1 ... "'");
-    expected.PushString("'" ... TEST_TRANSLATES_VALUE2 ... "'");
-    expected.PushString("'" ... TEST_TRANSLATES_VALUE3 ... "'");
-    return expected;
+    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY3, GetLanguageByCode("en"), TEST_TRANSLATES_DATA3_1, TEST_TRANSLATES_DATA3_2);
+    AssertStrEq("%T", sink.GetLastLogMsg(), "'" ... TEST_TRANSLATES_VALUE3 ... "'");
+
+
+    logger.Close();
+    sink.Close();
 }
 
 
@@ -1316,49 +2476,41 @@ void TestSpecial()
 
 void TestSpecialAmxTpl()
 {
-    // %T, LANGID
+    // flags: [-] / [0]
+    // %[flags][width]specifier
     SetTestContext("Test Special AmxTpl");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.InfoAmxTpl("'%N'", 0);
+    AssertStrEq("%N", sink.GetLastLogMsg(), "'Console'");
+
     logger.InfoAmxTpl("'%L'", 0);
+    AssertStrEq("%L", sink.GetLastLogMsg(), "'Console<0><Console><Console>'");
 
-    ArrayList expected = GetSpecialExpected();
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
-
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
+    logger.Close();
+    sink.Close();
 }
 
 void TestSpecialEx()
 {
+    // 内部是先获取字符串，然后调用 AddString
     // flags: [-] / [0]
     // %[flags][width]specifier
     SetTestContext("Test Special Ex");
 
-    TestSink sink = TestSink.Initialize();
+    TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.InfoEx("'%N'", 0);
+    AssertStrEq("%N", sink.GetLastLogMsg(), "'Console'");
+
     logger.InfoEx("'%L'", 0);
+    AssertStrEq("%L", sink.GetLastLogMsg(), "'Console<0><Console><Console>'");
 
-    ArrayList expected = GetSpecialExpected();
-    TestSink.AssertMsgs("Log msgs", sink.GetMsgs(), expected);
-
-    delete logger;
-    TestSink.Destroy();
-    delete expected;
-}
-
-ArrayList GetSpecialExpected()
-{
-    ArrayList expected = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    expected.PushString("'Console'");
-    expected.PushString("'Console<0><Console><Console>'");
-    return expected;
+    logger.Close();
+    sink.Close();
 }

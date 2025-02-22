@@ -10,7 +10,7 @@
 #define LOGGER_NAME                 "test-err-handler"
 #define PLUGIN_PATTERN              ".*test-logger-err-handler.sp"
 #define ERR_MSG_PATTERN             "String formatted incorrectly - parameter [0-9] \\(total [0-9]\\)"
-#define SM_ERR_FILE_PATTERN         "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[.*\\] \\["... PLUGIN_PATTERN ... "::[0-9]+\\] \\["... LOGGER_NAME ... "\\] " ... ERR_MSG_PATTERN
+#define SM_ERR_FILE_PATTERN         "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[.*\\] \\["... PLUGIN_PATTERN ... "::[0-9]+\\] \\["... LOGGER_NAME ... "\\] " ... ERR_MSG_PATTERN ... "\\s"
 #define DEFAULT_LOG_FILE_PATTERN    "Test message 1\nTest message 3\n"
 #define CUSTOM_LOG_FILE_PATTERN     "Test message 1\nTest message 2\nTest message 6\nTest message 7\n"
 
@@ -37,19 +37,20 @@ void TestDefaultErrorHandler()
 {
     SetTestContext("Test Default Error Handler");
 
+    LogError("======= Test Default Error Handler =======");
+
     // SM 错误日志文件路径
     char errFilePath[PLATFORM_MAX_PATH];
     FormatTime(errFilePath, sizeof(errFilePath), "addons/sourcemod/logs/errors_%Y%m%d.log");
 
-    // 读取当前行数, 将指针置于文件末尾
-    LogError("======= Test Default Error Handler =======");
-    int errStartlines = 0;
-    File errFile = OpenFile(errFilePath, "r");
-    if (errFile)
-    {
-        errStartlines = CountLines(errFilePath);
-        errFile.Seek(0, SEEK_END);
-    }
+    // 读取当前位置
+    File preErrFile = OpenFile(errFilePath, "r");
+    preErrFile.Seek(0, SEEK_END);
+    int preErrFilePosition = preErrFile.Position;
+    delete preErrFile;
+
+    // 读取当前行数
+    int preErrlines = CountLines(errFilePath);
 
     char path[PLATFORM_MAX_PATH];
     path = PrepareTestPath("err-handler/default_handler.log");
@@ -62,12 +63,17 @@ void TestDefaultErrorHandler()
     logger.InfoEx("Test message %d", 3);
     delete logger;
 
-    AssertEq("SM file line cnt", CountLines(errFilePath), errStartlines + 1);
-    AssertFileRegexEq2("SM file contents", errFile, SM_ERR_FILE_PATTERN);
-    delete errFile;
+    // 读取新的数据
+    char postMsg[TEST_MAX_MSG_LENGTH];
+    File postErrFile = OpenFile(errFilePath, "r");
+    postErrFile.Seek(preErrFilePosition, SEEK_SET);
+    postErrFile.ReadString(postMsg, sizeof(postMsg));
+    delete postErrFile;
 
+    AssertStrMatch("SM file log", postMsg, SM_ERR_FILE_PATTERN);
+    AssertEq("SM file line cnt", CountLines(errFilePath), preErrlines + 1);
     AssertEq("Log file line cnt", CountLines(path), 2);
-    AssertFileRegexEq("Log file contents", path, DEFAULT_LOG_FILE_PATTERN);
+    AssertFileMatch("Log file contents", path, DEFAULT_LOG_FILE_PATTERN);
 }
 
 
@@ -98,7 +104,7 @@ void TestCustomErrorHandler()
 
     AssertEq("Custom handler cnt", g_iCustomErrCnt, 3);
     AssertEq("Log file line cnt", CountLines(path), 4);
-    AssertFileRegexEq("Log file contents", path, CUSTOM_LOG_FILE_PATTERN);
+    AssertFileMatch("Log file contents", path, CUSTOM_LOG_FILE_PATTERN);
 }
 
 
@@ -107,8 +113,8 @@ void CustomErrorHandler(const char[] msg, const char[] name, const char[] file, 
 {
     g_iCustomErrCnt++;
 
-    AssertStrRegexEq("CB msg pattern", msg, ERR_MSG_PATTERN);
+    AssertStrMatch("CB msg pattern", msg, ERR_MSG_PATTERN);
     AssertStrEq("CB name", name, LOGGER_NAME);
-    AssertStrRegexEq("CB file pattern", file, PLUGIN_PATTERN);
+    AssertStrMatch("CB file pattern", file, PLUGIN_PATTERN);
     AssertStrEq("CB func", func, "TestCustomErrorHandler");
 }

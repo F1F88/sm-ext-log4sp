@@ -6,6 +6,9 @@
 #pragma newdecls required
 
 
+#define LOGGER_NAME     "test-callback"
+
+
 public void OnPluginStart()
 {
     RegServerCmd("sm_log4sp_test_callback_logger", Command_Test);
@@ -22,76 +25,58 @@ Action Command_Test(int args)
 }
 
 
-CallbackSink g_hCBSink = null;
-ArrayList g_hLogMsgs = null;
-ArrayList g_hLogLines = null;
-
-int g_iLogMsgsCounter = 0;
-int g_iLogLinesCounter = 0;
-int g_iFlushCounter = 0;
+TestSink g_testSink;
 
 void TestCustomCallbackLogger()
 {
     SetTestContext("Test Custom Callback Logger");
 
-    g_hLogMsgs = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    g_hLogLines = new ArrayList(ByteCountToCells(TEST_MAX_MSG_LENGTH));
-    g_iLogMsgsCounter = 0;
-    g_iLogLinesCounter = 0;
-    g_iFlushCounter = 0;
+    // 基于 CallbackSink
+    g_testSink = new TestSink();
+    CallbackSink sink = new CallbackSink(CBSink_OnLog, CBSink_OnLogPost);
 
-    g_hCBSink = new CallbackSink(CBSink_OnLog, CBSink_OnLogPost, CBSink_OnFlush);
-    g_hCBSink.SetFlushCallback(CBSink_OnFlush);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(g_testSink);
+    logger.AddSink(sink);
+    logger.SetPattern("'%Y-%m-%d' '%l' '%n' '%v'");
 
-    TestSink testSink = TestSink.Initialize();
-
-    Logger logger = new Logger("test-callback");
-    logger.AddSink(g_hCBSink);
-    logger.AddSink(testSink);
-    logger.SetPattern("[%Y-%m-%d %H:%M:%S] [%n] [%l] [%s:%#] %v");
-
-    for (int i = 0; i < LOG4SP_LEVEL_OFF + 1; ++i)
+    for (int i = 0; i < TEST_LOG4SP_LEVEL_TOTAL; ++i)
     {
-        logger.LogAmxTpl(view_as<LogLevel>(i), "test message %d - 1", i);
-        logger.LogSrcAmxTpl(view_as<LogLevel>(i), "test message %d - 2", i);
-        logger.LogLocAmxTpl(__BINARY_PATH__, __LINE__, __BINARY_NAME__, view_as<LogLevel>(i), "test message %d - 3", i);
-        // logger.Flush();
+        logger.LogAmxTpl(view_as<LogLevel>(i), "test message %d", i);
     }
 
-    AssertEq("On log msgs counter",             g_iLogMsgsCounter,  testSink.GetLogCount());
-    AssertEq("On log post lines counter",       g_iLogLinesCounter, testSink.GetLogPostCount());
-    AssertEq("On flush counter",                g_iFlushCounter,    testSink.GeFlushCount());
+    logger.Flush();
 
-    TestSink.AssertMsgs("On log msgs",          g_hLogMsgs,         testSink.GetLines());
-    TestSink.AssertLines("On log post lines",   g_hLogLines,        testSink.GetLines());
+    int logCnt      = g_testSink.GetLogCount();
+    int logPostCnt  = g_testSink.GetLogPostCount();
+    int flushCnt    = g_testSink.GeFlushCount();
 
-    delete g_hLogMsgs;
-    delete g_hLogLines;
+    g_testSink.Close();
+    sink.Close();
+    logger.Close();
 
-    delete logger;
-    delete g_hCBSink;
-    TestSink.Destroy();
+    //  total - 2 (trace、debug)
+    AssertEq("On log msgs counter",         logCnt,     5);
+    AssertEq("On log post lines counter",   logPostCnt, 5);
+    AssertEq("On flush counter",            flushCnt,   1);
 }
 
 void CBSink_OnLog(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int timePoint)
 {
-    char buffer[TEST_MAX_MSG_LENGTH];
-    g_hCBSink.ToPattern(buffer, sizeof(buffer), name, lvl, msg, file, line, func, timePoint);
-
-    g_hLogMsgs.PushString(buffer);
-    g_iLogMsgsCounter++;
+    AssertStrEq("On log name", name, LOGGER_NAME);
+    AssertEq("On log lvl", lvl, view_as<LogLevel>(g_testSink.GetLogCount() + 1));
+    AssertStrMatch("On log msg", msg, "test message [0-9]");
 }
 
 void CBSink_OnLogPost(const char[] msg)
 {
-    char buffer[TEST_MAX_MSG_LENGTH];
-    strcopy(buffer, sizeof(buffer), msg);
-
-    g_hLogLines.PushString(buffer);
-    g_iLogLinesCounter++;
-}
-
-void CBSink_OnFlush()
-{
-    g_iFlushCounter++;
+    switch (g_testSink.GetLogPostCount())
+    {
+        case 1: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'info' '"  ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
+        case 2: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'warn' '"  ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
+        case 3: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'error' '" ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
+        case 4: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'fatal' '" ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
+        case 5: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'off' '"   ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
+        default: AssertTrue("On log unknown lvl", false);
+    }
 }
