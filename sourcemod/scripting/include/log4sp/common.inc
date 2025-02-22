@@ -74,29 +74,29 @@ enum struct SourceLoc
 
 
 /**
- * Convert a logging level enum to name.
+ * Convert a log level enum to name.
  *
  * @param buffer    Buffer to store log level name.
  * @param maxlen    Maximum length of the buffer.
- * @param lvl       Logging level enum.
+ * @param lvl       Log level enum.
  * @return          Number of characters written to the buffer, not including the null terminator.
  */
 native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
 
 /**
- * Convert a logging level enum to short name.
+ * Convert a log level enum to short name.
  *
  * @param buffer    Buffer to store log level short name.
  * @param maxlen    Maximum length of the buffer.
- * @param lvl       Logging level enum.
+ * @param lvl       Log level enum.
  * @return          Number of characters written to the buffer, not including the null terminator.
  */
 native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
 
 /**
- * Convert a logging level name to log level enum.
+ * Convert a log level name to log level enum.
  *
  * @param name      Log level name.
- * @return          Logging level enum or LogLevel_Off when the logging level name does not exist.
+ * @return          Log level enum or LogLevel_Off when the log level name does not exist.
  */
 native LogLevel NameToLogLevel(const char[] name);

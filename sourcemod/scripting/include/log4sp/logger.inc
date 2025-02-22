@@ -13,7 +13,7 @@
 /**
  * Callback for user defined error handler.
  *
- * @note By default, the handler logs error messages using SourceMod's LogError.
+ * @note By default, the handler log the error message using SourceMod API LogError().
  *
  * @note e.g.
  *      void LogToSM(const char[] msg) {
@@ -78,7 +78,7 @@ methodmap Logger < Handle
     /**
      * Creating a logger handle with an array of sink handles.
      *
-     * @note The sink handle in the array will be closed after successful addition.
+     * @note After creation, all sink handles in the sinks are closed.
      *
      * @param name      The name of the new logger.
      * @param sinks     The sinks array to be added to the new logger.
@@ -268,7 +268,7 @@ methodmap Logger < Handle
     /**
      * Add a new sink to sinks.
      *
-     * @note The sink handle will be closed after successful addition.
+     * @note After creation, the sink handle is closed.
      *
      * @param sink      Sink handle.
      * @error           Invalid sink handle.
