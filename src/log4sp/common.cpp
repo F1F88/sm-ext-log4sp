@@ -43,7 +43,7 @@ namespace log4sp {
         return {};
     }
 
-    std::vector<std::string> trace{"Call tack trace:"};
+    std::vector<std::string> trace{"Call stack trace:"};
 
     for (int index = 0; !iter->Done(); iter->Next(), ++index) {
         if (iter->IsNativeFrame()) {
