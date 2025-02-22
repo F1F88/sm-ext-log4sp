@@ -465,7 +465,7 @@ static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 
     auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
 
-    logger->log_amx_tpl({}, lvl, ctx, params, 3);
+    logger->log_amx_tpl(log4sp::source_loc::from_plugin_ctx(ctx), lvl, ctx, params, 3);
     return 0;
 }
 
