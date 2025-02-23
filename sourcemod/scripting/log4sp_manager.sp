@@ -44,11 +44,14 @@ Action Cmd_Log4sp(int client, int args)
     char result[1024];
     ServerCommandEx(result, sizeof(result), "sm log4sp %s", command);
 
+#if SOURCEMOD_V_MINOR <= 11
+    bool antiFlood = !command[0] || !strncmp(command, "list", 4) || !strncmp(command, "apply_all", 9);
+#else
+    bool antiFlood = !command[0] || !strncmp(command, "list", sizeof("list") - 1) || !strncmp(command, "apply_all", sizeof("apply_all") - 1);
+#endif
+
     // Preventing flooded chat
-    if (GetCmdReplySource() == SM_REPLY_TO_CHAT &&
-        (!command[0] ||
-        !strncmp(command, "list", sizeof("list") - 1) ||
-        !strncmp(command, "apply_all", sizeof("apply_all") - 1)))
+    if (GetCmdReplySource() == SM_REPLY_TO_CHAT && antiFlood)
     {
         ReplyToCommand(client, "[SM] %t", "See console for output");
         PrintToConsole(client, result);
@@ -237,7 +240,11 @@ void DisplayLoggerSetFlushLvlMenu(const char[] name, int client, int time = MENU
     menu.Display(client, time);
 }
 
+#if SOURCEMOD_V_MINOR <= 11
+int MenuHandler_Manager(Menu menu, MenuAction action, int param1, int param2)
+#else
 void MenuHandler_Manager(Menu menu, MenuAction action, int param1, int param2)
+#endif
 {
     switch (action)
     {
@@ -254,7 +261,11 @@ void MenuHandler_Manager(Menu menu, MenuAction action, int param1, int param2)
                 if (!Logger.Get(name))
                 {
                     PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
+#if SOURCEMOD_V_MINOR <= 11
+                    return 0;
+#else
                     return;
+#endif
                 }
 
                 DisplayLoggerMenu(name, param1);
@@ -265,9 +276,16 @@ void MenuHandler_Manager(Menu menu, MenuAction action, int param1, int param2)
             delete menu;
         }
     }
+#if SOURCEMOD_V_MINOR <= 11
+    return 0;
+#endif
 }
 
+#if SOURCEMOD_V_MINOR <= 11
+int MenuHandler_ApplyAll(Menu menu, MenuAction action, int param1, int param2)
+#else
 void MenuHandler_ApplyAll(Menu menu, MenuAction action, int param1, int param2)
+#endif
 {
     switch (action)
     {
@@ -300,9 +318,16 @@ void MenuHandler_ApplyAll(Menu menu, MenuAction action, int param1, int param2)
                 DisplayManagerMenu(param1);
         }
     }
+#if SOURCEMOD_V_MINOR <= 11
+    return 0;
+#endif
 }
 
+#if SOURCEMOD_V_MINOR <= 11
+int MenuHandler_AllSetLogLvl(Menu menu, MenuAction action, int param1, int param2)
+#else
 void MenuHandler_AllSetLogLvl(Menu menu, MenuAction action, int param1, int param2)
+#endif
 {
     switch (action)
     {
@@ -323,9 +348,16 @@ void MenuHandler_AllSetLogLvl(Menu menu, MenuAction action, int param1, int para
                 DisplayApplyAllMenu(param1);
         }
     }
+#if SOURCEMOD_V_MINOR <= 11
+    return 0;
+#endif
 }
 
+#if SOURCEMOD_V_MINOR <= 11
+int MenuHandler_AllSetFlushLvl(Menu menu, MenuAction action, int param1, int param2)
+#else
 void MenuHandler_AllSetFlushLvl(Menu menu, MenuAction action, int param1, int param2)
+#endif
 {
     switch (action)
     {
@@ -346,9 +378,16 @@ void MenuHandler_AllSetFlushLvl(Menu menu, MenuAction action, int param1, int pa
                 DisplayApplyAllMenu(param1);
         }
     }
+#if SOURCEMOD_V_MINOR <= 11
+    return 0;
+#endif
 }
 
+#if SOURCEMOD_V_MINOR <= 11
+int MenuHandler_Logger(Menu menu, MenuAction action, int param1, int param2)
+#else
 void MenuHandler_Logger(Menu menu, MenuAction action, int param1, int param2)
+#endif
 {
     switch (action)
     {
@@ -361,7 +400,11 @@ void MenuHandler_Logger(Menu menu, MenuAction action, int param1, int param2)
             if (!logger)
             {
                 PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
+#if SOURCEMOD_V_MINOR <= 11
+                return 0;
+#else
                 return;
+#endif
             }
 
             switch (param2)
@@ -391,9 +434,17 @@ void MenuHandler_Logger(Menu menu, MenuAction action, int param1, int param2)
                 DisplayManagerMenu(param1);
         }
     }
+#if SOURCEMOD_V_MINOR <= 11
+    return 0;
+#endif
 }
 
+
+#if SOURCEMOD_V_MINOR <= 11
+int MenuHandler_SetLogLvl(Menu menu, MenuAction action, int param1, int param2)
+#else
 void MenuHandler_SetLogLvl(Menu menu, MenuAction action, int param1, int param2)
+#endif
 {
     switch (action)
     {
@@ -406,7 +457,11 @@ void MenuHandler_SetLogLvl(Menu menu, MenuAction action, int param1, int param2)
             if (!logger)
             {
                 PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
+#if SOURCEMOD_V_MINOR <= 11
+                return 0;
+#else
                 return;
+#endif
             }
 
             char level[32];
@@ -425,9 +480,17 @@ void MenuHandler_SetLogLvl(Menu menu, MenuAction action, int param1, int param2)
                 DisplayManagerMenu(param1);
         }
     }
+#if SOURCEMOD_V_MINOR <= 11
+    return 0;
+#endif
 }
 
+
+#if SOURCEMOD_V_MINOR <= 11
+int MenuHandler_SetFlushLvl(Menu menu, MenuAction action, int param1, int param2)
+#else
 void MenuHandler_SetFlushLvl(Menu menu, MenuAction action, int param1, int param2)
+#endif
 {
     switch (action)
     {
@@ -440,7 +503,11 @@ void MenuHandler_SetFlushLvl(Menu menu, MenuAction action, int param1, int param
             if (!logger)
             {
                 PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
+#if SOURCEMOD_V_MINOR <= 11
+                return 0;
+#else
                 return;
+#endif
             }
 
             char level[32];
@@ -459,6 +526,9 @@ void MenuHandler_SetFlushLvl(Menu menu, MenuAction action, int param1, int param
                 DisplayManagerMenu(param1);
         }
     }
+#if SOURCEMOD_V_MINOR <= 11
+    return 0;
+#endif
 }
 
 // array have at least one logger called LOG4SP_GLOBAL_LOGGER_NAME created by extension
