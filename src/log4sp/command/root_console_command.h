@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "extension.h"
+#include "log4sp/common.h"
 
 
 namespace log4sp {
@@ -31,13 +31,12 @@ public:
 protected:
     [[nodiscard]] std::shared_ptr<logger> arg_to_logger(const std::string &arg);
 
-    [[nodiscard]] spdlog::level::level_enum arg_to_level(const std::string &arg);
+    [[nodiscard]] level::level_enum arg_to_level(const std::string &arg);
 };
 
 
 class list_command final : public command {
 public:
-    list_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
@@ -54,57 +53,55 @@ private:
 
 class get_lvl_command final : public command {
 public:
-    get_lvl_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
 
 class set_lvl_command final : public command {
 public:
-    set_lvl_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
 
 class set_pattern_command final : public command {
 public:
-    set_pattern_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
 
 class should_log_command final : public command {
 public:
-    should_log_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
 
 class log_command final : public command {
 public:
-    log_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
 
 class flush_command final : public command {
 public:
-    flush_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
 
 class get_flush_lvl_command final : public command {
 public:
-    get_flush_lvl_command() = default;
     void execute(const std::vector<std::string> &args) override;
 };
 
 
 class set_flush_lvl_command final : public command {
 public:
-    set_flush_lvl_command() = default;
     void execute(const std::vector<std::string> &args) override;
+};
+
+
+class version_command final : public command {
+public:
+    void execute(const std::vector<std::string> &) override;
 };
 
 

@@ -1,8 +1,6 @@
 #include <cassert>
 #include <string>
 
-#include "log4sp/logger.h"
-
 #include "log4sp/adapter/logger_handler.h"
 
 
@@ -22,12 +20,14 @@ void logger_handler::destroy() noexcept {
 }
 
 
-[[nodiscard]] HandleType_t logger_handler::handle_type() const noexcept {
+[[nodiscard]] SourceMod::HandleType_t logger_handler::handle_type() const noexcept {
     return handle_type_;
 }
 
-[[nodiscard]] Handle_t logger_handler::create_handle(std::shared_ptr<logger> object, const HandleSecurity *security, const HandleAccess *access, HandleError *error) noexcept {
-    Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
+[[nodiscard]] SourceMod::Handle_t logger_handler::create_handle(std::shared_ptr<logger> object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
+    assert(handle_type_ != NO_HANDLE_TYPE);
+
+    auto handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
     }
@@ -41,13 +41,14 @@ void logger_handler::destroy() noexcept {
     return handle;
 }
 
-[[nodiscard]] std::shared_ptr<logger> logger_handler::read_handle(Handle_t handle, HandleSecurity *security, HandleError *error) const noexcept {
-    logger *object;
-    HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
+[[nodiscard]] std::shared_ptr<logger> logger_handler::read_handle(const SourceMod::Handle_t handle, const SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
+    assert(handle_type_ != NO_HANDLE_TYPE);
 
-    if (err != HandleError_None) {
+    logger *object;
+    auto err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    if (err != SourceMod::HandleError_None) {
         if (error) {
-            *error = static_cast<HandleError>(err);
+            *error = static_cast<SourceMod::HandleError>(err);
         }
         return nullptr;
     }
@@ -58,13 +59,14 @@ void logger_handler::destroy() noexcept {
     return found->second;
 }
 
-[[nodiscard]] logger *logger_handler::read_handle_raw(Handle_t handle, HandleSecurity *security, HandleError *error) const noexcept {
-    logger *object;
-    HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
+[[nodiscard]] logger *logger_handler::read_handle_raw(const SourceMod::Handle_t handle, const SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
+    assert(handle_type_ != NO_HANDLE_TYPE);
 
-    if (err != HandleError_None) {
+    logger *object;
+    auto err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    if (err != SourceMod::HandleError_None) {
         if (error) {
-            *error = static_cast<HandleError>(err);
+            *error = static_cast<SourceMod::HandleError>(err);
         }
         return nullptr;
     }
@@ -74,7 +76,7 @@ void logger_handler::destroy() noexcept {
     return object;
 }
 
-[[nodiscard]] Handle_t logger_handler::find_handle(const std::string &name) const noexcept {
+[[nodiscard]] SourceMod::Handle_t logger_handler::find_handle(const std::string &name) const noexcept {
     auto found = handles_.find(name);
     return found == handles_.end() ? BAD_HANDLE : found->second;
 }
@@ -84,7 +86,7 @@ void logger_handler::destroy() noexcept {
     return found == loggers_.end() ? BAD_HANDLE : found->second;
 }
 
-void logger_handler::apply_all(const std::function<void(const Handle_t)> &fun) {
+void logger_handler::apply_all(const std::function<void(const SourceMod::Handle_t)> &fun) {
     for (auto &h : handles_) {
         fun(h.second);
     }
@@ -96,7 +98,7 @@ void logger_handler::apply_all(const std::function<void(std::shared_ptr<logger>)
     }
 }
 
-void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
+void logger_handler::OnHandleDestroy(SourceMod::HandleType_t type, void *object) {
     auto logger = static_cast<log4sp::logger *>(object);
 
     assert(handles_.find(logger->name()) != handles_.end());
@@ -108,22 +110,20 @@ void logger_handler::OnHandleDestroy(HandleType_t type, void *object) {
 
 
 void logger_handler::initialize_() {
-    HandleAccess access;
-    HandleError error;
+    SourceMod::HandleAccess access;
+    SourceMod::HandleError error;
 
     // 默认情况下，创建的 handle 可以被任意插件释放
     handlesys->InitAccessDefaults(nullptr, &access);
-    access.access[HandleAccess_Delete] = 0;
+    access.access[SourceMod::HandleAccess_Delete] = 0;
 
     handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (handle_type_ == NO_HANDLE_TYPE) {
-        throw std::runtime_error{spdlog::fmt_lib::format("SM error! Could not create Logger handle type (error: {})", static_cast<int>(error))};
+        throw_log4sp_ex("SM error! Could not create Logger handle type (error: " + std::to_string(static_cast<int>(error)) + ")" );
     }
 }
 
 void logger_handler::destroy_() noexcept {
-    assert(handle_type_ != NO_HANDLE_TYPE);
-
     if (handle_type_ != NO_HANDLE_TYPE) {
         handlesys->RemoveType(handle_type_, myself->GetIdentity());
         handle_type_ = NO_HANDLE_TYPE;

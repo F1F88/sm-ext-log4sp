@@ -13,13 +13,13 @@
 /**
  * Callback for user defined error handler.
  *
- * @note The default handler uses the global logger (log4sp) to log an error message
- *       containing the number of errors, the name of logger, and the error message.
+ * @note By default, the handler log the error message using SourceMod API LogError().
  *
- * Example:
+ * @note e.g.
  *      void LogToSM(const char[] msg) {
  *          LogError(msg);
  *      }
+ *
  *
  * @param msg       Error message.
  * @param name      The name of the error origin.
@@ -38,7 +38,7 @@ typeset LoggerErrorHandler
 /**
  * Callback for apply a user defined function on all logger handles.
  *
- * Example:
+ * @note e.g.
  *      void FlushAllLoggers(Logger logger) {
  *          logger.Flush();
  *      }
@@ -56,7 +56,7 @@ typeset LoggerApplyAllCallback
 methodmap Logger < Handle
 {
     /**
-     * Creating a logger handle manually.
+     * Creating a logger handle.
      *
      * @param name      The name of the new logger.
      * @return          Logger handle.
@@ -78,7 +78,7 @@ methodmap Logger < Handle
     /**
      * Creating a logger handle with an array of sink handles.
      *
-     * @note The sinks array is automatically freed when successfully added.
+     * @note After creation, all sink handles in the sinks are closed.
      *
      * @param name      The name of the new logger.
      * @param sinks     The sinks array to be added to the new logger.
@@ -202,9 +202,9 @@ methodmap Logger < Handle
      * Aborts the current callback and throws an error.
      * This function does not return in that no code is executed following it.
      *
-     * @note This will first log a log message using ThorwError() and stop code
-     *       execution, then log the same log message using the logger.
-     * @note A low log level will not prevent ThorwError() from executing!
+     * @note This will call SourceMod native ThrowError() first and then log the message using the logger.
+     * @note A low log level does not skip the call of ThrowError()!
+     * @note A low log level will skip log the message using the logger!
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.
@@ -239,7 +239,7 @@ methodmap Logger < Handle
     public native void FatalAmxTpl(const char[] fmt, any ...);
 
     /**
-     * Manual flush logger contents.
+     * Manual flush the contents for the sinks in the logger.
      */
     public native void Flush();
 
@@ -268,7 +268,7 @@ methodmap Logger < Handle
     /**
      * Add a new sink to sinks.
      *
-     * @note The sink is automatically freed when successfully added.
+     * @note After creation, the sink handle is closed.
      *
      * @param sink      Sink handle.
      * @error           Invalid sink handle.

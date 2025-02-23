@@ -51,12 +51,38 @@ methodmap Sink < Handle
      *
      * @param name      The name of a logger.
      * @param lvl       Log level enum.
-     * @param msg       Log message.
+     * @param msg       Pre formatted log message.
+     * @param file      The file name of the source location.
+     * @param line      The line number of the source location.
+     * @param func      The function name of the source location.
+     * @param logTime   The log message time point in seconds.
+     *                  If -1, current time point is used as the time of the log message.
      */
-    public native void Log(const char[] name, LogLevel lvl, const char[] msg);
+    public native void Log(const char[] name, LogLevel lvl, const char[] msg,
+        const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
+        int logTime = -1);
 
     /**
-     * Manual flush logger contents.
+     * Format log message in a pre-set pattern.
+     *
+     * @param buffer    Buffer to store logger name.
+     * @param maxlen    Maximum length of the buffer.
+     * @param lvl       Log level enum.
+     * @param msg       Pre formatted log message.
+     * @param file      The file name of the source location.
+     * @param line      The line number of the source location.
+     * @param func      The function name of the source location.
+     * @param logTime   The log message time point in seconds.
+     *                  If -1, current time point is used as the time of the log message.
+     * @return          Number of characters written to the buffer, not including the null terminator.
+     */
+    public native int ToPattern(char[] buffer, int maxlen,
+        const char[] name, LogLevel lvl, const char[] msg,
+        const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
+        int logTime = -1);
+
+    /**
+     * Manual flush sink contents.
      */
     public native void Flush();
 }

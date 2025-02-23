@@ -37,15 +37,21 @@
  * @brief Contains macros for configuring basic extension information.
  */
 
+#ifndef LOG4SP_SHA_SHORT
+    #define LOG4SP_SHA_SHORT          "unknown"
+#endif
+
 /* Basic information exposed publicly */
 #define SMEXT_CONF_NAME         "Log for SourcePawn"
 #define SMEXT_CONF_DESCRIPTION  "A high-performance and feature-rich logging extension"
-#define SMEXT_CONF_VERSION      "1.7.0"
+#define SMEXT_CONF_SHA_SHORT    LOG4SP_SHA_SHORT
+#define SMEXT_CONF_VERSION      "1.8.0"
 #define SMEXT_CONF_AUTHOR       "F1F88"
 #define SMEXT_CONF_URL          "https://github.com/F1F88/sm-ext-log4sp"
 #define SMEXT_CONF_LOGTAG       "log4sp"
 #define SMEXT_CONF_LICENSE      "GPL"
 #define SMEXT_CONF_DATESTRING   __DATE__
+#define SMEXT_CONF_TIMESTRING   __TIME__
 
 /**
  * @brief Exposes plugin's main interface.

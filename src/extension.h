@@ -119,7 +119,7 @@ extern Log4sp                   g_Log4sp;
 extern const sp_nativeinfo_t    CommonNatives[];
 extern const sp_nativeinfo_t    LoggerNatives[];
 extern const sp_nativeinfo_t    SinkNatives[];
-extern const sp_nativeinfo_t    BaseFileSinkNatives[];
+extern const sp_nativeinfo_t    BasicFileSinkNatives[];
 extern const sp_nativeinfo_t    CallbackSinkNatives[];
 extern const sp_nativeinfo_t    DailyFileSinkNatives[];
 extern const sp_nativeinfo_t    RingBufferSinkNatives[];

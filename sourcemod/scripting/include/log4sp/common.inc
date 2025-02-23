@@ -31,14 +31,10 @@
 #define LOG4SP_LEVEL_SHORT_NAME_OFF     "O"
 
 #define LOG4SP_GLOBAL_LOGGER_NAME       "log4sp"
-#define LOG4SP_DEFAULT_LOGGER_NAME      LOG4SP_GLOBAL_LOGGER_NAME
 
 
 /**
  * Log level enum.
- *
- * @note If you pass an out-of-bounds value to native,
- *       native will modify it to the nearest boundary value.
  */
 enum LogLevel
 {
@@ -53,11 +49,7 @@ enum LogLevel
 }
 
 /**
- * Pattern time - specific time getting to use for pattern_formatter.
- * local time by default.
- *
- * @note If you pass an out-of-bounds value to native,
- *       native will modify it to the nearest boundary value.
+ * Specific time used for pattern formatting.
  */
 enum PatternTimeType
 {
@@ -66,29 +58,45 @@ enum PatternTimeType
 };
 
 /**
- * Convert a logging level enum to name.
+ * Source code location.
+ */
+enum struct SourceLoc
+{
+    char filename[PLATFORM_MAX_PATH];   // file name/path.
+    int line;                           // line number.
+    char funcname[PLATFORM_MAX_PATH];   // function name.
+
+    bool IsEmpty()
+    {
+        return !this.filename[0] || this.line <= 0 || !this.funcname[0];
+    }
+}
+
+
+/**
+ * Convert a log level enum to name.
  *
- * @param lvl       Logging level enum.
  * @param buffer    Buffer to store log level name.
  * @param maxlen    Maximum length of the buffer.
+ * @param lvl       Log level enum.
  * @return          Number of characters written to the buffer, not including the null terminator.
  */
-native int LogLevelToName(LogLevel lvl, char[] buffer, int maxlen);
+native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
 
 /**
- * Convert a logging level enum to short name.
+ * Convert a log level enum to short name.
  *
- * @param lvl       Logging level enum.
  * @param buffer    Buffer to store log level short name.
  * @param maxlen    Maximum length of the buffer.
+ * @param lvl       Log level enum.
  * @return          Number of characters written to the buffer, not including the null terminator.
  */
-native int LogLevelToShortName(LogLevel lvl, char[] buffer, int maxlen);
+native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
 
 /**
- * Convert a logging level name to log level enum.
+ * Convert a log level name to log level enum.
  *
  * @param name      Log level name.
- * @return          Logging level enum or LogLevel_Off when the logging level name does not exist.
+ * @return          Log level enum or LogLevel_Off when the log level name does not exist.
  */
 native LogLevel NameToLogLevel(const char[] name);
