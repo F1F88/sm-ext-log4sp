@@ -1,9 +1,11 @@
+#pragma semicolon 1
+#pragma newdecls required
+
+#include <sourcemod>
 #include <log4sp>
 
 #include "test_utils"
 
-#pragma semicolon 1
-#pragma newdecls required
 
 #define PLUGIN_PATTERN  ".*test-ringbuffer-logger.sp"
 #define LOGGER_NAME     "test-ring-buffer"

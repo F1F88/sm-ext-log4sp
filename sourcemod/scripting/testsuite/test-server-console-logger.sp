@@ -1,9 +1,8 @@
-#include <testing>
-
-#include <log4sp>
-
 #pragma semicolon 1
 #pragma newdecls required
+
+#include <sourcemod>
+#include <log4sp>
 
 
 public void OnPluginStart()
@@ -24,8 +23,6 @@ Action Command_Test(int args)
 
 void TestServerConsole()
 {
-    SetTestContext("Test server cosnole");
-
     Logger logger = ServerConsoleSink.CreateLogger("test-server-console");
     logger.SetPattern("%+");
     logger.SetLevel(LogLevel_Trace);

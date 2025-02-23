@@ -47,16 +47,6 @@ stock int CountLines(const char[] path)
     return counter;
 }
 
-stock int GetFileSize(const char[] path)
-{
-    File file = OpenFile(path, "r");
-    // AssertTrue(path, file != null);
-
-    int size = file.Size();
-    delete file;
-    return size;
-}
-
 stock bool StrEndWith(const char[] full, const char[] ending, bool caseSensitive = true)
 {
     int fullLen = strlen(full);

@@ -1,6 +1,5 @@
-#include <log4sp>
-
-#include "test_sink"
+#pragma semicolon 1
+#pragma newdecls required
 
 /**
  * Fix: "Not enough space on the heap"
@@ -8,8 +7,10 @@
  */
 #pragma dynamic 131072
 
-#pragma semicolon 1
-#pragma newdecls required
+#include <sourcemod>
+#include <log4sp>
+
+#include "test_sink"
 
 /**
  * Full syntax

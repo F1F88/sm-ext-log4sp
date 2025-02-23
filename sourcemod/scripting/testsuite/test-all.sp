@@ -1,9 +1,10 @@
+#pragma semicolon 1
+#pragma newdecls required
+
+#include <sourcemod>
 #include <log4sp>
 
 #include "test_utils"
-
-#pragma semicolon 1
-#pragma newdecls required
 
 
 static const char g_sCommands[][] = {

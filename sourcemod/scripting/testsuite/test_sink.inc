@@ -7,7 +7,6 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <testing>
 #include <log4sp/logger>
 #include <log4sp/sinks/callback_sink>
 

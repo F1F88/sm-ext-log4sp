@@ -1,11 +1,10 @@
-#include <testing>
+#pragma semicolon 1
+#pragma newdecls required
 
+#include <sourcemod>
 #include <log4sp>
 
 #include "test_sink"
-
-#pragma semicolon 1
-#pragma newdecls required
 
 
 public void OnPluginStart()

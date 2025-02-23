@@ -1,9 +1,10 @@
+#pragma semicolon 1
+#pragma newdecls required
+
+#include <sourcemod>
 #include <log4sp>
 
 #include "test_utils"
-
-#pragma semicolon 1
-#pragma newdecls required
 
 
 public void OnPluginStart()
@@ -96,10 +97,10 @@ void TestAutoRotate()
     }
     delete logger;
 
-    AssertTrue("Auto rotate post, file size", GetFileSize(path) <= maxSize);
+    AssertTrue("Auto rotate post, file size", FileSize(path) <= maxSize);
 
     BuildTestPath(path, sizeof(path), "rotate-file/rotating_auto_rotate.1.log");
-    AssertTrue("Auto rotate post, file 1 size", GetFileSize(path) <= maxSize);
+    AssertTrue("Auto rotate post, file 1 size", FileSize(path) <= maxSize);
 }
 
 void TestManualRotate()
@@ -127,10 +128,10 @@ void TestManualRotate()
     delete sink;
     delete logger;
 
-    AssertTrue("Manual rotate, file size", 0 < GetFileSize(path) <= maxSize);
+    AssertTrue("Manual rotate, file size", 0 < FileSize(path) <= maxSize);
     AssertEq("Manual rotate, file line", CountLines(path), 1);
 
     AssertFileMatch("Manual rotate, file 1 data", path, "Test message - post-rotation\n");
-    AssertTrue("Manual rotate, file 1 size", 0 < GetFileSize(path) <= maxSize);
+    AssertTrue("Manual rotate, file 1 size", 0 < FileSize(path) <= maxSize);
     AssertEq("Manual rotate, file 1 line", CountLines(path), 1);
 }

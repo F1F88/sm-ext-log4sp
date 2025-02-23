@@ -1,5 +1,7 @@
-#include <sourcemod>
+#pragma semicolon 1
+#pragma newdecls required
 
+#include <sourcemod>
 #include <log4sp>
 
 #include "test_utils"
@@ -39,17 +41,17 @@ void TestCommon()
 
     Logger logger = ServerConsoleSink.CreateLogger("test-common");
 
-    char level[TEST_LOG4SP_LEVEL_TOTAL][64];
-    char levelShort[TEST_LOG4SP_LEVEL_TOTAL][64];
+    char level[64];
+    char levelShort[64];
 
     for (int i = 0; i < TEST_LOG4SP_LEVEL_TOTAL; ++i)
     {
-        LogLevelToName(level[i], sizeof(level[]), view_as<LogLevel>(i));
-        LogLevelToShortName(levelShort[i], sizeof(levelShort[]), view_as<LogLevel>(i));
-    }
+        LogLevelToName(level, sizeof(level), view_as<LogLevel>(i));
+        AssertStrEq("Log level name", level, g_expectedLevelNames[i]);
 
-    AssertStrArrayEq("Log level name", level, g_expectedLevelNames, TEST_LOG4SP_LEVEL_TOTAL);
-    AssertStrArrayEq("Log level short name", levelShort, g_expectedLevelShortNames, TEST_LOG4SP_LEVEL_TOTAL);
+        LogLevelToShortName(levelShort, sizeof(levelShort), view_as<LogLevel>(i));
+        AssertStrEq("Log level short name", levelShort, g_expectedLevelShortNames[i]);
+    }
 
     AssertEq("Name '" ... LOG4SP_LEVEL_NAME_TRACE ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_TRACE), LogLevel_Trace);
     AssertEq("Name '" ... LOG4SP_LEVEL_NAME_DEBUG ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_DEBUG), LogLevel_Debug);
