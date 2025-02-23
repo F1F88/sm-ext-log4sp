@@ -118,7 +118,7 @@ jobs:
         shell: bash
         working-directory: extension
         run: |
-          echo "LOG4SP_VERSION=$(grep -E "SMEXT_CONF_VERSION" ./src/smsdk_config.h | grep -oE "[0-9]+\.[0-9]+\.[0-9]") >> $GITHUB_ENV
+          echo "LOG4SP_VERSION=$(grep -E 'SMEXT_CONF_VERSION' ./src/smsdk_config.h | grep -oE '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
 
       - name: Compiling ${{ github.event.repository.name }}
         working-directory: extension
