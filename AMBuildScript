@@ -84,7 +84,7 @@ class ExtensionConfig(object):
 
     #* Make version *#
     cxx.defines += [
-      'LOG4SP_SHA_SHORT="' + self.get_git_hash()[:6] + '"'
+      'LOG4SP_SHA_SHORT="' + self.get_git_hash()[:7] + '"'
     ]
 
     # Optimization
