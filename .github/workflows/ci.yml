@@ -1,7 +1,4 @@
-# Author: ProjectSky
-# url: https://github.com/ProjectSky/sm-ext-yyjson/blob/main/.github/workflows/ci.yml
-
-name: build
+name: Build extension
 on:
   workflow_dispatch:
 
@@ -130,5 +127,5 @@ jobs:
       - name: Uploading package
         uses: actions/upload-artifact@v4
         with:
-          name: sm-ext-log4sp-${{ env.LOG4SP_VERSION }}-${{ env.GITHUB_SHA_SHORT }}-${{ matrix.sm_short }}-${{ matrix.os_short }}
+          name: sm-ext-log4sp-${{ env.LOG4SP_VERSION }}.${{ env.GITHUB_SHA_SHORT }}-${{ matrix.sm_short }}-${{ matrix.os_short }}
           path: extension/build/package
