@@ -75,7 +75,7 @@ void TestCommands()
     AssertStrMatch("Commands set_flush_lvl", buffer, "\\[SM\\] Logger 'test-commands' will set flush level to 'debug'\\s");
 
     ServerCommandEx(buffer, sizeof(buffer), "sm log4sp version");
-    AssertStrMatch("Commands set_flush_lvl", buffer, "Sourcemod extension Log4sp version information:\\s    Version         [0-9]+\\.[0-9]+\\.[0-9]+.*");
+    AssertStrMatch("Commands set_flush_lvl", buffer, "SourceMod extension Log4sp version information:\\s+ Version .*[0-9]+\\.[0-9]+\\.[0-9]+.*\\s+ Compiled on .* [0-9]{2} [0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}\\s+ Built from \\s+ https://github.com/F1F88/sm-ext-log4sp/commit/.*");
 
     delete logger;
 }
