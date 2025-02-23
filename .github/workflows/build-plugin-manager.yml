@@ -1,0 +1,61 @@
+name: Build plugin - manager
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'sourcemod/scripting/log4sp_manager.sp'
+
+jobs:
+  build:
+    name: build with ${{ matrix.sm_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sm_version: ["1.13.x", "1.12.x", "1.11.x"]
+        include:
+          - sm_version: "1.13.x"
+            sm_short: sm_latest
+
+          - sm_version: "1.12.x"
+            sm_short: sm_1_12
+
+          - sm_version: "1.11.x"
+            sm_short: sm_1_11
+
+    steps:
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Getting own repository
+        uses: actions/checkout@v4
+        with:
+          path: extension
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup SourcePawn Compiler ${{ matrix.sm_latest }}
+        id: setup_sp
+        uses: rumblefrog/setup-sp@master
+        with:
+          version: ${{ matrix.sm_version }}
+          version-file: extension/sourcemod/scripting/log4sp_manager.sp
+          define-name: PLUGIN_VERSION
+
+      - name: Compiling plugin log4sp manager
+        working-directory: extension/sourcemod/scripting
+        run: |
+          mkdir -p ../plugins
+          spcomp log4sp_manager.sp -o "../plugins/log4sp_manager.smx" -i "include"
+          echo "PLUGIN_VERSION=${{ steps.setup_sp.outputs.plugin-version }}" >> $GITHUB_ENV
+
+      - name: Uploading package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sm-plugin-log4sp_manager-${{ env.PLUGIN_VERSION }}.${{ env.GITHUB_SHA_SHORT }}-${{ matrix.sm_short }}
+          path: extension/sourcemod/plugins
