@@ -167,7 +167,7 @@ static void AddString(memory_buf_t &out, const char *string, uint32_t width, int
             }
         }
     } else {
-        uint32_t size{strlen(string)};
+        uint32_t size{static_cast<uint32_t>(strlen(string))};
         if (prec >= 0 && static_cast<uint32_t>(prec) < size) {
             size = prec;
         }
