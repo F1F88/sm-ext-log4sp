@@ -2,6 +2,7 @@
 #include <string>
 
 #include "log4sp/adapter/logger_handler.h"
+#include "log4sp/sinks/server_console_sink.h"
 
 
 namespace log4sp {
@@ -119,7 +120,26 @@ void logger_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (handle_type_ == NO_HANDLE_TYPE) {
-        throw_log4sp_ex("SM error! Could not create Logger handle type (error: " + std::to_string(static_cast<int>(error)) + ")" );
+        throw_log4sp_ex("SM error! Could not create Logger handle type (error: " + std::to_string(static_cast<int>(error)) + ")");
+    }
+
+    // Init Global Logger
+    // 全局 Logger 生命周期与拓展一致，不应该被任何插件释放
+    handlesys->InitAccessDefaults(nullptr, &access);
+    access.access[SourceMod::HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
+    SourceMod::HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
+
+    log4sp::sink_ptr sink;
+    try {
+        sink = std::make_shared<log4sp::sinks::server_console_sink>();
+    } catch (const std::exception &ex) {
+        throw_log4sp_ex(std::string("Could not create global logger handle (reason: ") + ex.what() + ")");
+    }
+
+    auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &error);
+    if (handle == BAD_HANDLE) {
+        throw_log4sp_ex("SM error! Could not create global logger handle (error: " + std::to_string(static_cast<int>(error)) + ")");
     }
 }
 
