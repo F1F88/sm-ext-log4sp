@@ -95,6 +95,7 @@ public:
 
     sink_handler(const sink_handler &) = delete;
     sink_handler &operator=(const sink_handler &) = delete;
+    sink_handler(const sink_handler &&) = delete;
 
 private:
     sink_handler() = default;

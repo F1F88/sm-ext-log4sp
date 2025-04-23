@@ -117,6 +117,7 @@ public:
 
     logger_handler(const logger_handler &) = delete;
     logger_handler &operator=(const logger_handler &) = delete;
+    logger_handler(const logger_handler &&) = delete;
 
 private:
     logger_handler() = default;
