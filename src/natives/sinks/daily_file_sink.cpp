@@ -118,7 +118,7 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-    return bytes;
+    return static_cast<cell_t>(bytes);
 }
 
 /**
