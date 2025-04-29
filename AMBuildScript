@@ -371,10 +371,12 @@ class ExtensionConfig(object):
   # 获取最新 SHA（例如：a1b2c3d...）
   def get_git_hash(self):
     try:
-      command = "git rev-parse HEAD"
+      command = ["git", "rev-parse", "HEAD"]
       result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
+      print('Get the git hash is "' + result.strip() + '"')
       return result.strip()
     except BaseException:
+      print('::warning file=AMBuildScript,line=372,title=get_git_hash::Unable to get git hash!')
       return "unknown"
 
 Extension = ExtensionConfig()
