@@ -75,7 +75,7 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-    return bytes;
+    return static_cast<cell_t>(bytes);
 }
 
 /**
@@ -126,7 +126,7 @@ static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, con
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes);
-    return bytes;
+    return static_cast<cell_t>(bytes);
 }
 
 /**

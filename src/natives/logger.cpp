@@ -211,7 +211,7 @@ static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[2], params[3], logger->name().c_str(), &bytes);
-    return bytes;
+    return static_cast<cell_t>(bytes);
 }
 
 /**

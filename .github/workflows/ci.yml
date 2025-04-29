@@ -4,20 +4,21 @@ on:
 
 jobs:
   build:
-    name: build with ${{ matrix.sm_short }} on ${{ matrix.os_short }}
+    name: Build with ${{ matrix.sm_short }} on ${{ matrix.os_short }} ${{ matrix.target_arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, ubuntu-20.04, windows-latest, windows-2019]
+        os: [ubuntu-latest, ubuntu-22.04, windows-latest, windows-2019]
         sm_version: [latest, "1.12", "1.11"]
+        target_arch: [x86, x64]
 
         include:
           - os: ubuntu-latest
             os_short: ubuntu_latest
 
-          - os: ubuntu-20.04
-            os_short: ubuntu_20_04
+          - os: ubuntu-22.04
+            os_short: ubuntu_22_04
 
           - os: windows-latest
             os_short: win_latest
@@ -37,12 +38,17 @@ jobs:
             sm_branch: "1.11-dev"
             sm_short: sm_1_11
 
+          - target_arch: x86
+            vs_dev_arch: x86
+
+          - target_arch: x64
+            vs_dev_arch: x86_64
+
     steps:
       - name: Prepare env
         shell: bash
         run: |
           echo "PYTHONUTF8=1" >> $GITHUB_ENV
-          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Install (Linux)
         if: runner.os == 'Linux'
@@ -59,28 +65,13 @@ jobs:
         run: |
           :: See https://github.com/microsoft/vswhere/wiki/Find-VC
           for /f "usebackq delims=*" %%i in (`vswhere -latest -property installationPath`) do (
-            call "%%i"\Common7\Tools\vsdevcmd.bat -arch=x86 -host_arch=x64
+            call "%%i"\Common7\Tools\vsdevcmd.bat -arch=${{ matrix.vs_dev_arch }} -host_arch=x64
           )
 
           :: Loop over all environment variables and make them global.
           for /f "delims== tokens=1,2" %%a in ('set') do (
             echo>>"%GITHUB_ENV%" %%a=%%b
           )
-
-      - name: Install v143 Toolset (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          $WorkLoads = '--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"", $WorkLoads, '--quiet', '--norestart', '--nocache')
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          if ($process.ExitCode -eq 0) {
-              Write-Host "components have been successfully added"
-          } else {
-              Write-Host "components were not installed"
-          }
 
       - name: Add msbuild to PATH (Windows)
         if: runner.os == 'Windows'
@@ -108,23 +99,80 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: extension
-          submodules: true
-          fetch-depth: 0
-
-      - name: Getting own repository version
-        shell: bash
-        working-directory: extension
-        run: |
-          echo "LOG4SP_VERSION=$(grep -E 'SMEXT_CONF_VERSION' ./src/smsdk_config.h | grep -oE '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
 
       - name: Compiling ${{ github.event.repository.name }}
         working-directory: extension
         run: |
           mkdir build && cd build
-          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/${{ matrix.sm_short }}"
+          python ../configure.py --enable-optimize --sm-path="${{ github.workspace }}/${{ matrix.sm_short }}" --targets ${{ matrix.target_arch }}
           ambuild
 
       - name: Uploading package
+        uses: actions/upload-artifact@v4
+        with:
+          name: tmp-${{ matrix.sm_short }}-${{ matrix.os_short }}-${{ matrix.target_arch }}
+          path: extension/build/package
+
+
+  Merge:
+    name: Upload assets with ${{ matrix.sm_short }} on ${{ matrix.os_short }}
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-22.04, windows-latest, windows-2019]
+        sm_version: [latest, "1.12", "1.11"]
+
+        include:
+          - os: ubuntu-latest
+            os_short: ubuntu_latest
+
+          - os: ubuntu-22.04
+            os_short: ubuntu_22_04
+
+          - os: windows-latest
+            os_short: win_latest
+
+          - os: windows-2019
+            os_short: win_2019
+
+          - sm_version: latest
+            sm_short: sm_latest
+
+          - sm_version: "1.12"
+            sm_short: sm_1_12
+
+          - sm_version: "1.11"
+            sm_short: sm_1_11
+
+    steps:
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Checkout own repository
+        uses: actions/checkout@v4
+        with:
+          path: extension
+          submodules: true
+          fetch-depth: 0
+
+      - name: Getting extension version
+        shell: bash
+        working-directory: extension
+        run: |
+          echo "LOG4SP_VERSION=$(grep -E 'SMEXT_CONF_VERSION' ./src/smsdk_config.h | grep -oE '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          path: extension/build/package
+          pattern: tmp-${{ matrix.sm_short }}-${{ matrix.os_short }}*
+          merge-multiple: true
+
+      - name: Uploading merged package
         uses: actions/upload-artifact@v4
         with:
           name: sm-ext-log4sp-${{ env.LOG4SP_VERSION }}.${{ env.GITHUB_SHA_SHORT }}-${{ matrix.sm_short }}-${{ matrix.os_short }}

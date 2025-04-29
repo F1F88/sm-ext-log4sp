@@ -13,7 +13,7 @@ static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *para
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[1], params[2], name.data(), &bytes);
-    return bytes;
+    return static_cast<cell_t>(bytes);
 }
 
 /**
@@ -26,7 +26,7 @@ static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t 
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[1], params[2], name, &bytes);
-    return bytes;
+    return static_cast<cell_t>(bytes);
 }
 
 /**
