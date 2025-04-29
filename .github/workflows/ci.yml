@@ -73,21 +73,6 @@ jobs:
             echo>>"%GITHUB_ENV%" %%a=%%b
           )
 
-      - name: Install v143 Toolset (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          $WorkLoads = '--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"", $WorkLoads, '--quiet', '--norestart', '--nocache')
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          if ($process.ExitCode -eq 0) {
-              Write-Host "components have been successfully added"
-          } else {
-              Write-Host "components were not installed"
-          }
-
       - name: Add msbuild to PATH (Windows)
         if: runner.os == 'Windows'
         uses: microsoft/setup-msbuild@v2
