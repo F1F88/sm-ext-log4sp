@@ -127,3 +127,68 @@ jobs:
         with:
           name: tmp-${{ matrix.sm_short }}-${{ matrix.os_short }}-${{ matrix.target_arch }}
           path: extension/build/package
+
+
+  Merge:
+    name: Upload assets with ${{ matrix.sm_short }} on ${{ matrix.os_short }}
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-22.04, windows-latest, windows-2019]
+        sm_version: [latest, "1.12", "1.11"]
+
+        include:
+          - os: ubuntu-latest
+            os_short: ubuntu_latest
+
+          - os: ubuntu-22.04
+            os_short: ubuntu_22_04
+
+          - os: windows-latest
+            os_short: win_latest
+
+          - os: windows-2019
+            os_short: win_2019
+
+          - sm_version: latest
+            sm_short: sm_latest
+
+          - sm_version: "1.12"
+            sm_short: sm_1_12
+
+          - sm_version: "1.11"
+            sm_short: sm_1_11
+
+    steps:
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Checkout own repository
+        uses: actions/checkout@v4
+        with:
+          path: extension
+          submodules: true
+          fetch-depth: 0
+
+      - name: Getting extension version
+        shell: bash
+        working-directory: extension
+        run: |
+          echo "LOG4SP_VERSION=$(grep -E 'SMEXT_CONF_VERSION' ./src/smsdk_config.h | grep -oE '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          path: extension/build/package
+          pattern: tmp-${{ matrix.sm_short }}-${{ matrix.os_short }}*
+          merge-multiple: true
+
+      - name: Uploading merged package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sm-ext-log4sp-${{ env.LOG4SP_VERSION }}.${{ env.GITHUB_SHA_SHORT }}-${{ matrix.sm_short }}-${{ matrix.os_short }}
+          path: extension/build/package
