@@ -1,7 +1,8 @@
-#include "log4sp/common.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
+#include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
-#include "log4sp/sinks/rotating_file_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,10 +27,10 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     auto maxFiles     = static_cast<size_t>(params[3]);
     auto rotateOnOpen = static_cast<bool>(params[4]);
 
-    log4sp::sink_ptr sink;
+    spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
     catch (const std::exception &ex)
     {
@@ -67,7 +68,7 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::rotating_file_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
     if (!realSink)
     {
         ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
@@ -95,7 +96,7 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::rotating_file_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
     if (!realSink)
     {
         ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
@@ -122,7 +123,7 @@ static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, con
     ctx->LocalToString(params[3], &file);
     auto index = static_cast<size_t>(params[4]);
 
-    auto filename = log4sp::sinks::rotating_file_sink::calc_filename(file, index);
+    auto filename = spdlog::sinks::rotating_file_sink_st::calc_filename(file, index);
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes);
@@ -152,10 +153,10 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     auto maxFiles     = static_cast<size_t>(params[4]);
     auto rotateOnOpen = static_cast<bool>(params[5]);
 
-    log4sp::sink_ptr sink;
+    spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<log4sp::sinks::rotating_file_sink>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
     catch (const std::exception &ex)
     {
