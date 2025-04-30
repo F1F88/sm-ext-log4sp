@@ -15,6 +15,8 @@ class logger;
 
 class command {
 public:
+    using level_enum = spdlog::level::level_enum;
+
     virtual ~command() = default;
 
     /**
@@ -31,7 +33,7 @@ public:
 protected:
     [[nodiscard]] std::shared_ptr<logger> arg_to_logger(const std::string &arg);
 
-    [[nodiscard]] level::level_enum arg_to_level(const std::string &arg);
+    [[nodiscard]] level_enum arg_to_level(const std::string &arg);
 };
 
 

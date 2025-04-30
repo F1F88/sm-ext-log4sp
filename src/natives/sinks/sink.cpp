@@ -47,7 +47,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
         return 0;
     }
 
-    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
+    auto lvl = log4sp::num_to_lvl(static_cast<int>(params[2]));
 
     sink->set_level(lvl);
     return 0;
@@ -94,7 +94,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
         return 0;
     }
 
-    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[2]));
+    auto lvl = log4sp::num_to_lvl(static_cast<int>(params[2]));
 
     return sink->should_log(lvl);
 }
@@ -120,13 +120,13 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     ctx->LocalToString(params[2], &name);
     ctx->LocalToString(params[4], &msg);
 
-    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[3]));
+    auto lvl = log4sp::num_to_lvl(static_cast<int>(params[3]));
 
     char *file, *func;
     ctx->LocalToStringNULL(params[5], &file);
     ctx->LocalToStringNULL(params[7], &func);
 
-    auto line = static_cast<uint32_t>(params[6]);
+    auto line = static_cast<int>(params[6]);
 
     source_loc loc{file, line, func};
 
@@ -170,13 +170,13 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     ctx->LocalToString(params[4], &name);
     ctx->LocalToString(params[6], &msg);
 
-    auto lvl = log4sp::level::from_number(static_cast<uint32_t>(params[5]));
+    auto lvl = log4sp::num_to_lvl(static_cast<int>(params[5]));
 
     char *file, *func;
     ctx->LocalToStringNULL(params[7], &file);
     ctx->LocalToStringNULL(params[9], &func);
 
-    auto line = static_cast<uint32_t>(params[8]);
+    auto line = static_cast<int>(params[8]);
 
     source_loc loc{file, line, func};
 
