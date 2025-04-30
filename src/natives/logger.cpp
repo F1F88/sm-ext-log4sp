@@ -234,7 +234,7 @@ static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *param
         return 0;
     }
 
-    return logger->name().length();
+    return static_cast<cell_t>(logger->name().length());
 }
 
 /**
