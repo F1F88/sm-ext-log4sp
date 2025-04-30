@@ -3,6 +3,9 @@
 #include "log4sp/adapter/sink_hanlder.h"
 #include "log4sp/sinks/callback_sink.h"
 
+using spdlog::sink_ptr;
+using log4sp::sinks::callback_sink;
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                  CallbackSink Functions
@@ -16,10 +19,10 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     auto logPostFunction   = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
     auto flushFunction     = ctx->GetFunctionById(static_cast<funcid_t>(params[3]));
 
-    log4sp::sink_ptr sink;
+    sink_ptr sink;
     try
     {
-        sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);
+        sink = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
     }
     catch (const std::exception &ex)
     {
@@ -65,7 +68,7 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
     if (!realSink)
     {
         ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
@@ -110,7 +113,7 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
     if (!realSink)
     {
         ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
@@ -149,7 +152,7 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<log4sp::sinks::callback_sink>(sink);
+    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
     if (!realSink)
     {
         ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
@@ -192,10 +195,10 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
     auto logPostFunction   = ctx->GetFunctionById(static_cast<funcid_t>(params[3]));
     auto flushFunction     = ctx->GetFunctionById(static_cast<funcid_t>(params[4]));
 
-    log4sp::sink_ptr sink;
+    sink_ptr sink;
     try
     {
-        sink = std::make_shared<log4sp::sinks::callback_sink>(logFunction, logPostFunction, flushFunction);
+        sink = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
     }
     catch (const std::exception &ex)
     {

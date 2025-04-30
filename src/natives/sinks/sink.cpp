@@ -1,6 +1,10 @@
+#include "spdlog/sinks/sink.h"
+
 #include "log4sp/common.h"
 #include "log4sp/adapter/sink_hanlder.h"
-#include "log4sp/sinks/base_sink.h"
+
+using spdlog::source_loc;
+using spdlog::details::os::now;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,10 +128,10 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
     auto line = static_cast<uint32_t>(params[6]);
 
-    log4sp::source_loc loc{file, line, func};
+    source_loc loc{file, line, func};
 
     using std::chrono::system_clock;
-    system_clock::time_point logTime{log4sp::details::os::now()};
+    system_clock::time_point logTime{now()};
     if (params[8] != -1)
     {
         logTime = system_clock::time_point{
@@ -136,7 +140,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
     try
     {
-        sink->log(log4sp::details::log_msg{logTime, loc, name, lvl, msg});
+        sink->log({logTime, loc, name, lvl, msg});
     }
     catch (const std::exception &ex)
     {
@@ -174,10 +178,10 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
     auto line = static_cast<uint32_t>(params[8]);
 
-    log4sp::source_loc loc{file, line, func};
+    source_loc loc{file, line, func};
 
     using std::chrono::system_clock;
-    system_clock::time_point logTime{log4sp::details::os::now()};
+    system_clock::time_point logTime{now()};
     if (params[10] != -1)
     {
         logTime = system_clock::time_point{
@@ -187,7 +191,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     std::string formatted;
     try
     {
-        formatted = sink->to_pattern(log4sp::details::log_msg{logTime, loc, name, lvl, msg});
+        formatted = sink->to_pattern({logTime, loc, name, lvl, msg});
     }
     catch (const std::exception &ex)
     {

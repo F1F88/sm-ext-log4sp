@@ -5,6 +5,9 @@
 
 namespace log4sp {
 
+using spdlog::sink_ptr;
+using spdlog::sinks::sink;
+
 [[nodiscard]] sink_handler &sink_handler::instance() noexcept {
     static sink_handler instance;
     return instance;
@@ -43,11 +46,11 @@ void sink_handler::destroy() noexcept {
 [[nodiscard]] sink_ptr sink_handler::read_handle(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
-    sinks::base_sink *object;
+    sink *object;
     auto err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
-            *error = static_cast<SourceMod::HandleError>(err);
+            *error = err;
         }
         return nullptr;
     }
@@ -58,14 +61,14 @@ void sink_handler::destroy() noexcept {
     return found->second;
 }
 
-[[nodiscard]] sinks::base_sink *sink_handler::read_handle_raw(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
+[[nodiscard]] sink *sink_handler::read_handle_raw(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
-    sinks::base_sink *object;
+    sink *object;
     auto err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
-            *error = static_cast<SourceMod::HandleError>(err);
+            *error = err;
         }
         return nullptr;
     }
@@ -76,13 +79,13 @@ void sink_handler::destroy() noexcept {
 }
 
 void sink_handler::OnHandleDestroy(SourceMod::HandleType_t type, void *object) {
-    auto sink = static_cast<sinks::base_sink*>(object);
+    auto sink_obj = static_cast<sink*>(object);
 
-    assert(handles_.find(sink) != handles_.end());
-    assert(sinks_.find(sink) != sinks_.end());
+    assert(handles_.find(sink_obj) != handles_.end());
+    assert(sinks_.find(sink_obj) != sinks_.end());
 
-    handles_.erase(sink);
-    sinks_.erase(sink);
+    handles_.erase(sink_obj);
+    sinks_.erase(sink_obj);
 }
 
 
@@ -96,7 +99,7 @@ void sink_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (handle_type_ == NO_HANDLE_TYPE) {
-        throw_log4sp_ex("SM error! Could not create Sink handle type (error: " + std::to_string(static_cast<int>(error)) + ")" );
+        throw_log4sp_ex("SM error! Could not create Sink handle type (error: " + std::to_string(error) + ")" );
     }
 }
 
