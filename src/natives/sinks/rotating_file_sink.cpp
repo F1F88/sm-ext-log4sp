@@ -1,8 +1,12 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 
-#include "log4sp/logger.h"
+#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
+
+using spdlog::sink_ptr;
+using spdlog::sinks::rotating_file_sink_mt;
+using spdlog::sinks::rotating_file_sink_st;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,10 +31,10 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     auto maxFiles     = static_cast<size_t>(params[3]);
     auto rotateOnOpen = static_cast<bool>(params[4]);
 
-    spdlog::sink_ptr sink;
+    sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
     catch (const std::exception &ex)
     {
@@ -68,15 +72,21 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
-    if (!realSink)
+    size_t bytes{0};
+    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink))
     {
-        ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+        return static_cast<cell_t>(bytes);
     }
 
-    size_t bytes{0};
-    ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-    return static_cast<cell_t>(bytes);
+    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_mt>(sink))
+    {
+        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+        return static_cast<cell_t>(bytes);
+    }
+
+    ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+    return 0;
 }
 
 /**
@@ -96,21 +106,33 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);
-    if (!realSink)
+    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink))
     {
-        ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+        try
+        {
+            realSink->rotate_now();
+        }
+        catch (const std::exception &ex)
+        {
+            ctx->ReportError(ex.what());
+        }
         return 0;
     }
 
-    try
+    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_mt>(sink))
     {
-        realSink->rotate_now();
+        try
+        {
+            realSink->rotate_now();
+        }
+        catch (const std::exception &ex)
+        {
+            ctx->ReportError(ex.what());
+        }
+        return 0;
     }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-    }
+
+    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
@@ -123,7 +145,7 @@ static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, con
     ctx->LocalToString(params[3], &file);
     auto index = static_cast<size_t>(params[4]);
 
-    auto filename = spdlog::sinks::rotating_file_sink_st::calc_filename(file, index);
+    auto filename = rotating_file_sink_st::calc_filename(file, index);
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes);
@@ -153,10 +175,10 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     auto maxFiles     = static_cast<size_t>(params[4]);
     auto rotateOnOpen = static_cast<bool>(params[5]);
 
-    spdlog::sink_ptr sink;
+    sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
     }
     catch (const std::exception &ex)
     {
