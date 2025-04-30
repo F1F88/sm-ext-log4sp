@@ -1,5 +1,6 @@
 #include "spdlog/sinks/basic_file_sink.h"
 
+#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
@@ -61,16 +62,21 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
-    if (!realSink)
+    size_t bytes{0};
+    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink))
     {
-        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
-        return 0;
+        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+        return static_cast<cell_t>(bytes);
     }
 
-    size_t bytes{0};
-    ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-    return static_cast<cell_t>(bytes);
+    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink))
+    {
+        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+        return static_cast<cell_t>(bytes);
+    }
+
+    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+    return 0;
 }
 
 /**
@@ -90,22 +96,33 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink);
-    if (!realSink)
+    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink))
     {
-        ctx->ReportError("Invalid base file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+        try
+        {
+            realSink->truncate();
+        }
+        catch (const std::exception &ex)
+        {
+            ctx->ReportError(ex.what());
+        }
         return 0;
     }
 
-    try
+    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink))
     {
-        realSink->truncate();
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
+        try
+        {
+            realSink->truncate();
+        }
+        catch (const std::exception &ex)
+        {
+            ctx->ReportError(ex.what());
+        }
+        return 0;
     }
 
+    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
