@@ -1,11 +1,16 @@
 #include <cassert>
 #include <string>
 
+#include "spdlog/sinks/stdout_sinks.h"
+
 #include "log4sp/adapter/logger_handler.h"
-#include "log4sp/sinks/server_console_sink.h"
 
 
 namespace log4sp {
+
+using spdlog::sink_ptr;
+using spdlog::sinks::stdout_sink_st;
+
 
 [[nodiscard]] logger_handler &logger_handler::instance() noexcept {
     static logger_handler instance;
@@ -129,9 +134,9 @@ void logger_handler::initialize_() {
     access.access[SourceMod::HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
     SourceMod::HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
 
-    log4sp::sink_ptr sink;
+    sink_ptr sink;
     try {
-        sink = std::make_shared<log4sp::sinks::server_console_sink>();
+        sink = std::make_shared<stdout_sink_st>();
     } catch (const std::exception &ex) {
         throw_log4sp_ex(std::string("Could not create global logger handle (reason: ") + ex.what() + ")");
     }
