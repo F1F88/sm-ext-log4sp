@@ -1,6 +1,8 @@
+#include "spdlog/sinks/stdout_sinks.h"
+
+#include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
-#include "log4sp/sinks/server_console_sink.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11,10 +13,10 @@
  */
 static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    log4sp::sink_ptr sink;
+    spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<log4sp::sinks::server_console_sink>();
+        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
     }
     catch (const std::exception &ex)
     {
@@ -48,10 +50,10 @@ static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, co
         return BAD_HANDLE;
     }
 
-    log4sp::sink_ptr sink;
+    spdlog::sink_ptr sink;
     try
     {
-        sink = std::make_shared<log4sp::sinks::server_console_sink>();
+        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
     }
     catch (const std::exception &ex)
     {
