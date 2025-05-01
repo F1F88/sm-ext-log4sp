@@ -33,7 +33,7 @@ void logger_handler::destroy() noexcept {
 [[nodiscard]] SourceMod::Handle_t logger_handler::create_handle(std::shared_ptr<logger> object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
-    auto handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
+    SourceMod::Handle_t handle{handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error)};
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
     }
@@ -51,34 +51,31 @@ void logger_handler::destroy() noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
     logger *object;
-    auto err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
     if (err != SourceMod::HandleError_None) {
         if (error) {
-            *error = static_cast<SourceMod::HandleError>(err);
+            *error = err;
         }
         return nullptr;
     }
 
     assert(loggers_.find(object->name()) != loggers_.end());
-
-    auto found = loggers_.find(object->name());
-    return found->second;
+    return loggers_.find(object->name())->second;
 }
 
 [[nodiscard]] logger *logger_handler::read_handle_raw(const SourceMod::Handle_t handle, const SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
     logger *object;
-    auto err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
     if (err != SourceMod::HandleError_None) {
         if (error) {
-            *error = static_cast<SourceMod::HandleError>(err);
+            *error = err;
         }
         return nullptr;
     }
 
     assert(loggers_.find(object->name()) != loggers_.end());
-
     return object;
 }
 
@@ -125,7 +122,7 @@ void logger_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (handle_type_ == NO_HANDLE_TYPE) {
-        throw_log4sp_ex("SM error! Could not create Logger handle type (error: " + std::to_string(static_cast<int>(error)) + ")");
+        throw_log4sp_ex("SM error! Could not create Logger handle type (error: " + std::to_string(error) + ")");
     }
 
     // Init Global Logger
@@ -142,9 +139,9 @@ void logger_handler::initialize_() {
     }
 
     auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
-    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, &access, &error);
+    auto handle = logger_handler::instance().create_handle(logger, &security, &access, &error);
     if (handle == BAD_HANDLE) {
-        throw_log4sp_ex("SM error! Could not create global logger handle (error: " + std::to_string(static_cast<int>(error)) + ")");
+        throw_log4sp_ex("SM error! Could not create global logger handle (error: " + std::to_string(error) + ")");
     }
 }
 

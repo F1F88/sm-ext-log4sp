@@ -61,8 +61,7 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
     }
 
     auto function_name = args[0];
-    auto iter = functions_.find(function_name);
-    if (iter == functions_.end()) {
+    if (functions_.find(function_name) == functions_.end()) {
         throw_log4sp_ex("Command function name \"" + function_name + "\" not exists.");
     }
 

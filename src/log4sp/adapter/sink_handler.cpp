@@ -29,7 +29,7 @@ void sink_handler::destroy() noexcept {
 [[nodiscard]] SourceMod::Handle_t sink_handler::create_handle(sink_ptr object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
-    auto handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
+    SourceMod::Handle_t handle{handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error)};
     if (handle == BAD_HANDLE) {
         return BAD_HANDLE;
     }
@@ -47,7 +47,7 @@ void sink_handler::destroy() noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
     sink *object;
-    auto err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
+    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;
@@ -56,16 +56,14 @@ void sink_handler::destroy() noexcept {
     }
 
     assert(sinks_.find(object) != sinks_.end());
-
-    auto found = sinks_.find(object);
-    return found->second;
+    return sinks_.find(object)->second;
 }
 
 [[nodiscard]] sink *sink_handler::read_handle_raw(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
     assert(handle_type_ != NO_HANDLE_TYPE);
 
     sink *object;
-    auto err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
+    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;
@@ -74,7 +72,6 @@ void sink_handler::destroy() noexcept {
     }
 
     assert(sinks_.find(object) != sinks_.end());
-
     return object;
 }
 

@@ -25,7 +25,7 @@ using spdlog::source_loc;
     const char *file{nullptr};
     const char *func{nullptr};
 
-    auto iter = ctx->CreateFrameIterator();
+    SourcePawn::IFrameIterator *iter{ctx->CreateFrameIterator()};
     do {
         if (iter->IsScriptedFrame()) {
             line = iter->LineNumber();
@@ -43,7 +43,7 @@ using spdlog::source_loc;
 [[nodiscard]] std::vector<std::string> get_stack_trace(SourcePawn::IPluginContext *ctx) noexcept {
     assert(ctx);
 
-    auto iter = ctx->CreateFrameIterator();
+    SourcePawn::IFrameIterator *iter{ctx->CreateFrameIterator()};
     if (iter->Done()) {
         ctx->DestroyFrameIterator(iter);
         return {};
@@ -53,19 +53,19 @@ using spdlog::source_loc;
 
     for (int index = 0; !iter->Done(); iter->Next(), ++index) {
         if (iter->IsNativeFrame()) {
-            auto func = iter->FunctionName();
+            const char *func{iter->FunctionName()};
             if (!func) {
                 func = "<unknown function>";
             }
 
             trace.emplace_back(fmt_lib::format("  [{}] {}", index, func));
         } else if (iter->IsScriptedFrame()) {
-            auto func = iter->FunctionName();
+            const char *func{iter->FunctionName()};
             if (!func) {
                 func = "<unknown function>";
             }
 
-            auto file = iter->FilePath();
+            const char *file{iter->FilePath()};
             if (!file) {
                 func = "<unknown>";
             }
@@ -478,7 +478,7 @@ static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int 
 }
 
 static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp) noexcept {
-    auto player = playerhelpers->GetGamePlayer(index);
+    SourceMod::IGamePlayer *player{playerhelpers->GetGamePlayer(index)};
     if (!player || !player->IsConnected()) {
         return false;
     }
@@ -693,7 +693,7 @@ reswitch:
                 cell_t *target;
                 ctx->LocalToString(params[arg++], &key);
                 ctx->LocalToPhysAddr(params[arg++], &target);
-                auto phrase{Translate(ctx, key, *target, params, &arg)};
+                memory_buf_t phrase{Translate(ctx, key, *target, params, &arg)};
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
@@ -704,7 +704,7 @@ reswitch:
 
                 char *key;
                 ctx->LocalToString(params[arg++], &key);
-                auto phrase{Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg)};
+                memory_buf_t phrase{Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg)};
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
