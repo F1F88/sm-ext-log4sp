@@ -92,6 +92,15 @@ SPDLOG_INLINE void stdout_sink_base<ConsoleMutex>::set_formatter(
     formatter_ = std::move(sink_formatter);
 }
 
+//* @log4sp hack *//
+template <typename ConsoleMutex>
+[[nodiscard]] SPDLOG_INLINE std::string stdout_sink_base<ConsoleMutex>::to_pattern(const details::log_msg &log_msg) {
+    std::lock_guard<mutex_t> lock(mutex_);
+    memory_buf_t formatted;
+    formatter_->format(log_msg, formatted);
+    return fmt_lib::to_string(formatted);
+}
+
 // stdout sink
 template <typename ConsoleMutex>
 SPDLOG_INLINE stdout_sink<ConsoleMutex>::stdout_sink()
