@@ -4,6 +4,10 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
+using spdlog::sink_ptr;
+using spdlog::sinks::basic_file_sink_mt;
+using spdlog::sinks::basic_file_sink_st;
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                  BasicFileSink Functions
@@ -21,10 +25,10 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
     auto truncate = static_cast<bool>(params[2]);
 
-    spdlog::sink_ptr sink;
+    sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        sink = std::make_shared<basic_file_sink_st>(path, truncate);
     }
     catch (const std::exception &ex)
     {
@@ -63,13 +67,13 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
     }
 
     size_t bytes{0};
-    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink))
+    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_st>(sink))
     {
         ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
         return static_cast<cell_t>(bytes);
     }
 
-    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink))
+    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_mt>(sink))
     {
         ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
         return static_cast<cell_t>(bytes);
@@ -96,7 +100,7 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
         return 0;
     }
 
-    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_st>(sink))
+    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_st>(sink))
     {
         try
         {
@@ -109,7 +113,7 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
         return 0;
     }
 
-    if (auto realSink = std::dynamic_pointer_cast<spdlog::sinks::basic_file_sink_mt>(sink))
+    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_mt>(sink))
     {
         try
         {
@@ -147,10 +151,10 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
 
     auto truncate = static_cast<bool>(params[3]);
 
-    spdlog::sink_ptr sink;
+    sink_ptr sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(path, truncate);
+        sink = std::make_shared<basic_file_sink_st>(path, truncate);
     }
     catch (const std::exception &ex)
     {
