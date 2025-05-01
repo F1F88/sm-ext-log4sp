@@ -373,7 +373,8 @@ class ExtensionConfig(object):
     try:
       command = ["git", "rev-parse", "HEAD"]
       result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
-      print('Get the git hash is "' + result.strip() + '"')
+      if builder.options.debug == '1':
+        print('Get the git hash is "' + result.strip() + '"')
       return result.strip()
     except BaseException:
       print('::warning file=AMBuildScript,line=372,title=get_git_hash::Unable to get git hash!')
