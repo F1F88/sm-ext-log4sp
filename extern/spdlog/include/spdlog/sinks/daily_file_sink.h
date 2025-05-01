@@ -79,7 +79,7 @@ public:
                     uint16_t max_files = 0,
                     const file_event_handlers &event_handlers = {},
                     //* @log4sp hack *//
-                    log4sp_daily_filename_calculator calculator = (const filename_t &filename, const tm &now_tm) {
+                    log4sp_daily_filename_calculator calculator = [](const filename_t &filename, const tm &now_tm) {
                         return FileNameCalc::calc_filename(filename, now_tm);
                     })
         : base_filename_(std::move(base_filename)),
