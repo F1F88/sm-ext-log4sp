@@ -27,7 +27,7 @@ namespace log4sp {
     using spdlog::string_view_t;
     constexpr string_view_t level_string_views[] SPDLOG_LEVEL_NAMES;
 
-    for (int i = 0; i < std::size(level_string_views); ++i) {
+    for (size_t i = 0; i < std::size(level_string_views); ++i) {
         if (!strcmp(name, level_string_views[i].data())) {
             return num_to_lvl(i);
         }
@@ -52,7 +52,7 @@ namespace log4sp {
     using spdlog::level::level_enum;
     constexpr const char *short_level_names[] SPDLOG_SHORT_LEVEL_NAMES;
 
-    for (int i = 0; i < std::size(short_level_names); ++i) {
+    for (size_t i = 0; i < std::size(short_level_names); ++i) {
         if (!strcmp(name, short_level_names[i])) {
             return num_to_lvl(i);
         }
