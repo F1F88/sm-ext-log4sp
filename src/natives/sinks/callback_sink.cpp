@@ -60,29 +60,21 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
         return 0;
     }
 
-    auto logFunction = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
-    if (!logFunction)
+    if (auto realSink = std::dynamic_pointer_cast<callback_sink>(sink))
     {
+        SourcePawn::IPluginFunction *logFunction = ctx->GetFunctionById(params[2]);
+        try
+        {
+            realSink->set_log_callback(logFunction);
+        }
+        catch (const std::exception &ex)
+        {
+            ctx->ReportError(ex.what());
+        }
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
-    if (!realSink)
-    {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-        return 0;
-    }
-
-    try
-    {
-        realSink->set_log_callback(logFunction);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return 0;
-    }
-
+    ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
@@ -103,29 +95,21 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
         return 0;
     }
 
-    auto logPostFunction = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
-    if (!logPostFunction)
+    if (auto realSink = std::dynamic_pointer_cast<callback_sink>(sink))
     {
+        SourcePawn::IPluginFunction *logPostFunction = ctx->GetFunctionById(params[2]);
+        try
+        {
+            realSink->set_log_post_callback(logPostFunction);
+        }
+        catch (const std::exception &ex)
+        {
+            ctx->ReportError(ex.what());
+        }
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
-    if (!realSink)
-    {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-        return 0;
-    }
-
-    try
-    {
-        realSink->set_log_post_callback(logPostFunction);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return 0;
-    }
-
+    ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
@@ -146,29 +130,21 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
         return 0;
     }
 
-    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
-    if (!realSink)
+    if (auto realSink = std::dynamic_pointer_cast<callback_sink>(sink))
     {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
+        SourcePawn::IPluginFunction *flushCallback = ctx->GetFunctionById(params[2]);
+        try
+        {
+            realSink->set_flush_callback(flushCallback);
+        }
+        catch (const std::exception &ex)
+        {
+            ctx->ReportError(ex.what());
+        }
         return 0;
     }
 
-    auto flushFunction = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
-    if (!flushFunction)
-    {
-        return 0;
-    }
-
-    try
-    {
-        realSink->set_flush_callback(flushFunction);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return 0;
-    }
-
+    ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
