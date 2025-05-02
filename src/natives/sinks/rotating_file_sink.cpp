@@ -12,14 +12,6 @@ using spdlog::sinks::rotating_file_sink_st;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                 RotatingFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * public native RotatingFileSink(
- *     const char[] file,
- *     const int maxFileSize,
- *     const int maxFiles,
- *     bool rotateOnOpen = false
- * );
- */
 static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
@@ -55,9 +47,6 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     return handle;
 }
 
-/**
- * public native void GetFilename(char[] buffer, int maxlen);
- */
 static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -87,9 +76,6 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
     return 0;
 }
 
-/**
- * public native void RotateNow();
- */
 static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -132,9 +118,6 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
     return 0;
 }
 
-/**
- * public native void CalcFilename(const char[] file, int index, char[] buffer, int maxlen);
- */
 static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
@@ -148,9 +131,6 @@ static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, con
     return static_cast<cell_t>(bytes);
 }
 
-/**
- * public static native Logger CreateLogger(const char[] name, const char[] file, int maxFileSize, int maxFiles, bool rotateOnOpen = false);
- */
 static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;

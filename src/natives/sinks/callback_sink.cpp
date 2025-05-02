@@ -10,9 +10,6 @@ using log4sp::sinks::callback_sink;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                  CallbackSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * public native CallbackSink(CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
- */
 static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourcePawn::IPluginFunction *logFunction{ctx->GetFunctionById(params[1])};
@@ -43,11 +40,6 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     return handle;
 }
 
-/**
- * public native void SetLogCallback(CustomLogCallback logCallback);
- *
- * function void(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
- */
 static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -78,11 +70,6 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
     return 0;
 }
 
-/**
- * public native void SetLogPostCallback(CustomLogCallback logPostCallback);
- *
- * function void(const char[] msg);
- */
 static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -113,11 +100,6 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
     return 0;
 }
 
-/**
- * public native void SetFlushCallback(CustomFlushCallback flushCallback);
- *
- * function void();
- */
 static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -148,9 +130,6 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
     return 0;
 }
 
-/**
- * public static native Logger CreateLogger(const char[] name, CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
- */
 static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;

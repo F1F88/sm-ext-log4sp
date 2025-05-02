@@ -12,9 +12,6 @@ using spdlog::sinks::stdout_sink_st;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                 ServerConsoleSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * public native ServerConsoleSink();
- */
 static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     sink_ptr sink;
@@ -41,9 +38,6 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
     return handle;
 }
 
-/**
- * public static native Logger CreateLogger(const char[] name);
- */
 static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;

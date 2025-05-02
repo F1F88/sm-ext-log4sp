@@ -18,14 +18,6 @@ using spdlog::sinks::daily_file_sink_st;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                   DailyFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * public native DailyFileSink(const char[] file,
- *                             int hour = 0,
- *                             int minute = 0,
- *                             bool truncate = false,
- *                             int maxFiles = 0,
- *                             DailyFileCalculator callback = INVALID_FUNCTION);
- */
 static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
@@ -104,9 +96,6 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     return handle;
 }
 
-/**
- * public native void GetFilename(char[] buffer, int maxlen);
- */
 static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -136,9 +125,6 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
     return 0;
 }
 
-/**
- * public static native Logger CreateLogger(const char[] name, const char[] file, int hour = 0, int minute = 0, bool truncate = false, int maxFiles = 0);
- */
 static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;

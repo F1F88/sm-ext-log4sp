@@ -13,9 +13,6 @@ using spdlog::sinks::ringbuffer_sink_st;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                 RingBufferSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * public native RingBufferSink(int amount);
- */
 static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto amount = static_cast<size_t>(params[1]);
@@ -34,11 +31,6 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
     return handle;
 }
 
-/**
- * public native void Drain(DrainCallback callback, any data = 0);
- *
- * function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data);
- */
 static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -140,11 +132,6 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
     return 0;
 }
 
-/**
- * public native void DrainFormatted(DrainFormattedCallback callback, any data = 0);
- *
- * function void (const char[] msg, any data);
- */
 static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -219,9 +206,6 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     return 0;
 }
 
-/**
- * public static native Logger CreateLogger(const char[] name, int amount);
- */
 static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;

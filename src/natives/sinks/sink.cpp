@@ -10,9 +10,6 @@ using spdlog::details::os::now;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                       Sink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * public native LogLevel GetLevel();
- */
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -28,9 +25,6 @@ static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     return sink->level();
 }
 
-/**
- * public native void SetLevel(LogLevel lvl);
- */
 static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -49,9 +43,6 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     return 0;
 }
 
-/**
- * public native void SetPattern(const char[] pattern);
- */
 static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -71,9 +62,6 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     return 0;
 }
 
-/**
- * public native bool ShouldLog(LogLevel lvl);
- */
 static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -91,9 +79,6 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     return sink->should_log(lvl);
 }
 
-/**
- * public native void Log(const char[] name, LogLevel lvl, const char[] msg, const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING, int logTime = -1);
- */
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -139,9 +124,6 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     return 0;
 }
 
-/**
- * public native int ToPattern(char[] buffer, int maxlen, const char[] name, LogLevel lvl, const char[] msg, const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING, int logTime = -1);
- */
 static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -192,9 +174,6 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     return static_cast<cell_t>(bytes);
 }
 
-/**
- * public native void Flush();
- */
 static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};

@@ -7,9 +7,6 @@ using spdlog::level::from_str;
 using spdlog::level::to_short_c_str;
 using spdlog::level::to_string_view;
 
-/**
- * native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
- */
 static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto lvl = log4sp::num_to_lvl(params[3]);
@@ -20,9 +17,6 @@ static cell_t LogLevelToName(SourcePawn::IPluginContext *ctx, const cell_t *para
     return static_cast<cell_t>(bytes);
 }
 
-/**
- * native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
- */
 static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto lvl = log4sp::num_to_lvl(params[3]);
@@ -33,9 +27,6 @@ static cell_t LogLevelToShortName(SourcePawn::IPluginContext *ctx, const cell_t 
     return static_cast<cell_t>(bytes);
 }
 
-/**
- * native LogLevel NameToLogLevel(const char[] name);
- */
 static cell_t NameToLogLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;

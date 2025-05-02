@@ -12,9 +12,6 @@ using spdlog::sinks::basic_file_sink_st;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                  BasicFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * public native BasicFileSink(const char[] file, bool truncate = false);
- */
 static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
@@ -49,9 +46,6 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     return handle;
 }
 
-/**
- * public native void GetFilename(char[] buffer, int maxlen);
- */
 static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -81,9 +75,6 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
     return 0;
 }
 
-/**
- * public native void Truncate();
- */
 static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -126,9 +117,6 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
     return 0;
 }
 
-/**
- * public static native Logger CreateLogger(const char[] name, const char[] file, bool truncate = false);
- */
 static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
