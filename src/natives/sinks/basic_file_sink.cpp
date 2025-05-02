@@ -54,15 +54,13 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
  */
 static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
-
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
         return 0;
     }
 
@@ -79,7 +77,7 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
         return static_cast<cell_t>(bytes);
     }
 
-    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
@@ -88,15 +86,13 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
  */
 static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
-
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
         return 0;
     }
 
@@ -126,7 +122,7 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
         return 0;
     }
 
-    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 

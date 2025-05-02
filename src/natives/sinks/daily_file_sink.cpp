@@ -31,11 +31,11 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     char *file;
     ctx->LocalToString(params[1], &file);
 
-    auto hour     = static_cast<int>(params[2]);
-    auto minute   = static_cast<int>(params[3]);
+    int hour      = params[2];
+    int minute    = params[3];
     auto truncate = static_cast<bool>(params[4]);
     auto maxFiles = static_cast<uint16_t>(params[5]);
-    auto function = ctx->GetFunctionById(static_cast<funcid_t>(params[6]));
+    auto function = ctx->GetFunctionById(params[6]);
 
     auto calculator = [function](const filename_t &filename, const tm &now_tm)
     {
@@ -109,15 +109,13 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
  */
 static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
-
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
         return 0;
     }
 
@@ -134,7 +132,7 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
         return static_cast<cell_t>(bytes);
     }
 
-    ctx->ReportError("Invalid daily file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+    ctx->ReportError("Invalid daily file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
@@ -154,11 +152,11 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     char *file;
     ctx->LocalToString(params[2], &file);
 
-    auto hour     = static_cast<int>(params[3]);
-    auto minute   = static_cast<int>(params[4]);
+    int hour      = params[3];
+    int minute    = params[4];
     auto truncate = static_cast<bool>(params[5]);
     auto maxFiles = static_cast<uint16_t>(params[6]);
-    auto function = ctx->GetFunctionById(static_cast<funcid_t>(params[7]));
+    auto function = ctx->GetFunctionById(params[7]);
 
     auto calculator = [function](const filename_t &filename, const tm &now_tm)
     {

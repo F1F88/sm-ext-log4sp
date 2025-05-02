@@ -41,19 +41,17 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
  */
 static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
-
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
         return 0;
     }
 
-    auto funcid   = static_cast<funcid_t>(params[2]);
+    auto funcid   = params[2];
     auto function = ctx->GetFunctionById(funcid);
     if (!function)
     {
@@ -139,7 +137,7 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
     }
 
     forwards->ReleaseForward(forward);
-    ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+    ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
@@ -150,19 +148,17 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
  */
 static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
-
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
+    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
         return 0;
     }
 
-    auto function = ctx->GetFunctionById(static_cast<funcid_t>(params[2]));
+    auto function = ctx->GetFunctionById(params[2]);
     if (!function)
     {
         return 0;
@@ -219,7 +215,7 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     }
 
     forwards->ReleaseForward(forward);
-    ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
+    ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
