@@ -27,10 +27,10 @@ void sink_handler::destroy() noexcept {
 }
 
 [[nodiscard]] SourceMod::Handle_t sink_handler::create_handle(sink_ptr object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
-    assert(handle_type_ != NO_HANDLE_TYPE);
+    assert(handle_type_);
 
     SourceMod::Handle_t handle{handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error)};
-    if (handle == BAD_HANDLE) {
+    if (!handle) {
         return BAD_HANDLE;
     }
 
@@ -44,7 +44,7 @@ void sink_handler::destroy() noexcept {
 }
 
 [[nodiscard]] sink_ptr sink_handler::read_handle(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
-    assert(handle_type_ != NO_HANDLE_TYPE);
+    assert(handle_type_);
 
     sink *object;
     SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
@@ -60,7 +60,7 @@ void sink_handler::destroy() noexcept {
 }
 
 [[nodiscard]] sink *sink_handler::read_handle_raw(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
-    assert(handle_type_ != NO_HANDLE_TYPE);
+    assert(handle_type_);
 
     sink *object;
     SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
@@ -95,13 +95,13 @@ void sink_handler::initialize_() {
     access.access[SourceMod::HandleAccess_Delete] = 0;
 
     handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
-    if (handle_type_ == NO_HANDLE_TYPE) {
+    if (!handle_type_) {
         throw_log4sp_ex("SM error! Could not create Sink handle type (error: " + std::to_string(error) + ")" );
     }
 }
 
 void sink_handler::destroy_() noexcept {
-    if (handle_type_ != NO_HANDLE_TYPE) {
+    if (handle_type_) {
         handlesys->RemoveType(handle_type_, myself->GetIdentity());
         handle_type_ = NO_HANDLE_TYPE;
     }

@@ -47,6 +47,9 @@ SMEXT_LINK(&g_Log4sp);
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
+    static_assert(!NO_HANDLE_TYPE);
+    static_assert(!BAD_HANDLE);
+
     try
     {
         log4sp::logger_handler::initialize();
