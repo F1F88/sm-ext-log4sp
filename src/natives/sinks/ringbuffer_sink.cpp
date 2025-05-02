@@ -51,11 +51,10 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         return 0;
     }
 
-    auto funcid   = params[2];
-    auto function = ctx->GetFunctionById(funcid);
+    auto function = ctx->GetFunctionById(params[2]);
     if (!function)
     {
-        ctx->ReportError("Invalid function id: 0x%08x", funcid);
+        ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
     }
 
@@ -161,6 +160,7 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)
     {
+        ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
     }
 
