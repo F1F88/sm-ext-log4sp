@@ -5,6 +5,7 @@
 namespace log4sp {
 
 namespace fmt_lib = spdlog::fmt_lib;
+using spdlog::filename_t;
 using spdlog::level::level_enum;
 using spdlog::memory_buf_t;
 using spdlog::pattern_time_type;
@@ -76,6 +77,31 @@ using spdlog::source_loc;
 
     ctx->DestroyFrameIterator(iter);
     return trace;
+}
+
+[[nodiscard]] spdlog::filename_t unbuild_path(SourceMod::PathType type, const filename_t &filename) noexcept
+{
+    const char *base = nullptr;
+    switch (type)
+    {
+    case SourceMod::PathType::Path_Game:
+        base = smutils->GetGamePath();
+        break;
+    case SourceMod::PathType::Path_SM:
+        base = smutils->GetSourceModPath();
+        break;
+    case SourceMod::PathType::Path_SM_Rel:
+        // TODO
+        break;
+    default:
+        break;
+    }
+
+    if (base)
+    {
+        return filename.substr(std::strlen(base) + 1);
+    }
+    return filename;
 }
 
 
