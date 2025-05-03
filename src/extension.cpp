@@ -47,6 +47,9 @@ SMEXT_LINK(&g_Log4sp);
 
 bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
+    static_assert(!NO_HANDLE_TYPE, "NO_HANDLE_TYPE has changed, conditional statement for handle needs to be modified!");
+    static_assert(!BAD_HANDLE, "BAD_HANDLE has changed, conditional statement for handle needs to be modified!");
+
     try
     {
         log4sp::logger_handler::initialize();

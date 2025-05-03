@@ -19,7 +19,7 @@ using spdlog::level::to_string_view;
 std::shared_ptr<logger> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
     auto logger = logger_handler::instance().find_logger(arg);
-    if (logger == nullptr) {
+    if (!logger) {
         throw_log4sp_ex("Logger with name \"" + arg + "\" not exists.");
     }
     return logger;

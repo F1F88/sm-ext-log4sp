@@ -30,14 +30,11 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
-    if (handle == BAD_HANDLE)
-    {
-        ctx->ReportError("SM error! Could not create callback sink handle (error: %d)", error);
-        return BAD_HANDLE;
-    }
+    if (auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error))
+        return handle;
 
-    return handle;
+    ctx->ReportError("SM error! Could not create callback sink handle (error: %d)", error);
+    return BAD_HANDLE;
 }
 
 static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -134,7 +131,7 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
+    if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
         return BAD_HANDLE;
@@ -159,14 +156,11 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
-    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-    if (handle == BAD_HANDLE)
-    {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-        return BAD_HANDLE;
-    }
+    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
+        return handle;
 
-    return handle;
+    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+    return BAD_HANDLE;
 }
 
 const sp_nativeinfo_t CallbackSinkNatives[] =
