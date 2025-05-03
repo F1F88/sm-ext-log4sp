@@ -10,6 +10,17 @@
 
 
 /**
+ * Called before the sink open the file.
+ */
+typedef SinkFileOpenPre = function void (const char[] filename);
+
+/**
+ * Called after the sink close the file.
+ */
+typedef SinkFileClosePost = function void (const char[] filename);
+
+
+/**
  * Base Sink
  */
 methodmap Sink < Handle
