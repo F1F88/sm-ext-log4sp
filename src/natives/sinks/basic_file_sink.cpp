@@ -36,11 +36,14 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    if (auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error))
-        return handle;
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create base file sink handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
 
-    ctx->ReportError("SM error! Could not create base file sink handle (error: %d)", error);
-    return BAD_HANDLE;
+    return handle;
 }
 
 static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -118,7 +121,7 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name))
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
         return BAD_HANDLE;
@@ -147,12 +150,14 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
-    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
-        return handle;
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
 
-    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-    return BAD_HANDLE;
-
+    return handle;
 }
 
 const sp_nativeinfo_t BasicFileSinkNatives[] =

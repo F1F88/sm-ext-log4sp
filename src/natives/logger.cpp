@@ -10,7 +10,7 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name))
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
         return BAD_HANDLE;
@@ -20,18 +20,21 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name);
-    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
-        return handle;
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
 
-    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-    return BAD_HANDLE;
+    return handle;
 }
 
 static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name))
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
         return BAD_HANDLE;
@@ -59,18 +62,21 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
     }
 
     auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
-    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
-        return handle;
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
 
-    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-    return BAD_HANDLE;
+    return handle;
 }
 
 static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
     ctx->LocalToString(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name))
+    if (log4sp::logger_handler::instance().find_handle(name) != BAD_HANDLE)
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
         return BAD_HANDLE;
@@ -98,6 +104,12 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
     }
 
     auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
 
     for (int i = 0; i < numSinks; ++i)
     {
@@ -108,11 +120,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 #endif
     }
 
-    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
-        return handle;
-
-    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-    return BAD_HANDLE;
+    return handle;
 }
 
 static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -933,13 +941,14 @@ static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
         return 0;
     }
 
-    if (auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error))
+    auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
+    if (sink == nullptr)
     {
-        logger->add_sink(sink);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
         return 0;
     }
 
-    ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
+    logger->add_sink(sink);
     return 0;
 }
 
@@ -956,20 +965,14 @@ static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     }
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
-
-#ifndef DEBUG
-    handlesys->FreeHandle(params[2], &security);
-#else
-    assert(handlesys->FreeHandle(params[2], &security) == SP_ERROR_NONE);
-#endif
-
-    if (sink)
+    if (sink == nullptr)
     {
-        logger->add_sink(sink);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
         return 0;
     }
 
-    ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
+    logger->add_sink(sink);
+    handlesys->FreeHandle(params[2], &security);
     return 0;
 }
 
@@ -985,13 +988,14 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
         return 0;
     }
 
-    if (auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error))
+    auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
+    if (sink == nullptr)
     {
-        logger->remove_sink(sink);
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
         return 0;
     }
 
-    ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
+    logger->remove_sink(sink);
     return 0;
 }
 
