@@ -36,21 +36,25 @@ methodmap DailyFileSink < Sink
      * @note Note that old log files from previous executions will not be deleted by this class,
      *       rotation and deletion is only applied while the program is running.
      *
-     * @param file      The file path where the log messages will be written.
-     * @param hour      The hour of the day when the log file should be rotated. (0-23)
-     * @param minute    The minute of the hour when the log file should be rotated. (0-59)
-     * @param truncate  If true, the created file will be truncated.
-     * @param maxFiles  If max_files > 0, retain only the last max_files and delete previous.
-     * @param callback  Callback function called when calculating the daily log file name.
-     * @return          DailyFileSink handle.
-     * @error           Invalid rotation time in ctor.
+     * @param file          The file path where the log messages will be written.
+     * @param hour          The hour of the day when the log file should be rotated. (0-23)
+     * @param minute        The minute of the hour when the log file should be rotated. (0-59)
+     * @param truncate      If true, the created file will be truncated.
+     * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
+     * @param calculator    Callback function called when calculating the daily log file name.
+     * @param openPre       Called before the sink open the file.
+     * @param closePost     Called after the sink close the file.
+     * @return              DailyFileSink handle.
+     * @error               Invalid rotation time in ctor.
      */
     public native DailyFileSink(const char[] file,
                                 int hour = 0,
                                 int minute = 0,
                                 bool truncate = false,
                                 int maxFiles = 0,
-                                DailyFileCalculator callback = INVALID_FUNCTION);
+                                DailyFileCalculator calculator = INVALID_FUNCTION,
+                                SinkFileOpenPre openPre = INVALID_FUNCTION,
+                                SinkFileClosePost closePost = INVALID_FUNCTION);
 
     /**
      * Get the current filename being used by the file sink.
@@ -64,15 +68,17 @@ methodmap DailyFileSink < Sink
     /**
      * Create a logger handle that outputs to a file and rotates the file based on date.
      *
-     * @param name      The name of the logger.
-     * @param file      The file path where the log messages will be written.
-     * @param hour      The hour of the day when the log file should be rotated. (0-23)
-     * @param minute    The minute of the hour when the log file should be rotated. (0-59)
-     * @param truncate  If true, the created file will be truncated.
-     * @param maxFiles  If max_files > 0, retain only the last max_files and delete previous.
-     * @param callback  For generate log file names.
-     * @return          Logger handle.
-     * @error           Logger name already exits, or invalid rotation time.
+     * @param name          The name of the logger.
+     * @param file          The file path where the log messages will be written.
+     * @param hour          The hour of the day when the log file should be rotated. (0-23)
+     * @param minute        The minute of the hour when the log file should be rotated. (0-59)
+     * @param truncate      If true, the created file will be truncated.
+     * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
+     * @param calculator    For generate log file names.
+     * @param openPre       Called before the sink open the file.
+     * @param closePost     Called after the sink close the file.
+     * @return              Logger handle.
+     * @error               Logger name already exits, or invalid rotation time.
      */
     public static native Logger CreateLogger(
         const char[] name,
@@ -81,7 +87,9 @@ methodmap DailyFileSink < Sink
         int minute = 0,
         bool truncate = false,
         int maxFiles = 0,
-        DailyFileCalculator callback = INVALID_FUNCTION);
+        DailyFileCalculator callback = INVALID_FUNCTION,
+        SinkFileOpenPre openPre = INVALID_FUNCTION,
+        SinkFileClosePost closePost = INVALID_FUNCTION);
 }
 
 
