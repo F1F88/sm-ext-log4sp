@@ -22,6 +22,8 @@ Action Command_Test(int args)
 
     TestTruncate();
 
+    TestFileCallback();
+
     PrintToServer("---- STOP TEST FILE LOGGER ----");
     return Plugin_Handled;
 }
@@ -94,4 +96,53 @@ void TestTruncate()
     delete logger;
     delete sink;
     AssertEq("Truncate final, file lines", CountLines(path), 1);
+}
+
+void TestFileCallback()
+{
+    SetTestContext("Test File Callback");
+
+    char path[PLATFORM_MAX_PATH];
+    path = PrepareTestPath("basic-file/file_callback.log");
+
+    Logger logger = BasicFileSink.CreateLogger("test-file-logger", path, _, OnOpenPre, OnClosePost);
+    logger.SetPattern("%v");
+    logger.Info("Some message");
+    delete logger;
+}
+
+void OnOpenPre(const char[] filename)
+{
+    char dir[PLATFORM_MAX_PATH];
+    BuildTestPath(dir, sizeof(dir), "basic-file");
+
+    char path[PLATFORM_MAX_PATH];
+    BuildTestPath(path, sizeof(path), "basic-file/file_callback.log");
+
+    AssertStrEq("File open pre, filename", filename, path);
+    AssertFalse("File open pre, dir exists", DirExists(dir));
+    AssertFalse("File open pre, file exists", FileExists(path));
+
+    CreateDirectory(dir);
+    File file = OpenFile(path, "wt");
+    file.WriteString("Hello File Event Callback! ", false);
+    file.Flush();
+    delete file;
+
+    AssertFileMatch("File contents", path, "Hello File Event Callback!\\s");
+}
+
+void OnClosePost(const char[] filename)
+{
+    char path[PLATFORM_MAX_PATH];
+    BuildTestPath(path, sizeof(path), "basic-file/file_callback.log");
+
+    AssertStrEq("File close post, filename", filename, path);
+    AssertTrue("File close post, file exists", FileExists(path));
+
+    File file = OpenFile(path, "at");
+    file.WriteString("Goodbey File Event Callback!", false);
+    delete file;
+
+    AssertFileMatch("File contents", path, "Hello File Event Callback! Some message\\sGoodbey File Event Callback!");
 }
