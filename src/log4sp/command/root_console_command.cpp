@@ -11,26 +11,31 @@
 
 namespace log4sp {
 
+using spdlog::fmt_lib::format;
+using spdlog::fmt_lib::join;
+using spdlog::level::level_enum;
+using spdlog::level::to_string_view;
+
 std::shared_ptr<logger> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
     auto logger = logger_handler::instance().find_logger(arg);
-    if (logger == nullptr) {
+    if (!logger) {
         throw_log4sp_ex("Logger with name \"" + arg + "\" not exists.");
     }
     return logger;
 }
 
-level::level_enum command::arg_to_level(const std::string &arg) {
+level_enum command::arg_to_level(const std::string &arg) {
     // 尝试按名字转换
-    auto level = level::from_str(arg.c_str());
+    level_enum level{str_to_lvl(arg.c_str())};
 
     // 尝试按数字转换
-    if (level == level::off) {
+    if (level == level_enum::off) {
         try {
             int number = std::stoi(arg);
-            level = level::from_number(static_cast<uint32_t>(number));
+            level = num_to_lvl(number);
         } catch (const std::exception &) {
-            level = level::off;
+            level = level_enum::off;
         }
     }
 
@@ -46,20 +51,17 @@ void list_command::execute(const std::vector<std::string> &args) {
         }
     );
 
-    rootconsole->ConsolePrint("%s", fmt_lib::format("[SM] List of all logger names: [{}].", fmt_lib::join(names, ", ")).c_str());
+    rootconsole->ConsolePrint("%s", format("[SM] List of all logger names: [{}].", join(names, ", ")).c_str());
 }
 
 
 void apply_all_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw_log4sp_ex(
-            fmt_lib::format(
-                "Usage: sm log4sp apply_all <function_name> [arguments]\nFunction names: [{}]", fmt_lib::join(functions_, ", ")));
+        throw_log4sp_ex(format("Usage: sm log4sp apply_all <function_name> [arguments]\nFunction names: [{}]", join(functions_, ", ")));
     }
 
     auto function_name = args[0];
-    auto iter = functions_.find(function_name);
-    if (iter == functions_.end()) {
+    if (functions_.find(function_name) == functions_.end()) {
         throw_log4sp_ex("Command function name \"" + function_name + "\" not exists.");
     }
 
@@ -97,7 +99,7 @@ void get_lvl_command::execute(const std::vector<std::string> &args) {
     auto logger = arg_to_logger(args[0]);
     auto level  = logger->level();
 
-    rootconsole->ConsolePrint("[SM] Logger '%s' log level is '%s'.", logger->name().c_str(), level::to_string_view(level).data());
+    rootconsole->ConsolePrint("[SM] Logger '%s' log level is '%s'.", logger->name().c_str(), to_string_view(level).data());
 }
 
 
@@ -110,11 +112,11 @@ void set_lvl_command::execute(const std::vector<std::string> &args) {
     auto level  = arg_to_level(args[1]);
 
     if (level == logger->level()) {
-        rootconsole->ConsolePrint("[SM] Logger '%s' log level is already '%s' level.", logger->name().c_str(), level::to_string_view(level).data());
+        rootconsole->ConsolePrint("[SM] Logger '%s' log level is already '%s' level.", logger->name().c_str(), to_string_view(level).data());
         return;
     }
 
-    rootconsole->ConsolePrint("[SM] Logger '%s' will set log level to '%s'", logger->name().c_str(), level::to_string_view(level).data());
+    rootconsole->ConsolePrint("[SM] Logger '%s' will set log level to '%s'", logger->name().c_str(), to_string_view(level).data());
     logger->set_level(level);
 }
 
@@ -141,7 +143,7 @@ void should_log_command::execute(const std::vector<std::string> &args) {
     auto level  = arg_to_level(args[1]);
     bool result = logger->should_log(level);
 
-    rootconsole->ConsolePrint("[SM] Logger '%s' has %s '%s' log level.", logger->name().c_str(), result ? "enabled" : "disabled", level::to_string_view(level).data());
+    rootconsole->ConsolePrint("[SM] Logger '%s' has %s '%s' log level.", logger->name().c_str(), result ? "enabled" : "disabled", to_string_view(level).data());
 }
 
 
@@ -154,7 +156,7 @@ void log_command::execute(const std::vector<std::string> &args) {
     auto level  = arg_to_level(args[1]);
     auto msg    = args[2];
 
-    rootconsole->ConsolePrint("[SM] Logger '%s' will log a message '%s' with log level '%s'.", logger->name().c_str(), msg.c_str(), level::to_string_view(level).data());
+    rootconsole->ConsolePrint("[SM] Logger '%s' will log a message '%s' with log level '%s'.", logger->name().c_str(), msg.c_str(), to_string_view(level).data());
     logger->log({__FILE__, __LINE__, __FUNCTION__}, level, msg, nullptr);
 }
 
@@ -179,7 +181,7 @@ void get_flush_lvl_command::execute(const std::vector<std::string> &args) {
     auto logger = arg_to_logger(args[0]);
     auto level  = logger->flush_level();
 
-    rootconsole->ConsolePrint("[SM] Logger '%s' flush level is '%s'.", logger->name().c_str(), level::to_string_view(level).data());
+    rootconsole->ConsolePrint("[SM] Logger '%s' flush level is '%s'.", logger->name().c_str(), to_string_view(level).data());
 }
 
 
@@ -192,11 +194,11 @@ void set_flush_lvl_command::execute(const std::vector<std::string> &args) {
     auto level  = arg_to_level(args[1]);
 
     if (level == logger->flush_level()) {
-        rootconsole->ConsolePrint("[SM] Logger '%s' flush level is already '%s' level.", logger->name().c_str(), level::to_string_view(level).data());
+        rootconsole->ConsolePrint("[SM] Logger '%s' flush level is already '%s' level.", logger->name().c_str(), to_string_view(level).data());
         return;
     }
 
-    rootconsole->ConsolePrint("[SM] Logger '%s' will set flush level to '%s'", logger->name().c_str(), level::to_string_view(level).data());
+    rootconsole->ConsolePrint("[SM] Logger '%s' will set flush level to '%s'", logger->name().c_str(), to_string_view(level).data());
     logger->flush_on(level);
 }
 

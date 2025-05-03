@@ -98,6 +98,15 @@ void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::set_color_mode(color_mode mode) 
     set_color_mode_impl(mode);
 }
 
+//* @log4sp hack *//
+template <typename ConsoleMutex>
+[[nodiscard]] SPDLOG_INLINE std::string wincolor_sink<ConsoleMutex>::to_pattern(const details::log_msg &log_msg) {
+    std::lock_guard<mutex_t> lock(mutex_);
+    memory_buf_t formatted;
+    formatter_->format(log_msg, formatted);
+    return fmt_lib::to_string(formatted);
+}
+
 template <typename ConsoleMutex>
 void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::set_color_mode_impl(color_mode mode) {
     if (mode == color_mode::automatic) {

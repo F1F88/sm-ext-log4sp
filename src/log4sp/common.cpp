@@ -4,6 +4,12 @@
 
 namespace log4sp {
 
+namespace fmt_lib = spdlog::fmt_lib;
+using spdlog::level::level_enum;
+using spdlog::memory_buf_t;
+using spdlog::pattern_time_type;
+using spdlog::source_loc;
+
 [[noreturn]] void throw_log4sp_ex(const std::string &msg, int last_errno) {
     spdlog::throw_spdlog_ex(msg, last_errno);
 }
@@ -12,17 +18,17 @@ namespace log4sp {
     spdlog::throw_spdlog_ex(std::move(msg));
 }
 
-[[nodiscard]] source_loc source_loc::from_plugin_ctx(SourcePawn::IPluginContext *ctx) noexcept {
+[[nodiscard]] source_loc get_source_loc(SourcePawn::IPluginContext *ctx) noexcept {
     assert(ctx);
 
-    uint32_t line{0};
+    unsigned int line{0};
     const char *file{nullptr};
     const char *func{nullptr};
 
-    auto iter = ctx->CreateFrameIterator();
+    SourcePawn::IFrameIterator *iter{ctx->CreateFrameIterator()};
     do {
         if (iter->IsScriptedFrame()) {
-            line = static_cast<uint32_t>(iter->LineNumber());
+            line = iter->LineNumber();
             file = iter->FilePath();
             func = iter->FunctionName();
             break;
@@ -31,13 +37,13 @@ namespace log4sp {
     } while (!iter->Done());
     ctx->DestroyFrameIterator(iter);
 
-    return source_loc{file, line, func};
+    return {file, static_cast<int>(line), func};
 }
 
-[[nodiscard]] std::vector<std::string> get_plugin_ctx_stack_trace(SourcePawn::IPluginContext *ctx) noexcept {
+[[nodiscard]] std::vector<std::string> get_stack_trace(SourcePawn::IPluginContext *ctx) noexcept {
     assert(ctx);
 
-    auto iter = ctx->CreateFrameIterator();
+    SourcePawn::IFrameIterator *iter{ctx->CreateFrameIterator()};
     if (iter->Done()) {
         ctx->DestroyFrameIterator(iter);
         return {};
@@ -47,19 +53,19 @@ namespace log4sp {
 
     for (int index = 0; !iter->Done(); iter->Next(), ++index) {
         if (iter->IsNativeFrame()) {
-            auto func = iter->FunctionName();
+            const char *func{iter->FunctionName()};
             if (!func) {
                 func = "<unknown function>";
             }
 
             trace.emplace_back(fmt_lib::format("  [{}] {}", index, func));
         } else if (iter->IsScriptedFrame()) {
-            auto func = iter->FunctionName();
+            const char *func{iter->FunctionName()};
             if (!func) {
                 func = "<unknown function>";
             }
 
-            auto file = iter->FilePath();
+            const char *file{iter->FilePath()};
             if (!file) {
                 func = "<unknown>";
             }
@@ -73,12 +79,12 @@ namespace log4sp {
 }
 
 
-[[nodiscard]] std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) {
+[[nodiscard]] std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, const unsigned int param) {
     assert(ctx && params);
 
     char *format;
     ctx->LocalToString(params[param], &format);
-    uint32_t lparam{param + 1};
+    unsigned int lparam{param + 1};
     return fmt_lib::to_string(format_cell_to_mem_buf(ctx, format, params, &lparam));
 }
 
@@ -92,14 +98,14 @@ namespace log4sp {
 
 static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) noexcept {
     cell_t new_params[MAX_TRANSLATE_PARAMS];
-    for (uint32_t i = 0; i < pTrans->fmt_count; i++) {
+    for (unsigned int i = 0; i < pTrans->fmt_count; ++i) {
         new_params[i] = params[pTrans->fmt_order[i]];
     }
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-static memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, uint32_t *arg) {
-    uint32_t langid;
+static memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, unsigned int *arg) {
+    unsigned int langid;
     Translation pTrans;
     IPhraseCollection *pPhrases = plsys->FindPluginByContext(ctx->GetContext())->GetPhrases();
 
@@ -125,13 +131,13 @@ try_serverlang:
         }
     }
 
-    uint32_t max_params{pTrans.fmt_count};
+    unsigned int max_params{pTrans.fmt_count};
 
     if (max_params) {
         cell_t new_params[MAX_TRANSLATE_PARAMS];
 
         /* Check if we're going to over the limit */
-        if ((*arg) + (max_params - 1) > static_cast<uint32_t>(params[0])) {
+        if ((*arg) + (max_params - 1) > static_cast<unsigned int>(params[0])) {
             throw_log4sp_ex(fmt_lib::format("Translation string formatted incorrectly - missing at least {} parameters (arg {})", ((*arg + (max_params - 1)) - params[0]), *arg));
         }
 
@@ -148,10 +154,10 @@ try_serverlang:
     return format_cell_to_mem_buf(ctx, pTrans.szPhrase, params, arg);
 }
 
-static void AddString(memory_buf_t &out, const char *string, uint32_t width, int prec, int flags) noexcept {
+static void AddString(memory_buf_t &out, const char *string, unsigned int width, int prec, int flags) noexcept {
     if (string == nullptr) {
         constexpr const char *nlstr{"(null)"};
-        constexpr const uint32_t size{sizeof(nlstr)};
+        constexpr const unsigned int size{sizeof(nlstr)};
 
         if (!(flags & LADJUST)) {
             while (size < width--) {
@@ -167,8 +173,8 @@ static void AddString(memory_buf_t &out, const char *string, uint32_t width, int
             }
         }
     } else {
-        uint32_t size{static_cast<uint32_t>(strlen(string))};
-        if (prec >= 0 && static_cast<uint32_t>(prec) < size) {
+        unsigned int size{static_cast<unsigned int>(strlen(string))};
+        if (prec >= 0 && static_cast<unsigned int>(prec) < size) {
             size = prec;
         }
 
@@ -188,12 +194,12 @@ static void AddString(memory_buf_t &out, const char *string, uint32_t width, int
     }
 }
 
-static void AddFloat(memory_buf_t &out, double fval, uint32_t width, int prec, int flags) noexcept {
+static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int prec, int flags) noexcept {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
     bool sign{false};           // false: positive, true: negative
-    uint32_t fieldlength;       // for padding
+    unsigned int fieldlength;   // for padding
     int significant_digits{0};  // number of significant digits written
     const int MAX_SIGNIFICANT_DIGITS{16};
 
@@ -215,7 +221,7 @@ static void AddFloat(memory_buf_t &out, double fval, uint32_t width, int prec, i
 
     // compute whole-part digits count
     // Only print 0.something if 0 < fval < 1
-    digits = std::max((int)std::log10(fval) + 1, 1);
+    digits = (std::max)((int)std::log10(fval) + 1, 1);
 
     // compute the field length
     fieldlength = digits + prec + (prec > 0 ? 1 : 0) + (sign ? 1 : 0);
@@ -288,7 +294,7 @@ static void AddFloat(memory_buf_t &out, double fval, uint32_t width, int prec, i
     }
 }
 
-static void AddBinary(memory_buf_t &out, uint32_t val, uint32_t width, int flags) noexcept {
+static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
     char text[32];
 
     int iter{31};
@@ -297,7 +303,7 @@ static void AddBinary(memory_buf_t &out, uint32_t val, uint32_t width, int flags
     } while (val >>= 1);
 
     const char *begin = text + iter + 1;
-    uint32_t digits = 31 - iter;
+    unsigned int digits = 31 - iter;
 
     if (!(flags & LADJUST)) {
         if (flags & ZEROPAD) {
@@ -326,9 +332,9 @@ static void AddBinary(memory_buf_t &out, uint32_t val, uint32_t width, int flags
     }
 }
 
-static void AddUInt(memory_buf_t &out, uint32_t val, uint32_t width, int flags) noexcept {
+static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
     char text[10];
-    uint32_t digits{0};
+    unsigned int digits{0};
     do {
         text[digits++] = '0' + val % 10;
     } while (val /= 10);
@@ -365,12 +371,12 @@ static void AddUInt(memory_buf_t &out, uint32_t val, uint32_t width, int flags) 
     }
 }
 
-static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexcept {
+static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) noexcept {
     char text[10];
-    uint32_t digits{0};
+    unsigned int digits{0};
 
     bool negative = val < 0;
-    uint32_t unsignedVal = negative ? abs(val) : val;
+    unsigned int unsignedVal = negative ? abs(val) : val;
 
     do {
         text[digits++] = '0' + unsignedVal % 10;
@@ -428,12 +434,12 @@ static void AddInt(memory_buf_t &out, int val, uint32_t width, int flags) noexce
     }
 }
 
-static void AddHex(memory_buf_t &out, uint32_t val, uint32_t width, int flags) noexcept {
+static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
     constexpr const char *hexUpper{"0123456789ABCDEF"};
     constexpr const char *hexlower{"0123456789abcdef"};
     const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexlower;
     char text[8];
-    uint32_t digits{0};
+    unsigned int digits{0};
 
     do {
         text[digits++] = hexAdjust[val & 0xF];
@@ -472,7 +478,7 @@ static void AddHex(memory_buf_t &out, uint32_t val, uint32_t width, int flags) n
 }
 
 static bool DescribePlayer(int index, const char **namep, const char **authp, int *useridp) noexcept {
-    auto player = playerhelpers->GetGamePlayer(index);
+    SourceMod::IGamePlayer *player{playerhelpers->GetGamePlayer(index)};
     if (!player || !player->IsConnected()) {
         return false;
     }
@@ -493,17 +499,17 @@ static bool DescribePlayer(int index, const char **namep, const char **authp, in
     return true;
 }
 
-[[nodiscard]] memory_buf_t format_cell_to_mem_buf(SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, uint32_t *param) {
+[[nodiscard]] memory_buf_t format_cell_to_mem_buf(SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, unsigned int *param) {
     assert(ctx && format && params && *param > 0);
 
     memory_buf_t out;
 
-    uint32_t args = params[0];  // params count
-    uint32_t arg  = *param;     // 用于遍历 params 的指针
-    const char *fmt = format;   // 用于遍历 format 的指针
-    int flags;                  // 对齐 (左 / 右) | 填充符 ('0' / ' ')
-    int prec;                   // 精度
-    uint32_t width;             // 宽度
+    unsigned int args = params[0];  // params count
+    unsigned int arg  = *param;     // 用于遍历 params 的指针
+    const char *fmt = format;       // 用于遍历 format 的指针
+    int flags;                      // 对齐 (左 / 右) | 填充符 ('0' / ' ')
+    int prec;                       // 精度
+    unsigned int width;             // 宽度
 
     while (true) {
         const char *begin = fmt;
@@ -559,7 +565,7 @@ reswitch:
         case '7':
         case '8':
         case '9': {
-                uint32_t n{0};
+                unsigned int n{0};
                 do {
                     n = 10 * n + (ch - '0');
                     ch = *fmt++;
@@ -608,7 +614,7 @@ reswitch:
 
                 cell_t *value;
                 ctx->LocalToPhysAddr(params[arg], &value);
-                AddUInt(out, static_cast<uint32_t>(*value), width, flags);
+                AddUInt(out, static_cast<unsigned int>(*value), width, flags);
                 ++arg;
                 break;
             }
@@ -687,7 +693,7 @@ reswitch:
                 cell_t *target;
                 ctx->LocalToString(params[arg++], &key);
                 ctx->LocalToPhysAddr(params[arg++], &target);
-                auto phrase{Translate(ctx, key, *target, params, &arg)};
+                memory_buf_t phrase{Translate(ctx, key, *target, params, &arg)};
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
@@ -698,7 +704,7 @@ reswitch:
 
                 char *key;
                 ctx->LocalToString(params[arg++], &key);
-                auto phrase{Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg)};
+                memory_buf_t phrase{Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg)};
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
@@ -709,7 +715,7 @@ reswitch:
 
                 cell_t *value;
                 ctx->LocalToPhysAddr(params[arg], &value);
-                AddHex(out, static_cast<uint32_t>(*value), width, flags | UPPERDIGITS);
+                AddHex(out, static_cast<unsigned int>(*value), width, flags | UPPERDIGITS);
                 ++arg;
                 break;
             }
@@ -720,7 +726,7 @@ reswitch:
 
                 cell_t *value;
                 ctx->LocalToPhysAddr(params[arg], &value);
-                AddHex(out, static_cast<uint32_t>(*value), width, flags);
+                AddHex(out, static_cast<unsigned int>(*value), width, flags);
                 ++arg;
                 break;
             }

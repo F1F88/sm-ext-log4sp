@@ -33,6 +33,9 @@ public:
     void set_pattern(const std::string &pattern) final override;
     void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) final override;
 
+    //* @log4sp hack *//
+    [[nodiscard]] std::string to_pattern(const details::log_msg &log_msg) final override;
+
 protected:
     // sink formatter
     std::unique_ptr<spdlog::formatter> formatter_;

@@ -9,6 +9,10 @@
 
 namespace log4sp {
 
+using spdlog::fmt_lib::format;
+using spdlog::fmt_lib::join;
+using spdlog::level::level_string_views;
+
 root_console_command_handler &root_console_command_handler::instance() {
     static root_console_command_handler singleInstance;
     return singleInstance;
@@ -29,8 +33,8 @@ void root_console_command_handler::draw_menu() {
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
     rootconsole->DrawGenericOption("apply_all",     "Apply a command function on all loggers.");
-    rootconsole->DrawGenericOption("get_lvl",       fmt_lib::format("Gets a logger log level. [{}]", fmt_lib::join(level::level_string_views, " < ")).c_str());
-    rootconsole->DrawGenericOption("set_lvl",       fmt_lib::format("Sets a logger log level. [{}]", fmt_lib::join(level::level_string_views, " < ")).c_str());
+    rootconsole->DrawGenericOption("get_lvl",       format("Gets a logger log level. [{}]", join(level_string_views, " < ")).c_str());
+    rootconsole->DrawGenericOption("set_lvl",       format("Sets a logger log level. [{}]", join(level_string_views, " < ")).c_str());
     rootconsole->DrawGenericOption("set_pattern",   "Sets a logger log pattern.");
     rootconsole->DrawGenericOption("should_log",    "Gets a logger whether logging is enabled for the given log level.");
     rootconsole->DrawGenericOption("log",           "Use a logger to log a message.");

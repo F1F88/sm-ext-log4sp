@@ -57,3 +57,12 @@ void SPDLOG_INLINE
 spdlog::sinks::base_sink<Mutex>::set_formatter_(std::unique_ptr<spdlog::formatter> sink_formatter) {
     formatter_ = std::move(sink_formatter);
 }
+
+//* @log4sp hack *//
+template <typename Mutex>
+[[nodiscard]] std::string SPDLOG_INLINE spdlog::sinks::base_sink<Mutex>::to_pattern(const details::log_msg &log_msg) {
+    std::lock_guard<Mutex> lock(mutex_);
+    memory_buf_t formatted;
+    formatter_->format(log_msg, formatted);
+    return fmt_lib::to_string(formatted);
+}

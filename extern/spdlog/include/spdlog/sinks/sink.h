@@ -17,6 +17,9 @@ public:
     virtual void set_pattern(const std::string &pattern) = 0;
     virtual void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) = 0;
 
+    //* @log4sp hack *//
+    [[nodiscard]] virtual std::string to_pattern(const details::log_msg &log_msg) = 0;
+
     void set_level(level::level_enum log_level);
     level::level_enum level() const;
     bool should_log(level::level_enum msg_level) const;

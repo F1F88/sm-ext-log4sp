@@ -5,6 +5,8 @@
 namespace log4sp {
 namespace sinks {
 
+using spdlog::details::log_msg;
+
 callback_sink::callback_sink(IPluginFunction *log_function,
                              IPluginFunction *log_post_function,
                              IPluginFunction *flush_function) {
@@ -105,7 +107,7 @@ void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
     flush_callback_ = cb;
 }
 
-void callback_sink::sink_it_(const details::log_msg &log_msg) {
+void callback_sink::sink_it_(const log_msg &log_msg) {
     if (log_callback_) {
         auto logTime{std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch())};
 

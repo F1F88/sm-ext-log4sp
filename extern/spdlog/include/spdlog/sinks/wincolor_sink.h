@@ -37,6 +37,9 @@ public:
     void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) override final;
     void set_color_mode(color_mode mode);
 
+    //* @log4sp hack *//
+    [[nodiscard]] std::string to_pattern(const details::log_msg &log_msg) final override;
+
 protected:
     using mutex_t = typename ConsoleMutex::mutex_t;
     void *out_handle_;
