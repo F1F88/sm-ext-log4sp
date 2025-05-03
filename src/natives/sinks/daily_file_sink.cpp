@@ -72,10 +72,60 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         return filename_t{buffer};
     };
 
+    SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[7]);
+    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[8]);
+
+    file_event_handlers handlers;
+    handlers.before_open = [openPre](const filename_t &filename)
+    {
+        if (!openPre)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create daily file open pre forward.");
+
+        if (!forward->AddFunction(openPre))
+            log4sp::throw_log4sp_ex("SM error! Could not add daily file open pre function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
+    handlers.after_close = [closePost](const filename_t &filename)
+    {
+        if (!closePost)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create daily file close post forward.");
+
+        if (!forward->AddFunction(closePost))
+            log4sp::throw_log4sp_ex("SM error! Could not add daily file close post function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, maxFiles, file_event_handlers{}, calculator);
+        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, maxFiles, handlers, calculator);
     }
     catch (const std::exception &ex)
     {
@@ -184,10 +234,60 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
         return filename_t{buffer};
     };
 
+    SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[8]);
+    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[9]);
+
+    file_event_handlers handlers;
+    handlers.before_open = [openPre](const filename_t &filename)
+    {
+        if (!openPre)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create daily file open pre forward.");
+
+        if (!forward->AddFunction(openPre))
+            log4sp::throw_log4sp_ex("SM error! Could not add daily file open pre function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
+    handlers.after_close = [closePost](const filename_t &filename)
+    {
+        if (!closePost)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create daily file close post forward.");
+
+        if (!forward->AddFunction(closePost))
+            log4sp::throw_log4sp_ex("SM error! Could not add daily file close post function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, maxFiles, file_event_handlers{}, calculator);
+        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, maxFiles, handlers, calculator);
     }
     catch (const std::exception &ex)
     {

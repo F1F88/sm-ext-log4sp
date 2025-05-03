@@ -4,6 +4,8 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
+using spdlog::file_event_handlers;
+using spdlog::filename_t;
 using spdlog::sink_ptr;
 using spdlog::sinks::rotating_file_sink_mt;
 using spdlog::sinks::rotating_file_sink_st;
@@ -22,11 +24,60 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     auto maxFileSize  = static_cast<size_t>(params[2]);
     auto maxFiles     = static_cast<size_t>(params[3]);
     auto rotateOnOpen = static_cast<bool>(params[4]);
+    SourcePawn::IPluginFunction *openPre = ctx->GetFunctionById(params[5]);
+    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[6]);
+
+    file_event_handlers handlers;
+    handlers.before_open = [openPre](const filename_t &filename)
+    {
+        if (!openPre)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create rotating file open pre forward.");
+
+        if (!forward->AddFunction(openPre))
+            log4sp::throw_log4sp_ex("SM error! Could not add rotating file open pre function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
+    handlers.after_close = [closePost](const filename_t &filename)
+    {
+        if (!closePost)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create rotating file close post forward.");
+
+        if (!forward->AddFunction(closePost))
+            log4sp::throw_log4sp_ex("SM error! Could not add rotating file close post function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen, handlers);
     }
     catch (const std::exception &ex)
     {
@@ -147,11 +198,60 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     auto maxFileSize  = static_cast<size_t>(params[3]);
     auto maxFiles     = static_cast<size_t>(params[4]);
     auto rotateOnOpen = static_cast<bool>(params[5]);
+    SourcePawn::IPluginFunction *openPre = ctx->GetFunctionById(params[6]);
+    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[7]);
+
+    file_event_handlers handlers;
+    handlers.before_open = [openPre](const filename_t &filename)
+    {
+        if (!openPre)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create rotating file open pre forward.");
+
+        if (!forward->AddFunction(openPre))
+            log4sp::throw_log4sp_ex("SM error! Could not add rotating file open pre function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
+    handlers.after_close = [closePost](const filename_t &filename)
+    {
+        if (!closePost)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create rotating file close post forward.");
+
+        if (!forward->AddFunction(closePost))
+            log4sp::throw_log4sp_ex("SM error! Could not add rotating file close post function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen);
+        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen, handlers);
     }
     catch (const std::exception &ex)
     {

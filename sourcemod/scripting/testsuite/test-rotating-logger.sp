@@ -24,6 +24,8 @@ Action Command_Test(int args)
 
     TestManualRotate();
 
+    TestFileCallback();
+
     PrintToServer("---- STOP TEST ROTATE LOGGER ----");
     return Plugin_Handled;
 }
@@ -135,3 +137,35 @@ void TestManualRotate()
     AssertTrue("Manual rotate, file 1 size", 0 < FileSize(path) <= maxSize);
     AssertEq("Manual rotate, file 1 line", CountLines(path), 1);
 }
+
+void TestFileCallback()
+{
+    SetTestContext("Test File Callback");
+
+    const int maxSize = 1024 * 10;
+
+    char path[PLATFORM_MAX_PATH];
+    path = PrepareTestPath("rotate-file/file_callback.log");
+
+    Logger logger = RotatingFileSink.CreateLogger("test-file-logger", path, maxSize, 1, .openPre=OnOpenPre, .closePost=OnClosePost);
+    delete logger;
+}
+
+void OnOpenPre(const char[] filename)
+{
+    char path[PLATFORM_MAX_PATH];
+    BuildTestPath(path, sizeof(path), "rotate-file/file_callback.log");
+
+    AssertStrEq("File open pre, filename", filename, path);
+    AssertFalse("File open pre, file exists", FileExists(path));
+}
+
+void OnClosePost(const char[] filename)
+{
+    char path[PLATFORM_MAX_PATH];
+    BuildTestPath(path, sizeof(path), "rotate-file/file_callback.log");
+
+    AssertStrEq("File close post, filename", filename, path);
+    AssertTrue("File close post, file exists", FileExists(path));
+}
+

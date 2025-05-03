@@ -17,11 +17,16 @@ methodmap BasicFileSink < Sink
     /**
      * Trivial file sink with single file as target.
      *
-     * @param file          The file path where the log messages will be written.
-     * @param truncate      If true, the created file will be truncated.
-     * @return              BasicFileSink handle.
+     * @param file      The file path where the log messages will be written.
+     * @param truncate  If true, the created file will be truncated.
+     * @param openPre   Called before the sink open the file.
+     * @param closePost Called after the sink close the file.
+     * @return          BasicFileSink handle.
      */
-    public native BasicFileSink(const char[] file, bool truncate = false);
+    public native BasicFileSink(const char[] file,
+                                bool truncate = false,
+                                SinkFileOpenPre openPre = INVALID_FUNCTION,
+                                SinkFileClosePost closePost = INVALID_FUNCTION);
 
     /**
      * Get the current filename being used by the file sink.
@@ -43,8 +48,15 @@ methodmap BasicFileSink < Sink
      * @param name      The name of the new logger.
      * @param file      The file path where the log messages will be written.
      * @param truncate  If true, the created file will be truncated.
+     * @param openPre   Called before the sink open the file.
+     * @param closePost Called after the sink close the file.
      * @return          Logger handle.
      * @error           Logger name already exits.
      */
-    public static native Logger CreateLogger(const char[] name, const char[] file, bool truncate = false);
+    public static native Logger CreateLogger(
+        const char[] name,
+        const char[] file,
+        bool truncate = false,
+        SinkFileOpenPre onOpen = INVALID_FUNCTION,
+        SinkFileClosePost onClose = INVALID_FUNCTION);
 }

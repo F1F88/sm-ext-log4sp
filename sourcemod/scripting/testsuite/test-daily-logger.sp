@@ -22,6 +22,8 @@ Action Command_Test(int args)
 
     TestRotates();
 
+    TestFileCallback();
+
     PrintToServer("---- STOP TEST DAILY LOGGER ----");
     return Plugin_Handled;
 }
@@ -102,4 +104,36 @@ void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)
 
     AssertEq("Rotate files count", CountFiles(path), expectedNumFiles);
 }
+
+void TestFileCallback()
+{
+    SetTestContext("Test File Callback");
+
+    char path[PLATFORM_MAX_PATH];
+    path = PrepareTestPath("daily/file_callback.log");
+
+    Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .openPre=OnOpenPre, .closePost=OnClosePost);
+    delete logger;
+}
+
+void OnOpenPre(const char[] filename)
+{
+    char path[PLATFORM_MAX_PATH];
+    FormatTime(path, sizeof(path), "daily/file_callback_%Y%m%d.log");
+    BuildTestPath(path, sizeof(path), path);
+
+    AssertStrEq("File open pre, filename", filename, path);
+    AssertFalse("File open pre, file exists", FileExists(path));
+}
+
+void OnClosePost(const char[] filename)
+{
+    char path[PLATFORM_MAX_PATH];
+    FormatTime(path, sizeof(path), "daily/file_callback_%Y%m%d.log");
+    BuildTestPath(path, sizeof(path), path);
+
+    AssertStrEq("File close post, filename", filename, path);
+    AssertTrue("File close post, file exists", FileExists(path));
+}
+
 

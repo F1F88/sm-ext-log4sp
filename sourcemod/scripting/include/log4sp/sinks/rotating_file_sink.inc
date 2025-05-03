@@ -25,13 +25,17 @@ methodmap RotatingFileSink < Sink
      * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  If true, the log file will be rotated when opened.
+     * @param openPre       Called before the sink open the file.
+     * @param closePost     Called after the sink close the file.
      * @return              RotatingFileSink handle.
      * @error               Param maxFileSize <= 0, Param maxFiles > 200000.
      */
     public native RotatingFileSink(const char[] file,
                                    const int maxFileSize,
                                    const int maxFiles,
-                                   bool rotateOnOpen = false);
+                                   bool rotateOnOpen = false,
+                                   SinkFileOpenPre openPre = INVALID_FUNCTION,
+                                   SinkFileClosePost closePost = INVALID_FUNCTION);
 
     /**
      * Get the current filename being used by the file sink.
@@ -67,6 +71,8 @@ methodmap RotatingFileSink < Sink
      * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  If true, the log file will be rotated when opened.
+     * @param openPre       Called before the sink open the file.
+     * @param closePost     Called after the sink close the file.
      * @return              Logger handle.
      * @error               Logger name already exits, or maxFileSize == 0, or maxFiles > 200000.
      */
@@ -75,5 +81,7 @@ methodmap RotatingFileSink < Sink
         const char[] file,
         int maxFileSize,
         int maxFiles,
-        bool rotateOnOpen = false);
+        bool rotateOnOpen = false,
+        SinkFileOpenPre openPre = INVALID_FUNCTION,
+        SinkFileClosePost closePost = INVALID_FUNCTION);
 }

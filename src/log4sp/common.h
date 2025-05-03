@@ -26,11 +26,12 @@ namespace log4sp {
     using spdlog::level::level_enum;
     using spdlog::string_view_t;
     constexpr string_view_t level_string_views[] SPDLOG_LEVEL_NAMES;
-    static_assert(sizeof(level_string_views) < INTMAX_MAX);
+    constexpr int size = std::size(level_string_views);
+    static_assert(size == level_enum::n_levels);
 
-    for (size_t i = 0; i < std::size(level_string_views); ++i) {
+    for (int i = 0; i < size; ++i) {
         if (!strcmp(name, level_string_views[i].data())) {
-            return num_to_lvl(static_cast<int>(i));
+            return num_to_lvl(i);
         }
     }
 
@@ -52,11 +53,12 @@ namespace log4sp {
 [[nodiscard]] constexpr spdlog::level::level_enum str_short_to_lvl(const char *name) noexcept {
     using spdlog::level::level_enum;
     constexpr const char *short_level_names[] SPDLOG_SHORT_LEVEL_NAMES;
-    static_assert(sizeof(short_level_names) < INTMAX_MAX);
+    constexpr int size = std::size(short_level_names);
+    static_assert(size == level_enum::n_levels);
 
-    for (size_t i = 0; i < std::size(short_level_names); ++i) {
+    for (int i = 0; i < size; ++i) {
         if (!strcmp(name, short_level_names[i])) {
-            return num_to_lvl(static_cast<int>(i));
+            return num_to_lvl(i);
         }
     }
     return level_enum::off;
@@ -87,6 +89,8 @@ namespace log4sp {
 
 [[nodiscard]] spdlog::source_loc get_source_loc(SourcePawn::IPluginContext *ctx) noexcept;
 [[nodiscard]] std::vector<std::string> get_stack_trace(SourcePawn::IPluginContext *ctx) noexcept;
+
+[[nodiscard]] spdlog::filename_t unbuild_path(SourceMod::PathType type, const spdlog::filename_t &filename) noexcept;
 
 [[nodiscard]] std::string format_cell_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, const unsigned int param);
 [[nodiscard]] spdlog::memory_buf_t format_cell_to_mem_buf(SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, unsigned int *param);

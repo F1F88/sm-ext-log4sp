@@ -4,6 +4,8 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
+using spdlog::file_event_handlers;
+using spdlog::filename_t;
 using spdlog::sink_ptr;
 using spdlog::sinks::basic_file_sink_mt;
 using spdlog::sinks::basic_file_sink_st;
@@ -21,11 +23,60 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
     auto truncate = static_cast<bool>(params[2]);
+    SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[3]);
+    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[4]);
+
+    file_event_handlers handlers;
+    handlers.before_open = [openPre](const filename_t &filename)
+    {
+        if (!openPre)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create basic file open pre forward.");
+
+        if (!forward->AddFunction(openPre))
+            log4sp::throw_log4sp_ex("SM error! Could not add basic file open pre function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
+    handlers.after_close = [closePost](const filename_t &filename)
+    {
+        if (!closePost)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create basic file close post forward.");
+
+        if (!forward->AddFunction(closePost))
+            log4sp::throw_log4sp_ex("SM error! Could not add basic file close post function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<basic_file_sink_st>(path, truncate);
+        sink = std::make_shared<basic_file_sink_st>(path, truncate, handlers);
     }
     catch (const std::exception &ex)
     {
@@ -131,11 +182,60 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
     auto truncate = static_cast<bool>(params[3]);
+    SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[4]);
+    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[5]);
+
+    file_event_handlers handlers;
+    handlers.before_open = [openPre](const filename_t &filename)
+    {
+        if (!openPre)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create basic file open pre forward.");
+
+        if (!forward->AddFunction(openPre))
+            log4sp::throw_log4sp_ex("SM error! Could not add basic file open pre function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
+
+    handlers.after_close = [closePost](const filename_t &filename)
+    {
+        if (!closePost)
+            return;
+
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        if (!forward)
+            log4sp::throw_log4sp_ex("SM error! Could not create basic file close post forward.");
+
+        if (!forward->AddFunction(closePost))
+            log4sp::throw_log4sp_ex("SM error! Could not add basic file close post function.");
+
+        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
+
+        forward->PushString(path.c_str());
+#ifndef DEBUG
+        forward->Execute();
+#else
+        assert(forward->Execute() == SP_ERROR_NONE);
+#endif
+        forwards->ReleaseForward(forward);
+    };
 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<basic_file_sink_st>(path, truncate);
+        sink = std::make_shared<basic_file_sink_st>(path, truncate, handlers);
     }
     catch (const std::exception &ex)
     {
