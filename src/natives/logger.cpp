@@ -103,14 +103,6 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
         sinkVector[i] = sink;
     }
 
-    auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
-    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
-    if (handle == BAD_HANDLE)
-    {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-        return BAD_HANDLE;
-    }
-
     for (int i = 0; i < numSinks; ++i)
     {
 #ifndef DEBUG
@@ -118,6 +110,14 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 #else
         assert(handlesys->FreeHandle(sinks[i], &security) == SP_ERROR_NONE);
 #endif
+    }
+
+    auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (handle == BAD_HANDLE)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
     }
 
     return handle;
