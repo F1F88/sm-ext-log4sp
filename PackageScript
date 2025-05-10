@@ -56,6 +56,7 @@ CopyFiles('sourcemod/scripting/include/log4sp/sinks', 'addons/sourcemod/scriptin
    'rotating_file_sink.inc',
    'server_console_sink.inc',
    'sink.inc',
+   'tcp_sink.inc',
  ]
 )
 
