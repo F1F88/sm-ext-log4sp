@@ -114,10 +114,10 @@ Parameter formatting is performed at **Logger** layer and is triggered only if l
 | :----------------------------------------------------------: | :-------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 |                          **Speed**                           | Very Fast |                             Fast                             |                             Fast                             |                             Slow                             |
 |                      **Max character**                       | unlimited |                          unlimited                           |                             2048                             |                             2048                             |
-|                      **Error handling**                      |     ×     |                  Handover to Error Handler                   |                         Throw error                          |                         Throw error                          |
 |                       **Param format**                       |     ×     |                              √                               |                              √                               |                              √                               |
 |                       **Implemented**                        |     ×     |          [Log4sp Format](./src/log4sp/common.h#L95)          | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
 |                          **Usage**                           |     ×     | Same as [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | Same as [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | Same as [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
+|                       **Format error**                       |     ×     |                  Handover to Error Handler                   |                         Throw error                          |                         Throw error                          |
 |                         **flag %s**                          |     ×     |        Default right justify<br/>Support Left justify        |          Default left justify<br/>Not right justify          |          Default left justify<br/>Not right justify          |
 | **Overflow [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |     ×     |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
 |                       **Symbols BUG**                        |     ×     |                       Fixed in v1.8.0                        |            **"%0[width]d"**<br> "-1" --> "000-1"             |            **"%0[width]d"**<br/> "-1" --> "000-1"            |
@@ -188,9 +188,9 @@ You can override this with:
 
 ### Error Handler
 
-Normally, Log4sp Natives will only throw errors and interrupt code execution when the parameters are incorrect; errors within the extension (logging, file flushing, etc.) are handled by the Error Handler and will not interrupt code execution.
+Normally, Log4sp Natives will only throw errors and interrupt code execution when the parameters are invalid; errors within the extension (logging, flushing, etc.) are handled by the Error Handler and will not interrupt code execution.
 
-By default, the error handler only logs error information to the errors_date.log file of SourceMod.
+By default, the Error Handler only logs error information to the errors_date.log file of SourceMod.
 
 ```sourcepawn
 void SetMyErrorHandler(Logger logger)
@@ -280,12 +280,6 @@ In the [Multi Sinks](#Multi Sinks) section, lines 13-15 close the sink handles, 
 ## Flowchart
 
 ```mermaid
----
-config:
-  theme: mc
-  layout: dagre
-  look: neo
----
 flowchart LR
  subgraph Logger["Logger"]
         LoggerShouldLog{"Should Log?"}
@@ -327,18 +321,14 @@ flowchart LR
     SinkPatternFormat --- SinkLog
     SinkLog --> Stop
     SinkShouldLog -. No .-> Stop
-    LoggerShouldJunction@{ shape: f-circ}
-    LoggerLogJunction@{ shape: f-circ}
+    LoggerShouldJunction@{ shape: junction}
+    LoggerLogJunction@{ shape: junction}
     LoggerLogFormat@{ shape: das}
     LoggerLogExFormat@{ shape: das}
     LoggerLogAmxTplFormat@{ shape: das}
-    SinkShouldJunction@{ shape: f-circ}
+    SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
-    SinkFlushJunction@{ shape: f-circ}
-     Start:::Aqua
-     Stop:::Rose
-    classDef Rose stroke-width:1px, stroke-dasharray:none, stroke:#FF5978, fill:#FFDFE5, color:#8E2236
-    classDef Aqua stroke-width:1px, stroke-dasharray:none, stroke:#46EDC8, fill:#DEFFF8, color:#378E7A
+    SinkFlushJunction@{ shape: junction}
     style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
     style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
@@ -351,15 +341,6 @@ flowchart LR
     style SinkLog stroke-width:4px,stroke-dasharray: 0
     style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1
     style SinkFlush stroke-width:4px,stroke-dasharray: 0
-    style Start stroke-width:4px,stroke-dasharray: 0
-    style Stop stroke-width:4px,stroke-dasharray: 0
-    click LoggerShouldLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L155"
-    click LoggerLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L163"
-    click LoggerLogEx "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L164"
-    click LoggerLogAmxTpl "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L165"
-    click SinkShouldLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/sinks/sink.inc#L58"
-    click SinkLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/sinks/sink.inc#L72"
-    click SinkFlush "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/sinks/sink.inc#L98"
     linkStyle 1 stroke:#00C853,fill:none
     linkStyle 2 stroke:#00C853,fill:none
     linkStyle 3 stroke:#00C853,fill:none

@@ -107,17 +107,17 @@ sink.ShouldLog(LogLevel_Trace);     // false
 
 参数格式化在 **Logger** 层执行，仅当日志消息级别 **≥** logger 日志级别时才会触发。
 
-|                                                              |        Log         |                            LogEx                             |                          LogAmxTpl                           |                       SM - LogMessage                        |
-| :----------------------------------------------------------: | :----------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|                         **运行效率**                         |        最快        |                             较快                             |                             较快                             |                             较慢                             |
-|                         **最多字符**                         |        无限        |                             无限                             |                             2048                             |                             2048                             |
-|                         **错误处理**                         | 调用 Error Handler |                        Error Handler                         |                         抛出错误信息                         |                         抛出错误信息                         |
-|                        **参数格式化**                        |         ×          |                              √                               |                              √                               |                              √                               |
-|                           **实现**                           |         ×          |          [Log4sp Format](./src/log4sp/common.h#L95)          | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
-|                           **用法**                           |         ×          | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 |
-|                        **通配符 %s**                         |         ×          |                  默认右对齐<br/>支持左对齐                   |                 默认左对齐<br/>不支持右对齐                  |                 默认左对齐<br/>不支持右对齐                  |
-| **溢出 [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |         ×          |                        修复于 v1.5.0                         | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
-|                         **符号 BUG**                         |         ×          |                        修复于 v1.8.0                         |            **"%0[width]d"**<br> "-1" --> "000-1"             |            **"%0[width]d"**<br/> "-1" --> "000-1"            |
+|                                                              | Log  |                            LogEx                             |                          LogAmxTpl                           |                       SM - LogMessage                        |
+| :----------------------------------------------------------: | :--: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+|                         **运行效率**                         | 最快 |                             较快                             |                             较快                             |                             较慢                             |
+|                         **最多字符**                         | 无限 |                             无限                             |                             2048                             |                             2048                             |
+|                        **参数格式化**                        |  ×   |                              √                               |                              √                               |                              √                               |
+|                           **实现**                           |  ×   |          [Log4sp Format](./src/log4sp/common.h#L95)          | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
+|                           **用法**                           |  ×   | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 |
+|                         **格式错误**                         |  ×   |                      移交 Error Handler                      |                           抛出错误                           |                           抛出错误                           |
+|                        **通配符 %s**                         |  ×   |                  默认右对齐<br/>支持左对齐                   |                 默认左对齐<br/>不支持右对齐                  |                 默认左对齐<br/>不支持右对齐                  |
+| **溢出 [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |  ×   |                        修复于 v1.5.0                         | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
+|                         **符号 BUG**                         |  ×   |                        修复于 v1.8.0                         |            **"%0[width]d"**<br> "-1" --> "000-1"             |            **"%0[width]d"**<br/> "-1" --> "000-1"            |
 
 ### 模板格式化
 
@@ -187,7 +187,7 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
 
 ### 错误处理器
 
-通常，Log4sp 的 Natives 只会在参数不正确时抛出错误并中断代码的执行；对于拓展内部的错误（记录日志、文件刷写等），则交给 Error Handler 处理，且不会中断代码的执行。
+通常，Log4sp 的 Natives 只会在参数无效时抛出错误并中断代码的执行；对于拓展内部的错误（记录日志、刷写等），则交给 Error Handler 处理，且不会中断代码的执行。
 
 默认情况下，Error Handler 会将错误信息记录到 SourceMod 的 errors.log 文件。
 
@@ -286,12 +286,6 @@ Logger CreateMultiSinksLogger()
 ## 架构流程
 
 ```mermaid
----
-config:
-  theme: mc
-  layout: dagre
-  look: neo
----
 flowchart LR
  subgraph Logger["Logger"]
         LoggerShouldLog{"Should Log?"}
@@ -333,18 +327,14 @@ flowchart LR
     SinkPatternFormat --- SinkLog
     SinkLog --> Stop
     SinkShouldLog -. No .-> Stop
-    LoggerShouldJunction@{ shape: f-circ}
-    LoggerLogJunction@{ shape: f-circ}
+    LoggerShouldJunction@{ shape: junction}
+    LoggerLogJunction@{ shape: junction}
     LoggerLogFormat@{ shape: das}
     LoggerLogExFormat@{ shape: das}
     LoggerLogAmxTplFormat@{ shape: das}
-    SinkShouldJunction@{ shape: f-circ}
+    SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
-    SinkFlushJunction@{ shape: f-circ}
-     Start:::Aqua
-     Stop:::Rose
-    classDef Rose stroke-width:1px, stroke-dasharray:none, stroke:#FF5978, fill:#FFDFE5, color:#8E2236
-    classDef Aqua stroke-width:1px, stroke-dasharray:none, stroke:#46EDC8, fill:#DEFFF8, color:#378E7A
+    SinkFlushJunction@{ shape: junction}
     style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
     style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
@@ -357,15 +347,6 @@ flowchart LR
     style SinkLog stroke-width:4px,stroke-dasharray: 0
     style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1
     style SinkFlush stroke-width:4px,stroke-dasharray: 0
-    style Start stroke-width:4px,stroke-dasharray: 0
-    style Stop stroke-width:4px,stroke-dasharray: 0
-    click LoggerShouldLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L155"
-    click LoggerLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L163"
-    click LoggerLogEx "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L164"
-    click LoggerLogAmxTpl "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/logger.inc#L165"
-    click SinkShouldLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/sinks/sink.inc#L58"
-    click SinkLog "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/sinks/sink.inc#L72"
-    click SinkFlush "https://github.com/F1F88/sm-ext-log4sp/blob/main/sourcemod/scripting/include/log4sp/sinks/sink.inc#L98"
     linkStyle 1 stroke:#00C853,fill:none
     linkStyle 2 stroke:#00C853,fill:none
     linkStyle 3 stroke:#00C853,fill:none
