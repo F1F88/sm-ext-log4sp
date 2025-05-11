@@ -10,6 +10,8 @@
 
 
 /**
+ * Rotating file sink based on size.
+ *
  * Rotate files:
  *  log.txt   -> log.1.txt
  *  log.1.txt -> log.2.txt
@@ -45,6 +47,13 @@ methodmap RotatingFileSink < Sink
      * @return              Number of characters written to the buffer, not including the null terminator.
      */
     public native int GetFilename(char[] buffer, int maxlen);
+
+    /**
+     * Gets the length of the filename.
+     *
+     * @return              Length of the filename string.
+     */
+    public native int GetFilenameLength();
 
     /**
      * Rotate log files on demand.

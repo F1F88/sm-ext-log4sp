@@ -121,6 +121,28 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
     return static_cast<cell_t>(bytes);
 }
 
+static cell_t RotatingFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
+
+    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
+        return 0;
+    }
+
+    auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink);
+    if (!realSink)
+    {
+        ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
+        return 0;
+    }
+
+    return static_cast<cell_t>(realSink->filename().length());
+}
+
 static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
@@ -261,6 +283,7 @@ const sp_nativeinfo_t RotatingFileSinkNatives[] =
 {
     {"RotatingFileSink.RotatingFileSink",       RotatingFileSink},
     {"RotatingFileSink.GetFilename",            RotatingFileSink_GetFilename},
+    {"RotatingFileSink.GetFilenameLength",      RotatingFileSink_GetFilenameLength},
     {"RotatingFileSink.RotateNow",              RotatingFileSink_RotateNow},
 
     {"RotatingFileSink.CalcFilename",           RotatingFileSink_CalcFilename},
