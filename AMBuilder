@@ -22,6 +22,7 @@ sourceFiles = [
   'src/natives/sinks/ringbuffer_sink.cpp',
   'src/natives/sinks/rotating_file_sink.cpp',
   'src/natives/sinks/server_console_sink.cpp',
+  'src/natives/sinks/udp_sink.cpp',
 ]
 
 ###############
