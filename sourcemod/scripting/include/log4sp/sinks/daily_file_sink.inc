@@ -66,6 +66,13 @@ methodmap DailyFileSink < Sink
     public native int GetFilename(char[] buffer, int maxlen);
 
     /**
+     * Gets the length of the filename.
+     *
+     * @return              Length of the filename string.
+     */
+    public native int GetFilenameLength();
+
+    /**
      * Create a logger handle that outputs to a file and rotates the file based on date.
      *
      * @param name          The name of the logger.
