@@ -72,6 +72,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, RotatingFileSinkNatives);
     sharesys->AddNatives(myself, ServerConsoleSinkNatives);
     sharesys->AddNatives(myself, TCPSinkNatives);
+    sharesys->AddNatives(myself, UDPSinkNatives);
 
     sharesys->RegisterLibrary(myself, SMEXT_CONF_LOGTAG);
 

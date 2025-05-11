@@ -57,6 +57,7 @@ CopyFiles('sourcemod/scripting/include/log4sp/sinks', 'addons/sourcemod/scriptin
    'server_console_sink.inc',
    'sink.inc',
    'tcp_sink.inc',
+   'udp_sink.inc',
  ]
 )
 

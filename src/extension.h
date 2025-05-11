@@ -126,5 +126,6 @@ extern const sp_nativeinfo_t    RingBufferSinkNatives[];
 extern const sp_nativeinfo_t    RotatingFileSinkNatives[];
 extern const sp_nativeinfo_t    ServerConsoleSinkNatives[];
 extern const sp_nativeinfo_t    TCPSinkNatives[];
+extern const sp_nativeinfo_t    UDPSinkNatives[];
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
