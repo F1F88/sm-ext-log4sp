@@ -109,21 +109,16 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
         return 0;
     }
 
+    auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink);
+    if (realSink)
+    {
+        ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
+        return 0;
+    }
+
     size_t bytes{0};
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink))
-    {
-        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-        return static_cast<cell_t>(bytes);
-    }
-
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_mt>(sink))
-    {
-        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-        return static_cast<cell_t>(bytes);
-    }
-
-    ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-    return 0;
+    ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
+    return static_cast<cell_t>(bytes);
 }
 
 static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -138,33 +133,21 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
         return 0;
     }
 
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink))
+    auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink);
+    if (realSink)
     {
-        try
-        {
-            realSink->rotate_now();
-        }
-        catch (const std::exception &ex)
-        {
-            ctx->ReportError(ex.what());
-        }
+        ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_mt>(sink))
+    try
     {
-        try
-        {
-            realSink->rotate_now();
-        }
-        catch (const std::exception &ex)
-        {
-            ctx->ReportError(ex.what());
-        }
-        return 0;
+        realSink->rotate_now();
     }
-
-    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
+    catch (const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+    }
     return 0;
 }
 
