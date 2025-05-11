@@ -28,11 +28,13 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
     SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
     SourceMod::HandleError error;
 
-    if (auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error))
-        return handle;
-
-    ctx->ReportError("SM error! Could not create server console sink handle (error: %d)", error);
-    return BAD_HANDLE;
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    if (!handle)
+    {
+        ctx->ReportError("SM error! Could not create server console sink handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+    return handle;
 }
 
 static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -60,11 +62,13 @@ static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, co
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
-    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
-        return handle;
-
-    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-    return BAD_HANDLE;
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (!handle)
+    {
+        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        return BAD_HANDLE;
+    }
+    return handle;
 }
 
 const sp_nativeinfo_t ServerConsoleSinkNatives[] =
