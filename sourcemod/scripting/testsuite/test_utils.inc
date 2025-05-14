@@ -1,7 +1,7 @@
-#if defined _log_for_sourcepawn_test_utils_included
+#if defined _log4sp_test_utils_included
  #endinput
 #endif
-#define _log_for_sourcepawn_test_utils_included
+#define _log4sp_test_utils_included
 
 #pragma newdecls required
 #pragma semicolon 1

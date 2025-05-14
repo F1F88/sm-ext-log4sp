@@ -1,7 +1,7 @@
-#if defined _log_for_sourcepawn_included
+#if defined _log4sp_included
  #endinput
 #endif
-#define _log_for_sourcepawn_included
+#define _log4sp_included
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -33,7 +33,7 @@
  */
 public Extension __ext_log4sp =
 {
-    name = "Log for SourcePawn",
+    name = "Log4sp",
     file = "log4sp.ext",
 #if defined AUTOLOAD_EXTENSIONS
     autoload = 1,

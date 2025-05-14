@@ -8,6 +8,8 @@
 
 #include "log4sp/common.h"
 
+#define LOG4SP_ROOT_CMD     "log4sp"
+
 
 namespace log4sp {
 

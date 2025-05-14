@@ -1,7 +1,7 @@
 /**
  * vim: set ts=4 :
  * =============================================================================
- * SourceMod Logging for SourcePawn Extension
+ * SourceMod log4sp Extension
  * Copyright (C) 2004-2008 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
@@ -34,7 +34,7 @@
 
 /**
  * @file extension.h
- * @brief Log for SourcePawn extension code header.
+ * @brief Log4sp extension code header.
  */
 #include "smsdk_ext.h"
 

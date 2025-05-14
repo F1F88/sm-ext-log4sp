@@ -28,8 +28,8 @@ void root_console_command_handler::destroy() {
 
 
 void root_console_command_handler::draw_menu() {
-    rootconsole->ConsolePrint("Log for SourcePawn Menu:");
-    rootconsole->ConsolePrint("Usage: sm log4sp <function_name> [arguments]");
+    rootconsole->ConsolePrint(SMEXT_CONF_NAME " Menu:");
+    rootconsole->ConsolePrint("Usage: sm " LOG4SP_ROOT_CMD " <function_name> [arguments]");
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
     rootconsole->DrawGenericOption("apply_all",     "Apply a command function on all loggers.");
@@ -92,7 +92,7 @@ root_console_command_handler::root_console_command_handler() {
 }
 
 void root_console_command_handler::initialize_() {
-    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Log for SourcePawn command menu", this)) {
+    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, SMEXT_CONF_NAME " command menu", this)) {
         throw_log4sp_ex("SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\".");
     }
 }
