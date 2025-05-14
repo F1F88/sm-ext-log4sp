@@ -48,8 +48,6 @@ class ExtensionConfig(object):
     else:
       target_archs = ['x86', 'x86_64']
 
-    print(target_archs)
-
     for arch in target_archs:
         try:
             cxx = builder.DetectCxx(target_arch = arch)
@@ -112,17 +110,21 @@ class ExtensionConfig(object):
     for cxx in self.all_targets:
         self.configure_cxx(cxx)
 
-    #* spdlog settings *#
-    cxx.defines += [
-      'SPDLOG_FOLDER_SEPS="/\\\\"',
-      'SPDLOG_LEVEL_NAMES={{"trace", 5ULL}, {"debug", 5ULL}, {"info", 4ULL}, {"warn", 4ULL}, {"error", 5ULL}, {"fatal", 5ULL}, {"off", 3ULL}}',
-      'SPDLOG_SHORT_LEVEL_NAMES={"T", "D", "I", "W", "E", "F", "O"}',
-    ]
+  def configure_cxx(self, cxx):
+    if cxx.family == 'msvc':
+      if cxx.version < 1914 and builder.options.generator != 'vs':
+        raise Exception(f'Only MSVC 2017 15.7 and later are supported, full C++17 support is required. ({str(cxx.version)} < 1914)')
+    elif cxx.family == 'gcc':
+      if cxx.version < 'gcc-8':
+        raise Exception('Only GCC versions 8 or later are supported, full C++17 support is required.')
+    elif cxx.family == 'clang':
+      if cxx.version < 'clang-5':
+        raise Exception('Only clang versions 5 or later are supported, full C++17 support is required.')
 
-    #* Make version *#
-    cxx.defines += [
-      'LOG4SP_SHA_SHORT="' + self.get_git_hash()[:7] + '"'
-    ]
+    if cxx.like('gcc'):
+      self.configure_gcc(cxx)
+    elif cxx.family == 'msvc':
+      self.configure_msvc(cxx)
 
     # Optimization
     if builder.options.opt == '1':
@@ -144,29 +146,13 @@ class ExtensionConfig(object):
         'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE',
       ]
 
-  def configure_cxx(self, cxx):
-    if cxx.family == 'msvc':
-      if cxx.version < 1914 and builder.options.generator != 'vs':
-        raise Exception(f'Only MSVC 2017 15.7 and later are supported, full C++17 support is required. ({str(cxx.version)} < 1914)')
-    elif cxx.family == 'gcc':
-      if cxx.version < 'gcc-8':
-        raise Exception('Only GCC versions 8 or later are supported, full C++17 support is required.')
-    elif cxx.family == 'clang':
-      if cxx.version < 'clang-5':
-        raise Exception('Only clang versions 5 or later are supported, full C++17 support is required.')
-
-    if cxx.like('gcc'):
-      self.configure_gcc(cxx)
-    elif cxx.family == 'msvc':
-      self.configure_msvc(cxx)
-
-    # Optimization
-    if builder.options.opt == '1':
-      cxx.defines += ['NDEBUG']
-
-    # Debugging
-    if builder.options.debug == '1':
-      cxx.defines += ['DEBUG', '_DEBUG']
+    #* log4sp settings *#
+    cxx.defines += [
+      'SPDLOG_FOLDER_SEPS="/\\\\"',
+      'SPDLOG_LEVEL_NAMES={{"trace", 5ULL}, {"debug", 5ULL}, {"info", 4ULL}, {"warn", 4ULL}, {"error", 5ULL}, {"fatal", 5ULL}, {"off", 3ULL}}',
+      'SPDLOG_SHORT_LEVEL_NAMES={"T", "D", "I", "W", "E", "F", "O"}',
+      'LOG4SP_SHA_SHORT="' + self.get_git_hash()[:7] + '"'
+    ]
 
     # Platform-specifics
     if cxx.target.platform == 'linux':
@@ -338,7 +324,7 @@ class ExtensionConfig(object):
 
       #*** log4sp addition: 添加头文件、依赖库 ***#
       os.path.join(context.currentSourcePath, 'src'),
-      os.path.join(context.currentSourcePath, 'extern', 'spdlog', 'include' )
+      os.path.join(context.currentSourcePath, 'extern', 'spdlog', 'include'),
     ]
     return compiler
 
@@ -373,8 +359,6 @@ class ExtensionConfig(object):
     try:
       command = ["git", "rev-parse", "HEAD"]
       result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
-      if builder.options.debug == '1':
-        print('Get the git hash is "' + result.strip() + '"')
       return result.strip()
     except BaseException:
       print('::warning file=AMBuildScript,line=372,title=get_git_hash::Unable to get git hash!')
