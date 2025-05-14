@@ -136,6 +136,7 @@ class ExtensionConfig(object):
         'SPDLOG_NO_ATOMIC_LEVELS',
         'SPDLOG_DISABLE_DEFAULT_LOGGER',
         'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_OFF',
+        'SPDLOG_FWRITE_UNLOCKED',
       ]
 
     # Debugging
