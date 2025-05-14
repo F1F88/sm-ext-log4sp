@@ -1,4 +1,4 @@
-# Log for SourcePawn
+# Log4sp
 
 一个基于 [spdlog](https://github.com/gabime/spdlog) 的 SourceMod 高性能日志框架拓展
 
@@ -16,7 +16,7 @@
 ## 安装
 
 1. 从 [Releases](https://github.com/F1F88/sm-ext-log4sp/releases) 中下载合适的版本
-    - `sm-ext-log4sp` 包含 extension 文件与 SourcePawn 头文件
+    - `sm-ext-log4sp` 包含 extension 文件和 scripting 头文件
     - `sm-plugin-log4sp_manager` 插件支持用户指令与菜单管理 logger（依赖于 extension）
 2. 将 "addons/sourcemod" 目录中的文件上传到服务器
 
@@ -518,7 +518,7 @@ error 139: could not find type "Logger"
 
 #### 运行问题
 
-[SM] Unable to load plugin "....smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running
+[SM] Unable to load plugin "....smx": Required extension "Log4sp" file("log4sp.ext") not running
 
 > 检查 `"addons/sourcemod/extensions"` 文件夹内是否缺少 `log4sp.ext` 拓展文件
 

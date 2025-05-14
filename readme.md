@@ -1,6 +1,6 @@
 **[English](./readme.md) | [中文](./readme-chi.md)**
 
-# Log for SourcePawn
+# Log4sp
 
 Log4sp is an extension of the SourceMod high-performance logging framework based on [spdlog](https://github.com/gabime/spdlog).
 
@@ -19,7 +19,7 @@ Log4sp is an extension of the SourceMod high-performance logging framework based
 ## Installation
 
 1. Download the appropriate version from [Releases](https://github.com/F1F88/sm-ext-log4sp/releases)
-    - `sm-ext-log4sp` contains the extension file and SourcePawn include files.
+    - `sm-ext-log4sp` contains the extension file and scripting include files.
     - `sm-plugin-log4sp_manager` plugin adds user commands and menus to manage logger (depends on extension)
 2. Uploading "addons/sourcemod" files to the server
 
@@ -507,7 +507,7 @@ bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found
 
 error 139: could not find type "Logger"
 
-> Check if `#include <log4sp>` is missing in the SourcePawn code files
+> Check if `#include <log4sp>` is missing in the scripting code files
 >
 > Check whether the Log4sp includes file is missing in the compilation environment
 >
@@ -515,7 +515,7 @@ error 139: could not find type "Logger"
 
 #### Runtime Problem
 
-[SM] Unable to load plugin "....smx": Required extension "Logging for SourcePawn" file("log4sp.ext") not running
+[SM] Unable to load plugin "....smx": Required extension "Log4sp" file("log4sp.ext") not running
 
 > Check if the `log4sp.ext` extension file is missing in the server `"addons/sourcemod/extensions"` folder
 
