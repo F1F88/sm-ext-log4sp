@@ -137,6 +137,7 @@ class ExtensionConfig(object):
         'SPDLOG_DISABLE_DEFAULT_LOGGER',
         'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_OFF',
         'SPDLOG_FWRITE_UNLOCKED',
+        'SPDLOG_CLOCK_COARSE',
       ]
 
     # Debugging
@@ -221,14 +222,10 @@ class ExtensionConfig(object):
       cxx.cflags += ['-O3']
 
       #*** log4sp addition ***#
-      cxx.cxxflags += ['-g0']
-      cxx.defines += ['SPDLOG_CLOCK_COARSE']
-
       if os.environ.get('GITHUB_ACTIONS') != 'true':
         cxx.cflags += ['-march=native']
         cxx.cxxflags += ['-march=native']
-
-      if cxx.vendor == 'gcc':
+      if have_gcc:
         cxx.cxxflags += [
           '-flto=auto',
           '-funroll-loops',
@@ -327,6 +324,10 @@ class ExtensionConfig(object):
       os.path.join(context.currentSourcePath, 'src'),
       os.path.join(context.currentSourcePath, 'extern', 'spdlog', 'include'),
     ]
+
+    #*** log4sp addition ***#
+    if builder.options.opt == '1':
+      compiler.symbol_files = 'separate'
     return compiler
 
   def ConfigureForHL2(self, binary):
