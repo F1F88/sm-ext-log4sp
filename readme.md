@@ -447,10 +447,8 @@ error: externally-managed-environment
 # ref: https://blog.csdn.net/2202_75762088/article/details/134625775
 # Ubantu does not have pip installed by default
 sudo apt install python3-pip
-# The downlink code needs to change python3.x to your version
-sudo mv /usr/lib/python3.x/EXTERNALLY-MANAGED /usr/lib/python3.x/EXTERNALLY-MANAGED.bk
 # Try installing AMBuild again
-pip install ./ambuild
+pip install ./ambuild --break-system-packages
 ```
 
 ### Extension
