@@ -146,5 +146,8 @@ public void __ext_log4sp_SetNTVOptional()
 
     MarkNativeAsOptional("TCPSink.TCPSink");
     MarkNativeAsOptional("TCPSink.CreateLogger");
+
+    MarkNativeAsOptional("UDPSink.UDPSink");
+    MarkNativeAsOptional("UDPSink.CreateLogger");
 }
 #endif
