@@ -28,6 +28,7 @@ def Normalize(path):
 def SetArchFlags(compiler):
   if compiler.behavior == 'gcc':
     if compiler.target.arch == 'x86_64':
+      return
       compiler.cflags += ['-fPIC']
   elif compiler.like('msvc'):
     if compiler.target.arch == 'x86_64':
