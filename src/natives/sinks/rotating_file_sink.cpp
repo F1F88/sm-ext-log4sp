@@ -110,7 +110,7 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
     }
 
     auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink);
-    if (realSink)
+    if (!realSink)
     {
         ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
         return 0;
@@ -156,7 +156,7 @@ static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const 
     }
 
     auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink);
-    if (realSink)
+    if (!realSink)
     {
         ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
         return 0;
