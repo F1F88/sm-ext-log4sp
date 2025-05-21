@@ -2,8 +2,10 @@
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
+namespace fmt_lib = spdlog::fmt_lib;
 using spdlog::level::level_enum;
 using spdlog::sink_ptr;
+using spdlog::source_loc;
 
 
 static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -289,7 +291,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    logger->log({}, lvl, msg, ctx);
+    logger->log(ctx, lvl, msg);
     return 0;
 }
 
@@ -307,7 +309,7 @@ static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log({}, lvl, ctx, params, 3);
+    logger->log(ctx, lvl, params, 3);
     return 0;
 }
 
@@ -325,7 +327,7 @@ static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log_amx_tpl({}, lvl, ctx, params, 3);
+    logger->log_amx_tpl(ctx, lvl, params, 3);
     return 0;
 }
 
@@ -346,7 +348,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    logger->log(log4sp::get_source_loc(ctx), lvl, msg, ctx);
+    logger->log(log4sp::src_helper::get_from_plugin_ctx(ctx), lvl, msg);
     return 0;
 }
 
@@ -364,7 +366,7 @@ static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log(log4sp::get_source_loc(ctx), lvl, ctx, params, 3);
+    logger->log(ctx, log4sp::src_helper::get_from_plugin_ctx(ctx), lvl, params, 3);
     return 0;
 }
 
@@ -382,7 +384,7 @@ static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log_amx_tpl(log4sp::get_source_loc(ctx), lvl, ctx, params, 3);
+    logger->log_amx_tpl(ctx, log4sp::src_helper::get_from_plugin_ctx(ctx), lvl, params, 3);
     return 0;
 }
 
@@ -406,7 +408,7 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
 
-    logger->log({file, line, func}, lvl, msg, ctx);
+    logger->log(source_loc{file, line, func}, lvl, msg);
     return 0;
 }
 
@@ -429,7 +431,7 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
 
-    logger->log({file, line, func}, lvl, ctx, params, 6);
+    logger->log(ctx, source_loc{file, line, func}, lvl, params, 6);
     return 0;
 }
 
@@ -452,7 +454,7 @@ static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
 
-    logger->log_amx_tpl({file, line, func}, lvl, ctx, params, 6);
+    logger->log_amx_tpl(ctx, source_loc{file, line, func}, lvl, params, 6);
     return 0;
 }
 
@@ -473,7 +475,13 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    logger->log_stack_trace(lvl, msg, ctx);
+    logger->log(ctx, lvl, fmt_lib::format("Stack trace requested: {}", msg));
+    logger->log(ctx, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
+
+    std::vector<std::string> messages{log4sp::src_helper::get_stack_trace(ctx)};
+    for (auto &iter : messages) {
+        logger->log(ctx, lvl, iter);
+    }
     return 0;
 }
 
@@ -491,7 +499,7 @@ static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *par
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log_stack_trace(lvl, ctx, params, 3);
+    logger->log_stack_trace(ctx, lvl, params, 3);
     return 0;
 }
 
@@ -509,7 +517,7 @@ static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t 
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log_stack_trace(lvl, ctx, params, 3);
+    logger->log_stack_trace_amx_tpl(ctx, lvl, params, 3);
     return 0;
 }
 
@@ -530,7 +538,15 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     char *msg;
     ctx->LocalToString(params[3], &msg);
 
-    logger->throw_error(lvl, msg, ctx);
+    ctx->ReportError(msg);
+
+    logger->log(ctx, lvl, fmt_lib::format("Exception reported: {}", msg));
+    logger->log(ctx, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
+
+    std::vector<std::string> messages{log4sp::src_helper::get_stack_trace(ctx)};
+    for (auto &iter : messages) {
+        logger->log(ctx, lvl, iter);
+    }
     return 0;
 }
 
@@ -548,7 +564,7 @@ static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->throw_error(lvl, ctx, params, 3);
+    logger->throw_error(ctx, lvl, params, 3);
     return 0;
 }
 
@@ -566,8 +582,7 @@ static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *pa
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->throw_error_amx_tpl(lvl, ctx, params, 3);
-
+    logger->throw_error_amx_tpl(ctx, lvl, params, 3);
     return 0;
 }
 
@@ -586,7 +601,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, level_enum::trace, msg, ctx);
+    logger->log(ctx, level_enum::trace, msg);
     return 0;
 }
 
@@ -602,7 +617,7 @@ static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
         return 0;
     }
 
-    logger->log({}, level_enum::trace, ctx, params, 2);
+    logger->log(ctx, level_enum::trace, params, 2);
     return 0;
 }
 
@@ -618,7 +633,7 @@ static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, level_enum::trace, ctx, params, 2);
+    logger->log_amx_tpl(ctx, level_enum::trace, params, 2);
     return 0;
 }
 
@@ -637,7 +652,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, level_enum::debug, msg, ctx);
+    logger->log(ctx, level_enum::debug, msg);
     return 0;
 }
 
@@ -653,7 +668,7 @@ static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
         return 0;
     }
 
-    logger->log({}, level_enum::debug, ctx, params, 2);
+    logger->log(ctx, level_enum::debug, params, 2);
     return 0;
 }
 
@@ -669,7 +684,7 @@ static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, level_enum::debug, ctx, params, 2);
+    logger->log_amx_tpl(ctx, level_enum::debug, params, 2);
     return 0;
 }
 
@@ -688,7 +703,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, level_enum::info, msg, ctx);
+    logger->log(ctx, level_enum::info, msg);
     return 0;
 }
 
@@ -704,7 +719,7 @@ static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
         return 0;
     }
 
-    logger->log({}, level_enum::info, ctx, params, 2);
+    logger->log(ctx, level_enum::info, params, 2);
     return 0;
 }
 
@@ -720,7 +735,7 @@ static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
         return 0;
     }
 
-    logger->log_amx_tpl({}, level_enum::info, ctx, params, 2);
+    logger->log_amx_tpl(ctx, level_enum::info, params, 2);
     return 0;
 }
 
@@ -739,7 +754,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, level_enum::warn, msg, ctx);
+    logger->log(ctx, level_enum::warn, msg);
     return 0;
 }
 
@@ -755,7 +770,7 @@ static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
         return 0;
     }
 
-    logger->log({}, level_enum::warn, ctx, params, 2);
+    logger->log(ctx, level_enum::warn, params, 2);
     return 0;
 }
 
@@ -771,7 +786,7 @@ static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
         return 0;
     }
 
-    logger->log_amx_tpl({}, level_enum::warn, ctx, params, 2);
+    logger->log_amx_tpl(ctx, level_enum::warn, params, 2);
     return 0;
 }
 
@@ -790,7 +805,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, level_enum::err, msg, ctx);
+    logger->log(ctx, level_enum::err, msg);
     return 0;
 }
 
@@ -806,7 +821,7 @@ static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
         return 0;
     }
 
-    logger->log({}, level_enum::err, ctx, params, 2);
+    logger->log(ctx, level_enum::err, params, 2);
     return 0;
 }
 
@@ -822,7 +837,7 @@ static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, level_enum::err, ctx, params, 2);
+    logger->log_amx_tpl(ctx, level_enum::err, params, 2);
     return 0;
 }
 
@@ -841,7 +856,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    logger->log({}, level_enum::critical, msg, ctx);
+    logger->log(ctx, level_enum::critical, msg);
     return 0;
 }
 
@@ -857,7 +872,7 @@ static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
         return 0;
     }
 
-    logger->log({}, level_enum::critical, ctx, params, 2);
+    logger->log(ctx, level_enum::critical, params, 2);
     return 0;
 }
 
@@ -873,7 +888,7 @@ static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    logger->log_amx_tpl({}, level_enum::critical, ctx, params, 2);
+    logger->log_amx_tpl(ctx, level_enum::critical, params, 2);
     return 0;
 }
 
@@ -889,7 +904,7 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
         return 0;
     }
 
-    logger->flush({}, ctx);
+    logger->flush(ctx);
     return 0;
 }
 

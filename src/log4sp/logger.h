@@ -23,6 +23,7 @@ public:
     using sinks_init_list   = spdlog::sinks_init_list;
     using source_loc        = spdlog::source_loc;
     using string_view_t     = spdlog::string_view_t;
+    using plugin_ctx        = SourcePawn::IPluginContext;
 
     explicit logger(std::string name)
         : name_(std::move(name)) {}
@@ -39,22 +40,28 @@ public:
 
     ~logger() = default;
 
-    // loc 和 ctx 必选其一，用于发生异常时标记来源
-    // 当调用者是 SourcePawn 时，ctx 不为 nullptr，所以总是能获取源代码位置
-    // 当调用者是其他时，例如 控制台指令模块，ctx 可以为 null，但 loc 必须是相应的代码位置
-    void log(const source_loc loc, const level_enum lvl, const string_view_t msg, SourcePawn::IPluginContext *ctx = nullptr) const noexcept;
-    void log(const source_loc loc, const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept;
-    void log_amx_tpl(const source_loc loc, const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept;
+    // log with no format string, just string message
+    void log(plugin_ctx *ctx, level_enum lvl, string_view_t msg) const noexcept;
+    void log(const source_loc &loc, level_enum lvl, string_view_t msg) const noexcept;
 
-    // 所有参数都是必选项，ctx 用于获取堆栈信息
-    void log_stack_trace(const level_enum lvl, string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept;
-    void log_stack_trace(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
-    void log_stack_trace_amx_tpl(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
+    // log with log4sp format
+    void log(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
+        log(ctx, {}, lvl, params, param);
+    }
+    void log(plugin_ctx *ctx, const source_loc &loc, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
 
-    // 所有参数都是必选项，ctx 用于获取堆栈信息
-    void throw_error(const level_enum lvl, string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept;
-    void throw_error(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
-    void throw_error_amx_tpl(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept;
+    // log with sourcemod format
+    void log_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
+        log_amx_tpl(ctx, {}, lvl, params, param);
+    }
+    void log_amx_tpl(plugin_ctx *ctx, const source_loc &loc, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
+
+    // special log
+    void log_stack_trace(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
+    void log_stack_trace_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
+
+    void throw_error(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
+    void throw_error_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
 
     // return true if logging is enabled for the given level.
     [[nodiscard]] bool should_log(level_enum msg_level) const noexcept;
@@ -82,7 +89,8 @@ public:
     void set_pattern(std::string pattern, pattern_time_type type = pattern_time_type::local) noexcept;
 
     // flush
-    void flush(const source_loc loc, SourcePawn::IPluginContext *ctx) noexcept;
+    void flush(plugin_ctx *ctx) noexcept;
+    void flush(const source_loc &loc) noexcept;
     void flush_on(level_enum lvl) noexcept;
     [[nodiscard]] level_enum flush_level() const noexcept;
 
@@ -96,20 +104,9 @@ public:
     void set_error_handler(SourceMod::IChangeableForward *handler) noexcept;
 
 private:
-    void sink_it_(const log_msg &msg, SourcePawn::IPluginContext *ctx = nullptr) const noexcept;
-    void flush_(const source_loc loc = {}, SourcePawn::IPluginContext *ctx = nullptr) const noexcept;
-
-    class err_helper final {
-    public:
-        void handle_ex(const std::string &origin, const source_loc &loc, const std::exception &ex) const noexcept;
-        void handle_unknown_ex(const std::string &origin, const source_loc &loc) const noexcept;
-        void set_err_handler(SourceMod::IChangeableForward *handler) noexcept;
-        ~err_helper() noexcept;
-    private:
-        void release_forward() noexcept;
-
-        SourceMod::IChangeableForward *custom_error_handler_{nullptr};
-    };
+    // source 用于发生错误时获取错误发生的源码位置
+    void sink_it_(const log_msg &msg, const src_helper &source) const noexcept;
+    void flush_(const src_helper &source) const noexcept;
 
     std::string name_;
     std::vector<sink_ptr> sinks_;

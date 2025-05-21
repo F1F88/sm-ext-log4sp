@@ -15,6 +15,7 @@ using spdlog::fmt_lib::format;
 using spdlog::fmt_lib::join;
 using spdlog::level::level_enum;
 using spdlog::level::to_string_view;
+using spdlog::source_loc;
 
 std::shared_ptr<logger> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
@@ -157,7 +158,7 @@ void log_command::execute(const std::vector<std::string> &args) {
     auto msg    = args[2];
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will log a message '%s' with log level '%s'.", logger->name().c_str(), msg.c_str(), to_string_view(level).data());
-    logger->log({__FILE__, __LINE__, __FUNCTION__}, level, msg, nullptr);
+    logger->log(source_loc{__FILE__, __LINE__, __FUNCTION__}, level, msg);
 }
 
 
@@ -169,7 +170,7 @@ void flush_command::execute(const std::vector<std::string> &args) {
     auto logger = arg_to_logger(args[0]);
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will flush its contents.", logger->name().c_str());
-    logger->flush({__FILE__, __LINE__, __FUNCTION__}, nullptr);
+    logger->flush(source_loc{__FILE__, __LINE__, __FUNCTION__});
 }
 
 
