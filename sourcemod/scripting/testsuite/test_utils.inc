@@ -122,6 +122,63 @@ stock int StringMatch(const char[] str, const char[] expectedPattern)
     return count;
 }
 
+stock char[] GetErrorFilename()
+{
+    char filename[PLATFORM_MAX_PATH];
+    FormatTime(filename, sizeof(filename), "addons/sourcemod/logs/errors_%Y%m%d.log");
+    return filename;
+}
+
+stock void BackupSMErrorFile()
+{
+    if (!FileExists(GetErrorFilename()))
+        return;
+
+    char prefix[PLATFORM_MAX_PATH];
+    FormatTime(prefix, sizeof(prefix), "addons/sourcemod/logs/errors_%Y%m%d");
+
+    char newpath[PLATFORM_MAX_PATH];
+    FormatEx(newpath, sizeof(newpath), "%s-backup.1.log", prefix);
+
+    // 查找未被占用的文件名
+    for (int i = 2; FileExists(newpath); ++i)
+        FormatEx(newpath, sizeof(newpath), "%s-backup.%d.log", prefix, i);
+
+    RenameFile(newpath, GetErrorFilename());
+}
+
+stock void MarkErrorTestStart(const char[] fmt, any ...)
+{
+    char buffer[2048];
+    VFormat(buffer, sizeof(buffer), fmt, 2);
+
+    BackupSMErrorFile(); // 保留原先的错误信息以便排查
+
+    FindConVar("sv_logecho").SetBool(false); // HACK: 暂时关闭控制台回显日志消息
+    LogError("======= Start - %s =======", buffer);
+}
+
+stock void MarkErrorTestEnd(const char[] fmt, any ...)
+{
+    char buffer[2048];
+    VFormat(buffer, sizeof(buffer), fmt, 2);
+
+    LogError("======= End - %s =======", buffer);
+    FindConVar("sv_logecho").SetBool(true); // HACK: 重新启用控制台回显日志消息
+}
+
+stock char[] GetFileContents(const char[] path)
+{
+    File file = OpenFile(path, "rt");
+    if (!file)
+        ThrowError("Failed open file '%s'.", file);
+
+    char buffer[2048 * 2];
+    file.ReadString(buffer, sizeof(buffer));
+    delete file;
+    return buffer;
+}
+
 
 
 // 内部封装
