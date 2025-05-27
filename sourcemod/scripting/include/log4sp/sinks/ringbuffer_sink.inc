@@ -84,6 +84,8 @@ methodmap RingBufferSink < Sink
      * @param           Amount of log messages in memory.
      * @return          Logger handle.
      * @error           Logger name already exits.
+     * @deprecated      This cannot be done using the RingbufferSink function.
      */
+    #pragma deprecated This cannot be done using the RingbufferSink function.
     public static native Logger CreateLogger(const char[] name, int amount);
 }
