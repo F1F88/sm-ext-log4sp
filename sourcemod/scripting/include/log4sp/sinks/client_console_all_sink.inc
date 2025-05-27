@@ -6,6 +6,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
+#include <log4sp/logger>
 #include <log4sp/sinks/callback_sink>
 
 
