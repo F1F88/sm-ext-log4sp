@@ -1,14 +1,13 @@
-#include "spdlog/sinks/ringbuffer_sink.h"
-
 #include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/sinks/ringbuffer_sink.h"
 
 using spdlog::sink_ptr;
 using spdlog::details::log_msg_buffer;
 using spdlog::fmt_lib::to_string;
-using spdlog::sinks::ringbuffer_sink_mt;
-using spdlog::sinks::ringbuffer_sink_st;
+using log4sp::sinks::ringbuffer_sink_mt;
+using log4sp::sinks::ringbuffer_sink_st;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                 RingBufferSink Functions
@@ -42,6 +41,13 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         return 0;
     }
 
+    auto realSink = std::dynamic_pointer_cast<ringbuffer_sink_st>(sink);
+    if (!realSink)
+    {
+        ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
+        return 0;
+    }
+
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)
     {
@@ -67,17 +73,8 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
     }
 
     auto data = params[3];
-    auto realSink = std::dynamic_pointer_cast<ringbuffer_sink_st>(sink);
-    if (!realSink)
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-        return 0;
-    }
 
-    std::vector<log_msg_buffer> messages{realSink->last_raw()};
-    for (auto log_msg : messages)
-    {
+    realSink->drain([&forward, &data](const log_msg_buffer &log_msg) {
         auto name = to_string(log_msg.logger_name);
         auto payload = to_string(log_msg.payload);
         auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
@@ -97,7 +94,7 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
 #else
         assert(forward->Execute() == SP_ERROR_NONE);
 #endif
-    }
+    });
 
     forwards->ReleaseForward(forward);
     return 0;
@@ -112,6 +109,13 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     if (!sink)
     {
         ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
+        return 0;
+    }
+
+    auto realSink = std::dynamic_pointer_cast<ringbuffer_sink_st>(sink);
+    if (!realSink)
+    {
+        ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
         return 0;
     }
 
@@ -137,25 +141,16 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     }
 
     auto data = params[3];
-    auto realSink = std::dynamic_pointer_cast<ringbuffer_sink_st>(sink);
-    if (!realSink)
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-        return 0;
-    }
 
-    std::vector<std::string> messages{realSink->last_formatted()};
-    for (auto message : messages)
-    {
-        forward->PushString(message.c_str());
+    realSink->drain_formatted([&forward, &data](std::string_view msg) {
+        forward->PushString(msg.data());
         forward->PushCell(data);
 #ifndef DEBUG
         forward->Execute();
 #else
         assert(forward->Execute() == SP_ERROR_NONE);
 #endif
-    }
+    });
 
     forwards->ReleaseForward(forward);
     return 0;
