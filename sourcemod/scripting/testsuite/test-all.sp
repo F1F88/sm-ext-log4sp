@@ -20,6 +20,7 @@ static const char g_sCommands[][] = {
     "sm_log4sp_test_ringbuffer_logger",
     "sm_log4sp_test_rotate_logger",
     "sm_log4sp_test_server_console_logger",
+    "sm_log4sp_test_test_sink",
     "sm_log4sp_test_update_sinks",
 };
 

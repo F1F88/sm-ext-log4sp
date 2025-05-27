@@ -26,6 +26,11 @@ sourceFiles = [
   'src/natives/sinks/udp_sink.cpp',
 ]
 
+if builder.options.debug == '1':
+  sourceFiles += [
+    'tests/natives/test_sink.cpp',
+  ]
+
 ###############
 # Make sure to edit PackageScript, which copies your files to their appropriate locations
 # Simple extensions do not need to modify past this point.
