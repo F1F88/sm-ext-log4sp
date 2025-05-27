@@ -24,6 +24,8 @@ Action Command_Test(int args)
 {
     PrintToServer("---- START TEST LOGGER ERR HANDLER ----");
 
+    PrepareTestPath("err-handler/");
+
     TestDefaultErrorHandler();
 
     TestCustomErrorHandler();
@@ -53,7 +55,7 @@ void TestDefaultErrorHandler()
     int preErrlines = CountLines(errFilePath);
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("err-handler/default_handler.log");
+    BuildTestPath(path, sizeof(path), "err-handler/default_handler.log");
 
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
     logger.SetPattern("%v");
@@ -86,7 +88,7 @@ void TestCustomErrorHandler()
     g_iCustomErrCnt = 0;
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("err-handler/custom_handler.log");
+    BuildTestPath(path, sizeof(path), "err-handler/custom_handler.log");
 
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
     logger.SetPattern("%v");

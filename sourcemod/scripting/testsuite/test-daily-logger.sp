@@ -16,6 +16,8 @@ Action Command_Test(int args)
 {
     PrintToServer("---- START TEST DAILY LOGGER ----");
 
+    PrepareTestPath("daily/");
+
     TestDefaultCalculator();
 
     TestFormatCalculator();
@@ -33,7 +35,7 @@ void TestDefaultCalculator()
     SetTestContext("Test Daily Default Calculator");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("daily/daily_default_calculator.log");
+    BuildTestPath(path, sizeof(path), "daily/daily_default_calculator.log");
 
     Logger logger = DailyFileSink.CreateLogger("test-daily-calc", path);
     for (int i = 0; i < 10; ++i)
@@ -51,8 +53,6 @@ void TestDefaultCalculator()
 void TestFormatCalculator()
 {
     SetTestContext("Test Daily Custom Calculator");
-
-    PrepareTestPath("daily/");
 
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "daily/daily_custom_calculator_%Y-%m-%d_%H-%M.log");
@@ -92,7 +92,7 @@ void TestRotates()
 void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)
 {
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("daily/daily_rotate.log");
+    path = PrepareTestPath("daily/rotate/daily_rotate.log");
 
     DailyFileSink sink = new DailyFileSink(path, 2, 30, true, maxDays);
     for (int i = 0; i < daysToRun; ++i)
@@ -110,7 +110,7 @@ void TestFileCallback()
     SetTestContext("Test File Callback");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("daily/file_callback.log");
+    BuildTestPath(path, sizeof(path), "daily/file_callback.log");
 
     Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .openPre=OnOpenPre, .closePost=OnClosePost);
     delete logger;

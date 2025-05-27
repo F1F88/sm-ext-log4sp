@@ -19,7 +19,7 @@ Action Command_Test(int args)
 {
     PrintToServer("---- START TEST LOG ----");
 
-    SetTestContext("Test Logger Log");
+    PrepareTestPath("logger-log/");
 
     TestLog();
 
@@ -143,7 +143,7 @@ void TestLogStackTrace()
 \\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[2\\] Line [0-9]+, .*test-logger-log\\.sp::Command_Test\\s"
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("logger-log/log-stack-trace.log");
+    BuildTestPath(path, sizeof(path), "logger-log/log-stack-trace.log");
 
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
 
@@ -174,7 +174,7 @@ void TestLogThrowError()
     delete preErrFile;
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("logger-log/throw-error.log");
+    BuildTestPath(path, sizeof(path), "logger-log/throw-error.log");
 
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
 

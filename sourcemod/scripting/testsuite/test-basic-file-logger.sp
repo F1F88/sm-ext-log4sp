@@ -16,6 +16,8 @@ Action Command_Test(int args)
 {
     PrintToServer("---- START TEST FILE LOGGER ----");
 
+    PrepareTestPath("basic-file/");
+
     TestFileLogger();
 
     TestFlushOn();
@@ -34,7 +36,7 @@ void TestFileLogger()
     SetTestContext("Test Simple File Logger");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("basic-file/simple_file.log");
+    BuildTestPath(path, sizeof(path), "basic-file/simple_file.log");
 
     Logger logger = BasicFileSink.CreateLogger("test-file-logger", path);
     logger.SetPattern("%v");
@@ -52,7 +54,7 @@ void TestFlushOn()
     SetTestContext("Test FlushOn");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("basic-file/flush_on.log");
+    BuildTestPath(path, sizeof(path), "basic-file/flush_on.log");
 
     Logger logger = BasicFileSink.CreateLogger("test-file-logger", path);
     logger.SetPattern("%v");
@@ -77,7 +79,7 @@ void TestTruncate()
     SetTestContext("Test Truncate");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("basic-file/truncate.log");
+    BuildTestPath(path, sizeof(path), "basic-file/truncate.log");
 
     BasicFileSink sink = new BasicFileSink(path);
     Logger logger = new Logger("test-file-logger");
@@ -103,7 +105,7 @@ void TestFileCallback()
     SetTestContext("Test File Callback");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("basic-file/file_callback.log");
+    BuildTestPath(path, sizeof(path), "basic-file/file_callback.log");
 
     Logger logger = BasicFileSink.CreateLogger("test-file-logger", path, _, OnOpenPre, OnClosePost);
     logger.SetPattern("%v");
