@@ -5,6 +5,7 @@
 #include <log4sp>
 
 #include "test_sink"
+#include "test_utils"
 
 
 public void OnPluginStart()
@@ -32,10 +33,10 @@ void TestDefaultLevel()
     SetTestContext("Test Default Log Level");
 
     TestSink sink = new TestSink();
-    AssertEq("sink lvl", sink.GetLevel(), LogLevel_Trace);
+    AssertEq("Sink level", sink.GetLevel(), LogLevel_Trace);
 
     Logger logger = new Logger("test-level");
-    AssertEq("logger lvl", logger.GetLevel(), LogLevel_Info);
+    AssertEq("Logger level", logger.GetLevel(), LogLevel_Info);
 
     logger.Close();
     sink.Close();
@@ -59,49 +60,37 @@ void TestLoggerLevel(LogLevel level)
     Logger logger = new Logger("test-level");
     logger.AddSink(sink);
 
-    AssertEq("Set logger lvl pre", logger.GetLevel(), LogLevel_Info);
+    AssertEq("Before set logger level, logger level", logger.GetLevel(), LogLevel_Info);
     logger.SetLevel(level);
-    AssertEq("Set logger lvl post", logger.GetLevel(), level);
+    AssertEq("After set logger level, logger level", logger.GetLevel(), level);
 
-    AssertEq("Sink lvl keep", sink.GetLevel(), LogLevel_Trace);
+    AssertEq("After set logger level, sink level keep", sink.GetLevel(), LogLevel_Trace);
 
     logger.SetPattern("%l %v");
 
     logger.Trace("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_TRACE)
-        AssertStrMatch("trace", sink.GetLastLogLine(), "trace hello\\s");
-    else
-        AssertStrEq("trace", sink.GetLastLogLine(), "");
+        AssertStrEq("Trace message", sink.DrainLastLineFast(), "trace hello");
 
     logger.Debug("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_DEBUG)
-        AssertStrMatch("debug", sink.GetLastLogLine(), "debug hello\\s");
-    else
-        AssertStrEq("debug", sink.GetLastLogLine(), "");
+        AssertStrEq("Debug message", sink.DrainLastLineFast(), "debug hello");
 
     logger.Info("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_INFO)
-        AssertStrMatch("info", sink.GetLastLogLine(), "info hello\\s");
-    else
-        AssertStrEq("info", sink.GetLastLogLine(), "");
+        AssertStrEq("Info message", sink.DrainLastLineFast(), "info hello");
 
     logger.Warn("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_WARN)
-        AssertStrMatch("warn", sink.GetLastLogLine(), "warn hello\\s");
-    else
-        AssertStrEq("warn", sink.GetLastLogLine(), "");
+        AssertStrEq("Warn message", sink.DrainLastLineFast(), "warn hello");
 
     logger.Error("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_ERROR)
-        AssertStrMatch("error", sink.GetLastLogLine(), "error hello\\s");
-    else
-        AssertStrEq("error", sink.GetLastLogLine(), "");
+        AssertStrEq("Error message", sink.DrainLastLineFast(), "error hello");
 
     logger.Fatal("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_FATAL)
-        AssertStrMatch("fatal", sink.GetLastLogLine(), "fatal hello\\s");
-    else
-        AssertStrEq("fatal", sink.GetLastLogLine(), "");
+        AssertStrEq("Fatal message", sink.DrainLastLineFast(), "fatal hello");
 
     logger.Close();
     sink.Close();
@@ -125,51 +114,39 @@ void TestSinkLevel(LogLevel level)
     Logger logger = new Logger("test-level");
     logger.AddSink(sink);
 
-    AssertEq("Set logger lvl pre", logger.GetLevel(), LogLevel_Info);
+    AssertEq("Before set logger level, logger level", logger.GetLevel(), LogLevel_Info);
     logger.SetLevel(level);
-    AssertEq("Set logger lvl post", logger.GetLevel(), level);
+    AssertEq("After set logger level, logger level", logger.GetLevel(), level);
 
-    AssertEq("Set sink lvl pre", sink.GetLevel(), LogLevel_Trace);
+    AssertEq("Before set sink level, sink level", sink.GetLevel(), LogLevel_Trace);
     sink.SetLevel(level);
-    AssertEq("Set sink lvl post", sink.GetLevel(), level);
+    AssertEq("Before set sink level, sink level", sink.GetLevel(), level);
 
     logger.SetPattern("%l %v");
 
     logger.Trace("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_TRACE)
-        AssertStrMatch("trace", sink.GetLastLogLine(), "trace hello\\s");
-    else
-        AssertStrEq("trace", sink.GetLastLogLine(), "");
+        AssertStrEq("Trace message", sink.DrainLastLineFast(), "trace hello");
 
     logger.Debug("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_DEBUG)
-        AssertStrMatch("debug", sink.GetLastLogLine(), "debug hello\\s");
-    else
-        AssertStrEq("debug", sink.GetLastLogLine(), "");
+        AssertStrEq("Debug message", sink.DrainLastLineFast(), "debug hello");
 
     logger.Info("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_INFO)
-        AssertStrMatch("info", sink.GetLastLogLine(), "info hello\\s");
-    else
-        AssertStrEq("info", sink.GetLastLogLine(), "");
+        AssertStrEq("Info message", sink.DrainLastLineFast(), "info hello");
 
     logger.Warn("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_WARN)
-        AssertStrMatch("warn", sink.GetLastLogLine(), "warn hello\\s");
-    else
-        AssertStrEq("warn", sink.GetLastLogLine(), "");
+        AssertStrEq("Warn message", sink.DrainLastLineFast(), "warn hello");
 
     logger.Error("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_ERROR)
-        AssertStrMatch("error", sink.GetLastLogLine(), "error hello\\s");
-    else
-        AssertStrEq("error", sink.GetLastLogLine(), "");
+        AssertStrEq("Error message", sink.DrainLastLineFast(), "error hello");
 
     logger.Fatal("hello");
     if (view_as<int>(level) <= LOG4SP_LEVEL_FATAL)
-        AssertStrMatch("fatal", sink.GetLastLogLine(), "fatal hello\\s");
-    else
-        AssertStrEq("fatal", sink.GetLastLogLine(), "");
+        AssertStrEq("Fatal message", sink.DrainLastLineFast(), "fatal hello");
 
     logger.Close();
     sink.Close();

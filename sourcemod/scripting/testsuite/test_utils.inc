@@ -152,10 +152,10 @@ stock void MarkErrorTestStart(const char[] fmt, any ...)
     char buffer[2048];
     VFormat(buffer, sizeof(buffer), fmt, 2);
 
-    BackupSMErrorFile(); // 保留原先的错误信息以便排查
+    // BackupSMErrorFile(); // 保留原先的错误信息以便排查
 
     FindConVar("sv_logecho").SetBool(false); // HACK: 暂时关闭控制台回显日志消息
-    LogError("======= Start - %s =======", buffer);
+    LogError("--------------------- Start - %s ---------------------", buffer);
 }
 
 stock void MarkErrorTestEnd(const char[] fmt, any ...)
@@ -163,7 +163,7 @@ stock void MarkErrorTestEnd(const char[] fmt, any ...)
     char buffer[2048];
     VFormat(buffer, sizeof(buffer), fmt, 2);
 
-    LogError("======= End - %s =======", buffer);
+    LogError("---------------------- End - %s ----------------------", buffer);
     FindConVar("sv_logecho").SetBool(true); // HACK: 重新启用控制台回显日志消息
 }
 

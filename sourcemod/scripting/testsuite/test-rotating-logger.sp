@@ -64,7 +64,7 @@ void TestRotateLogger()
     }
     delete logger;
 
-    AssertEq("Simple log, file line cnt", CountLines(path), 10);
+    AssertEq("Simple log, count lines", CountLines(path), 10);
 }
 
 void TestAutoRotate()
@@ -91,7 +91,7 @@ void TestAutoRotate()
     }
     logger.Flush();
 
-    AssertEq("Auto rotate pre, file line cnt", CountLines(path), 10);
+    AssertEq("Before rotate, count lines", CountLines(path), 10);
 
     for (int i = 0; i < 1000; ++i)
     {
@@ -99,10 +99,10 @@ void TestAutoRotate()
     }
     delete logger;
 
-    AssertTrue("Auto rotate post, file size", FileSize(path) <= maxSize);
+    AssertTrue("After rotate, file size", FileSize(path) <= maxSize);
 
     BuildTestPath(path, sizeof(path), "rotate-file/rotating_auto_rotate.1.log");
-    AssertTrue("Auto rotate post, file 1 size", FileSize(path) <= maxSize);
+    AssertTrue("After rotate, file 1 size", FileSize(path) <= maxSize);
 }
 
 void TestManualRotate()
@@ -131,11 +131,11 @@ void TestManualRotate()
     delete logger;
 
     AssertTrue("Manual rotate, file size", 0 < FileSize(path) <= maxSize);
-    AssertEq("Manual rotate, file line", CountLines(path), 1);
+    AssertEq("Manual rotate, file count lines", CountLines(path), 1);
 
-    AssertFileMatch("Manual rotate, file 1 data", path, "Test message - post-rotation\n");
+    AssertFileMatch("Manual rotate, file 1 contents match", path, "Test message - post-rotation\n");
     AssertTrue("Manual rotate, file 1 size", 0 < FileSize(path) <= maxSize);
-    AssertEq("Manual rotate, file 1 line", CountLines(path), 1);
+    AssertEq("Manual rotate, file 1 count lines", CountLines(path), 1);
 }
 
 void TestFileCallback()
@@ -156,7 +156,7 @@ void OnOpenPre(const char[] filename)
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "rotate-file/file_callback.log");
 
-    AssertStrEq("File open pre, filename", filename, path);
+    AssertStrEq("File open pre, file name", filename, path);
     AssertFalse("File open pre, file exists", FileExists(path));
 }
 
@@ -165,7 +165,7 @@ void OnClosePost(const char[] filename)
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "rotate-file/file_callback.log");
 
-    AssertStrEq("File close post, filename", filename, path);
+    AssertStrEq("File close post, file name", filename, path);
     AssertTrue("File close post, file exists", FileExists(path));
 }
 

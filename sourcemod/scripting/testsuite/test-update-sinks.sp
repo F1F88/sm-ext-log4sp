@@ -52,9 +52,9 @@ void TestUpdateSinks()
 
     delete logger;
 
-    AssertEq("File line cnt", CountLines(path), 7777);
+    AssertEq("Basic file, count lines", CountLines(path), 7777);
 
     FormatTime(path, sizeof(path), "update-sinks/simple_file_%Y%m%d.log");
     BuildTestPath(path, sizeof(path), path);
-    AssertEq("File line cnt", CountLines(path), 7777);
+    AssertEq("Daily file, count lines", CountLines(path), 7777);
 }

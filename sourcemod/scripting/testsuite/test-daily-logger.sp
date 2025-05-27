@@ -47,7 +47,7 @@ void TestDefaultCalculator()
     FormatTime(path, sizeof(path), "daily/daily_default_calculator_%Y%m%d.log");
     BuildTestPath(path, sizeof(path), path);
 
-    AssertEq("log file msg cnt", CountLines(path), 10);
+    AssertEq("Generated log file, count lines", CountLines(path), 10);
 }
 
 void TestFormatCalculator()
@@ -67,7 +67,7 @@ void TestFormatCalculator()
     FormatTime(path, sizeof(path), "daily/daily_custom_calculator_%Y-%m-%d_%H-%M.log");
     BuildTestPath(path, sizeof(path), path);
 
-    AssertEq("log file msg cnt", CountLines(path), 10);
+    AssertEq("Generated log file, count lines", CountLines(path), 10);
 }
 
 /* Test removal of old files */
@@ -102,7 +102,7 @@ void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)
     }
     delete sink;
 
-    AssertEq("Rotate files count", CountFiles(path), expectedNumFiles);
+    AssertEq("Generated log file, count files", CountFiles(path), expectedNumFiles);
 }
 
 void TestFileCallback()
@@ -122,8 +122,8 @@ void OnOpenPre(const char[] filename)
     FormatTime(path, sizeof(path), "daily/file_callback_%Y%m%d.log");
     BuildTestPath(path, sizeof(path), path);
 
-    AssertStrEq("File open pre, filename", filename, path);
-    AssertFalse("File open pre, file exists", FileExists(path));
+    AssertStrEq("OpenPre, file name", filename, path);
+    AssertFalse("OpenPre, file exists", FileExists(path));
 }
 
 void OnClosePost(const char[] filename)
@@ -132,8 +132,8 @@ void OnClosePost(const char[] filename)
     FormatTime(path, sizeof(path), "daily/file_callback_%Y%m%d.log");
     BuildTestPath(path, sizeof(path), path);
 
-    AssertStrEq("File close post, filename", filename, path);
-    AssertTrue("File close post, file exists", FileExists(path));
+    AssertStrEq("ClosePost, file name", filename, path);
+    AssertTrue("ClosePost, file exists", FileExists(path));
 }
 
 
