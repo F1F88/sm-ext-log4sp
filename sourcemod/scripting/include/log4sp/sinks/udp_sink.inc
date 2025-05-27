@@ -1,7 +1,7 @@
-#if defined _log_for_sourcepawn_sinks_tcp_sink_included
+#if defined _log_for_sourcepawn_sinks_udp_sink_included
  #endinput
 #endif
-#define _log_for_sourcepawn_sinks_tcp_sink_included
+#define _log_for_sourcepawn_sinks_udp_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
