@@ -6,8 +6,14 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define TEST_MAX_MSG_LENGTH      2048
 #define TEST_LOG4SP_LEVEL_TOTAL  view_as<int>(LogLevel_Total)
+// Pattern
+#define P_FOLDER_SEPS           "(/|\\)"
+#define P_EOL                   "(\n|\r\n)"
+#define P_SM_DATE               "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}"
+#define P_SM_PREFIX             P_SM_DATE ... ": \\[SM\\] "
+#define P_DATE                  "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}\\]"
+#define P_PREFIX                P_DATE ... " \\[test-.*\\] \\[(trace|debug|info|warn|error|fatal|off)\\] "
 
 #include <files>
 #include <regex>
@@ -33,9 +39,10 @@ stock int BuildTestPath(char[] buffer, int maxlen, const char[] file)
 stock int CountLines(const char[] path)
 {
     File file = OpenFile(path, "r");
-    // AssertTrue(path, file != null);
+    if (!file)
+        ThrowError("Failed open file: (%s).", file);
 
-    char buffer[TEST_MAX_MSG_LENGTH];
+    char buffer[2048];
     int counter = 0;
     while (!file.EndOfFile() && file.ReadLine(buffer, sizeof(buffer)))
     {
@@ -67,21 +74,14 @@ stock int CountFiles(const char[] folder, any ...)
 
     buffer[sep] = '\0';
 
-    // AssertTrue(buffer, DirExists(buffer));
+    if (!DirExists(buffer))
+        ThrowError("Invalid path: (%s).", buffer);
     return __CountFiles(buffer);
 }
 
-// 整个文件
 stock void AssertFileMatch(const char[] text, const char[] path, const char[] expectedPattern)
 {
-    File file = OpenFile(path, "r");
-    // AssertTrue(text, file != null);
-
-    char buffer[TEST_MAX_MSG_LENGTH * 10];
-    file.ReadString(buffer, sizeof(buffer));
-    AssertStrMatch(text, buffer, expectedPattern);
-
-    delete file;
+    AssertTrue(text, StringMatch(GetFileContents(path), expectedPattern) > 0);
 }
 
 stock void AssertStrMatch(const char[] text, const char[] str, const char[] expectedPattern)
@@ -95,10 +95,9 @@ stock int StringMatch(const char[] str, const char[] expectedPattern)
     Regex regex = new Regex(expectedPattern, _, err, sizeof(err));
     if (!regex)
     {
-        LogMessage("Invalid regex handle: %s", err);
-        LogMessage("Str: '%s'", str);
-        LogMessage("Exp: '%s'", expectedPattern);
-        return -1;
+        LogError("Str: (%s)", str);
+        LogError("Exp: (%s)", expectedPattern);
+        ThrowError("Invalid regex handle: (%s).", err);
     }
 
     RegexError code = REGEX_ERROR_NONE;
@@ -107,25 +106,82 @@ stock int StringMatch(const char[] str, const char[] expectedPattern)
 
     if (code != REGEX_ERROR_NONE)
     {
-        LogMessage("String match failure: %d", code);
-        LogMessage("Str: '%s'", str);
-        LogMessage("Exp: '%s'", expectedPattern);
-        return count;
+        LogError("Str: (%s)", str);
+        LogError("Exp: (%s)", expectedPattern);
+        ThrowError("String match failure: (%d).", code);
     }
 
     if (count <= 0)
     {
-        LogMessage("String match not found");
-        LogMessage("Str: '%s'", str);
-        LogMessage("Exp: '%s'", expectedPattern);
+        Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME).WarnEx("Str: (%s)", str);
+        Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME).WarnEx("Exp: (%s)", expectedPattern);
+        Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME).WarnEx("StringMatch: No match found!");
         return count;
     }
 
     return count;
 }
 
+stock char[] GetErrorFilename()
+{
+    char filename[PLATFORM_MAX_PATH];
+    FormatTime(filename, sizeof(filename), "addons/sourcemod/logs/errors_%Y%m%d.log");
+    return filename;
+}
+
+stock void BackupSMErrorFile()
+{
+    if (!FileExists(GetErrorFilename()))
+        return;
+
+    char prefix[PLATFORM_MAX_PATH];
+    FormatTime(prefix, sizeof(prefix), "addons/sourcemod/logs/errors_%Y%m%d");
+
+    char newpath[PLATFORM_MAX_PATH];
+    FormatEx(newpath, sizeof(newpath), "%s-backup.1.log", prefix);
+
+    // 查找未被占用的文件名
+    for (int i = 2; FileExists(newpath); ++i)
+        FormatEx(newpath, sizeof(newpath), "%s-backup.%d.log", prefix, i);
+
+    RenameFile(newpath, GetErrorFilename());
+}
+
+stock void MarkErrorTestStart(const char[] fmt, any ...)
+{
+    char buffer[2048];
+    VFormat(buffer, sizeof(buffer), fmt, 2);
+
+    // BackupSMErrorFile(); // 保留原先的错误信息以便排查
+
+    FindConVar("sv_logecho").SetBool(false); // HACK: 暂时关闭控制台回显日志消息
+    LogError("--------------------- Start - %s ---------------------", buffer);
+}
+
+stock void MarkErrorTestEnd(const char[] fmt, any ...)
+{
+    char buffer[2048];
+    VFormat(buffer, sizeof(buffer), fmt, 2);
+
+    LogError("---------------------- End - %s ----------------------", buffer);
+    FindConVar("sv_logecho").SetBool(true); // HACK: 重新启用控制台回显日志消息
+}
+
+stock char[] GetFileContents(const char[] path)
+{
+    File file = OpenFile(path, "rt");
+    if (!file)
+        ThrowError("Failed open file '%s'.", file);
+
+    char buffer[2048 * 2];
+    file.ReadString(buffer, sizeof(buffer));
+    delete file;
+    return buffer;
+}
 
 
+
+// 内部封装
 static void __CleanTestDir(const char[] path)
 {
     char buffer[PLATFORM_MAX_PATH];
@@ -169,26 +225,18 @@ static void __CleanDir(const char[] path)
                 case FileType_File:
                 {
                     if (!DeleteFile(fullpath))
-                    {
-                        char buffer[256];
-                        FormatEx(buffer, sizeof(buffer), "Unable to delete '%s'", fullpath);
-                        AssertTrue(buffer, false);
-                    }
+                        ThrowError("Unable to delete: (%s).", fullpath);
                 }
                 default:
                 {
-                    PrintToServer("Ignore unknown file type (%d) \"%s\"", type, fullpath);
+                    LogError("Ignore unknown file type: (%d) (%s).", type, fullpath);
                 }
             }
         }
         delete dir;
 
         if (!RemoveDir(path))
-        {
-            char buffer[256];
-            FormatEx(buffer, sizeof(buffer), "Unable to delete %s", path);
-            AssertTrue(buffer, false);
-        }
+            ThrowError("Unable to delete: (%s).", path);
     }
 }
 
@@ -223,7 +271,7 @@ static int __CountFiles(const char[] path)
                 }
                 default:
                 {
-                    PrintToServer("Ignore unknown file type (%d) \"%s\"", type, fullpath);
+                    ThrowError("Unknown file type: (%d) (%s).", type, fullpath);
                 }
             }
         }

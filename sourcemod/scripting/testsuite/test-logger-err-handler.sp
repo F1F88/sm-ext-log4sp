@@ -8,11 +8,6 @@
 
 
 #define LOGGER_NAME                 "test-err-handler"
-#define PLUGIN_PATTERN              ".*test-logger-err-handler.sp"
-#define ERR_MSG_PATTERN             "String formatted incorrectly - parameter [0-9] \\(total [0-9]\\)"
-#define SM_ERR_FILE_PATTERN         "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[.*\\] \\["... PLUGIN_PATTERN ... "::[0-9]+\\] \\["... LOGGER_NAME ... "\\] " ... ERR_MSG_PATTERN ... "\\s"
-#define DEFAULT_LOG_FILE_PATTERN    "Test message 1\nTest message 3\n"
-#define CUSTOM_LOG_FILE_PATTERN     "Test message 1\nTest message 2\nTest message 6\nTest message 7\n"
 
 
 public void OnPluginStart()
@@ -23,6 +18,8 @@ public void OnPluginStart()
 Action Command_Test(int args)
 {
     PrintToServer("---- START TEST LOGGER ERR HANDLER ----");
+
+    PrepareTestPath("err-handler/");
 
     TestDefaultErrorHandler();
 
@@ -37,23 +34,10 @@ void TestDefaultErrorHandler()
 {
     SetTestContext("Test Default Error Handler");
 
-    LogError("======= Test Default Error Handler =======");
-
-    // SM 错误日志文件路径
-    char errFilePath[PLATFORM_MAX_PATH];
-    FormatTime(errFilePath, sizeof(errFilePath), "addons/sourcemod/logs/errors_%Y%m%d.log");
-
-    // 读取当前位置
-    File preErrFile = OpenFile(errFilePath, "r");
-    preErrFile.Seek(0, SEEK_END);
-    int preErrFilePosition = preErrFile.Position;
-    delete preErrFile;
-
-    // 读取当前行数
-    int preErrlines = CountLines(errFilePath);
+    MarkErrorTestStart("Test Default Error Handler");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("err-handler/default_handler.log");
+    BuildTestPath(path, sizeof(path), "err-handler/default_handler.log");
 
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
     logger.SetPattern("%v");
@@ -63,17 +47,17 @@ void TestDefaultErrorHandler()
     logger.InfoEx("Test message %d", 3);
     delete logger;
 
-    // 读取新的数据
-    char postMsg[TEST_MAX_MSG_LENGTH];
-    File postErrFile = OpenFile(errFilePath, "r");
-    postErrFile.Seek(preErrFilePosition, SEEK_SET);
-    postErrFile.ReadString(postMsg, sizeof(postMsg));
-    delete postErrFile;
+    MarkErrorTestEnd("Test Default Error Handler");
 
-    AssertStrMatch("SM file log", postMsg, SM_ERR_FILE_PATTERN);
-    AssertEq("SM file line cnt", CountLines(errFilePath), preErrlines + 1);
-    AssertEq("Log file line cnt", CountLines(path), 2);
-    AssertFileMatch("Log file contents", path, DEFAULT_LOG_FILE_PATTERN);
+    AssertEq("Skip param format error log, count lines", CountLines(path), 2);
+    AssertFileMatch("Skip param format error log, contents match", path, "Test message 1" ... P_EOL ... "Test message 3" ... P_EOL);
+
+    // AssertEq("Default error handler log to SM file, count lines", CountLines(GetErrorFilename()), 3);
+    char[] pattern = "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[.*\\] \\[test-logger-err-handler.sp::[0-9]+\\] \\[test-err-handler\\] String formatted incorrectly - parameter 4 \\(total 3\\)(\n|\r\n)";
+    AssertFileMatch("Default error handler log to SM file, contents match", GetErrorFilename(), pattern);
+
+    // 若检验通过，则删除本次测试生成的日志信息以保持 SM 错误日志的简洁
+    // DeleteFile(GetErrorFilename());
 }
 
 
@@ -86,7 +70,7 @@ void TestCustomErrorHandler()
     g_iCustomErrCnt = 0;
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("err-handler/custom_handler.log");
+    BuildTestPath(path, sizeof(path), "err-handler/custom_handler.log");
 
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
     logger.SetPattern("%v");
@@ -102,9 +86,9 @@ void TestCustomErrorHandler()
     logger.InfoEx("Test message %d", 7);
     delete logger;
 
-    AssertEq("Custom handler cnt", g_iCustomErrCnt, 3);
-    AssertEq("Log file line cnt", CountLines(path), 4);
-    AssertFileMatch("Log file contents", path, CUSTOM_LOG_FILE_PATTERN);
+    AssertEq("Call custom error handler count", g_iCustomErrCnt, 3);
+    AssertEq("Skip param format error log, count lines", CountLines(path), 4);
+    AssertFileMatch("Skip param format error log, contents match", path, "Test message 1" ... P_EOL ... "Test message 2" ... P_EOL ... "Test message 6" ... P_EOL ... "Test message 7" ... P_EOL);
 }
 
 
@@ -113,8 +97,8 @@ void CustomErrorHandler(const char[] msg, const char[] name, const char[] file, 
 {
     g_iCustomErrCnt++;
 
-    AssertStrMatch("CB msg pattern", msg, ERR_MSG_PATTERN);
-    AssertStrEq("CB name", name, LOGGER_NAME);
-    AssertStrMatch("CB file pattern", file, PLUGIN_PATTERN);
-    AssertStrEq("CB func", func, "TestCustomErrorHandler");
+    AssertStrEq("OnCustomErrorHandler msg", msg, "String formatted incorrectly - parameter 4 (total 3)");
+    AssertStrEq("OnCustomErrorHandler name", name, LOGGER_NAME);
+    AssertStrMatch("OnCustomErrorHandler file match", file, ".*test-logger-err-handler.sp");
+    AssertStrEq("OnCustomErrorHandler func", func, "TestCustomErrorHandler");
 }

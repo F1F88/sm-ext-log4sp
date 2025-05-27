@@ -128,4 +128,8 @@ extern const sp_nativeinfo_t    ServerConsoleSinkNatives[];
 extern const sp_nativeinfo_t    TCPSinkNatives[];
 extern const sp_nativeinfo_t    UDPSinkNatives[];
 
+#ifdef DEBUG
+extern const sp_nativeinfo_t    TestSinkNatives[];
+#endif
+
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_

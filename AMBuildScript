@@ -335,6 +335,12 @@ class ExtensionConfig(object):
     ]
 
     #*** log4sp addition ***#
+    if builder.options.debug == '1':
+      compiler.cxxincludes += [
+        os.path.join(context.currentSourcePath, 'tests'),
+      ]
+
+    #*** log4sp addition ***#
     if builder.options.opt == '1':
       compiler.symbol_files = 'separate'
     return compiler
