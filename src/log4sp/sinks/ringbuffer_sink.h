@@ -27,7 +27,7 @@ public:
     ~ringbuffer_sink() override = default;
 
     void drain(std::function<void(const log_msg_buffer &)> callback) {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         while (!q_.empty()) {
             callback(q_.front());
             q_.pop_front();
@@ -35,11 +35,11 @@ public:
     }
 
     void drain_formatted(std::function<void(std::string_view)> callback) {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         spdlog::memory_buf_t formatted;
         while (!q_.empty()) {
             formatted.clear();
-            base_sink<Mutex>::formatter_->format(q_.front(), formatted);
+            spdlog::sinks::base_sink<Mutex>::formatter_->format(q_.front(), formatted);
             callback(std::string_view{formatted.data(), formatted.size()});
             q_.pop_front();
         }
