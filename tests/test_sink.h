@@ -24,23 +24,23 @@ class test_sink final : public spdlog::sinks::base_sink<Mutex> {
 
 public:
     [[nodiscard]] unsigned int get_log_counter() noexcept {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         return log_counter_;
     }
     [[nodiscard]] unsigned int get_flush_counter() noexcept {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         return flush_counter_;
     }
 
     void drain_msgs(drain_cb callback) noexcept {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         for (auto msg : msgs_) {
             callback(msg);
         }
         msgs_.clear();
     }
     void drain_last_msg(drain_cb callback) noexcept {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         if (!msgs_.empty()) {
             callback(msgs_.back());
             msgs_.pop_back();
@@ -48,14 +48,14 @@ public:
     }
 
     void drain_lines(drain_line_cb callback) noexcept {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         for (auto line : lines_) {
             callback(line);
         }
         lines_.clear();
     }
     void drain_last_line(drain_line_cb callback) noexcept {
-        std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         if (!lines_.empty()) {
             callback(lines_.back());
             lines_.pop_back();
@@ -80,7 +80,7 @@ protected:
         msgs_.emplace_back(log_msg_buffer{msg});
 
         spdlog::memory_buf_t formatted;
-        base_sink<Mutex>::formatter_->format(msg, formatted);
+        spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
         // save the line without the eol
         auto eol_len = strlen(spdlog::details::os::default_eol);
         lines_.emplace_back(formatted.begin(), formatted.end() - eol_len);
