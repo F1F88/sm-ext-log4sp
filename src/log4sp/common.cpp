@@ -729,7 +729,7 @@ reswitch:
                     const char *auth;
                     int userid;
                     if (!DescribePlayer(*value, &name, &auth, &userid)) {
-                        throw_log4sp_ex(fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                        throw_log4sp_ex(fmt_lib::format("Client index {} is invalid (arg {})", *value, arg));
                     }
 
                     AddString(out, fmt_lib::format("{}<{}><{}><>", name, userid, auth).c_str(), width, prec, flags);
@@ -750,7 +750,7 @@ reswitch:
                 if (*value) {
                     const char *name;
                     if (!DescribePlayer(*value, &name, nullptr, nullptr)) {
-                        throw_log4sp_ex(fmt_lib::format("String formatted incorrectly - parameter {} (total {})", arg, args));
+                        throw_log4sp_ex(fmt_lib::format("Client index {} is invalid (arg {})", *value, arg));
                     }
 
                     AddString(out, name, width, prec, flags);
