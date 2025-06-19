@@ -39,7 +39,7 @@ using spdlog::source_loc;
     const char *file{nullptr};
     const char *func{nullptr};
 
-    SourcePawn::IFrameIterator *iter{ctx->CreateFrameIterator()};
+    SourcePawn::IFrameIterator *iter = ctx->CreateFrameIterator();
     do {
         if (iter->IsScriptedFrame()) {
             line = iter->LineNumber();
@@ -51,13 +51,13 @@ using spdlog::source_loc;
     } while (!iter->Done());
     ctx->DestroyFrameIterator(iter);
 
-    return {file, static_cast<int>(line), func};
+    return source_loc(file, static_cast<int>(line), func);
 }
 
 [[nodiscard]] std::vector<std::string> src_helper::get_stack_trace(SourcePawn::IPluginContext *ctx) noexcept {
     assert(ctx);
 
-    SourcePawn::IFrameIterator *iter{ctx->CreateFrameIterator()};
+    SourcePawn::IFrameIterator *iter = ctx->CreateFrameIterator();
     if (iter->Done()) {
         ctx->DestroyFrameIterator(iter);
         return {};
@@ -67,19 +67,19 @@ using spdlog::source_loc;
 
     for (int index = 0; !iter->Done(); iter->Next(), ++index) {
         if (iter->IsNativeFrame()) {
-            const char *func{iter->FunctionName()};
+            const char *func = iter->FunctionName();
             if (!func) {
                 func = "<unknown function>";
             }
 
             trace.emplace_back(fmt_lib::format("  [{}] {}", index, func));
         } else if (iter->IsScriptedFrame()) {
-            const char *func{iter->FunctionName()};
+            const char *func = iter->FunctionName();
             if (!func) {
                 func = "<unknown function>";
             }
 
-            const char *file{iter->FilePath()};
+            const char *file = iter->FilePath();
             if (!file) {
                 func = "<unknown>";
             }
@@ -118,7 +118,7 @@ void err_helper::handle_ex(const std::string &origin, const src_helper &src, con
 }
 
 void err_helper::handle_unknown_ex(const std::string &origin, const src_helper &src) const noexcept {
-    handle_ex(origin, src, std::runtime_error{"unknown exception"});
+    handle_ex(origin, src, std::runtime_error("unknown exception"));
 }
 
 void err_helper::set_err_handler(SourceMod::IChangeableForward *handler) noexcept {
@@ -217,7 +217,7 @@ try_serverlang:
         }
     }
 
-    unsigned int max_params{pTrans.fmt_count};
+    unsigned int max_params = pTrans.fmt_count;
 
     if (max_params) {
         cell_t new_params[MAX_TRANSLATE_PARAMS];
@@ -564,8 +564,8 @@ static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int 
 }
 
 static bool DescribePlayer(int entRef, const char **namep, const char **authp, int *useridp) noexcept {
-    int index{gamehelpers->ReferenceToIndex(entRef)};
-    SourceMod::IGamePlayer *player{playerhelpers->GetGamePlayer(index)};
+    int index = gamehelpers->ReferenceToIndex(entRef);
+    SourceMod::IGamePlayer *player = playerhelpers->GetGamePlayer(index);
     if (!player || !player->IsConnected()) {
         return false;
     }
@@ -780,7 +780,7 @@ reswitch:
                 cell_t *target;
                 ctx->LocalToString(params[arg++], &key);
                 ctx->LocalToPhysAddr(params[arg++], &target);
-                memory_buf_t phrase{Translate(ctx, key, *target, params, &arg)};
+                memory_buf_t phrase = Translate(ctx, key, *target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
@@ -791,7 +791,7 @@ reswitch:
 
                 char *key;
                 ctx->LocalToString(params[arg++], &key);
-                memory_buf_t phrase{Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg)};
+                memory_buf_t phrase = Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }

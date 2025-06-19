@@ -19,7 +19,7 @@ static cell_t TCPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     int port = params[2];
     bool lazyConnect = static_cast<bool>(params[3]);
 
-    tcp_sink_config config{host, port};
+    tcp_sink_config config(host, port);
     config.lazy_connect = lazyConnect;
 
     sink_ptr sink;
@@ -33,7 +33,7 @@ static cell_t TCPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
@@ -61,7 +61,7 @@ static cell_t TCPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
     int port = params[3];
     bool lazyConnect = static_cast<bool>(params[4]);
 
-    tcp_sink_config config{host, port};
+    tcp_sink_config config(host, port);
     config.lazy_connect = lazyConnect;
 
     sink_ptr sink;
@@ -75,7 +75,7 @@ static cell_t TCPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);

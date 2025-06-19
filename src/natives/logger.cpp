@@ -18,7 +18,7 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name);
@@ -45,9 +45,9 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
     ctx->LocalToPhysAddr(params[2], &sinks);
 
     int numSinks{params[3]};
-    auto sinkVector{std::vector<sink_ptr>(numSinks, nullptr)};
+    std::vector<sink_ptr> sinkVector(numSinks, nullptr);
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     for (int i = 0; i < numSinks; ++i)
@@ -86,9 +86,9 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
     ctx->LocalToPhysAddr(params[2], &sinks);
 
     int numSinks{params[3]};
-    auto sinkVector{std::vector<sink_ptr>(numSinks, nullptr)};
+    std::vector<sink_ptr> sinkVector(numSinks, nullptr);
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     for (int i = 0; i < numSinks; ++i)
@@ -173,7 +173,7 @@ static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -190,7 +190,7 @@ static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -205,7 +205,7 @@ static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -220,7 +220,7 @@ static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -238,7 +238,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -259,7 +259,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -276,7 +276,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -297,7 +297,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
 static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -315,7 +315,7 @@ static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -333,7 +333,7 @@ static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -354,7 +354,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -372,7 +372,7 @@ static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -390,7 +390,7 @@ static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -408,13 +408,13 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
 
-    logger->log(source_loc{file, line, func}, lvl, msg);
+    logger->log(source_loc(file, line, func), lvl, msg);
     return 0;
 }
 
 static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -431,13 +431,13 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
 
-    logger->log(ctx, source_loc{file, line, func}, lvl, params, 6);
+    logger->log(ctx, source_loc(file, line, func), lvl, params, 6);
     return 0;
 }
 
 static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -454,13 +454,13 @@ static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
 
-    logger->log_amx_tpl(ctx, source_loc{file, line, func}, lvl, params, 6);
+    logger->log_amx_tpl(ctx, source_loc(file, line, func), lvl, params, 6);
     return 0;
 }
 
 static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -478,7 +478,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
     logger->log(ctx, lvl, fmt_lib::format("Stack trace requested: {}", msg));
     logger->log(ctx, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
 
-    std::vector<std::string> messages{log4sp::src_helper::get_stack_trace(ctx)};
+    std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
     for (auto &iter : messages) {
         logger->log(ctx, lvl, iter);
     }
@@ -487,7 +487,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -505,7 +505,7 @@ static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *par
 
 static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -523,7 +523,7 @@ static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t 
 
 static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -543,7 +543,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     logger->log(ctx, lvl, fmt_lib::format("Exception reported: {}", msg));
     logger->log(ctx, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
 
-    std::vector<std::string> messages{log4sp::src_helper::get_stack_trace(ctx)};
+    std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
     for (auto &iter : messages) {
         logger->log(ctx, lvl, iter);
     }
@@ -552,7 +552,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -570,7 +570,7 @@ static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -588,7 +588,7 @@ static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *pa
 
 static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -607,7 +607,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -623,7 +623,7 @@ static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -639,7 +639,7 @@ static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -658,7 +658,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -674,7 +674,7 @@ static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -690,7 +690,7 @@ static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -709,7 +709,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
 
 static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -725,7 +725,7 @@ static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -741,7 +741,7 @@ static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -760,7 +760,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
 
 static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -776,7 +776,7 @@ static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -792,7 +792,7 @@ static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -811,7 +811,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -827,7 +827,7 @@ static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -843,7 +843,7 @@ static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -862,7 +862,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -878,7 +878,7 @@ static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -894,7 +894,7 @@ static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -910,7 +910,7 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t GetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -925,7 +925,7 @@ static cell_t GetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -943,7 +943,7 @@ static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -966,7 +966,7 @@ static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -995,7 +995,7 @@ static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -1018,7 +1018,7 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);

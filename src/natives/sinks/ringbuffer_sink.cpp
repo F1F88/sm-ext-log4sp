@@ -17,7 +17,7 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
     auto amount = static_cast<size_t>(params[1]);
     sink_ptr sink = std::make_shared<ringbuffer_sink_st>(amount);
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
@@ -31,7 +31,7 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
 
 static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -102,7 +102,7 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
 
 static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -170,7 +170,7 @@ static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const
 
     sink_ptr sink = std::make_shared<ringbuffer_sink_st>(amount);
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);

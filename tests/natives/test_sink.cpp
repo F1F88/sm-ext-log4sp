@@ -15,7 +15,7 @@ using spdlog::details::log_msg_buffer;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static std::shared_ptr<test_sink_st> ReadHandle(SourcePawn::IPluginContext *ctx, SourceMod::Handle_t handle)
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
@@ -39,7 +39,7 @@ static cell_t TestSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 {
     sink_ptr sink = std::make_shared<test_sink_st>();
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);

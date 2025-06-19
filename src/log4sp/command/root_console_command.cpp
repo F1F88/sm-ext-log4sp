@@ -76,9 +76,9 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
                 root_console_command_handler::instance().execute(function_name, arguments);
             } catch (const std::exception &ex) {
                 // 如果是参数格式问题，将消息替换为 apply_all 格式
-                static const std::regex match_usage_pattern{"(Usage: sm " LOG4SP_ROOT_CMD " [a-z_]+ <logger_name>.*)"};
-                static const std::regex replace_logger_name_pattern{R"( <logger_name>)"};
-                static const std::regex replace_prefix_pattern{"(Usage: sm " LOG4SP_ROOT_CMD " )"};
+                static const std::regex match_usage_pattern("(Usage: sm " LOG4SP_ROOT_CMD " [a-z_]+ <logger_name>.*)");
+                static const std::regex replace_logger_name_pattern(R"( <logger_name>)");
+                static const std::regex replace_prefix_pattern("(Usage: sm " LOG4SP_ROOT_CMD " )");
 
                 std::string msg{ex.what()};
                 if (std::regex_match(msg, match_usage_pattern)) {
@@ -158,7 +158,7 @@ void log_command::execute(const std::vector<std::string> &args) {
     auto msg    = args[2];
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will log a message '%s' with log level '%s'.", logger->name().c_str(), msg.c_str(), to_string_view(level).data());
-    logger->log(source_loc{__FILE__, __LINE__, __FUNCTION__}, level, msg);
+    logger->log(source_loc(__FILE__, __LINE__, __FUNCTION__), level, msg);
 }
 
 
@@ -170,7 +170,7 @@ void flush_command::execute(const std::vector<std::string> &args) {
     auto logger = arg_to_logger(args[0]);
 
     rootconsole->ConsolePrint("[SM] Logger '%s' will flush its contents.", logger->name().c_str());
-    logger->flush(source_loc{__FILE__, __LINE__, __FUNCTION__});
+    logger->flush(source_loc(__FILE__, __LINE__, __FUNCTION__));
 }
 
 

@@ -27,7 +27,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
@@ -41,7 +41,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -71,7 +71,7 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
 
 static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -101,7 +101,7 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
 
 static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -154,7 +154,7 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);

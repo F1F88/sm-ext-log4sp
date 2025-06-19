@@ -1,4 +1,5 @@
 #include <cassert>
+#include "log4sp/common.h"
 #include "log4sp/sinks/callback_sink.h"
 
 
@@ -50,12 +51,12 @@ void callback_sink::set_log_callback(IPluginFunction *log_function) {
                                        Param_String, Param_Cell, Param_String,
                                        Param_Cell);
         if (!cb) {
-            throw std::runtime_error{"SM error! Could not create callback sink log forward."};
+            throw_log4sp_ex("SM error! Could not create callback sink log forward.");
         }
 
         if (!cb->AddFunction(log_function)) {
             forwards->ReleaseForward(cb);
-            throw std::runtime_error{"SM error! Could not add callback sink log function."};
+            throw_log4sp_ex("SM error! Could not add callback sink log function.");
         }
     }
 
@@ -71,12 +72,12 @@ void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
     if (log_post_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
         if (!cb) {
-            throw std::runtime_error{"SM error! Could not create callback sink log post forward."};
+            throw_log4sp_ex("SM error! Could not create callback sink log post forward.");
         }
 
         if (!cb->AddFunction(log_post_function)) {
             forwards->ReleaseForward(cb);
-            throw std::runtime_error{"SM error! Could not add callback sink log post function."};
+            throw_log4sp_ex("SM error! Could not add callback sink log post function.");
         }
     }
 
@@ -92,12 +93,12 @@ void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
     if (flush_function) {
         cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 0, nullptr);
         if (!cb) {
-            throw std::runtime_error{"SM error! Could not create callback sink flush forward."};
+            throw_log4sp_ex("SM error! Could not create callback sink flush forward.");
         }
 
         if (!cb->AddFunction(flush_function)) {
             forwards->ReleaseForward(cb);
-            throw std::runtime_error{"SM error! Could not add callback sink flush function."};
+            throw_log4sp_ex("SM error! Could not add callback sink flush function.");
         }
     }
 

@@ -40,7 +40,7 @@ public:
         while (!q_.empty()) {
             formatted.clear();
             spdlog::sinks::base_sink<Mutex>::formatter_->format(q_.front(), formatted);
-            callback(std::string_view{formatted.data(), formatted.size()});
+            callback(std::string_view(formatted.data(), formatted.size()));
             q_.pop_front();
         }
     }
@@ -49,7 +49,7 @@ private:
     spdlog::details::circular_q<log_msg_buffer> q_;
 
     void sink_it_(const log_msg &log_msg) override {
-        q_.push_back(log_msg_buffer{log_msg});
+        q_.push_back(log_msg_buffer(log_msg));
     }
 
     void flush_() override {}

@@ -46,13 +46,13 @@ public:
 
     // log with log4sp format
     void log(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
-        log(ctx, {}, lvl, params, param);
+        log(ctx, source_loc{}, lvl, params, param);
     }
     void log(plugin_ctx *ctx, const source_loc &loc, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
 
     // log with sourcemod format
     void log_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
-        log_amx_tpl(ctx, {}, lvl, params, param);
+        log_amx_tpl(ctx, source_loc{}, lvl, params, param);
     }
     void log_amx_tpl(plugin_ctx *ctx, const source_loc &loc, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
 

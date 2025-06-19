@@ -40,7 +40,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
             char path[PLATFORM_MAX_PATH];
             smutils->BuildPath(Path_Game, path, sizeof(path), buffer.c_str());
-            return filename_t{path};
+            return filename_t(path);
         }
 
         auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);
@@ -69,7 +69,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
         forwards->ReleaseForward(forward);
         smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);
-        return filename_t{buffer};
+        return filename_t(buffer);
     };
 
     SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[7]);
@@ -133,7 +133,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
@@ -147,7 +147,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -171,7 +171,7 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
 
 static cell_t DailyFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -221,7 +221,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
 
             char path[PLATFORM_MAX_PATH];
             smutils->BuildPath(Path_Game, path, sizeof(path), buffer.c_str());
-            return filename_t{path};
+            return filename_t(path);
         }
 
         auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);
@@ -250,7 +250,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
 
         forwards->ReleaseForward(forward);
         smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);
-        return filename_t{buffer};
+        return filename_t(buffer);
     };
 
     SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[8]);
@@ -314,7 +314,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);

@@ -29,7 +29,7 @@ void sink_handler::destroy() noexcept {
 [[nodiscard]] SourceMod::Handle_t sink_handler::create_handle(sink_ptr object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
     assert(handle_type_);
 
-    SourceMod::Handle_t handle{handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error)};
+    SourceMod::Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (!handle) {
         return BAD_HANDLE;
     }
@@ -47,7 +47,7 @@ void sink_handler::destroy() noexcept {
     assert(handle_type_);
 
     sink *object;
-    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;
@@ -63,7 +63,7 @@ void sink_handler::destroy() noexcept {
     assert(handle_type_);
 
     sink *object;
-    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;

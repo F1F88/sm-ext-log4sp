@@ -33,7 +33,7 @@ void logger_handler::destroy() noexcept {
 [[nodiscard]] SourceMod::Handle_t logger_handler::create_handle(std::shared_ptr<logger> object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
     assert(handle_type_);
 
-    SourceMod::Handle_t handle{handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error)};
+    SourceMod::Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (!handle) {
         return BAD_HANDLE;
     }
@@ -51,7 +51,7 @@ void logger_handler::destroy() noexcept {
     assert(handle_type_);
 
     logger *object;
-    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;
@@ -67,7 +67,7 @@ void logger_handler::destroy() noexcept {
     assert(handle_type_);
 
     logger *object;
-    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;
@@ -129,7 +129,7 @@ void logger_handler::initialize_() {
     // 全局 Logger 生命周期与拓展一致，不应该被任何插件释放
     handlesys->InitAccessDefaults(nullptr, &access);
     access.access[SourceMod::HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
-    SourceMod::HandleSecurity security{myself->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
 
     sink_ptr sink;
     try {

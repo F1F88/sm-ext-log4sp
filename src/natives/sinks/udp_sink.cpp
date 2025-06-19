@@ -22,7 +22,7 @@ static cell_t UDPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<udp_sink_st>(udp_sink_config{host, port});
+        sink = std::make_shared<udp_sink_st>(udp_sink_config(host, port));
     }
     catch (const std::exception &ex)
     {
@@ -30,7 +30,7 @@ static cell_t UDPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
@@ -60,7 +60,7 @@ static cell_t UDPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<udp_sink_st>(udp_sink_config{host, port});
+        sink = std::make_shared<udp_sink_st>(udp_sink_config(host, port));
     }
     catch (const std::exception &ex)
     {
@@ -68,7 +68,7 @@ static cell_t UDPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);

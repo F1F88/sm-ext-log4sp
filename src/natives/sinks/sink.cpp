@@ -4,7 +4,9 @@
 #include "log4sp/adapter/sink_hanlder.h"
 
 using spdlog::source_loc;
+using spdlog::details::log_msg;
 using spdlog::details::os::now;
+using spdlog::level::level_enum;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -12,7 +14,7 @@ using spdlog::details::os::now;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -27,7 +29,7 @@ static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -45,7 +47,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -64,7 +66,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -81,7 +83,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
@@ -103,19 +105,20 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
     auto line = params[6];
 
-    source_loc loc{file, line, func};
+    source_loc loc(file, line, func);
 
+    using std::chrono::duration_cast;
     using std::chrono::system_clock;
-    system_clock::time_point logTime{now()};
+    std::chrono::system_clock::time_point logTime = now();
     if (params[8] != -1)
     {
-        logTime = system_clock::time_point{
-            std::chrono::duration_cast<system_clock::duration>(std::chrono::seconds{params[8]})};
+        auto seconds = std::chrono::seconds(params[8]);
+        logTime = system_clock::time_point(duration_cast<system_clock::duration>(seconds));
     }
 
     try
     {
-        sink->log({logTime, loc, name, lvl, msg});
+        sink->log(log_msg(logTime, loc, name, lvl, msg));
     }
     catch (const std::exception &ex)
     {
@@ -126,7 +129,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
 static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
@@ -148,20 +151,21 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
     int line =params[8];
 
-    source_loc loc{file, line, func};
+    source_loc loc(file, line, func);
 
+    using std::chrono::duration_cast;
     using std::chrono::system_clock;
-    system_clock::time_point logTime{now()};
+    system_clock::time_point logTime = now();
     if (params[10] != -1)
     {
-        logTime = system_clock::time_point{
-            std::chrono::duration_cast<system_clock::duration>(std::chrono::seconds{params[10]})};
+        auto seconds = std::chrono::seconds(params[10]);
+        logTime = system_clock::time_point(duration_cast<system_clock::duration>(seconds));
     }
 
     std::string formatted;
     try
     {
-        formatted = sink->to_pattern({logTime, loc, name, lvl, msg});
+        formatted = sink->to_pattern(log_msg(logTime, loc, name, lvl, msg));
     }
     catch (const std::exception &ex)
     {
@@ -176,7 +180,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
