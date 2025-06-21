@@ -262,7 +262,7 @@ Logger CreateMultiSinksLogger()
 
 The underlying Logger and Sink objects are only deleted from memory when the reference count is 0.
 
-In the [Multi Sinks](#Multi Sinks) section, lines 13-15 close the sink handles, but the underlying Sink objects are not deleted because the logger created in line 11 references these Sinks objects.
+In the [Multi Sinks](#Multiple-Sinks) section, lines 13-15 close the sink handles, but the underlying Sink objects are not deleted because the logger created in line 11 references these Sinks objects.
 
 - Before line 11, the Sinks object is only referenced by the Handles system, so the number of Sinks references is 1;
 
