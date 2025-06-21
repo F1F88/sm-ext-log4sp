@@ -564,7 +564,13 @@ static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int 
 }
 
 static bool DescribePlayer(int entRef, const char **namep, const char **authp, int *useridp) noexcept {
-    int index = gamehelpers->ReferenceToIndex(entRef);
+    constexpr const int ENTREF_MASK = (1 << 31);
+
+    int index{entRef};
+    if (entRef & ENTREF_MASK) {
+        index = gamehelpers->ReferenceToIndex(entRef);
+    }
+
     SourceMod::IGamePlayer *player = playerhelpers->GetGamePlayer(index);
     if (!player || !player->IsConnected()) {
         return false;
