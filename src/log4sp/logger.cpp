@@ -2,16 +2,17 @@
 
 #include "spdlog/pattern_formatter.h"
 
+#include "log4sp/format.h"
 #include "log4sp/adapter/logger_handler.h"
 
 
 namespace log4sp {
 
+namespace fmt_lib = spdlog::fmt_lib;
 using spdlog::pattern_formatter;
 using spdlog::pattern_time_type;
 using spdlog::sink_ptr;
 using spdlog::source_loc;
-using spdlog::fmt_lib::format;
 using spdlog::level::level_enum;
 
 // log with no format string, just string message
@@ -40,7 +41,7 @@ void logger::log(plugin_ctx *ctx, const source_loc &loc, level_enum lvl, const c
         std::string msg;
 
         try {
-            msg = format_cell_to_string(ctx, params, param);
+            msg = format_to_string(ctx, params, param);
         } catch (const std::exception &ex) {
             err_helper_.handle_ex(name_, source, ex);
             return;
@@ -81,7 +82,7 @@ void logger::log_stack_trace(plugin_ctx *ctx, level_enum lvl, const cell_t *para
         std::string msg;
 
         try {
-            msg = format_cell_to_string(ctx, params, param);
+            msg = format_to_string(ctx, params, param);
         } catch (const std::exception &ex) {
             err_helper_.handle_ex(name_, source, ex);
             return;
@@ -90,8 +91,8 @@ void logger::log_stack_trace(plugin_ctx *ctx, level_enum lvl, const cell_t *para
             return;
         }
 
-        sink_it_(log_msg(name_, lvl, format("Stack trace requested: {}", msg)), source);
-        sink_it_(log_msg(name_, lvl, format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Stack trace requested: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
 
         std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
@@ -114,8 +115,8 @@ void logger::log_stack_trace_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell
             return;
         }
 
-        sink_it_(log_msg(name_, lvl, format("Stack trace requested: {}", msg)), source);
-        sink_it_(log_msg(name_, lvl, format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Stack trace requested: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
 
         std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
@@ -131,7 +132,7 @@ void logger::throw_error(plugin_ctx *ctx, level_enum lvl, const cell_t *params, 
     src_helper source(ctx);
     std::string msg;
     try {
-        msg = format_cell_to_string(ctx, params, param);
+        msg = format_to_string(ctx, params, param);
     } catch (const std::exception &ex) {
         ctx->ReportError(ex.what());
         err_helper_.handle_ex(name_, source, ex);
@@ -145,8 +146,8 @@ void logger::throw_error(plugin_ctx *ctx, level_enum lvl, const cell_t *params, 
     ctx->ReportError(msg.c_str());
 
     if (should_log(lvl)) {
-        sink_it_(log_msg(name_, lvl, format("Exception reported: {}", msg)), source);
-        sink_it_(log_msg(name_, lvl, format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Exception reported: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
 
         std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
@@ -172,8 +173,8 @@ void logger::throw_error_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *
     if (should_log(lvl)) {
         src_helper source(ctx);
 
-        sink_it_(log_msg(name_, lvl, format("Exception reported: {}", msg)), source);
-        sink_it_(log_msg(name_, lvl, format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Exception reported: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
 
         std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
