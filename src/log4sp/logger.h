@@ -5,6 +5,7 @@
 #include "extension.h"
 
 #include "log4sp/common.h"
+#include "log4sp/source_helper.h"
 
 
 namespace log4sp {

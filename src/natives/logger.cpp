@@ -1,4 +1,5 @@
 #include "log4sp/common.h"
+#include "log4sp/source_helper.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
