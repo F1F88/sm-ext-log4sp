@@ -9,6 +9,22 @@ using spdlog::sink_ptr;
 using spdlog::source_loc;
 
 
+/**
+ * 封装读取 logger handle 代码
+ * 这会创建 3 个变量: security, error, logger
+ *      读取成功时: 继续执行后续代码
+ *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
+ */
+#define READ_LOGGER_HANDLE_OR_ERROR(handle)                                                         \
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
+    SourceMod::HandleError error;                                                                   \
+    auto logger = log4sp::logger_handler::instance().read_handle_raw(handle, &security, &error);    \
+    if (!logger) {                                                                                  \
+        ctx->ReportError("Invalid logger handle %x (error: %d)", handle, error);                    \
+        return 0;                                                                                   \
+    }
+
+
 static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
@@ -174,15 +190,7 @@ static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[2], params[3], logger->name().c_str(), &bytes);
@@ -191,45 +199,21 @@ static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     return static_cast<cell_t>(logger->name().length());
 }
 
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     return logger->level();
 }
 
 static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -239,15 +223,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *pattern;
     ctx->LocalToString(params[2], &pattern);
@@ -260,15 +236,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -277,15 +245,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -298,15 +258,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
 static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -316,15 +268,7 @@ static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -334,15 +278,7 @@ static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -355,15 +291,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -373,15 +301,7 @@ static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -391,15 +311,7 @@ static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func, *msg;
     ctx->LocalToString(params[2], &file);
@@ -415,15 +327,7 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func;
     ctx->LocalToString(params[2], &file);
@@ -438,15 +342,7 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func;
     ctx->LocalToString(params[2], &file);
@@ -461,15 +357,7 @@ static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -488,15 +376,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -506,15 +386,7 @@ static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *par
 
 static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -524,15 +396,7 @@ static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t 
 
 static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -553,15 +417,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -571,15 +427,7 @@ static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -589,15 +437,7 @@ static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *pa
 
 static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
@@ -608,15 +448,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::trace, params, 2);
     return 0;
@@ -624,15 +456,7 @@ static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::trace, params, 2);
     return 0;
@@ -640,15 +464,7 @@ static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
@@ -659,15 +475,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::debug, params, 2);
     return 0;
@@ -675,15 +483,7 @@ static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::debug, params, 2);
     return 0;
@@ -691,15 +491,7 @@ static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
@@ -710,15 +502,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
 
 static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::info, params, 2);
     return 0;
@@ -726,15 +510,7 @@ static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::info, params, 2);
     return 0;
@@ -742,15 +518,7 @@ static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
@@ -761,15 +529,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
 
 static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::warn, params, 2);
     return 0;
@@ -777,15 +537,7 @@ static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::warn, params, 2);
     return 0;
@@ -793,15 +545,7 @@ static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
@@ -812,15 +556,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::err, params, 2);
     return 0;
@@ -828,15 +564,7 @@ static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::err, params, 2);
     return 0;
@@ -844,15 +572,7 @@ static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
@@ -863,15 +583,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::critical, params, 2);
     return 0;
@@ -879,15 +591,7 @@ static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::critical, params, 2);
     return 0;
@@ -895,15 +599,7 @@ static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->flush(ctx);
     return 0;
@@ -911,30 +607,14 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t GetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     return logger->flush_level();
 }
 
 static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -944,15 +624,7 @@ static cell_t FlushOn(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
     if (!sink)
@@ -967,15 +639,7 @@ static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
     if (!sink)
@@ -996,15 +660,7 @@ static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
     if (!sink)
@@ -1019,15 +675,7 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!logger)
-    {
-        ctx->ReportError("Invalid logger handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)

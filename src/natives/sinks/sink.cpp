@@ -9,35 +9,35 @@ using spdlog::details::os::now;
 using spdlog::level::level_enum;
 
 
+/**
+ * 封装读取 sink handle 代码
+ * 这会创建 3 个变量: security, error, sink
+ *      读取成功时: 继续执行后续代码
+ *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
+ */
+#define READ_SINK_HANDLE_OR_ERROR(handle)                                                           \
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
+    SourceMod::HandleError error;                                                                   \
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
+    if (!sink) {                                                                                    \
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
+        return 0;                                                                                   \
+    }
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                       Sink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     return sink->level();
 }
 
 static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -47,15 +47,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *pattern;
     ctx->LocalToString(params[2], &pattern);
@@ -66,15 +58,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
@@ -83,15 +67,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *name, *msg;
     ctx->LocalToString(params[2], &name);
@@ -129,15 +105,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
 static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *name, *msg;
     ctx->LocalToString(params[4], &name);
@@ -180,15 +148,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle_raw(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     try
     {

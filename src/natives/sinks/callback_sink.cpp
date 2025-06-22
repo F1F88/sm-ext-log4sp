@@ -7,6 +7,27 @@ using spdlog::sink_ptr;
 using log4sp::sinks::callback_sink;
 
 
+/**
+ * 封装读取 daily file sink handle 代码
+ * 这会创建 4 个变量: security, error, sink, callbackSink
+ *      读取成功时: 继续执行后续代码
+ *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
+ */
+#define READ_CALLBACK_SINK_HANDLE_OR_ERROR(handle)                                                  \
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
+    SourceMod::HandleError error;                                                                   \
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
+    if (!sink) {                                                                                    \
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
+        return 0;                                                                                   \
+    }                                                                                               \
+    auto callbackSink = std::dynamic_pointer_cast<callback_sink>(sink);                             \
+    if (!callbackSink) {                                                                            \
+        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter); \
+        return 0;                                                                                   \
+    }
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                  CallbackSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,26 +62,11 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
-
-    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
-    if (!realSink)
-    {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-        return 0;
-    }
+    READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
     try
     {
-        realSink->set_log_callback(ctx->GetFunctionById(params[2]));
+        callbackSink->set_log_callback(ctx->GetFunctionById(params[2]));
     }
     catch (const std::exception &ex)
     {
@@ -71,26 +77,11 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
 
 static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
-
-    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
-    if (!realSink)
-    {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-        return 0;
-    }
+    READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
     try
     {
-        realSink->set_log_post_callback(ctx->GetFunctionById(params[2]));
+        callbackSink->set_log_post_callback(ctx->GetFunctionById(params[2]));
     }
     catch (const std::exception &ex)
     {
@@ -101,26 +92,11 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
 
 static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
-
-    auto realSink = std::dynamic_pointer_cast<callback_sink>(sink);
-    if (!realSink)
-    {
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-        return 0;
-    }
+    READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
     try
     {
-        realSink->set_flush_callback(ctx->GetFunctionById(params[2]));
+        callbackSink->set_flush_callback(ctx->GetFunctionById(params[2]));
     }
     catch (const std::exception &ex)
     {

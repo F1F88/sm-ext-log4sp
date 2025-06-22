@@ -10,31 +10,25 @@ using spdlog::sink_ptr;
 using spdlog::details::log_msg_buffer;
 
 
+#define READ_TEST_SINK_HANDLE_OR_ERROR(handle)                                                      \
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
+    SourceMod::HandleError error;                                                                   \
+    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
+    if (!sink) {                                                                                    \
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
+        return 0;                                                                                   \
+    }                                                                                               \
+    auto testSink = std::dynamic_pointer_cast<test_sink_st>(sink);                                  \
+    if (!testSink) {                                                                                \
+        ctx->ReportError("Invalid test sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter); \
+        return 0;                                                                                   \
+    }
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                      TestSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-static std::shared_ptr<test_sink_st> ReadHandle(SourcePawn::IPluginContext *ctx, SourceMod::Handle_t handle)
-{
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
-        return nullptr;
-    }
-
-    auto realSink = std::dynamic_pointer_cast<test_sink_st>(sink);
-    if (!realSink)
-    {
-        ctx->ReportError("Invalid test sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);
-        return nullptr;
-    }
-
-    return realSink;
-}
-
 static cell_t TestSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     sink_ptr sink = std::make_shared<test_sink_st>();
@@ -53,27 +47,21 @@ static cell_t TestSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t GetLogCount(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    return sink->get_log_counter();
+    return testSink->get_log_counter();
 }
 
 static cell_t GetFlushCount(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    return sink->get_flush_counter();
+    return testSink->get_flush_counter();
 }
 
 static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)
@@ -101,7 +89,7 @@ static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
     auto data = params[3];
 
-    sink->drain_msgs(
+    testSink->drain_msgs(
         [forward, data](const log_msg_buffer &log_msg) {
             auto name = to_string(log_msg.logger_name);
             auto payload = to_string(log_msg.payload);
@@ -127,9 +115,7 @@ static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 
 static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)
@@ -157,7 +143,7 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
 
     auto data = params[3];
 
-    sink->drain_last_msg(
+    testSink->drain_last_msg(
         [forward, data](const log_msg_buffer &log_msg) {
             auto name = to_string(log_msg.logger_name);
             auto payload = to_string(log_msg.payload);
@@ -183,9 +169,7 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
 
 static cell_t DrainLines(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)
@@ -210,7 +194,7 @@ static cell_t DrainLines(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
     auto data = params[3];
 
-    sink->drain_lines(
+    testSink->drain_lines(
         [forward, data](std::string_view line) {
             forward->PushString(line.data());
             forward->PushCell(data);
@@ -224,9 +208,7 @@ static cell_t DrainLines(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t DrainLastLine(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)
@@ -251,7 +233,7 @@ static cell_t DrainLastLine(SourcePawn::IPluginContext *ctx, const cell_t *param
 
     auto data = params[3];
 
-    sink->drain_last_line(
+    testSink->drain_last_line(
         [forward, data](std::string_view line) {
             forward->PushString(line.data());
             forward->PushCell(data);
@@ -265,67 +247,55 @@ static cell_t DrainLastLine(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t SetLogDelay(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    sink->set_log_delay(std::chrono::milliseconds(params[2]));
+    testSink->set_log_delay(std::chrono::milliseconds(params[2]));
     return 0;
 }
 
 static cell_t SetFlushDelay(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    sink->set_flush_delay(std::chrono::milliseconds(params[2]));
+    testSink->set_flush_delay(std::chrono::milliseconds(params[2]));
     return 0;
 }
 
 static cell_t SetLogException(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    sink->set_log_exception(std::runtime_error(msg));
+    testSink->set_log_exception(std::runtime_error(msg));
     return 0;
 }
 
 static cell_t ClearLogException(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    sink->clear_log_exception();
+    testSink->clear_log_exception();
     return 0;
 }
 
 static cell_t SetFlushException(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
     ctx->LocalToString(params[2], &msg);
 
-    sink->set_flush_exception(std::runtime_error(msg));
+    testSink->set_flush_exception(std::runtime_error(msg));
     return 0;
 }
 
 static cell_t ClearFlushException(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto sink = ReadHandle(ctx, params[1]);
-    if (!sink)
-        return 0;
+    READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    sink->clear_flush_exception();
+    testSink->clear_flush_exception();
     return 0;
 }
 
