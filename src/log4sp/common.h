@@ -1,9 +1,27 @@
 #pragma once
 
+#include <functional>
+
 #include "spdlog/common.h"
 
 #include "extension.h"
 
+
+#define FILE_EVENT_CALLBACK(callback, tag)                                                          \
+    [callback](const filename_t &filename) {                                                        \
+        if (callback) {                                                                             \
+            auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String); \
+            if (!forward)                                                                           \
+                log4sp::throw_log4sp_ex("SM error! Could not create " tag " forward.");             \
+            if (!forward->AddFunction(callback))                                                    \
+                log4sp::throw_log4sp_ex("SM error! Could not add " tag " function.");               \
+            auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);             \
+            forward->PushString(path.c_str());                                                      \
+            auto error = forward->Execute();                                                        \
+            assert(error != SP_ERROR_NONE);                                                         \
+            forwards->ReleaseForward(forward);                                                      \
+        }                                                                                           \
+    }
 
 namespace log4sp {
 

@@ -48,51 +48,8 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[4]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "basic file open pre");
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "basic file close post");
 
     sink_ptr sink;
     try
@@ -162,51 +119,8 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[5]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "basic file open pre");
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "basic file close post");
 
     sink_ptr sink;
     try

@@ -49,51 +49,8 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[6]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "rotating file open pre");
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "rotating file close post");
 
     sink_ptr sink;
     try
@@ -185,51 +142,8 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[7]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "rotating file open pre");
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "rotating file close post");
 
     sink_ptr sink;
     try
