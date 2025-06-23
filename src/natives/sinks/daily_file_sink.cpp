@@ -88,10 +88,16 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     int hour      = params[2];
     int minute    = params[3];
     auto truncate = static_cast<bool>(params[4]);
-    auto maxFiles = static_cast<uint16_t>(params[5]);
+    auto maxFiles = params[5];
     auto function = ctx->GetFunctionById(params[6]);
     auto openPre  = ctx->GetFunctionById(params[7]);
     auto closePost= ctx->GetFunctionById(params[8]);
+
+    if (maxFiles < 0 || maxFiles > UINT16_MAX)
+    {
+        ctx->ReportError("Invalid maxFiles %d. (0-%d)", maxFiles, UINT16_MAX);
+        return BAD_HANDLE;
+    }
 
     log4sp_daily_filename_calculator calculator = DAILY_FILE_DEFAULT_CALCULATOR();
     if (function)
@@ -106,7 +112,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, maxFiles, handlers, calculator);
+        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, static_cast<uint16_t>(maxFiles), handlers, calculator);
     }
     catch (const std::exception &ex)
     {
@@ -158,10 +164,16 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     int hour      = params[3];
     int minute    = params[4];
     auto truncate = static_cast<bool>(params[5]);
-    auto maxFiles = static_cast<uint16_t>(params[6]);
+    auto maxFiles = params[6];
     auto function = ctx->GetFunctionById(params[7]);
     auto openPre  = ctx->GetFunctionById(params[8]);
     auto closePost= ctx->GetFunctionById(params[9]);
+
+    if (maxFiles < 0 || maxFiles > UINT16_MAX)
+    {
+        ctx->ReportError("Invalid maxFiles %d. (0-%d)", maxFiles, UINT16_MAX);
+        return BAD_HANDLE;
+    }
 
     log4sp_daily_filename_calculator calculator = DAILY_FILE_DEFAULT_CALCULATOR();
     if (function)
@@ -176,7 +188,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, maxFiles, handlers, calculator);
+        sink = std::make_shared<daily_file_sink_st>(file, hour, minute, truncate, static_cast<uint16_t>(maxFiles), handlers, calculator);
     }
     catch (const std::exception &ex)
     {
