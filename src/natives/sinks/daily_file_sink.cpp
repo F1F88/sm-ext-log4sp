@@ -13,6 +13,7 @@ using spdlog::details::file_helper;
 using spdlog::fmt_lib::format;
 using spdlog::sinks::daily_file_sink_mt;
 using spdlog::sinks::daily_file_sink_st;
+using spdlog::sinks::log4sp_daily_filename_calculator;
 
 
 /**
@@ -35,6 +36,46 @@ using spdlog::sinks::daily_file_sink_st;
         return 0;                                                                                   \
     }
 
+#define DAILY_FILE_DEFAULT_CALCULATOR()                                                             \
+    [](const filename_t &filename, const tm &now_tm) {                                              \
+        filename_t basename, ext;                                                                   \
+        std::tie(basename, ext) = file_helper::split_by_extension(filename);                        \
+        auto buffer = format(SPDLOG_FMT_STRING(SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),       \
+                    basename, now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday, ext);       \
+        char path[PLATFORM_MAX_PATH];                                                               \
+        smutils->BuildPath(Path_Game, path, sizeof(path), buffer.c_str());                          \
+        return filename_t(path);                                                                    \
+    }
+
+#define DAILY_FILE_CUSTOM_CALCULATOR(function)                                                      \
+    [function](const filename_t &filename, const tm &now_tm) {                                      \
+        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell); \
+        if (!forward)                                                                               \
+            log4sp::throw_log4sp_ex("SM error! Could not create daily file calculator forward.");   \
+        if (!forward->AddFunction(function))                                                        \
+            log4sp::throw_log4sp_ex("SM error! Could not add daily file calculator function.");     \
+                                                                                                    \
+        char buffer[PLATFORM_MAX_PATH];                                                             \
+        size_t size = filename.size();                                                              \
+        if (size > sizeof(buffer) - 1) {                                                            \
+            size = sizeof(buffer) - 1;                                                              \
+        }                                                                                           \
+        memcpy(buffer, filename.data(), size);                                                      \
+        buffer[size] = '\0';                                                                        \
+                                                                                                    \
+        tm tmp = now_tm;                                                                            \
+        auto stamp = static_cast<cell_t>(mktime(&tmp));                                             \
+                                                                                                    \
+        forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); \
+        forward->PushCell(sizeof(buffer));                                                          \
+        forward->PushCell(stamp);                                                                   \
+        auto error = forward->Execute();                                                            \
+        assert(error != SP_ERROR_NONE);                                                             \
+        forwards->ReleaseForward(forward);                                                          \
+                                                                                                    \
+        smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);                              \
+        return filename_t(buffer);                                                                  \
+    }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                   DailyFileSink Functions
@@ -49,52 +90,14 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto truncate = static_cast<bool>(params[4]);
     auto maxFiles = static_cast<uint16_t>(params[5]);
     auto function = ctx->GetFunctionById(params[6]);
+    auto openPre  = ctx->GetFunctionById(params[7]);
+    auto closePost= ctx->GetFunctionById(params[8]);
 
-    auto calculator = [function](const filename_t &filename, const tm &now_tm)
+    log4sp_daily_filename_calculator calculator = DAILY_FILE_DEFAULT_CALCULATOR();
+    if (function)
     {
-        if (!function)
-        {
-            filename_t basename, ext;
-            std::tie(basename, ext) = file_helper::split_by_extension(filename);
-            auto buffer = format(SPDLOG_FMT_STRING(SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),
-                                 basename, now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday, ext);
-
-            char path[PLATFORM_MAX_PATH];
-            smutils->BuildPath(Path_Game, path, sizeof(path), buffer.c_str());
-            return filename_t(path);
-        }
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create daily file calculator forward.");
-
-        if (!forward->AddFunction(function))
-            log4sp::throw_log4sp_ex("SM error! Could not add daily file calculator function.");
-
-        char buffer[PLATFORM_MAX_PATH];
-        size_t len{(std::min)(sizeof(buffer) - 1, filename.size())};
-        memcpy(buffer, filename.data(), len);
-        buffer[len] = '\0';
-
-        tm tmp{now_tm};
-        auto stamp = static_cast<cell_t>(mktime(&tmp));
-
-        forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-        forward->PushCell(sizeof(buffer));
-        forward->PushCell(stamp);
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-
-        forwards->ReleaseForward(forward);
-        smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);
-        return filename_t(buffer);
-    };
-
-    SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[7]);
-    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[8]);
+        calculator = DAILY_FILE_CUSTOM_CALCULATOR(function);
+    }
 
     file_event_handlers handlers;
     handlers.before_open = FILE_EVENT_CALLBACK(openPre, "daily file open pre");
@@ -157,52 +160,14 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     auto truncate = static_cast<bool>(params[5]);
     auto maxFiles = static_cast<uint16_t>(params[6]);
     auto function = ctx->GetFunctionById(params[7]);
+    auto openPre  = ctx->GetFunctionById(params[8]);
+    auto closePost= ctx->GetFunctionById(params[9]);
 
-    auto calculator = [function](const filename_t &filename, const tm &now_tm)
+    log4sp_daily_filename_calculator calculator = DAILY_FILE_DEFAULT_CALCULATOR();
+    if (function)
     {
-        if (!function)
-        {
-            filename_t basename, ext;
-            std::tie(basename, ext) = file_helper::split_by_extension(filename);
-            auto buffer = format(SPDLOG_FMT_STRING(SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),
-                                 basename, now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday, ext);
-
-            char path[PLATFORM_MAX_PATH];
-            smutils->BuildPath(Path_Game, path, sizeof(path), buffer.c_str());
-            return filename_t(path);
-        }
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create daily file calculator forward.");
-
-        if (!forward->AddFunction(function))
-            log4sp::throw_log4sp_ex("SM error! Could not add daily file calculator function.");
-
-        char buffer[PLATFORM_MAX_PATH];
-        auto len = (std::min)(sizeof(buffer) - 1, filename.size());
-        memcpy(buffer, filename.data(), len);
-        buffer[len] = '\0';
-
-        tm tmp{now_tm};
-        auto stamp = static_cast<cell_t>(mktime(&tmp));
-
-        forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-        forward->PushCell(sizeof(buffer));
-        forward->PushCell(stamp);
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-
-        forwards->ReleaseForward(forward);
-        smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);
-        return filename_t(buffer);
-    };
-
-    SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[8]);
-    SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[9]);
+        calculator = DAILY_FILE_CUSTOM_CALCULATOR(function);
+    }
 
     file_event_handlers handlers;
     handlers.before_open = FILE_EVENT_CALLBACK(openPre, "daily file open pre");
