@@ -22,7 +22,7 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
  *      读取成功时: 继续执行后续代码
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
-#define READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(handle)                                               \
+#define READ_DAILY_FIEL_SINK_HANDLE_OR_ERROR(handle)                                                \
     SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
     SourceMod::HandleError error;                                                                   \
     auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
@@ -128,7 +128,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(params[1]);
+    READ_DAILY_FIEL_SINK_HANDLE_OR_ERROR(params[1]);
 
     size_t bytes{0};
     ctx->StringToLocalUTF8(params[2], params[3], dailyFileSink->filename().c_str(), &bytes);
@@ -137,7 +137,7 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
 
 static cell_t DailyFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(params[1]);
+    READ_DAILY_FIEL_SINK_HANDLE_OR_ERROR(params[1]);
 
     return static_cast<cell_t>(dailyFileSink->filename().length());
 }
