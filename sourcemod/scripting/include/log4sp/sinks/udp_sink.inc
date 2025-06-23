@@ -10,6 +10,13 @@
 #include <log4sp/sinks/sink>
 
 
+enum struct UDPSinkConfig
+{
+    char host[256];                     // Target host name or IP address.
+    int  port;                          // Target port.
+}
+
+
 /**
  * Simple udp client sink.
  * Sends formatted log via udp.

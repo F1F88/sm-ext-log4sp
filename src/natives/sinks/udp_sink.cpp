@@ -17,12 +17,17 @@ static cell_t UDPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     char *host;
     ctx->LocalToString(params[1], &host);
 
-    uint16_t port = static_cast<uint16_t>(params[2]);
+    int port = params[2];
+    if (port < 0 || port > UINT16_MAX)
+    {
+        ctx->ReportError("Invalid port %d. [0 - %d]", port, UINT16_MAX);
+        return BAD_HANDLE;
+    }
 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<udp_sink_st>(udp_sink_config(host, port));
+        sink = std::make_shared<udp_sink_st>(udp_sink_config(host, static_cast<uint16_t>(port)));
     }
     catch (const std::exception &ex)
     {
@@ -55,12 +60,17 @@ static cell_t UDPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
     char *host;
     ctx->LocalToString(params[2], &host);
 
-    uint16_t port = static_cast<uint16_t>(params[3]);
+    int port = params[2];
+    if (port < 0 || port > UINT16_MAX)
+    {
+        ctx->ReportError("Invalid port %d. [0 - %d]", port, UINT16_MAX);
+        return BAD_HANDLE;
+    }
 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<udp_sink_st>(udp_sink_config(host, port));
+        sink = std::make_shared<udp_sink_st>(udp_sink_config(host, static_cast<uint16_t>(port)));
     }
     catch (const std::exception &ex)
     {

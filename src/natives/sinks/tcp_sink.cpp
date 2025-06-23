@@ -17,6 +17,12 @@ static cell_t TCPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     ctx->LocalToString(params[1], &host);
 
     int port = params[2];
+    if (port < 0 || port > UINT16_MAX)
+    {
+        ctx->ReportError("Invalid port %d. [0 - %d]", port, UINT16_MAX);
+        return BAD_HANDLE;
+    }
+
     bool lazyConnect = static_cast<bool>(params[3]);
 
     tcp_sink_config config(host, port);
@@ -59,6 +65,12 @@ static cell_t TCPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
     ctx->LocalToString(params[2], &host);
 
     int port = params[3];
+    if (port < 0 || port > UINT16_MAX)
+    {
+        ctx->ReportError("Invalid port %d. [0 - %d]", port, UINT16_MAX);
+        return BAD_HANDLE;
+    }
+
     bool lazyConnect = static_cast<bool>(params[4]);
 
     tcp_sink_config config(host, port);

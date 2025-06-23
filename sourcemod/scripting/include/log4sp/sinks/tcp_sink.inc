@@ -10,6 +10,14 @@
 #include <log4sp/sinks/sink>
 
 
+enum struct TCPSinkConfig
+{
+    char host[256];                     // Target host name or IP address.
+    int  port;                          // Target port.
+    bool lazyConnect;                   // If true, connect on first log call instead of on construction.
+}
+
+
 /**
  * Simple tcp client sink.
  * Connects to remote address and send the formatted log.
@@ -26,7 +34,7 @@ methodmap TCPSink < Sink
      * @param port          Target port.
      * @param lazyConnect   If true, connect on first log call instead of on construction.
      * @return              TCPSink handle.
-     * @error               Invalid target address.
+     * @error               Failed to connect to TCP host/port.
      */
     public native TCPSink(const char[] host, int port, bool lazyConnect = false);
 
