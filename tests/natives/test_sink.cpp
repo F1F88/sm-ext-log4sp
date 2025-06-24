@@ -70,22 +70,18 @@ static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) n
         return 0;
     }
 
-    SourceMod::IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
-                                                                       Param_String, Param_Cell, Param_String,
-                                                                       Param_String, Param_Cell, Param_String,
-                                                                       Param_Cell, Param_Cell);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Could not create test sink drain msgs forward.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add test sink drain msgs function.");
-        return 0;
-    }
+    // void (const char[] name, LogLevel lvl, const char[] msg, const char[] file,
+    //       int line, const char[] func, int logTime, any data);
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 8, nullptr,
+                   Param_String,    // name
+                   Param_Cell,      // lvl
+                   Param_String,    // msg
+                   Param_String,    // file
+                   Param_Cell,      // line
+                   Param_String,    // func
+                   Param_Cell,      // logTime
+                   Param_Cell);     // data
+    FWD_ADD_FUNCTION(function);
 
     auto data = params[3];
 
@@ -95,17 +91,15 @@ static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) n
             auto payload = to_string(log_msg.payload);
             auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
 
-            forward->PushString(name.c_str());
-            forward->PushCell(log_msg.level);
-            forward->PushString(payload.c_str());
-
-            forward->PushString(log_msg.source.filename);
-            forward->PushCell(log_msg.source.line);
-            forward->PushString(log_msg.source.funcname);
-
-            forward->PushCell(static_cast<cell_t>(logTime.count()));
-            forward->PushCell(data);
-            assert(forward->Execute() == SP_ERROR_NONE);
+            FWD_PUSH_STRING(name.c_str());                          // name
+            FWD_PUSH_CELL(log_msg.level);                           // lvl
+            FWD_PUSH_STRING(payload.c_str());                       // msg
+            FWD_PUSH_STRING(log_msg.source.filename);               // file
+            FWD_PUSH_CELL(log_msg.source.line);                     // line
+            FWD_PUSH_STRING(log_msg.source.funcname);               // func
+            FWD_PUSH_CELL(static_cast<cell_t>(logTime.count()));    // logTime
+            FWD_PUSH_CELL(data);                                    // data
+            FWD_EXECUTE();
         }
     );
 
@@ -124,22 +118,18 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
         return 0;
     }
 
-    SourceMod::IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
-                                                                       Param_String, Param_Cell, Param_String,
-                                                                       Param_String, Param_Cell, Param_String,
-                                                                       Param_Cell, Param_Cell);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Could not create test sink peek last msg forward.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add test sink peek last msg function.");
-        return 0;
-    }
+    // void (const char[] name, LogLevel lvl, const char[] msg, const char[] file,
+    //       int line, const char[] func, int logTime, any data);
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 8, nullptr,
+                   Param_String,    // name
+                   Param_Cell,      // lvl
+                   Param_String,    // msg
+                   Param_String,    // file
+                   Param_Cell,      // line
+                   Param_String,    // func
+                   Param_Cell,      // logTime
+                   Param_Cell);     // data
+    FWD_ADD_FUNCTION(function);
 
     auto data = params[3];
 
@@ -149,17 +139,15 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
             auto payload = to_string(log_msg.payload);
             auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
 
-            forward->PushString(name.c_str());
-            forward->PushCell(log_msg.level);
-            forward->PushString(payload.c_str());
-
-            forward->PushString(log_msg.source.filename);
-            forward->PushCell(log_msg.source.line);
-            forward->PushString(log_msg.source.funcname);
-
-            forward->PushCell(static_cast<cell_t>(logTime.count()));
-            forward->PushCell(data);
-            assert(forward->Execute() == SP_ERROR_NONE);
+            FWD_PUSH_STRING(name.c_str());                          // name
+            FWD_PUSH_CELL(log_msg.level);                           // lvl
+            FWD_PUSH_STRING(payload.c_str());                       // msg
+            FWD_PUSH_STRING(log_msg.source.filename);               // file
+            FWD_PUSH_CELL(log_msg.source.line);                     // line
+            FWD_PUSH_STRING(log_msg.source.funcname);               // func
+            FWD_PUSH_CELL(static_cast<cell_t>(logTime.count()));    // logTime
+            FWD_PUSH_CELL(data);                                    // data
+            FWD_EXECUTE();
         }
     );
 
@@ -178,27 +166,17 @@ static cell_t DrainLines(SourcePawn::IPluginContext *ctx, const cell_t *params) 
         return 0;
     }
 
-    SourceMod::IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Could not create test sink drain lines forward.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add test sink drain lines function.");
-        return 0;
-    }
+    // void (const char[] line, any data);
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
+    FWD_ADD_FUNCTION(function);
 
     auto data = params[3];
 
     testSink->drain_lines(
         [forward, data](std::string_view line) {
-            forward->PushString(line.data());
-            forward->PushCell(data);
-            assert(forward->Execute() == SP_ERROR_NONE);
+            FWD_PUSH_STRING(line.data());
+            FWD_PUSH_CELL(data);
+            FWD_EXECUTE();
         }
     );
 
@@ -217,27 +195,17 @@ static cell_t DrainLastLine(SourcePawn::IPluginContext *ctx, const cell_t *param
         return 0;
     }
 
-    SourceMod::IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Could not create test sink peek last line forward.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add test sink peek last line function.");
-        return 0;
-    }
+    // void (const char[] line, any data);
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
+    FWD_ADD_FUNCTION(function);
 
     auto data = params[3];
 
     testSink->drain_last_line(
         [forward, data](std::string_view line) {
-            forward->PushString(line.data());
-            forward->PushCell(data);
-            assert(forward->Execute() == SP_ERROR_NONE);
+            FWD_PUSH_STRING(line.data());
+            FWD_PUSH_CELL(data);
+            FWD_EXECUTE();
         }
     );
 
@@ -266,7 +234,7 @@ static cell_t SetLogException(SourcePawn::IPluginContext *ctx, const cell_t *par
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     testSink->set_log_exception(std::runtime_error(msg));
     return 0;
@@ -285,7 +253,7 @@ static cell_t SetFlushException(SourcePawn::IPluginContext *ctx, const cell_t *p
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     testSink->set_flush_exception(std::runtime_error(msg));
     return 0;

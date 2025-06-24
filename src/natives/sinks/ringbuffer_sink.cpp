@@ -17,18 +17,21 @@ using log4sp::sinks::ringbuffer_sink_st;
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(handle)                                               \
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
-    SourceMod::HandleError error;                                                                   \
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
-    if (!sink) {                                                                                    \
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
-        return 0;                                                                                   \
-    }                                                                                               \
-    auto ringBufferSink = std::dynamic_pointer_cast<ringbuffer_sink_st>(sink);                      \
-    if (!ringBufferSink) {                                                                          \
-        ctx->ReportError("Invalid ring buffer sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter); \
-        return 0;                                                                                   \
-    }
+    std::shared_ptr<ringbuffer_sink_st> ringBufferSink;                                             \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);        \
+        if (!sink) {                                                                                \
+            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
+            return 0;                                                                               \
+        }                                                                                           \
+        ringBufferSink = std::dynamic_pointer_cast<ringbuffer_sink_st>(sink);                       \
+        if (!ringBufferSink) {                                                                      \
+            ctx->ReportError("Invalid RingBufferSink Handle %x.", handle);                          \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +48,7 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create ring buffer sink handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a RingBufferSink Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -62,22 +65,18 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         return 0;
     }
 
-    SourceMod::IChangeableForward *forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 8, nullptr,
-                                                                       Param_String, Param_Cell, Param_String,
-                                                                       Param_String, Param_Cell, Param_String,
-                                                                       Param_Cell, Param_Cell);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Could not create ring buffer sink drain forward.");
-        return 0;
-    }
+    // void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data)
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 8, nullptr,
+                   Param_String,                            // name
+                   Param_Cell,                              // lvl
+                   Param_String,                            // msg
+                   Param_String,                            // file
+                   Param_Cell,                              // line
+                   Param_String,                            // func
+                   Param_Cell,                              // logTime
+                   Param_Cell);                             // data
 
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add ring buffer sink drain function.");
-        return 0;
-    }
+    FWD_ADD_FUNCTION(function);
 
     auto data = params[3];
 
@@ -86,21 +85,15 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         auto payload = to_string(log_msg.payload);
         auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
 
-        forward->PushString(name.c_str());
-        forward->PushCell(log_msg.level);
-        forward->PushString(payload.c_str());
-
-        forward->PushString(log_msg.source.filename);
-        forward->PushCell(log_msg.source.line);
-        forward->PushString(log_msg.source.funcname);
-
-        forward->PushCell(static_cast<cell_t>(logTime.count()));
-        forward->PushCell(data);
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
+        FWD_PUSH_STRING(name.c_str());                      // name
+        FWD_PUSH_CELL(log_msg.level);                       // lvl
+        FWD_PUSH_STRING(payload.c_str());                   // msg
+        FWD_PUSH_STRING(log_msg.source.filename);           // file
+        FWD_PUSH_CELL(log_msg.source.line);                 // line
+        FWD_PUSH_STRING(log_msg.source.funcname);           // func
+        FWD_PUSH_CELL(static_cast<cell_t>(logTime.count()));// logTime
+        FWD_PUSH_CELL(data);                                // data
+        FWD_EXECUTE();
     });
 
     forwards->ReleaseForward(forward);
@@ -118,30 +111,16 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
         return 0;
     }
 
-    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Could not create ring buffer sink drain formatted forward.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add ring buffer sink drain formatted function.");
-        return 0;
-    }
+    // void (const char[] msg, any data)
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
+    FWD_ADD_FUNCTION(function);
 
     auto data = params[3];
 
     ringBufferSink->drain_formatted([&forward, &data](std::string_view msg) {
-        forward->PushString(msg.data());
-        forward->PushCell(data);
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
+        FWD_PUSH_STRING(msg.data());
+        FWD_PUSH_CELL(data);
+        FWD_EXECUTE();
     });
 
     forwards->ReleaseForward(forward);
@@ -151,7 +130,7 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
 static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -169,7 +148,7 @@ static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;

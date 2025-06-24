@@ -15,7 +15,7 @@ using spdlog::sinks::udp_sink_st;
 static cell_t UDPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *host;
-    ctx->LocalToString(params[1], &host);
+    CTX_LOCAL_TO_STRING(params[1], &host);
 
     int port = params[2];
     if (port < 0 || port > UINT16_MAX)
@@ -41,7 +41,7 @@ static cell_t UDPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create udp sink handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a UDPSink Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -50,7 +50,7 @@ static cell_t UDPSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 static cell_t UDPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -58,7 +58,7 @@ static cell_t UDPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
     }
 
     char *host;
-    ctx->LocalToString(params[2], &host);
+    CTX_LOCAL_TO_STRING(params[2], &host);
 
     int port = params[2];
     if (port < 0 || port > UINT16_MAX)
@@ -78,14 +78,14 @@ static cell_t UDPSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create udp sink handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;

@@ -31,7 +31,7 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create server console sink handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a ServerConsoleSink Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -40,7 +40,7 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
 static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -65,7 +65,7 @@ static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, co
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;

@@ -16,7 +16,7 @@ using spdlog::source_loc;
         return loc_;
     }
 
-    assert(false);
+    assert(false);                        // 说明初始化的代码存在错误 (至少一项有效)
     return source_loc{};
 }
 
@@ -85,16 +85,13 @@ void err_helper::handle_ex(const std::string &origin, const src_helper &src, con
     try {
         const source_loc loc{src.get()};
         if (custom_error_handler_) {
-            custom_error_handler_->PushString(ex.what());
-            custom_error_handler_->PushString(origin.c_str());
-            custom_error_handler_->PushString(loc.filename);
-            custom_error_handler_->PushCell(loc.line);
-            custom_error_handler_->PushString(loc.funcname);
-#ifndef DEBUG
-            custom_error_handler_->Execute();
-#else
-            assert(custom_error_handler_->Execute() == SP_ERROR_NONE);
-#endif
+            auto forward = custom_error_handler_;
+            FWD_PUSH_STRING(ex.what());             // msg
+            FWD_PUSH_STRING(origin.c_str());        // name
+            FWD_PUSH_STRING(loc.filename);          // file
+            FWD_PUSH_CELL(loc.line);                // line
+            FWD_PUSH_STRING(loc.funcname);          // func
+            FWD_EXECUTE();
             return;
         }
         smutils->LogError(myself, "[%s::%d] [%s] %s", get_path_filename(loc.filename), loc.line, origin.c_str(), ex.what());

@@ -18,23 +18,27 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
 
 /**
  * 封装读取 daily file sink handle 代码
- * 这会创建 4 个变量: security, error, sink, dailyFileSink
+ * 这会创建 1 个变量: dailyFileSink
  *      读取成功时: 继续执行后续代码
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_DAILY_FIEL_SINK_HANDLE_OR_ERROR(handle)                                                \
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
-    SourceMod::HandleError error;                                                                   \
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
-    if (!sink) {                                                                                    \
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
-        return 0;                                                                                   \
-    }                                                                                               \
-    auto dailyFileSink = std::dynamic_pointer_cast<daily_file_sink_st>(sink);                       \
-    if (!dailyFileSink) {                                                                           \
-        ctx->ReportError("Invalid daily file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter); \
-        return 0;                                                                                   \
-    }
+    std::shared_ptr<daily_file_sink_st> dailyFileSink;                                              \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);        \
+        if (!sink) {                                                                                \
+            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
+            return 0;                                                                               \
+        }                                                                                           \
+        dailyFileSink = std::dynamic_pointer_cast<daily_file_sink_st>(sink);                        \
+        if (!dailyFileSink) {                                                                       \
+            ctx->ReportError("Invalid DailyFileSink Handle %x.", handle);                           \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
+
 
 #define DAILY_FILE_DEFAULT_CALCULATOR()                                                             \
     [](const filename_t &filename, const tm &now_tm) {                                              \
@@ -47,14 +51,9 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
         return filename_t(path);                                                                    \
     }
 
+
 #define DAILY_FILE_CUSTOM_CALCULATOR(function)                                                      \
     [function](const filename_t &filename, const tm &now_tm) {                                      \
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell); \
-        if (!forward)                                                                               \
-            log4sp::throw_log4sp_ex("SM error! Could not create daily file calculator forward.");   \
-        if (!forward->AddFunction(function))                                                        \
-            log4sp::throw_log4sp_ex("SM error! Could not add daily file calculator function.");     \
-                                                                                                    \
         char buffer[PLATFORM_MAX_PATH];                                                             \
         size_t size = filename.size();                                                              \
         if (size > sizeof(buffer) - 1) {                                                            \
@@ -66,16 +65,19 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
         tm tmp = now_tm;                                                                            \
         auto stamp = static_cast<cell_t>(mktime(&tmp));                                             \
                                                                                                     \
-        forward->PushStringEx(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); \
-        forward->PushCell(sizeof(buffer));                                                          \
-        forward->PushCell(stamp);                                                                   \
-        auto error = forward->Execute();                                                            \
-        assert(error != SP_ERROR_NONE);                                                             \
+        /* void (char[] filename, int maxlen, int sec); */                                          \
+        FWDS_CREATE_EX(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);       \
+        FWD_ADD_FUNCTION(function);                                                                 \
+        FWD_PUSH_STRING_EX(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); \
+        FWD_PUSH_CELL(sizeof(buffer));                                                              \
+        FWD_PUSH_CELL(stamp);                                                                       \
+        FWD_EXECUTE();                                                                              \
         forwards->ReleaseForward(forward);                                                          \
                                                                                                     \
         smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);                              \
         return filename_t(buffer);                                                                  \
     }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                   DailyFileSink Functions
@@ -83,7 +85,7 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
 static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    ctx->LocalToString(params[1], &file);
+    CTX_LOCAL_TO_STRING(params[1], &file);
 
     int hour      = params[2];
     int minute    = params[3];
@@ -106,8 +108,8 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "daily file open pre");
-    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "daily file close post");
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -126,7 +128,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create daily file sink handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a DailyFileSink Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -137,7 +139,7 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
     READ_DAILY_FIEL_SINK_HANDLE_OR_ERROR(params[1]);
 
     size_t bytes{0};
-    ctx->StringToLocalUTF8(params[2], params[3], dailyFileSink->filename().c_str(), &bytes);
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], dailyFileSink->filename().c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 
@@ -151,7 +153,7 @@ static cell_t DailyFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx, c
 static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -159,7 +161,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     }
 
     char *file;
-    ctx->LocalToString(params[2], &file);
+    CTX_LOCAL_TO_STRING(params[2], &file);
 
     int hour      = params[3];
     int minute    = params[4];
@@ -182,8 +184,8 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     }
 
     file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "daily file open pre");
-    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "daily file close post");
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -203,7 +205,7 @@ static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;

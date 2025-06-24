@@ -11,24 +11,27 @@ using spdlog::source_loc;
 
 /**
  * 封装读取 logger handle 代码
- * 这会创建 3 个变量: security, error, logger
+ * 这会创建 1 个变量: logger
  *      读取成功时: 继续执行后续代码
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_LOGGER_HANDLE_OR_ERROR(handle)                                                         \
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
-    SourceMod::HandleError error;                                                                   \
-    auto logger = log4sp::logger_handler::instance().read_handle_raw(handle, &security, &error);    \
-    if (!logger) {                                                                                  \
-        ctx->ReportError("Invalid logger handle %x (error: %d)", handle, error);                    \
-        return 0;                                                                                   \
-    }
+    log4sp::logger *logger;                                                                         \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        logger = log4sp::logger_handler::instance().read_handle_raw(handle, &security, &error);     \
+        if (!logger) {                                                                              \
+            ctx->ReportError("Invalid Logger Handle %x (error code: %d)", handle, error);           \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
 
 
 static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -42,7 +45,7 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -51,7 +54,7 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -59,7 +62,7 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
     }
 
     cell_t *sinks;
-    ctx->LocalToPhysAddr(params[2], &sinks);
+    CTX_LOCAL_TO_PHYS_ADDR(params[2], &sinks);
 
     int numSinks{params[3]};
     std::vector<sink_ptr> sinkVector(numSinks, nullptr);
@@ -72,7 +75,7 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
         auto sink = log4sp::sink_handler::instance().read_handle(sinks[i], &security, &error);
         if (!sink)
         {
-            ctx->ReportError("Invalid sink handle %x (error: %d)", sinks[i], error);
+            ctx->ReportError("Invalid Sink Handle %x (index: %d, error code: %d)", sinks[i], i, error);
             return BAD_HANDLE;
         }
 
@@ -83,7 +86,7 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -92,7 +95,7 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
 static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -100,7 +103,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
     }
 
     cell_t *sinks;
-    ctx->LocalToPhysAddr(params[2], &sinks);
+    CTX_LOCAL_TO_PHYS_ADDR(params[2], &sinks);
 
     int numSinks{params[3]};
     std::vector<sink_ptr> sinkVector(numSinks, nullptr);
@@ -113,7 +116,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
         auto sink = log4sp::sink_handler::instance().read_handle(sinks[i], &security, &error);
         if (!sink)
         {
-            ctx->ReportError("Invalid sink handle %x (error: %d)", sinks[i], error);
+            ctx->ReportError("Invalid Sink Handle %x (index: %d, error code: %d)", sinks[i], i, error);
             return BAD_HANDLE;
         }
 
@@ -122,18 +125,14 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 
     for (int i = 0; i < numSinks; ++i)
     {
-#ifndef DEBUG
-        handlesys->FreeHandle(sinks[i], &security);
-#else
-        assert(handlesys->FreeHandle(sinks[i], &security) == SP_ERROR_NONE);
-#endif
+        HANDLE_SYS_FREE_HANDLE(sinks[i], &security);
     }
 
     auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -142,7 +141,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
 
     return log4sp::logger_handler::instance().find_handle(name);
 }
@@ -152,35 +151,21 @@ static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     auto function = ctx->GetFunctionById(params[1]);
     if (!function)
     {
-        ctx->ReportError("Invalid function id: 0x%08x", params[1]);
+        ctx->ReportError("Invalid function id: 0x%08x.", params[1]);
         return 0;
     }
 
-    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 2, nullptr, Param_Cell, Param_Cell);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Create apply all forward failure.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add apply all function.");
-        return 0;
-    }
+    // void (Logger logger, any data)
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_Cell, Param_Cell);
+    FWD_ADD_FUNCTION(function);
 
     auto data = params[2];
 
     log4sp::logger_handler::instance().apply_all(
         [forward, data](const SourceMod::Handle_t handle) {
-            forward->PushCell(handle);
-            forward->PushCell(data);
-#ifndef DEBUG
-            forward->Execute();
-#else
-            assert(forward->Execute() == SP_ERROR_NONE);
-#endif
+            FWD_PUSH_CELL(handle);
+            FWD_PUSH_CELL(data);
+            FWD_EXECUTE();
         }
     );
 
@@ -193,7 +178,7 @@ static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     size_t bytes{0};
-    ctx->StringToLocalUTF8(params[2], params[3], logger->name().c_str(), &bytes);
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], logger->name().c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 
@@ -226,7 +211,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *pattern;
-    ctx->LocalToString(params[2], &pattern);
+    CTX_LOCAL_TO_STRING(params[2], &pattern);
 
     auto type = log4sp::number_to_pattern_time_type(params[3]);
 
@@ -250,7 +235,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     auto lvl = log4sp::num_to_lvl(params[2]);
 
     char *msg;
-    ctx->LocalToString(params[3], &msg);
+    CTX_LOCAL_TO_STRING(params[3], &msg);
 
     logger->log(ctx, lvl, msg);
     return 0;
@@ -283,7 +268,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     auto lvl = log4sp::num_to_lvl(params[2]);
 
     char *msg;
-    ctx->LocalToString(params[3], &msg);
+    CTX_LOCAL_TO_STRING(params[3], &msg);
 
     logger->log(log4sp::src_helper::get_from_plugin_ctx(ctx), lvl, msg);
     return 0;
@@ -314,9 +299,9 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func, *msg;
-    ctx->LocalToString(params[2], &file);
-    ctx->LocalToString(params[4], &func);
-    ctx->LocalToString(params[6], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &file);
+    CTX_LOCAL_TO_STRING(params[4], &func);
+    CTX_LOCAL_TO_STRING(params[6], &msg);
 
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
@@ -330,8 +315,8 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func;
-    ctx->LocalToString(params[2], &file);
-    ctx->LocalToString(params[4], &func);
+    CTX_LOCAL_TO_STRING(params[2], &file);
+    CTX_LOCAL_TO_STRING(params[4], &func);
 
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
@@ -345,8 +330,8 @@ static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func;
-    ctx->LocalToString(params[2], &file);
-    ctx->LocalToString(params[4], &func);
+    CTX_LOCAL_TO_STRING(params[2], &file);
+    CTX_LOCAL_TO_STRING(params[4], &func);
 
     int line = params[3];
     auto lvl = log4sp::num_to_lvl(params[5]);
@@ -362,7 +347,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto lvl = log4sp::num_to_lvl(params[2]);
 
     char *msg;
-    ctx->LocalToString(params[3], &msg);
+    CTX_LOCAL_TO_STRING(params[3], &msg);
 
     logger->log(ctx, lvl, fmt_lib::format("Stack trace requested: {}", msg));
     logger->log(ctx, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
@@ -401,7 +386,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
     char *msg;
-    ctx->LocalToString(params[3], &msg);
+    CTX_LOCAL_TO_STRING(params[3], &msg);
 
     ctx->ReportError(msg);
 
@@ -440,7 +425,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     logger->log(ctx, level_enum::trace, msg);
     return 0;
@@ -467,7 +452,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     logger->log(ctx, level_enum::debug, msg);
     return 0;
@@ -494,7 +479,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     logger->log(ctx, level_enum::info, msg);
     return 0;
@@ -521,7 +506,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     logger->log(ctx, level_enum::warn, msg);
     return 0;
@@ -548,7 +533,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     logger->log(ctx, level_enum::err, msg);
     return 0;
@@ -575,7 +560,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    ctx->LocalToString(params[2], &msg);
+    CTX_LOCAL_TO_STRING(params[2], &msg);
 
     logger->log(ctx, level_enum::critical, msg);
     return 0;
@@ -626,10 +611,12 @@ static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleError error;
     auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
+        ctx->ReportError("Invalid Sink Handle %x (error code: %d)", params[2], error);
         return 0;
     }
 
@@ -641,18 +628,17 @@ static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleError error;
+
     auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
+        ctx->ReportError("Invalid Sink Handle %x (error code: %d)", params[2], error);
         return 0;
     }
 
-#ifndef DEBUG
-    handlesys->FreeHandle(params[2], &security);
-#else
-    assert(handlesys->FreeHandle(params[2], &security) == SP_ERROR_NONE);
-#endif
+    HANDLE_SYS_FREE_HANDLE(params[2], &security);
 
     logger->add_sink(sink);
     return 0;
@@ -662,10 +648,13 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleError error;
+
     auto sink = log4sp::sink_handler::instance().read_handle(params[2], &security, &error);
     if (!sink)
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[2], error);
+        ctx->ReportError("Invalid Sink Handle %x (error code: %d)", params[2], error);
         return 0;
     }
 
@@ -680,23 +669,13 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
     auto function = ctx->GetFunctionById(params[2]);
     if (!function)
     {
-        ctx->ReportError("Invalid function id: 0x%08x", params[2]);
+        ctx->ReportError("Invalid function id: 0x%08x.", params[2]);
         return 0;
     }
 
-    auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 5, nullptr, Param_String, Param_String, Param_String, Param_Cell, Param_String);
-    if (!forward)
-    {
-        ctx->ReportError("SM error! Could not create error handler forward.");
-        return 0;
-    }
-
-    if (!forward->AddFunction(function))
-    {
-        forwards->ReleaseForward(forward);
-        ctx->ReportError("SM error! Could not add error handler function.");
-        return 0;
-    }
+    // void (const char[] msg, const char[] name, const char[] file, int line, const char[] func)
+    FWDS_CREATE_EX(nullptr, ET_Ignore, 5, nullptr, Param_String, Param_String, Param_String, Param_Cell, Param_String);
+    FWD_ADD_FUNCTION(function);
 
     logger->set_error_handler(forward);
     return 0;

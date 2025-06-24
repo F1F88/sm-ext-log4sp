@@ -12,24 +12,27 @@ using spdlog::sinks::basic_file_sink_st;
 
 
 /**
- * 封装读取 daily file sink handle 代码
- * 这会创建 4 个变量: security, error, sink, basicFileSink
+ * 封装读取 basic file sink handle 代码
+ * 这会创建 1 个变量: basicFileSink
  *      读取成功时: 继续执行后续代码
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(handle)                                                \
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
-    SourceMod::HandleError error;                                                                   \
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
-    if (!sink) {                                                                                    \
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
-        return 0;                                                                                   \
-    }                                                                                               \
-    auto basicFileSink = std::dynamic_pointer_cast<basic_file_sink_st>(sink);                       \
-    if (!basicFileSink) {                                                                           \
-        ctx->ReportError("Invalid basic file sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter); \
-        return 0;                                                                                   \
-    }
+    std::shared_ptr<basic_file_sink_st> basicFileSink;                                              \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);        \
+        if (!sink) {                                                                                \
+            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
+            return 0;                                                                               \
+        }                                                                                           \
+        basicFileSink = std::dynamic_pointer_cast<basic_file_sink_st>(sink);                        \
+        if (!basicFileSink) {                                                                       \
+            ctx->ReportError("Invalid BasicFileSink Handle %x.", handle);                           \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +41,7 @@ using spdlog::sinks::basic_file_sink_st;
 static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    ctx->LocalToString(params[1], &file);
+    CTX_LOCAL_TO_STRING(params[1], &file);
 
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
@@ -48,8 +51,8 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[4]);
 
     file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "basic file open pre");
-    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "basic file close post");
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -68,7 +71,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create basic file sink handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a BasicFileSink Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -79,7 +82,7 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
     READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
     size_t bytes{0};
-    ctx->StringToLocalUTF8(params[2], params[3], basicFileSink->filename().c_str(), &bytes);
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], basicFileSink->filename().c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 
@@ -101,7 +104,7 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
 static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -109,7 +112,7 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     }
 
     char *file;
-    ctx->LocalToString(params[2], &file);
+    CTX_LOCAL_TO_STRING(params[2], &file);
 
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
@@ -119,8 +122,8 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[5]);
 
     file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_CALLBACK(openPre, "basic file open pre");
-    handlers.after_close = FILE_EVENT_CALLBACK(closePost, "basic file close post");
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -140,7 +143,7 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;

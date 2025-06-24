@@ -8,24 +8,27 @@ using log4sp::sinks::callback_sink;
 
 
 /**
- * 封装读取 daily file sink handle 代码
- * 这会创建 4 个变量: security, error, sink, callbackSink
+ * 封装读取 callback sink handle 代码
+ * 这会创建 1 个变量: callbackSink
  *      读取成功时: 继续执行后续代码
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_CALLBACK_SINK_HANDLE_OR_ERROR(handle)                                                  \
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
-    SourceMod::HandleError error;                                                                   \
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
-    if (!sink) {                                                                                    \
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
-        return 0;                                                                                   \
-    }                                                                                               \
-    auto callbackSink = std::dynamic_pointer_cast<callback_sink>(sink);                             \
-    if (!callbackSink) {                                                                            \
-        ctx->ReportError("Invalid callback sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter); \
-        return 0;                                                                                   \
-    }
+    std::shared_ptr<callback_sink> callbackSink;                                                    \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);        \
+        if (!sink) {                                                                                \
+            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
+            return 0;                                                                               \
+        }                                                                                           \
+        callbackSink = std::dynamic_pointer_cast<callback_sink>(sink);                              \
+        if (!callbackSink) {                                                                        \
+            ctx->ReportError("Invalid CallbackSink Handle %x.", handle);                            \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +57,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create callback sink handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a CallbackSink Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -108,7 +111,7 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
 static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -137,7 +140,7 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
         return BAD_HANDLE;
     }
     return handle;

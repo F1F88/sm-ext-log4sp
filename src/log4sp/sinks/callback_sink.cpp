@@ -12,13 +12,8 @@ callback_sink::callback_sink(IPluginFunction *log_function,
                              IPluginFunction *log_post_function,
                              IPluginFunction *flush_function) {
     set_log_callback(log_function);
-    try {
-        set_log_post_callback(log_post_function);
-        set_flush_callback(flush_function);
-    } catch(...) {
-        release_forwards_();
-        throw;
-    }
+    set_log_post_callback(log_post_function);
+    set_flush_callback(flush_function);
 }
 
 callback_sink::~callback_sink() {
@@ -43,109 +38,82 @@ void callback_sink::release_forwards_() {
 }
 
 void callback_sink::set_log_callback(IPluginFunction *log_function) {
-    SourceMod::IChangeableForward *cb{nullptr};
-
-    if (log_function) {
-        cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 7, nullptr,
-                                       Param_String, Param_Cell, Param_String,
-                                       Param_String, Param_Cell, Param_String,
-                                       Param_Cell);
-        if (!cb) {
-            throw_log4sp_ex("SM error! Could not create callback sink log forward.");
-        }
-
-        if (!cb->AddFunction(log_function)) {
-            forwards->ReleaseForward(cb);
-            throw_log4sp_ex("SM error! Could not add callback sink log function.");
-        }
-    }
-
     if (log_callback_) {
         forwards->ReleaseForward(log_callback_);
+        log_callback_ = nullptr;
     }
-    log_callback_ = cb;
+
+    if (log_function) {
+        // void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
+        FWDS_CREATE_EX(nullptr, ET_Ignore, 7, nullptr,
+                       Param_String,    // name
+                       Param_Cell,      // lvl
+                       Param_String,    // msg
+                       Param_String,    // file
+                       Param_Cell,      // line
+                       Param_String,    // func
+                       Param_Cell);     // logTime
+        FWD_ADD_FUNCTION(log_function);
+        log_callback_ = forward;
+    }
 }
 
 void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
-    SourceMod::IChangeableForward *cb{nullptr};
-
-    if (log_post_function) {
-        cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!cb) {
-            throw_log4sp_ex("SM error! Could not create callback sink log post forward.");
-        }
-
-        if (!cb->AddFunction(log_post_function)) {
-            forwards->ReleaseForward(cb);
-            throw_log4sp_ex("SM error! Could not add callback sink log post function.");
-        }
-    }
-
     if (log_post_callback_) {
         forwards->ReleaseForward(log_post_callback_);
+        log_post_callback_ = nullptr;
     }
-    log_post_callback_ = cb;
+
+    if (log_post_function) {
+        // void (const char[] msg);
+        FWDS_CREATE_EX(nullptr, ET_Ignore, 1, nullptr, Param_String);
+        FWD_ADD_FUNCTION(log_post_function);
+        log_post_callback_ = forward;
+    }
 }
 
 void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
-    SourceMod::IChangeableForward *cb{nullptr};
-
-    if (flush_function) {
-        cb = forwards->CreateForwardEx(nullptr, ET_Ignore, 0, nullptr);
-        if (!cb) {
-            throw_log4sp_ex("SM error! Could not create callback sink flush forward.");
-        }
-
-        if (!cb->AddFunction(flush_function)) {
-            forwards->ReleaseForward(cb);
-            throw_log4sp_ex("SM error! Could not add callback sink flush function.");
-        }
-    }
-
     if (flush_callback_) {
         forwards->ReleaseForward(flush_callback_);
+        flush_callback_ = nullptr;
     }
-    flush_callback_ = cb;
+
+    if (flush_function) {
+        // void ();
+        FWDS_CREATE_EX(nullptr, ET_Ignore, 0, nullptr);
+        FWD_ADD_FUNCTION(flush_function);
+        flush_callback_ = forward;
+    }
 }
 
 void callback_sink::sink_it_(const log_msg &log_msg) {
     if (log_callback_) {
-        auto logTime{std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch())};
+        auto forward = log_callback_;
+        auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
 
-        log_callback_->PushString(log_msg.logger_name.data());
-        log_callback_->PushCell(log_msg.level);
-        log_callback_->PushString(log_msg.payload.data());
-        log_callback_->PushString(log_msg.source.filename);
-        log_callback_->PushCell(log_msg.source.line);
-        log_callback_->PushString(log_msg.source.funcname);
-        log_callback_->PushCell(static_cast<cell_t>(logTime.count()));
-
-#ifndef DEBUG
-        log_callback_->Execute();
-#else
-        assert(log_callback_->Execute() == SP_ERROR_NONE);
-#endif
+        FWD_PUSH_STRING(log_msg.logger_name.data());            // name
+        FWD_PUSH_CELL(log_msg.level);                           // lvl
+        FWD_PUSH_STRING(log_msg.payload.data());                // msg
+        FWD_PUSH_STRING(log_msg.source.filename);               // file
+        FWD_PUSH_CELL(log_msg.source.line);                     // line
+        FWD_PUSH_STRING(log_msg.source.funcname);               // func
+        FWD_PUSH_CELL(static_cast<cell_t>(logTime.count()));    // logTime
+        FWD_EXECUTE();
     }
 
     if (log_post_callback_) {
+        auto forward = log_post_callback_;
         std::string formatted = to_pattern(log_msg);
-        log_post_callback_->PushString(formatted.c_str());
 
-#ifndef DEBUG
-        log_post_callback_->Execute();
-#else
-        assert(log_post_callback_->Execute() == SP_ERROR_NONE);
-#endif
+        FWD_PUSH_STRING(formatted.c_str());
+        FWD_EXECUTE();
     }
 }
 
 void callback_sink::flush_() {
     if (flush_callback_) {
-#ifndef DEBUG
-        flush_callback_->Execute();
-#else
-        assert(flush_callback_->Execute() == SP_ERROR_NONE);
-#endif
+        auto forward = flush_callback_;
+        FWD_EXECUTE();
     }
 }
 

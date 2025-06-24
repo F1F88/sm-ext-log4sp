@@ -14,6 +14,8 @@ using spdlog::memory_buf_t;
 #define LADJUST         0x00000001      /* left adjustment */
 #define ZEROPAD         0x00000002      /* zero (as opposed to blank) pad */
 #define UPPERDIGITS     0x00000004      /* make alpha digits uppercase */
+#define TO_DIGIT(c)     ((c) - '0')
+#define IS_DIGIT(c)     (c >= '0' && c <= '9')
 
 #define THROW_ERROR(fmt, ...) \
     throw_log4sp_ex(fmt_lib::format(fmt, __VA_ARGS__));
@@ -27,12 +29,13 @@ using spdlog::memory_buf_t;
     assert(ctx && params);
 
     char *format;
-    ctx->LocalToString(params[param], &format);
-    unsigned int lparam{param + 1};
+    CTX_LOCAL_TO_STRING(params[param], &format);
+    unsigned int lparam = param + 1;
     return fmt_lib::to_string(format_to_buffer(ctx, format, params, &lparam));
 }
 
-static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) noexcept {
+
+static void ReorderTranslationParams(const SourceMod::Translation *pTrans, cell_t *params) noexcept {
     cell_t new_params[MAX_TRANSLATE_PARAMS];
     for (unsigned int i = 0; i < pTrans->fmt_count; ++i) {
         new_params[i] = params[pTrans->fmt_order[i]];
@@ -42,8 +45,8 @@ static void ReorderTranslationParams(const Translation *pTrans, cell_t *params) 
 
 static memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, unsigned int *arg) {
     unsigned int langid;
-    Translation pTrans;
-    IPhraseCollection *pPhrases = plsys->FindPluginByContext(ctx->GetContext())->GetPhrases();
+    SourceMod::Translation pTrans;
+    SourceMod::IPhraseCollection *pPhrases = plsys->FindPluginByContext(ctx->GetContext())->GetPhrases();
 
 try_serverlang:
     if (target == SOURCEMOD_SERVER_LANGUAGE) {
@@ -102,7 +105,7 @@ static void AddString(memory_buf_t &out, const char *string, unsigned int width,
     }
 
     // 需要填充的字符数
-    unsigned int pads{(width <= size) ? (0u) : (width - size)};
+    unsigned int pads = (width <= size) ? (0u) : (width - size);
 
     // right justify if required
     if (!(flags & LADJUST)) {
@@ -149,11 +152,15 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     }
 
     // compute whole-part digits count
+    digits = (int)std::log10(fval) + 1;
+
     // Only print 0.something if 0 < fval < 1
-    digits = (std::max)((int)std::log10(fval) + 1, 1);
+    if (digits < 1) {
+        digits = 1;
+    }
 
     // compute the field length
-    fieldlength = digits + prec + (prec > 0 ? 1 : 0) + (sign ? 1 : 0);
+    fieldlength = digits + prec + ((prec > 0) ? 1 : 0) + (sign ? 1 : 0);
 
     // minus sign BEFORE left padding if padding with zeros
     if (sign && (flags & ZEROPAD)) {
@@ -230,7 +237,7 @@ static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, i
     unsigned int digits = MAX_BINARY - iter - 1;
 
     // 需要填充的字符数
-    unsigned int pads{(width <= digits) ? (0u) : (width - digits)};
+    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST)) {
@@ -258,7 +265,8 @@ static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int
         text[digits++] = '0' + val % 10;
     } while (val /= 10);
 
-    unsigned int pads{(width <= digits) ? (0u) : (width - digits)};
+    // 需要填充的字符数
+    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST)) {
@@ -286,15 +294,17 @@ static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) no
     unsigned int digits{0};
 
     bool negative = val < 0;
-    unsigned int unsignedVal = negative ? abs(val) : val;
+    unsigned int unsignedVal = negative ? std::abs(val) : val;
 
     do {
         text[digits++] = '0' + unsignedVal % 10;
     } while (unsignedVal /= 10);
 
-    unsigned int pads{(width <= digits) ? (0u) : (width - digits)};
-    if (pads > 0 && negative)
+    // 需要填充的字符数
+    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
+    if (pads > 0 && negative) {
         pads--;
+    }
 
     // minus sign BEFORE left padding if padding with zeros
     if (negative && (flags & ZEROPAD)) {
@@ -338,7 +348,8 @@ static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int 
         text[digits++] = hexAdjust[val & 0xF];
     } while(val >>= 4);
 
-    unsigned int pads{(width <= digits) ? (0u) : (width - digits)};
+    // 需要填充的字符数
+    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST)) {
@@ -430,7 +441,7 @@ reswitch:
         case '.': {
                 int n{0};
                 ch = *fmt++;
-                while (ch >= '0' && ch <= '9') {
+                while (IS_DIGIT(ch)) {
                     n = 10 * n + (ch - '0');
                     ch = *fmt++;
                 }
@@ -454,14 +465,15 @@ reswitch:
                 do {
                     n = 10 * n + (ch - '0');
                     ch = *fmt++;
-                } while(ch >= '0' && ch <= '9');
+                } while(IS_DIGIT(ch));
                 width = n;
                 goto reswitch;
             }
         case 'c': {
                 CHECK_ARGS(0);
                 char *c;
-                ctx->LocalToString(params[arg], &c);
+                CTX_LOCAL_TO_STRING(params[arg], &c);
+
                 out.push_back(*c);
                 ++arg;
                 break;
@@ -469,7 +481,8 @@ reswitch:
         case 'b': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
                 AddBinary(out, *value, width, flags);
                 ++arg;
                 break;
@@ -478,7 +491,8 @@ reswitch:
         case 'i': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
                 AddInt(out, static_cast<int>(*value), width, flags);
                 ++arg;
                 break;
@@ -486,7 +500,8 @@ reswitch:
         case 'u': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
                 AddUInt(out, static_cast<unsigned int>(*value), width, flags);
                 ++arg;
                 break;
@@ -494,7 +509,8 @@ reswitch:
         case 'f': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
                 AddFloat(out, sp_ctof(*value), width, prec, flags);
                 ++arg;
                 break;
@@ -502,7 +518,7 @@ reswitch:
         case 'L': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
                 if (*value) {
                     const char *name;
@@ -521,7 +537,7 @@ reswitch:
         case 'N': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
                 if (*value) {
                     const char *name;
@@ -538,7 +554,8 @@ reswitch:
         case 's': {
                 CHECK_ARGS(0);
                 char *str;
-                ctx->LocalToString(params[arg], &str);
+                CTX_LOCAL_TO_STRING(params[arg], &str);
+
                 AddString(out, str, width, prec, flags);
                 ++arg;
                 break;
@@ -547,8 +564,9 @@ reswitch:
                 CHECK_ARGS(1);
                 char *key;
                 cell_t *target;
-                ctx->LocalToString(params[arg++], &key);
-                ctx->LocalToPhysAddr(params[arg++], &target);
+                CTX_LOCAL_TO_STRING(params[arg++], &key);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg++], &target);
+
                 memory_buf_t phrase = Translate(ctx, key, *target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
@@ -556,15 +574,18 @@ reswitch:
         case 't': {
                 CHECK_ARGS(0);
                 char *key;
-                ctx->LocalToString(params[arg++], &key);
-                memory_buf_t phrase = Translate(ctx, key, static_cast<cell_t>(translator->GetGlobalTarget()), params, &arg);
+                CTX_LOCAL_TO_STRING(params[arg++], &key);
+                auto target = static_cast<cell_t>(translator->GetGlobalTarget());
+
+                memory_buf_t phrase = Translate(ctx, key, target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
         case 'X': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
                 AddHex(out, static_cast<unsigned int>(*value), width, flags | UPPERDIGITS);
                 ++arg;
                 break;
@@ -572,7 +593,8 @@ reswitch:
         case 'x': {
                 CHECK_ARGS(0);
                 cell_t *value;
-                ctx->LocalToPhysAddr(params[arg], &value);
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
                 AddHex(out, static_cast<unsigned int>(*value), width, flags);
                 ++arg;
                 break;

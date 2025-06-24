@@ -3,6 +3,7 @@
 #include "log4sp/common.h"
 #include "log4sp/adapter/sink_hanlder.h"
 
+using spdlog::sink_ptr;
 using spdlog::source_loc;
 using spdlog::details::log_msg;
 using spdlog::details::os::now;
@@ -11,18 +12,21 @@ using spdlog::level::level_enum;
 
 /**
  * 封装读取 sink handle 代码
- * 这会创建 3 个变量: security, error, sink
+ * 这会创建 1 个变量: sink
  *      读取成功时: 继续执行后续代码
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_SINK_HANDLE_OR_ERROR(handle)                                                           \
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
-    SourceMod::HandleError error;                                                                   \
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
-    if (!sink) {                                                                                    \
-        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
-        return 0;                                                                                   \
-    }
+    sink_ptr sink;                                                                                  \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);             \
+        if (!sink) {                                                                                \
+            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +54,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     char *pattern;
-    ctx->LocalToString(params[2], &pattern);
+    CTX_LOCAL_TO_STRING(params[2], &pattern);
 
     sink->set_pattern(pattern);
     return 0;
@@ -69,17 +73,14 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 {
     READ_SINK_HANDLE_OR_ERROR(params[1]);
 
-    char *name, *msg;
-    ctx->LocalToString(params[2], &name);
-    ctx->LocalToString(params[4], &msg);
+    char *name, *msg, *file, *func;
+    CTX_LOCAL_TO_STRING(params[2], &name);
+    CTX_LOCAL_TO_STRING(params[4], &msg);
+    CTX_LOCAL_TO_STRING_NULL(params[5], &file);
+    CTX_LOCAL_TO_STRING_NULL(params[7], &func);
 
     auto lvl = log4sp::num_to_lvl(params[3]);
-
-    char *file, *func;
-    ctx->LocalToStringNULL(params[5], &file);
-    ctx->LocalToStringNULL(params[7], &func);
-
-    auto line = params[6];
+    int line = params[8];
 
     source_loc loc(file, line, func);
 
@@ -107,17 +108,14 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 {
     READ_SINK_HANDLE_OR_ERROR(params[1]);
 
-    char *name, *msg;
-    ctx->LocalToString(params[4], &name);
-    ctx->LocalToString(params[6], &msg);
+    char *name, *msg, *file, *func;
+    CTX_LOCAL_TO_STRING(params[4], &name);
+    CTX_LOCAL_TO_STRING(params[6], &msg);
+    CTX_LOCAL_TO_STRING_NULL(params[7], &file);
+    CTX_LOCAL_TO_STRING_NULL(params[9], &func);
 
     auto lvl = log4sp::num_to_lvl(params[5]);
-
-    char *file, *func;
-    ctx->LocalToStringNULL(params[7], &file);
-    ctx->LocalToStringNULL(params[9], &func);
-
-    int line =params[8];
+    int line = params[8];
 
     source_loc loc(file, line, func);
 
@@ -142,7 +140,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     }
 
     size_t bytes{0};
-    ctx->StringToLocalUTF8(params[2], params[3], formatted.c_str(), &bytes);
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], formatted.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 

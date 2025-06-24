@@ -10,6 +10,7 @@ namespace log4sp {
 
 using spdlog::sink_ptr;
 using spdlog::sinks::stdout_sink_st;
+namespace fmt_lib = spdlog::fmt_lib;
 
 
 [[nodiscard]] logger_handler &logger_handler::instance() noexcept {
@@ -116,32 +117,29 @@ void logger_handler::initialize_() {
     SourceMod::HandleAccess access;
     SourceMod::HandleError error;
 
-    // 默认情况下，创建的 handle 可以被任意插件释放
+    // Init plugin create Logger access
+    // 插件创建的 Logger Handle 可以被任意插件释放
     handlesys->InitAccessDefaults(nullptr, &access);
     access.access[SourceMod::HandleAccess_Delete] = 0;
 
     handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
-    if (!handle_type_) {
-        throw_log4sp_ex("SM error! Could not create Logger handle type (error: " + std::to_string(error) + ")");
-    }
+    if (!handle_type_)
+        throw_log4sp_ex(fmt_lib::format("Failed to creates a Logger Handle type (error code: {})", static_cast<int>(error)));
 
-    // Init Global Logger
-    // 全局 Logger 生命周期与拓展一致，不应该被任何插件释放
+    // Init Global Logger access
+    // 拓展创建的全局 Logger Handle 不可以被插件释放, 生命周期由拓展管控
     handlesys->InitAccessDefaults(nullptr, &access);
     access.access[SourceMod::HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
     SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
 
-    sink_ptr sink;
     try {
-        sink = std::make_shared<stdout_sink_st>();
+        auto sink = std::make_shared<stdout_sink_st>();
+        auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
+        auto handle = logger_handler::instance().create_handle(logger, &security, &access, &error);
+        if (!handle)
+            throw_log4sp_ex(fmt_lib::format("error code: {}", static_cast<int>(error)));
     } catch (const std::exception &ex) {
-        throw_log4sp_ex(std::string("Could not create global logger handle (reason: ") + ex.what() + ")");
-    }
-
-    auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
-    auto handle = logger_handler::instance().create_handle(logger, &security, &access, &error);
-    if (!handle) {
-        throw_log4sp_ex("SM error! Could not create global logger handle (error: " + std::to_string(error) + ")");
+        throw_log4sp_ex(fmt_lib::format("Failed to creates a Global Logger Handle (reason: {})", ex.what()));
     }
 }
 
