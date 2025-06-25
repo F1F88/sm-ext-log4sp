@@ -83,7 +83,8 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
     ringBufferSink->drain([&forward, &data](const log_msg_buffer &log_msg) {
         auto name = to_string(log_msg.logger_name);
         auto payload = to_string(log_msg.payload);
-        auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
+        auto logTime = static_cast<cell_t>(seconds.count());// FIXME: Possible Year 2038 Problem
 
         FWD_PUSH_STRING(name.c_str());                      // name
         FWD_PUSH_CELL(log_msg.level);                       // lvl
@@ -91,7 +92,7 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
         FWD_PUSH_STRING(log_msg.source.filename);           // file
         FWD_PUSH_CELL(log_msg.source.line);                 // line
         FWD_PUSH_STRING(log_msg.source.funcname);           // func
-        FWD_PUSH_CELL(static_cast<cell_t>(logTime.count()));// logTime
+        FWD_PUSH_CELL(logTime);                             // logTime
         FWD_PUSH_CELL(data);                                // data
         FWD_EXECUTE();
     });

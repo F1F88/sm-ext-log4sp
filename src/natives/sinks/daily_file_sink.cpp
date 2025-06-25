@@ -63,14 +63,14 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
         buffer[size] = '\0';                                                                        \
                                                                                                     \
         tm tmp = now_tm;                                                                            \
-        auto stamp = static_cast<cell_t>(mktime(&tmp));                                             \
+        auto timestamp = static_cast<cell_t>(mktime(&tmp)); /* FIXME: Possible Year 2038 Problem */ \
                                                                                                     \
         /* void (char[] filename, int maxlen, int sec); */                                          \
         FWDS_CREATE_EX(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);       \
         FWD_ADD_FUNCTION(function);                                                                 \
         FWD_PUSH_STRING_EX(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); \
         FWD_PUSH_CELL(sizeof(buffer));                                                              \
-        FWD_PUSH_CELL(stamp);                                                                       \
+        FWD_PUSH_CELL(timestamp);                                                                   \
         FWD_EXECUTE();                                                                              \
         forwards->ReleaseForward(forward);                                                          \
                                                                                                     \

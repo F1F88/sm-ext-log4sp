@@ -89,6 +89,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     std::chrono::system_clock::time_point logTime = now();
     if (params[8] != -1)
     {
+        // FIXME: Possible Year 2038 Problem
         auto seconds = std::chrono::seconds(params[8]);
         logTime = system_clock::time_point(duration_cast<system_clock::duration>(seconds));
     }
@@ -124,6 +125,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     system_clock::time_point logTime = now();
     if (params[10] != -1)
     {
+        // FIXME: Possible Year 2038 Problem
         auto seconds = std::chrono::seconds(params[10]);
         logTime = system_clock::time_point(duration_cast<system_clock::duration>(seconds));
     }
