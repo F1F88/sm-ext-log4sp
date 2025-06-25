@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "log4sp/format.h"
+#include "am-float.h"
 
 
 namespace log4sp {
@@ -135,7 +136,7 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     int significant_digits{0};  // number of significant digits written
     constexpr const int MAX_SIGNIFICANT_DIGITS{16};
 
-    if (std::isnan(fval)) {
+    if (ke::IsNaN(static_cast<float>(fval))) {
         AddString(out, "NaN", width, prec, flags);
         return;
     }
