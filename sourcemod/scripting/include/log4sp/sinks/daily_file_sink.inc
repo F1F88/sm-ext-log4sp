@@ -46,7 +46,7 @@ methodmap DailyFileSink < Sink
      * @param openPre       Called before the sink open the file.
      * @param closePost     Called after the sink close the file.
      * @return              DailyFileSink handle.
-     * @error               Invalid rotation time in ctor.
+     * @error               Invalid rotation time in ctor, or maxFiles < 0, or maxFiles > 65535.
      */
     public native DailyFileSink(const char[] file,
                                 int hour = 0,
@@ -86,7 +86,7 @@ methodmap DailyFileSink < Sink
      * @param openPre       Called before the sink open the file.
      * @param closePost     Called after the sink close the file.
      * @return              Logger handle.
-     * @error               Logger name already exits, or invalid rotation time.
+     * @error               Logger name already exits, or invalid rotation time, or maxFiles < 0, or maxFiles > 65535.
      */
     public static native Logger CreateLogger(
         const char[] name,
