@@ -20,10 +20,11 @@
  *      [-] / [0]
  * NOTE
  *      SM 1.13.0.7198 修复了左对齐溢出的 BUG
- *      SM 的 %s 总是左对齐
- *      SM 的 %0[width]d 在传递负数时, 负号会添加在填充符 0 之后 '-1' --> '000-1'
- *      Log4sp 不支持 %t（会使用全局替代）
+ *      SM 的 %s 总是左对齐 (pr-2332 暂未合并)
+ *      SM 的 %0[width]d 在传递负数时, 负号会添加在填充符 0 之后 '-1' --> '000-1' (pr-2329 暂未合并)
+ *      SM 的 %f 在传递 inf 值时，不会格式化为 "Inf" (pr-2324 暂未合并)
  *      二者 Float 类型左对齐时都只会在后方添加 ' ' (不会添加 '0')
+ *        这应该是 SM 刻意这么做的 (commit - fcb362da09dc3e0e11e03d11866b574b19419648)
  */
 
 #define LOGGER_NAME             "test-format"
@@ -661,6 +662,14 @@ void TestFloatAmxTpl()
     logger.InfoAmxTpl("'%-020.7f'", -12345.968750);
     AssertStrEq("%-020.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500      '");
 
+    // Special
+    logger.InfoAmxTpl("'%f'", 0.0 / 0.0);
+    AssertStrEq("'%f' - NaN", sink.DrainLastMsgFast().msg, "'NaN'");
+
+    // https://github.com/alliedmodders/sourcemod/pull/2324
+    // logger.InfoAmxTpl("'%f'", 1.0 / 0.0);
+    // AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'Inf'");
+
     logger.Close();
     sink.Close();
 }
@@ -1121,6 +1130,13 @@ void TestFloatEx()
     AssertStrEq("%-020.7f", sink.DrainLastMsgFast().msg, "'0.0000000           '");
     logger.InfoEx("'%-020.7f'", -12345.968750);
     AssertStrEq("%-020.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500      '");
+
+    // Special
+    logger.InfoEx("'%f'", 0.0 / 0.0);
+    AssertStrEq("'%f' - NaN", sink.DrainLastMsgFast().msg, "'NaN'");
+
+    logger.InfoEx("'%f'", 1.0 / 0.0);
+    AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'Inf'");
 
     logger.Close();
     sink.Close();
