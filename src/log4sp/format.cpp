@@ -142,6 +142,11 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
         return;
     }
 
+    if (ke::IsInfinite(static_cast<float>(fval))) {
+        AddString(out, "Inf", width, prec, flags);
+        return;
+    }
+
     // default precision
     if (prec < 0) {
         prec = 6;
