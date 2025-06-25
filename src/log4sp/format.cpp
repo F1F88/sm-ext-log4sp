@@ -562,6 +562,21 @@ reswitch:
                 ++arg;
                 break;
             }
+        case 'E': {
+                CHECK_ARGS(0);
+                cell_t *value;
+                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
+                CBaseEntity *entity = gamehelpers->ReferenceToEntity(*value);
+                if (!entity)
+                    THROW_ERROR("Entity index {} is invalid (arg {})", *value, arg);
+
+                // 可能返回 nullptr, 但 AddString 有保障机制
+                const char *classname = gamehelpers->GetEntityClassname(entity);
+                AddString(out, classname, width, prec, flags);
+                ++arg;
+                break;
+            }
         case 's': {
                 CHECK_ARGS(0);
                 char *str;
