@@ -22,11 +22,11 @@ class ringbuffer_sink final : public spdlog::sinks::base_sink<Mutex>  {
     using log_msg_buffer = spdlog::details::log_msg_buffer;
 
 public:
-    explicit ringbuffer_sink(size_t n_items)
+    explicit ringbuffer_sink(size_t n_items) noexcept
         : q_{n_items} {}
     ~ringbuffer_sink() override = default;
 
-    void drain(std::function<void(const log_msg_buffer &)> callback) {
+    void drain(std::function<void(const log_msg_buffer &)> callback) noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         while (!q_.empty()) {
             callback(q_.front());
@@ -34,7 +34,7 @@ public:
         }
     }
 
-    void drain_formatted(std::function<void(std::string_view)> callback) {
+    void drain_formatted(std::function<void(std::string_view)> callback) noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         spdlog::memory_buf_t formatted;
         while (!q_.empty()) {
@@ -48,11 +48,11 @@ public:
 private:
     spdlog::details::circular_q<log_msg_buffer> q_;
 
-    void sink_it_(const log_msg &log_msg) override {
+    void sink_it_(const log_msg &log_msg) noexcept override {
         q_.push_back(log_msg_buffer(log_msg));
     }
 
-    void flush_() override {}
+    void flush_() noexcept override {}
 };
 
 using ringbuffer_sink_mt = ringbuffer_sink<std::mutex>;

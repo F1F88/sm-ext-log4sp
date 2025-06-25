@@ -10,17 +10,17 @@ using spdlog::details::log_msg;
 
 callback_sink::callback_sink(IPluginFunction *log_function,
                              IPluginFunction *log_post_function,
-                             IPluginFunction *flush_function) {
+                             IPluginFunction *flush_function) noexcept {
     set_log_callback(log_function);
     set_log_post_callback(log_post_function);
     set_flush_callback(flush_function);
 }
 
-callback_sink::~callback_sink() {
+callback_sink::~callback_sink() noexcept {
     release_forwards_();
 }
 
-void callback_sink::release_forwards_() {
+void callback_sink::release_forwards_() noexcept {
     if (log_callback_) {
         forwards->ReleaseForward(log_callback_);
         log_callback_ = nullptr;
@@ -37,7 +37,7 @@ void callback_sink::release_forwards_() {
     }
 }
 
-void callback_sink::set_log_callback(IPluginFunction *log_function) {
+void callback_sink::set_log_callback(IPluginFunction *log_function) noexcept {
     if (log_callback_) {
         forwards->ReleaseForward(log_callback_);
         log_callback_ = nullptr;
@@ -58,7 +58,7 @@ void callback_sink::set_log_callback(IPluginFunction *log_function) {
     }
 }
 
-void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
+void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) noexcept {
     if (log_post_callback_) {
         forwards->ReleaseForward(log_post_callback_);
         log_post_callback_ = nullptr;
@@ -72,7 +72,7 @@ void callback_sink::set_log_post_callback(IPluginFunction *log_post_function) {
     }
 }
 
-void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
+void callback_sink::set_flush_callback(IPluginFunction *flush_function) noexcept {
     if (flush_callback_) {
         forwards->ReleaseForward(flush_callback_);
         flush_callback_ = nullptr;
@@ -86,7 +86,7 @@ void callback_sink::set_flush_callback(IPluginFunction *flush_function) {
     }
 }
 
-void callback_sink::sink_it_(const log_msg &log_msg) {
+void callback_sink::sink_it_(const log_msg &log_msg) noexcept {
     if (log_callback_) {
         auto forward = log_callback_;
         auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
@@ -110,7 +110,7 @@ void callback_sink::sink_it_(const log_msg &log_msg) {
     }
 }
 
-void callback_sink::flush_() {
+void callback_sink::flush_() noexcept {
     if (flush_callback_) {
         auto forward = flush_callback_;
         FWD_EXECUTE();

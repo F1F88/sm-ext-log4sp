@@ -19,22 +19,22 @@ public:
 
     callback_sink(IPluginFunction *log_function = nullptr,
                   IPluginFunction *log_post_function = nullptr,
-                  IPluginFunction *flush_function = nullptr);
-    ~callback_sink() override;
+                  IPluginFunction *flush_function = nullptr) noexcept;
+    ~callback_sink() noexcept override;
 
-    void set_log_callback(IPluginFunction *log_function);
-    void set_log_post_callback(IPluginFunction *log_post_function);
-    void set_flush_callback(IPluginFunction *flush_function);
+    void set_log_callback(IPluginFunction *log_function) noexcept;
+    void set_log_post_callback(IPluginFunction *log_post_function) noexcept;
+    void set_flush_callback(IPluginFunction *flush_function) noexcept;
 
 private:
     SourceMod::IChangeableForward *log_callback_{nullptr};
     SourceMod::IChangeableForward *log_post_callback_{nullptr};
     SourceMod::IChangeableForward *flush_callback_{nullptr};
 
-    void sink_it_(const log_msg &log_msg) override;
-    void flush_() override;
+    void sink_it_(const log_msg &log_msg) noexcept override;
+    void flush_() noexcept override;
 
-    void release_forwards_();
+    void release_forwards_() noexcept;
 };
 
 
