@@ -125,7 +125,6 @@ extern const sp_nativeinfo_t    DailyFileSinkNatives[];
 extern const sp_nativeinfo_t    RingBufferSinkNatives[];
 extern const sp_nativeinfo_t    RotatingFileSinkNatives[];
 extern const sp_nativeinfo_t    ServerConsoleSinkNatives[];
-extern const sp_nativeinfo_t    UDPSinkNatives[];
 
 #ifdef DEBUG
 extern const sp_nativeinfo_t    TestSinkNatives[];

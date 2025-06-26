@@ -18,7 +18,6 @@
 #include <log4sp/sinks/ringbuffer_sink>
 #include <log4sp/sinks/rotating_file_sink>
 #include <log4sp/sinks/server_console_sink>
-#include <log4sp/sinks/udp_sink>
 
 
 
