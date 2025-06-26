@@ -18,7 +18,6 @@
 #include <log4sp/sinks/ringbuffer_sink>
 #include <log4sp/sinks/rotating_file_sink>
 #include <log4sp/sinks/server_console_sink>
-#include <log4sp/sinks/tcp_sink>
 #include <log4sp/sinks/udp_sink>
 
 
@@ -143,9 +142,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.Log");
     MarkNativeAsOptional("Sink.ToPattern");
     MarkNativeAsOptional("Sink.Flush");
-
-    MarkNativeAsOptional("TCPSink.TCPSink");
-    MarkNativeAsOptional("TCPSink.CreateLogger");
 
     MarkNativeAsOptional("UDPSink.UDPSink");
     MarkNativeAsOptional("UDPSink.CreateLogger");
