@@ -64,7 +64,7 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
     cell_t *sinks;
     CTX_LOCAL_TO_PHYS_ADDR(params[2], &sinks);
 
-    int numSinks{params[3]};
+    int numSinks = params[3];
     std::vector<sink_ptr> sinkVector(numSinks, nullptr);
 
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
@@ -105,7 +105,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
     cell_t *sinks;
     CTX_LOCAL_TO_PHYS_ADDR(params[2], &sinks);
 
-    int numSinks{params[3]};
+    int numSinks = params[3];
     std::vector<sink_ptr> sinkVector(numSinks, nullptr);
 
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
@@ -177,7 +177,7 @@ static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    size_t bytes{0};
+    size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], logger->name().c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }

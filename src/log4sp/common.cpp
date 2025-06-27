@@ -17,7 +17,7 @@ using spdlog::filename_t;
 
 [[nodiscard]] spdlog::filename_t unbuild_path(SourceMod::PathType type, const filename_t &filename) noexcept
 {
-    const char *base{nullptr};
+    const char *base = nullptr;
     switch (type)
     {
     case SourceMod::PathType::Path_Game:

@@ -17,15 +17,15 @@ using spdlog::source_loc;
     }
 
     assert(false);                        // 说明初始化的代码存在错误 (至少一项有效)
-    return source_loc{};
+    return source_loc();
 }
 
 [[nodiscard]] source_loc src_helper::get_from_plugin_ctx(SourcePawn::IPluginContext *ctx) noexcept {
     assert(ctx);
 
-    unsigned int line{0};
-    const char *file{nullptr};
-    const char *func{nullptr};
+    unsigned int line = 0;
+    const char *file = nullptr;
+    const char *func = nullptr;
 
     SourcePawn::IFrameIterator *iter = ctx->CreateFrameIterator();
     do {
@@ -83,7 +83,7 @@ using spdlog::source_loc;
 // err_helper
 void err_helper::handle_ex(const std::string &origin, const src_helper &src, const std::exception &ex) const noexcept {
     try {
-        const source_loc loc{src.get()};
+        const source_loc loc = src.get();
         if (custom_error_handler_) {
             auto forward = custom_error_handler_;
             FWD_PUSH_STRING(ex.what());             // msg

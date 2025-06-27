@@ -83,7 +83,7 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
 {
     READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    size_t bytes{0};
+    size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], rotatingFileSink->filename().c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
@@ -118,7 +118,7 @@ static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, con
 
     auto filename = rotating_file_sink_st::calc_filename(file, index);
 
-    size_t bytes{0};
+    size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[1], params[2], filename.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }

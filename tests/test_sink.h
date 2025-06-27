@@ -77,7 +77,7 @@ protected:
             std::rethrow_exception(log_exception_ptr_);
         }
 
-        msgs_.emplace_back(log_msg_buffer{msg});
+        msgs_.emplace_back(log_msg_buffer(msg));
 
         spdlog::memory_buf_t formatted;
         spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
@@ -97,15 +97,15 @@ protected:
         std::this_thread::sleep_for(flush_delay_);
     }
 
-    unsigned int log_counter_{0u};
-    unsigned int flush_counter_{0u};
+    unsigned int log_counter_   = 0u;
+    unsigned int flush_counter_ = 0u;
 
 
     std::vector<log_msg_buffer> msgs_;
     std::vector<std::string> lines_;
 
-    std::chrono::milliseconds log_delay_{std::chrono::milliseconds::zero()};
-    std::chrono::milliseconds flush_delay_{std::chrono::milliseconds::zero()};
+    std::chrono::milliseconds log_delay_   = std::chrono::milliseconds::zero();
+    std::chrono::milliseconds flush_delay_ = std::chrono::milliseconds::zero();
 
     std::exception_ptr log_exception_ptr_;  // will be thrown on next log if not null
     std::exception_ptr flush_exception_ptr_;// will be thrown on next flush if not null

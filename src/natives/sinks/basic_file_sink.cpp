@@ -81,7 +81,7 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
 {
     READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    size_t bytes{0};
+    size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], basicFileSink->filename().c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }

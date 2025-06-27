@@ -36,9 +36,9 @@ using log4sp::sinks::callback_sink;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourcePawn::IPluginFunction *logFunction{ctx->GetFunctionById(params[1])};
-    SourcePawn::IPluginFunction *logPostFunction{ctx->GetFunctionById(params[2])};
-    SourcePawn::IPluginFunction *flushFunction{ctx->GetFunctionById(params[3])};
+    SourcePawn::IPluginFunction *logFunction    = ctx->GetFunctionById(params[1]);
+    SourcePawn::IPluginFunction *logPostFunction= ctx->GetFunctionById(params[2]);
+    SourcePawn::IPluginFunction *flushFunction  = ctx->GetFunctionById(params[3]);
 
     sink_ptr sink;
     try
@@ -118,9 +118,9 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
         return BAD_HANDLE;
     }
 
-    SourcePawn::IPluginFunction *logFunction{ctx->GetFunctionById(params[2])};
-    SourcePawn::IPluginFunction *logPostFunction{ctx->GetFunctionById(params[3])};
-    SourcePawn::IPluginFunction *flushFunction{ctx->GetFunctionById(params[4])};
+    SourcePawn::IPluginFunction *logFunction     = ctx->GetFunctionById(params[2]);
+    SourcePawn::IPluginFunction *logPostFunction = ctx->GetFunctionById(params[3]);
+    SourcePawn::IPluginFunction *flushFunction   = ctx->GetFunctionById(params[4]);
 
     sink_ptr sink;
     try

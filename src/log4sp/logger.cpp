@@ -219,7 +219,7 @@ void logger::set_pattern(std::string pattern, pattern_time_type type) noexcept {
 }
 
 void logger::flush(plugin_ctx *ctx) noexcept {
-    flush_(src_helper{source_loc(), ctx});
+    flush_(src_helper(source_loc(), ctx));
 }
 
 void logger::flush(const source_loc &loc) noexcept {

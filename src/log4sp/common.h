@@ -74,7 +74,7 @@ namespace log4sp {
         return path;
     }
 
-    const char *file{path};
+    const char *file = path;
     while (*path) {
         if (*path == '\\' || *path == '/') {
             file = path + 1;

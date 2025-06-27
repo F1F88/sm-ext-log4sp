@@ -132,10 +132,10 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
-    bool sign{false};           // false: positive, true: negative
+    bool sign = false;          // false: positive, true: negative
     unsigned int fieldlength;   // for padding
-    int significant_digits{0};  // number of significant digits written
-    constexpr const int MAX_SIGNIFICANT_DIGITS{16};
+    int significant_digits = 0; // number of significant digits written
+    constexpr const int MAX_SIGNIFICANT_DIGITS = 16;
 
     if (ke::IsNaN(static_cast<float>(fval))) {
         AddString(out, "NaN", width, prec, flags);
@@ -267,7 +267,7 @@ static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, i
 
 static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
     char text[10];
-    unsigned int digits{0};
+    unsigned int digits = 0;
     do {
         text[digits++] = '0' + val % 10;
     } while (val /= 10);
@@ -298,7 +298,7 @@ static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int
 
 static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) noexcept {
     char text[10];
-    unsigned int digits{0};
+    unsigned int digits = 0;
 
     bool negative = val < 0;
     unsigned int unsignedVal = negative ? std::abs(val) : val;
@@ -345,11 +345,11 @@ static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) no
 }
 
 static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
-    constexpr const char *hexUpper{"0123456789ABCDEF"};
-    constexpr const char *hexlower{"0123456789abcdef"};
+    constexpr const char *hexUpper = "0123456789ABCDEF";
+    constexpr const char *hexlower = "0123456789abcdef";
     const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexlower;
     char text[8];
-    unsigned int digits{0};
+    unsigned int digits = 0;
 
     do {
         text[digits++] = hexAdjust[val & 0xF];
@@ -450,7 +450,7 @@ reswitch:
                 goto rflag;
             }
         case '.': {
-                int n{0};
+                int n = 0;
                 ch = *fmt++;
                 while (IS_DIGIT(ch)) {
                     n = 10 * n + (ch - '0');
@@ -472,7 +472,7 @@ reswitch:
         case '7':
         case '8':
         case '9': {
-                unsigned int n{0};
+                unsigned int n = 0;
                 do {
                     n = 10 * n + (ch - '0');
                     ch = *fmt++;

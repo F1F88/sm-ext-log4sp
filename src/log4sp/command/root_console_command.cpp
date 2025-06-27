@@ -28,7 +28,7 @@ std::shared_ptr<logger> command::arg_to_logger(const std::string &arg) {
 
 level_enum command::arg_to_level(const std::string &arg) {
     // 尝试按名字转换
-    level_enum level{str_to_lvl(arg.c_str())};
+    level_enum level = str_to_lvl(arg.c_str());
 
     // 尝试按数字转换
     if (level == level_enum::off) {
@@ -66,7 +66,7 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
         throw_log4sp_ex("Command function name \"" + function_name + "\" not exists.");
     }
 
-    std::vector<std::string> arguments{args};
+    std::vector<std::string> arguments = args;
 
     logger_handler::instance().apply_all(
         [&function_name, &arguments](std::shared_ptr<logger> logger) {
@@ -80,7 +80,7 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
                 static const std::regex replace_logger_name_pattern(R"( <logger_name>)");
                 static const std::regex replace_prefix_pattern("(Usage: sm " LOG4SP_ROOT_CMD " )");
 
-                std::string msg{ex.what()};
+                std::string msg = ex.what();
                 if (std::regex_match(msg, match_usage_pattern)) {
                     msg = std::regex_replace(msg, replace_logger_name_pattern, "");
                     msg = std::regex_replace(msg, replace_prefix_pattern, "Usage: sm " LOG4SP_ROOT_CMD " apply_all ");

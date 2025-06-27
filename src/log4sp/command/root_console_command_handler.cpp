@@ -63,7 +63,7 @@ void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, con
         return;
     }
 
-    std::string function_name {args->Arg(2)};
+    std::string function_name = args->Arg(2);
 
     std::vector<std::string> arguments;
     for (int i = 3; i < argCnt; ++i) {
@@ -79,7 +79,7 @@ void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, con
 
 root_console_command_handler::root_console_command_handler() {
     commands_["list"]           = std::make_unique<list_command>();
-    commands_["apply_all"]      = std::make_unique<apply_all_command>(std::unordered_set<std::string>{"get_lvl", "set_lvl", "set_pattern", "should_log", "log", "flush", "get_flush_lvl", "set_flush_lvl"});
+    commands_["apply_all"]      = std::make_unique<apply_all_command>();
     commands_["get_lvl"]        = std::make_unique<get_lvl_command>();
     commands_["set_lvl"]        = std::make_unique<set_lvl_command>();
     commands_["set_pattern"]    = std::make_unique<set_pattern_command>();

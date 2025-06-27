@@ -141,7 +141,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
         return 0;
     }
 
-    size_t bytes{0};
+    size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], formatted.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
