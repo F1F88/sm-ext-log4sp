@@ -1,7 +1,7 @@
-#if defined _log_for_sourcepawn_logger_included
+#if defined _log4sp_logger_included
  #endinput
 #endif
-#define _log_for_sourcepawn_logger_included
+#define _log4sp_logger_included
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -165,7 +165,7 @@ methodmap Logger < Handle
     public native void LogAmxTpl(LogLevel lvl, const char[] fmt, any ...);
 
     /**
-     * Logs a message with the sourcepawn source code location.
+     * Logs a message with the scripting source code location.
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.

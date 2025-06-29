@@ -11,13 +11,38 @@ using spdlog::sinks::rotating_file_sink_mt;
 using spdlog::sinks::rotating_file_sink_st;
 
 
+/**
+ * 封装读取 rotating file sink handle 代码
+ * 这会创建 1 个变量: rotatingFileSink
+ *      读取成功时: 继续执行后续代码
+ *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
+ */
+#define READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(handle)                                             \
+    std::shared_ptr<rotating_file_sink_st> rotatingFileSink;                                        \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);        \
+        if (!sink) {                                                                                \
+            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
+            return 0;                                                                               \
+        }                                                                                           \
+        rotatingFileSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink);                  \
+        if (!rotatingFileSink) {                                                                    \
+            ctx->ReportError("Invalid RotatingFileSink Handle %x.", handle);                        \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                 RotatingFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    ctx->LocalToString(params[1], &file);
+    CTX_LOCAL_TO_STRING(params[1], &file);
+
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
 
@@ -28,51 +53,8 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[6]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -85,104 +67,66 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
-    if (auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error))
-        return handle;
-
-    ctx->ReportError("SM error! Could not create rotating file sink handle (error: %d)", error);
-    return BAD_HANDLE;
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    if (!handle)
+    {
+        ctx->ReportError("Failed to creates a RotatingFileSink Handle (error code: %d)", error);
+        return BAD_HANDLE;
+    }
+    return handle;
 }
 
 static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
-    SourceMod::HandleError error;
+    READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
+    size_t bytes = 0;
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], rotatingFileSink->filename().c_str(), &bytes);
+    return static_cast<cell_t>(bytes);
+}
 
-    size_t bytes{0};
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink))
-    {
-        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-        return static_cast<cell_t>(bytes);
-    }
+static cell_t RotatingFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_mt>(sink))
-    {
-        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-        return static_cast<cell_t>(bytes);
-    }
-
-    ctx->ReportError("Invalid rotating file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-    return 0;
+    return static_cast<cell_t>(rotatingFileSink->filename().length());
 }
 
 static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
-    SourceMod::HandleError error;
+    READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
+    try
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
+        rotatingFileSink->rotate_now();
     }
-
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_st>(sink))
+    catch (const std::exception &ex)
     {
-        try
-        {
-            realSink->rotate_now();
-        }
-        catch (const std::exception &ex)
-        {
-            ctx->ReportError(ex.what());
-        }
-        return 0;
+        ctx->ReportError(ex.what());
     }
-
-    if (auto realSink = std::dynamic_pointer_cast<rotating_file_sink_mt>(sink))
-    {
-        try
-        {
-            realSink->rotate_now();
-        }
-        catch (const std::exception &ex)
-        {
-            ctx->ReportError(ex.what());
-        }
-        return 0;
-    }
-
-    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
 static cell_t RotatingFileSink_CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    ctx->LocalToString(params[3], &file);
+    CTX_LOCAL_TO_STRING(params[3], &file);
     auto index = static_cast<size_t>(params[4]);
 
     auto filename = rotating_file_sink_st::calc_filename(file, index);
 
-    size_t bytes{0};
-    ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes);
+    size_t bytes = 0;
+    CTX_STRING_TO_LOCAL_UTF8(params[1], params[2], filename.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 
 static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -190,7 +134,7 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     }
 
     char *file;
-    ctx->LocalToString(params[2], &file);
+    CTX_LOCAL_TO_STRING(params[2], &file);
 
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
@@ -202,51 +146,8 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[7]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create rotating file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add rotating file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -259,21 +160,24 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
-    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
-        return handle;
-
-    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-    return BAD_HANDLE;
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (!handle)
+    {
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
+        return BAD_HANDLE;
+    }
+    return handle;
 }
 
 const sp_nativeinfo_t RotatingFileSinkNatives[] =
 {
     {"RotatingFileSink.RotatingFileSink",       RotatingFileSink},
     {"RotatingFileSink.GetFilename",            RotatingFileSink_GetFilename},
+    {"RotatingFileSink.GetFilenameLength",      RotatingFileSink_GetFilenameLength},
     {"RotatingFileSink.RotateNow",              RotatingFileSink_RotateNow},
 
     {"RotatingFileSink.CalcFilename",           RotatingFileSink_CalcFilename},

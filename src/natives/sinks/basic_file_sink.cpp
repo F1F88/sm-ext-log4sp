@@ -11,13 +11,37 @@ using spdlog::sinks::basic_file_sink_mt;
 using spdlog::sinks::basic_file_sink_st;
 
 
+/**
+ * 封装读取 basic file sink handle 代码
+ * 这会创建 1 个变量: basicFileSink
+ *      读取成功时: 继续执行后续代码
+ *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
+ */
+#define READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(handle)                                                \
+    std::shared_ptr<basic_file_sink_st> basicFileSink;                                              \
+    do {                                                                                            \
+        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
+        SourceMod::HandleError error;                                                               \
+        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);        \
+        if (!sink) {                                                                                \
+            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
+            return 0;                                                                               \
+        }                                                                                           \
+        basicFileSink = std::dynamic_pointer_cast<basic_file_sink_st>(sink);                        \
+        if (!basicFileSink) {                                                                       \
+            ctx->ReportError("Invalid BasicFileSink Handle %x.", handle);                           \
+            return 0;                                                                               \
+        }                                                                                           \
+    } while(0);
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // *                                  BasicFileSink Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    ctx->LocalToString(params[1], &file);
+    CTX_LOCAL_TO_STRING(params[1], &file);
 
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
@@ -27,51 +51,8 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[4]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -84,91 +65,46 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
-    if (auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error))
-        return handle;
-
-    ctx->ReportError("SM error! Could not create base file sink handle (error: %d)", error);
-    return BAD_HANDLE;
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    if (!handle)
+    {
+        ctx->ReportError("Failed to creates a BasicFileSink Handle (error code: %d)", error);
+        return BAD_HANDLE;
+    }
+    return handle;
 }
 
 static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
-    SourceMod::HandleError error;
+    READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
-    }
-
-    size_t bytes{0};
-    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_st>(sink))
-    {
-        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-        return static_cast<cell_t>(bytes);
-    }
-
-    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_mt>(sink))
-    {
-        ctx->StringToLocalUTF8(params[2], params[3], realSink->filename().c_str(), &bytes);
-        return static_cast<cell_t>(bytes);
-    }
-
-    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
-    return 0;
+    size_t bytes = 0;
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], basicFileSink->filename().c_str(), &bytes);
+    return static_cast<cell_t>(bytes);
 }
 
 static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
-    SourceMod::HandleError error;
+    READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto sink = log4sp::sink_handler::instance().read_handle(params[1], &security, &error);
-    if (!sink)
+    try
     {
-        ctx->ReportError("Invalid sink handle %x (error: %d)", params[1], error);
-        return 0;
+        basicFileSink->truncate();
     }
-
-    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_st>(sink))
+    catch (const std::exception &ex)
     {
-        try
-        {
-            realSink->truncate();
-        }
-        catch (const std::exception &ex)
-        {
-            ctx->ReportError(ex.what());
-        }
-        return 0;
+        ctx->ReportError(ex.what());
     }
-
-    if (auto realSink = std::dynamic_pointer_cast<basic_file_sink_mt>(sink))
-    {
-        try
-        {
-            realSink->truncate();
-        }
-        catch (const std::exception &ex)
-        {
-            ctx->ReportError(ex.what());
-        }
-        return 0;
-    }
-
-    ctx->ReportError("Invalid basic file sink handle %x (error: %d)", params[1], SourceMod::HandleError::HandleError_Parameter);
     return 0;
 }
 
 static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    ctx->LocalToString(params[1], &name);
+    CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
@@ -176,7 +112,7 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     }
 
     char *file;
-    ctx->LocalToString(params[2], &file);
+    CTX_LOCAL_TO_STRING(params[2], &file);
 
     char path[PLATFORM_MAX_PATH];
     smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
@@ -186,51 +122,8 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     SourcePawn::IPluginFunction *closePost = ctx->GetFunctionById(params[5]);
 
     file_event_handlers handlers;
-    handlers.before_open = [openPre](const filename_t &filename)
-    {
-        if (!openPre)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file open pre forward.");
-
-        if (!forward->AddFunction(openPre))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file open pre function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
-
-    handlers.after_close = [closePost](const filename_t &filename)
-    {
-        if (!closePost)
-            return;
-
-        auto forward = forwards->CreateForwardEx(nullptr, ET_Ignore, 1, nullptr, Param_String);
-        if (!forward)
-            log4sp::throw_log4sp_ex("SM error! Could not create basic file close post forward.");
-
-        if (!forward->AddFunction(closePost))
-            log4sp::throw_log4sp_ex("SM error! Could not add basic file close post function.");
-
-        auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);
-
-        forward->PushString(path.c_str());
-#ifndef DEBUG
-        forward->Execute();
-#else
-        assert(forward->Execute() == SP_ERROR_NONE);
-#endif
-        forwards->ReleaseForward(forward);
-    };
+    handlers.before_open = FILE_EVENT_CALLBACK(openPre);
+    handlers.after_close = FILE_EVENT_CALLBACK(closePost);
 
     sink_ptr sink;
     try
@@ -243,16 +136,17 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security{ctx->GetIdentity(), myself->GetIdentity()};
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto logger = std::make_shared<log4sp::logger>(name, sink);
-    if (auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error))
-        return handle;
-
-    ctx->ReportError("SM error! Could not create logger handle (error: %d)", error);
-    return BAD_HANDLE;
-
+    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    if (!handle)
+    {
+        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
+        return BAD_HANDLE;
+    }
+    return handle;
 }
 
 const sp_nativeinfo_t BasicFileSinkNatives[] =

@@ -1,7 +1,7 @@
 /**
  * vim: set ts=4 :
  * =============================================================================
- * SourceMod Logging for SourcePawn Extension
+ * SourceMod log4sp Extension
  * Copyright (C) 2004-2008 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
@@ -42,10 +42,10 @@
 #endif
 
 /* Basic information exposed publicly */
-#define SMEXT_CONF_NAME         "Log for SourcePawn"
-#define SMEXT_CONF_DESCRIPTION  "A high-performance and feature-rich logging extension"
+#define SMEXT_CONF_NAME         "Log4sp"
+#define SMEXT_CONF_DESCRIPTION  "A high-performance logging framework"
 #define SMEXT_CONF_SHA_SHORT    LOG4SP_SHA_SHORT
-#define SMEXT_CONF_VERSION      "1.9.0"
+#define SMEXT_CONF_VERSION      "1.10.0"
 #define SMEXT_CONF_AUTHOR       "F1F88"
 #define SMEXT_CONF_URL          "https://github.com/F1F88/sm-ext-log4sp"
 #define SMEXT_CONF_LOGTAG       "log4sp"

@@ -1,7 +1,7 @@
 /**
  * vim: set ts=4 :
  * =============================================================================
- * SourceMod Logging for SourcePawn Extension
+ * SourceMod log4sp Extension
  * Copyright (C) 2004-2008 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
@@ -49,6 +49,7 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
     static_assert(!NO_HANDLE_TYPE, "NO_HANDLE_TYPE has changed, conditional statement for handle needs to be modified!");
     static_assert(!BAD_HANDLE, "BAD_HANDLE has changed, conditional statement for handle needs to be modified!");
+    static_assert(!SP_ERROR_NONE, "SP_ERROR_NONE has changed, conditional statement for forward needs to be modified!");
 
     try
     {
@@ -71,6 +72,10 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, RingBufferSinkNatives);
     sharesys->AddNatives(myself, RotatingFileSinkNatives);
     sharesys->AddNatives(myself, ServerConsoleSinkNatives);
+
+#ifdef DEBUG
+    sharesys->AddNatives(myself, TestSinkNatives);
+#endif
 
     sharesys->RegisterLibrary(myself, SMEXT_CONF_LOGTAG);
 

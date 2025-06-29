@@ -24,6 +24,10 @@ Action Command_Test(int args)
 
     TestDrainFormatted();
 
+    TestDrainTwice();
+
+    TestDrainFormattedTwice();
+
     TestEmpty();
 
     TestEmptySize();
@@ -91,6 +95,44 @@ void TestDrainFormatted()
     delete sink;
 }
 
+
+void TestDrainTwice()
+{
+    SetTestContext("Test Drain Twice");
+
+    RingBufferSink sink = new RingBufferSink(3);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(sink);
+
+    logger.Info("some message");
+    logger.Info("some message");
+
+    sink.Drain(RBSink_DrainTwice, false);
+    sink.Drain(RBSink_DrainTwice, true);
+
+    delete logger;
+    delete sink;
+}
+
+void TestDrainFormattedTwice()
+{
+    SetTestContext("Test Drain Formatted Twice");
+
+    RingBufferSink sink = new RingBufferSink(3);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(sink);
+
+    logger.Info("some message");
+    logger.Info("some message");
+
+    sink.DrainFormatted(RBSink_DrainFormattedTwice, false);
+    sink.DrainFormatted(RBSink_DrainFormattedTwice, true);
+
+    delete logger;
+    delete sink;
+}
+
+
 void TestEmpty()
 {
     SetTestContext("Test Empty");
@@ -142,10 +184,27 @@ void RBSink_Drain(const char[] name, LogLevel lvl, const char[] msg, const char[
     data.WriteCell(++counter);
 }
 
-void RBSink_DrainFormatted(const char[] msg, DataPack data)
+void RBSink_DrainFormatted(const char[] msg, int data)
 {
-    AssertStrMatch("Drain formatted msg", msg, "fmt [0-9]+\\s");
+    AssertStrMatch("Drain formatted msg match", msg, "fmt [0-9]+\\s");
     AssertEq("Drain formatted data", data, 2);
+}
+
+
+void RBSink_DrainTwice(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int timePoint, bool shouldEmpty)
+{
+    if (shouldEmpty)
+    {
+        AssertTrue("Drain twice should empty", false);
+    }
+}
+
+void RBSink_DrainFormattedTwice(const char[] msg, bool shouldEmpty)
+{
+    if (shouldEmpty)
+    {
+        AssertTrue("Drain formatted twice should empty", false);
+    }
 }
 
 

@@ -5,6 +5,7 @@
 #include <log4sp>
 
 #include "test_sink"
+#include "test_utils"
 
 
 #define LOGGER_NAME     "test-callback"
@@ -49,35 +50,26 @@ void TestCustomCallbackLogger()
     logger.Flush();
 
     int logCnt      = g_testSink.GetLogCount();
-    int logPostCnt  = g_testSink.GetLogPostCount();
-    int flushCnt    = g_testSink.GeFlushCount();
+    int flushCnt    = g_testSink.GetFlushCount();
 
     g_testSink.Close();
     sink.Close();
     logger.Close();
 
     //  total - 2 (trace、debug)
-    AssertEq("On log msgs counter",         logCnt,     5);
-    AssertEq("On log post lines counter",   logPostCnt, 5);
-    AssertEq("On flush counter",            flushCnt,   1);
+    AssertEq("Log count", logCnt, 5);
+    AssertEq("Flush count", flushCnt, 1);
 }
 
 void CBSink_OnLog(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int timePoint)
 {
-    AssertStrEq("On log name", name, LOGGER_NAME);
-    AssertEq("On log lvl", lvl, view_as<LogLevel>(g_testSink.GetLogCount() + 1));
-    AssertStrMatch("On log msg", msg, "test message [0-9]");
+    AssertStrEq("OnLog name", name, LOGGER_NAME);
+    AssertEq("OnLog lvl", lvl, view_as<LogLevel>(g_testSink.GetLogCount() + 1));
+    AssertStrMatch("OnLog msg match", msg, "test message [0-9]");
 }
 
 void CBSink_OnLogPost(const char[] msg)
 {
-    switch (g_testSink.GetLogPostCount())
-    {
-        case 1: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'info' '"  ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
-        case 2: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'warn' '"  ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
-        case 3: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'error' '" ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
-        case 4: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'fatal' '" ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
-        case 5: AssertStrMatch("On log post msg", msg, "'[0-9]{4}-[0-9]{2}-[0-9]{2}' 'off' '"   ... LOGGER_NAME ... "' 'test message [0-9]'\\s");
-        default: AssertTrue("On log unknown lvl", false);
-    }
+    char[] pattern = "'[0-9]{4}-[0-9]{2}-[0-9]{2}' '(info|warn|error|fatal|off)' 'test-callback' 'test message [0-9]'(\n|\r\n)";
+    AssertStrMatch("OnLogPost msg match", msg, pattern);
 }

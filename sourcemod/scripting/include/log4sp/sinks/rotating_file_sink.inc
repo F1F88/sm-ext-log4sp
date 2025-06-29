@@ -1,15 +1,18 @@
-#if defined _log_for_sourcepawn_sinks_rotating_file_sink_included
+#if defined _log4sp_sinks_rotating_file_sink_included
  #endinput
 #endif
-#define _log_for_sourcepawn_sinks_rotating_file_sink_included
+#define _log4sp_sinks_rotating_file_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
 
+#include <log4sp/logger>
 #include <log4sp/sinks/sink>
 
 
 /**
+ * Rotating file sink based on size.
+ *
  * Rotate files:
  *  log.txt   -> log.1.txt
  *  log.1.txt -> log.2.txt
@@ -45,6 +48,13 @@ methodmap RotatingFileSink < Sink
      * @return              Number of characters written to the buffer, not including the null terminator.
      */
     public native int GetFilename(char[] buffer, int maxlen);
+
+    /**
+     * Gets the length of the filename.
+     *
+     * @return              Length of the filename string.
+     */
+    public native int GetFilenameLength();
 
     /**
      * Rotate log files on demand.

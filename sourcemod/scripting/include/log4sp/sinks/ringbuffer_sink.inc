@@ -1,11 +1,12 @@
-#if defined _log_for_sourcepawn_sinks_ringbuffer_sink_included
+#if defined _log4sp_sinks_ringbuffer_sink_included
  #endinput
 #endif
-#define _log_for_sourcepawn_sinks_ringbuffer_sink_included
+#define _log4sp_sinks_ringbuffer_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
 
+#include <log4sp/logger>
 #include <log4sp/sinks/sink>
 
 
@@ -84,6 +85,8 @@ methodmap RingBufferSink < Sink
      * @param           Amount of log messages in memory.
      * @return          Logger handle.
      * @error           Logger name already exits.
+     * @deprecated      This cannot be done using the RingbufferSink function.
      */
+    #pragma deprecated This cannot be done using the RingbufferSink function.
     public static native Logger CreateLogger(const char[] name, int amount);
 }

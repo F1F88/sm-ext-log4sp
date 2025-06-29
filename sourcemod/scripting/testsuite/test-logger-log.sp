@@ -1,10 +1,17 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+/**
+ * Fix: "Not enough space on the heap"
+ * 似乎是由于 TestSink.DrainLastLineFast 的调用堆栈过深
+ */
+#pragma dynamic 131072
+
 #include <sourcemod>
 #include <log4sp>
 
 #include "test_sink"
+#include "test_utils"
 
 
 #define LOGGER_NAME             "test-log"
@@ -19,7 +26,7 @@ Action Command_Test(int args)
 {
     PrintToServer("---- START TEST LOG ----");
 
-    SetTestContext("Test Logger Log");
+    PrepareTestPath("logger-log/");
 
     TestLog();
 
@@ -38,18 +45,20 @@ Action Command_Test(int args)
 
 void TestLog()
 {
+    SetTestContext("Test Logger Log");
+
     TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.Log(LogLevel_Info, "test message 1");
-    AssertStrMatch("Log", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] test message 1\\s");
+    AssertStrMatch("Log line match", sink.DrainLastLineFast(), P_PREFIX ... "test message 1");
 
     logger.LogEx(LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("LogEx", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] test message 2\\s");
+    AssertStrMatch("LogEx line match", sink.DrainLastLineFast(), P_PREFIX ... "test message 2");
 
     logger.LogAmxTpl(LogLevel_Info, "test message %d", 3);
-    AssertStrMatch("LogAmxTpl", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] test message 3\\s");
+    AssertStrMatch("LogAmxTpl line match", sink.DrainLastLineFast(), P_PREFIX ... "test message 3");
 
     logger.Close();
     sink.Close();
@@ -58,18 +67,20 @@ void TestLog()
 
 void TestLogSrc()
 {
+    SetTestContext("Test Logger LogSrc");
+
     TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.LogSrc(LogLevel_Info, "test message 1");
-    AssertStrMatch("LogSrc", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] \\[test-logger-log.sp:[0-9]+\\] test message 1\\s");
+    AssertStrMatch("LogSrc line match", sink.DrainLastLineFast(), P_PREFIX ... "\\[test-logger-log.sp:[0-9]+\\] test message 1");
 
     logger.LogSrcEx(LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("LogSrcEx", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] \\[test-logger-log.sp:[0-9]+\\] test message 2\\s");
+    AssertStrMatch("LogSrcEx line match", sink.DrainLastLineFast(), P_PREFIX ... "\\[test-logger-log.sp:[0-9]+\\] test message 2");
 
     logger.LogSrcAmxTpl(LogLevel_Info, "test message %d", 3);
-    AssertStrMatch("LogSrcAmxTpl", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] \\[test-logger-log.sp:[0-9]+\\] test message 3\\s");
+    AssertStrMatch("LogSrcAmxTpl line match", sink.DrainLastLineFast(), P_PREFIX ... "\\[test-logger-log.sp:[0-9]+\\] test message 3");
 
     logger.Close();
     sink.Close();
@@ -78,38 +89,44 @@ void TestLogSrc()
 
 void TestLogLoc()
 {
-#define TEST_LOG_LOC_FILE1  "/home/sm-ext-log4sp/Linux-testFile.log"
-#define TEST_LOG_LOC_LINE1  123
-#define TEST_LOG_LOC_FUNC1  "Function1"
-#define TEST_LOG_LOC_EXP1   "\\[Linux-testFile\\.log:123\\] "
+    SourceLoc locLinux;
+    strcopy(locLinux.filename, sizeof(SourceLoc::filename), "/home/sm-ext-log4sp/Linux-testFile.log");
+    locLinux.line = 123;
+    strcopy(locLinux.funcname, sizeof(SourceLoc::funcname), "Function1");
 
-#define TEST_LOG_LOC_FILE2  "C:\\user\\sm-ext-log4sp\\Win-testFile.log"
-#define TEST_LOG_LOC_LINE2  456
-#define TEST_LOG_LOC_FUNC2  "Function2"
-#define TEST_LOG_LOC_EXP2   "\\[Win-testFile\\.log:456\\] "
+    SourceLoc locWin;
+    strcopy(locWin.filename, sizeof(SourceLoc::filename), "C:\\user\\sm-ext-log4sp\\Win-testFile.log");
+    locWin.line = 456;
+    strcopy(locWin.funcname, sizeof(SourceLoc::funcname), "Function2");
+
+    char expectedLinux[2048];
+    FormatEx(expectedLinux, sizeof(expectedLinux), P_PREFIX ... "\\[Linux-testFile.log:123\\] test message (1|2|3)");
+
+    char expectedWin[2048];
+    FormatEx(expectedWin, sizeof(expectedWin), P_PREFIX ... "\\[Win-testFile.log:456\\] test message (1|2|3)");
 
     TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.LogLoc(TEST_LOG_LOC_FILE1, TEST_LOG_LOC_LINE1, TEST_LOG_LOC_FUNC1, LogLevel_Info, "test message 1");
-    AssertStrMatch("LogLoc", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] " ... TEST_LOG_LOC_EXP1 ... "test message 1\\s");
+    logger.LogLoc(locLinux.filename, locLinux.line, locLinux.funcname, LogLevel_Info, "test message 1");
+    AssertStrMatch("Linux LogLoc line match", sink.DrainLastLineFast(), expectedLinux);
 
-    logger.LogLocEx(TEST_LOG_LOC_FILE1, TEST_LOG_LOC_LINE1, TEST_LOG_LOC_FUNC1, LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("LogLocEx", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] " ... TEST_LOG_LOC_EXP1 ... "test message 2\\s");
+    logger.LogLocEx(locLinux.filename, locLinux.line, locLinux.funcname, LogLevel_Info, "test message %d", 2);
+    AssertStrMatch("Linux LogLocEx line match", sink.DrainLastLineFast(), expectedLinux);
 
-    logger.LogLocAmxTpl(TEST_LOG_LOC_FILE1, TEST_LOG_LOC_LINE1, TEST_LOG_LOC_FUNC1, LogLevel_Info, "test message %d", 3);
-    AssertStrMatch("LogLocAmxTpl", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] " ... TEST_LOG_LOC_EXP1 ... "test message 3\\s");
+    logger.LogLocAmxTpl(locLinux.filename, locLinux.line, locLinux.funcname, LogLevel_Info, "test message %d", 3);
+    AssertStrMatch("Linux LogLocAmxTpl line match", sink.DrainLastLineFast(), expectedLinux);
 
 
-    logger.LogLoc(TEST_LOG_LOC_FILE2, TEST_LOG_LOC_LINE2, TEST_LOG_LOC_FUNC2, LogLevel_Info, "test message 1");
-    AssertStrMatch("LogLoc", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] " ... TEST_LOG_LOC_EXP2 ... "test message 1\\s");
+    logger.LogLoc(locWin.filename, locWin.line, locWin.funcname, LogLevel_Info, "test message 1");
+    AssertStrMatch("Win LogLoc line match", sink.DrainLastLineFast(), expectedWin);
 
-    logger.LogLocEx(TEST_LOG_LOC_FILE2, TEST_LOG_LOC_LINE2, TEST_LOG_LOC_FUNC2, LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("LogLocEx", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] " ... TEST_LOG_LOC_EXP2 ... "test message 2\\s");
+    logger.LogLocEx(locWin.filename, locWin.line, locWin.funcname, LogLevel_Info, "test message %d", 2);
+    AssertStrMatch("Win LogLocEx line match", sink.DrainLastLineFast(), expectedWin);
 
-    logger.LogLocAmxTpl(TEST_LOG_LOC_FILE2, TEST_LOG_LOC_LINE2, TEST_LOG_LOC_FUNC2, LogLevel_Info, "test message %d", 3);
-    AssertStrMatch("LogLocAmxTpl", sink.GetLastLogLine(), "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] " ... TEST_LOG_LOC_EXP2 ... "test message 3\\s");
+    logger.LogLocAmxTpl(locWin.filename, locWin.line, locWin.funcname, LogLevel_Info, "test message %d", 3);
+    AssertStrMatch("Win LogLocAmxTpl line match", sink.DrainLastLineFast(), expectedWin);
 
     logger.Close();
     sink.Close();
@@ -118,66 +135,57 @@ void TestLogLoc()
 
 void TestLogStackTrace()
 {
-#define TEST_LOG_STACK_TRACE_EXP "\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Stack trace requested: test message 1\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Called from: test-logger-log\\.smx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Call stack trace:\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[0\\] Logger\\.LogStackTrace\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::TestLogStackTrace\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[2\\] Line [0-9]+, .*test-logger-log\\.sp::Command_Test\\s"
-
-#define TEST_LOG_STACK_TRACE_EX_EXP "\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Stack trace requested: test message 2\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Called from: test-logger-log\\.smx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Call stack trace:\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[0\\] Logger\\.LogStackTraceEx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::TestLogStackTrace\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[2\\] Line [0-9]+, .*test-logger-log\\.sp::Command_Test\\s"
-
-#define TEST_LOG_STACK_TRACE_AMXTPL_EXP "\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Stack trace requested: test message 3\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Called from: test-logger-log\\.smx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Call stack trace:\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[0\\] Logger\\.LogStackTraceAmxTpl\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::TestLogStackTrace\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[2\\] Line [0-9]+, .*test-logger-log\\.sp::Command_Test\\s"
+    SetTestContext("Test Logger LogStackTrace");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("logger-log/log-stack-trace.log");
+    BuildTestPath(path, sizeof(path), "logger-log/log-stack-trace.log");
 
+    TestSink sink = new TestSink();
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
+    logger.AddSink(sink);
 
     logger.LogStackTrace(LogLevel_Info, "test message 1");
     logger.LogStackTraceEx(LogLevel_Info, "test message %d", 2);
     logger.LogStackTraceAmxTpl(LogLevel_Info, "test message %d", 3);
+    delete logger;
 
-    logger.Close();
+    AssertStrMatch("LogStackTraceAmxTpl line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
+    AssertStrMatch("LogStackTraceAmxTpl line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrac");
+    AssertStrMatch("LogStackTraceAmxTpl line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceAmxTpl");
+    AssertStrMatch("LogStackTraceAmxTpl line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
+    AssertStrMatch("LogStackTraceAmxTpl line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTraceAmxTpl line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 3");
 
-    AssertFileMatch("LogStackTrace", path, TEST_LOG_STACK_TRACE_EXP);
-    AssertFileMatch("LogStackTraceEx", path, TEST_LOG_STACK_TRACE_EX_EXP);
-    AssertFileMatch("LogStackTraceAmxTpl", path, TEST_LOG_STACK_TRACE_AMXTPL_EXP);
+    AssertStrMatch("LogStackTraceEx line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
+    AssertStrMatch("LogStackTraceEx line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
+    AssertStrMatch("LogStackTraceEx line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceE");
+    AssertStrMatch("LogStackTraceEx line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
+    AssertStrMatch("LogStackTraceEx line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTraceEx line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 2");
+
+    AssertStrMatch("LogStackTrace line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
+    AssertStrMatch("LogStackTrace line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
+    AssertStrMatch("LogStackTrace line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTrace");
+    AssertStrMatch("LogStackTrace line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
+    AssertStrMatch("LogStackTrace line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTrace line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
+    delete sink;
 }
 
 
 void TestLogThrowError()
 {
-    LogError("======= Test Log Thorw Error =======");
-
-    // SM 错误日志文件路径
-    char errFilePath[PLATFORM_MAX_PATH];
-    FormatTime(errFilePath, sizeof(errFilePath), "addons/sourcemod/logs/errors_%Y%m%d.log");
-
-    // 读取当前位置
-    File preErrFile = OpenFile(errFilePath, "r");
-    preErrFile.Seek(0, SEEK_END);
-    int preErrFilePosition = preErrFile.Position;
-    delete preErrFile;
+    SetTestContext("Test Logger ThrowError");
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("logger-log/throw-error.log");
+    BuildTestPath(path, sizeof(path), "logger-log/throw-error.log");
 
+    TestSink sink = new TestSink();
     Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
+    logger.AddSink(sink);
+    logger.FlushOn(LogLevel_Info);
 
+    RequestFrame(Frame_MarkStart);
     RequestFrame(Frame_ThorwErrorDebug, logger);
     RequestFrame(Frame_ThorwErrorExDebug, logger);
     RequestFrame(Frame_ThorwErrorAmxTplDebug, logger);
@@ -185,10 +193,23 @@ void TestLogThrowError()
     RequestFrame(Frame_ThorwErrorInfo, logger);
     RequestFrame(Frame_ThorwErrorExInfo, logger);
     RequestFrame(Frame_ThorwErrorAmxTplInfo, logger);
-
     RequestFrame(Frame_CloseLogger, logger);
+    RequestFrame(Frame_MarkEnd);
 
-    RequestFrame(Frame_AssertThorwErrorFile, preErrFilePosition);
+    RequestFrame(Frame_AssertThrowErrorSinkMsgs, sink);
+    RequestFrame(Frame_AssertThrowErrorLogFile);
+    RequestFrame(Frame_AssertThrowErrorSMFile); // And DeleteSMErrorFile
+    RequestFrame(Frame_CloseSink, sink);
+}
+
+static void Frame_MarkStart()
+{
+    MarkErrorTestStart("Test Log ThrowError");
+}
+
+static void Frame_MarkEnd()
+{
+    MarkErrorTestEnd("Test Log ThrowError");
 }
 
 void Frame_ThorwErrorDebug(Logger logger)
@@ -226,94 +247,60 @@ void Frame_CloseLogger(Logger logger)
     logger.Close();
 }
 
-void Frame_AssertThorwErrorFile(int preErrFilePosition)
+void Frame_CloseSink(Sink sink)
 {
-#define TEST_LOG_THROW_ERROR_DEBUG_SM_EXP "\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Exception reported: test message 1\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Blaming: test-logger-log\\.smx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Call stack trace:\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[0\\] Logger\\.ThrowError\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorDebug\\s"
+    sink.Close();
+}
 
-#define TEST_LOG_THROW_ERROR_EX_DEBUG_SM_EXP "\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Exception reported: test message 2\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Blaming: test-logger-log\\.smx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Call stack trace:\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[0\\] Logger\\.ThrowErrorEx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorExDebug\\s"
+static void Frame_AssertThrowErrorSinkMsgs(TestSink sink)
+{
+    AssertEq("ThrowError msgs", sink.GetLogCount(), 3 * 5);
 
-#define TEST_LOG_THROW_ERROR_AMXTPL_DEBUG_SM_EXP "\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Exception reported: test message 3\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Blaming: test-logger-log\\.smx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Call stack trace:\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[0\\] Logger\\.ThrowErrorAmxTpl\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorAmxTplDebug\\s"
+    ArrayList messages = sink.DrainMsgsFast();
+    sLogMessage logMsg;
+    for (int i = 0; i < 3; ++i)
+    {
+        messages.GetArray(i * 5, logMsg);
+        AssertStrMatch("ThrowError sink msg 1 match", logMsg.msg, "Exception reported: test message (1|2|3)");
 
-#define TEST_LOG_THROW_ERROR_INFO_SM_EXP "\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Exception reported: test message 1\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Blaming: test-logger-log\\.smx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Call stack trace:\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[0\\] Logger\\.ThrowError\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorInfo\\s"
+        messages.GetArray(i * 5 + 1, logMsg);
+        AssertStrEq("ThrowError sink msg 2", logMsg.msg, "Blaming: test-logger-log.smx");
 
-#define TEST_LOG_THROW_ERROR_EX_INFO_SM_EXP "\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Exception reported: test message 2\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Blaming: test-logger-log\\.smx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Call stack trace:\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[0\\] Logger\\.ThrowErrorEx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorExInfo\\s"
+        messages.GetArray(i * 5 + 2, logMsg);
+        AssertStrEq("ThrowError sink msg 3", logMsg.msg, "Call stack trace:");
 
-#define TEST_LOG_THROW_ERROR_AMXTPL_INFO_SM_EXP "\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Exception reported: test message 3\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Blaming: test-logger-log\\.smx\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\] Call stack trace:\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[0\\] Logger\\.ThrowErrorAmxTpl\\s\
-L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[SM\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorAmxTplInfo\\s"
+        messages.GetArray(i * 5 + 3, logMsg);
+        AssertStrMatch("ThrowError sink msg 4 match", logMsg.msg, "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*");
 
-    // SM 错误日志文件路径
-    char errFilePath[PLATFORM_MAX_PATH];
-    FormatTime(errFilePath, sizeof(errFilePath), "addons/sourcemod/logs/errors_%Y%m%d.log");
+        messages.GetArray(i * 5 + 4, logMsg);
+        AssertStrMatch("ThrowError sink msg 5 match", logMsg.msg, "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)");
+    }
+    delete messages;
+}
 
-    // 读取新的数据
-    char postMsg[TEST_MAX_MSG_LENGTH * 2];
-    File postErrFile = OpenFile(errFilePath, "r");
-    postErrFile.Seek(preErrFilePosition, SEEK_SET);
-    postErrFile.ReadString(postMsg, sizeof(postMsg));
-    delete postErrFile;
-
-    AssertStrMatch("ThrowError debug sm file", postMsg, TEST_LOG_THROW_ERROR_DEBUG_SM_EXP);
-    AssertStrMatch("ThrowErrorEx debug sm file", postMsg, TEST_LOG_THROW_ERROR_EX_DEBUG_SM_EXP);
-    AssertStrMatch("ThrowErrorAmxTpl debug sm file", postMsg, TEST_LOG_THROW_ERROR_INFO_SM_EXP);
-    AssertStrMatch("ThrowError info sm file", postMsg, TEST_LOG_THROW_ERROR_INFO_SM_EXP);
-    AssertStrMatch("ThrowErrorEx info sm file", postMsg, TEST_LOG_THROW_ERROR_EX_INFO_SM_EXP);
-    AssertStrMatch("ThrowErrorAmxTpl info sm file", postMsg, TEST_LOG_THROW_ERROR_AMXTPL_INFO_SM_EXP);
-
-
-#define TEST_LOG_THROW_ERROR_EXP "\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Exception reported: test message 1\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Blaming: test-logger-log\\.smx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Call stack trace:\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[0\\] Logger\\.ThrowError\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorInfo\\s"
-
-#define TEST_LOG_THROW_ERROR_EX_EXP "\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Exception reported: test message 2\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Blaming: test-logger-log\\.smx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Call stack trace:\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[0\\] Logger\\.ThrowErrorEx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorExInfo\\s"
-
-#define TEST_LOG_THROW_ERROR_EX_AMXTPL_EXP "\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Exception reported: test message 3\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Blaming: test-logger-log\\.smx\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\] Call stack trace:\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[0\\] Logger\\.ThrowErrorAmxTpl\\s\
-\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}\\] \\["  ... LOGGER_NAME ... "\\] \\[info\\]   \\[1\\] Line [0-9]+, .*test-logger-log\\.sp::Frame_ThorwErrorAmxTplInfo\\s"
+static void Frame_AssertThrowErrorLogFile()
+{
+#define THROW_ERROR_LOG_FILE_EXP   "(?:" ... P_PREFIX ... "Exception reported: test message (1|2|3)\
+(\n|\r\n)" ... P_PREFIX ... "Blaming: test-logger-log.smx\
+(\n|\r\n)" ... P_PREFIX ... "Call stack trace:\
+(\n|\r\n)" ... P_PREFIX ... "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*\
+(\n|\r\n)" ... P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)(\n|\r\n)){3}"
 
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "logger-log/throw-error.log");
+    AssertFileMatch("ThrowError log file match", path, THROW_ERROR_LOG_FILE_EXP);
+}
 
-    AssertFileMatch("ThrowError", path, TEST_LOG_THROW_ERROR_EXP);
-    AssertFileMatch("ThrowErrorEx", path, TEST_LOG_THROW_ERROR_EX_EXP);
-    AssertFileMatch("ThrowErrorAmxTpl", path, TEST_LOG_THROW_ERROR_EX_AMXTPL_EXP);
+static void Frame_AssertThrowErrorSMFile()
+{
+#define THROW_ERROR_SM_FILE_EXP   "(?:" ... P_SM_PREFIX ... "Exception reported: test message (1|2|3)\
+(\n|\r\n)" ... P_SM_PREFIX ... "Blaming: test-logger-log.smx\
+(\n|\r\n)" ... P_SM_PREFIX ... "Call stack trace:\
+(\n|\r\n)" ... P_SM_PREFIX ... "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*\
+(\n|\r\n)" ... P_SM_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)(\n|\r\n)){6}"
+
+    AssertFileMatch("ThrowError sm file match", GetErrorFilename(), THROW_ERROR_SM_FILE_EXP);
+
+    // 若检验通过，则删除本次测试生成的日志信息以保持 SM 错误日志的简洁
+    // DeleteFile(GetErrorFilename());
 }

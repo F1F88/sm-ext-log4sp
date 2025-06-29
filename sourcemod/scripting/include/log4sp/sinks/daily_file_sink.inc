@@ -1,11 +1,12 @@
-#if defined _log_for_sourcepawn_sinks_daily_file_sink_included
+#if defined _log4sp_sinks_daily_file_sink_included
  #endinput
 #endif
-#define _log_for_sourcepawn_sinks_daily_file_sink_included
+#define _log4sp_sinks_daily_file_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
 
+#include <log4sp/logger>
 #include <log4sp/sinks/sink>
 
 
@@ -45,7 +46,7 @@ methodmap DailyFileSink < Sink
      * @param openPre       Called before the sink open the file.
      * @param closePost     Called after the sink close the file.
      * @return              DailyFileSink handle.
-     * @error               Invalid rotation time in ctor.
+     * @error               Invalid rotation time in ctor, or maxFiles < 0, or maxFiles > 65535.
      */
     public native DailyFileSink(const char[] file,
                                 int hour = 0,
@@ -66,6 +67,13 @@ methodmap DailyFileSink < Sink
     public native int GetFilename(char[] buffer, int maxlen);
 
     /**
+     * Gets the length of the filename.
+     *
+     * @return              Length of the filename string.
+     */
+    public native int GetFilenameLength();
+
+    /**
      * Create a logger handle that outputs to a file and rotates the file based on date.
      *
      * @param name          The name of the logger.
@@ -78,7 +86,7 @@ methodmap DailyFileSink < Sink
      * @param openPre       Called before the sink open the file.
      * @param closePost     Called after the sink close the file.
      * @return              Logger handle.
-     * @error               Logger name already exits, or invalid rotation time.
+     * @error               Logger name already exits, or invalid rotation time, or maxFiles < 0, or maxFiles > 65535.
      */
     public static native Logger CreateLogger(
         const char[] name,

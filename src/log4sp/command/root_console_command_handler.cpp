@@ -28,8 +28,8 @@ void root_console_command_handler::destroy() {
 
 
 void root_console_command_handler::draw_menu() {
-    rootconsole->ConsolePrint("Log for SourcePawn Menu:");
-    rootconsole->ConsolePrint("Usage: sm log4sp <function_name> [arguments]");
+    rootconsole->ConsolePrint(SMEXT_CONF_NAME " Menu:");
+    rootconsole->ConsolePrint("Usage: sm " LOG4SP_ROOT_CMD " <function_name> [arguments]");
 
     rootconsole->DrawGenericOption("list",          "List all logger names.");
     rootconsole->DrawGenericOption("apply_all",     "Apply a command function on all loggers.");
@@ -63,7 +63,7 @@ void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, con
         return;
     }
 
-    std::string function_name {args->Arg(2)};
+    std::string function_name = args->Arg(2);
 
     std::vector<std::string> arguments;
     for (int i = 3; i < argCnt; ++i) {
@@ -79,7 +79,7 @@ void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, con
 
 root_console_command_handler::root_console_command_handler() {
     commands_["list"]           = std::make_unique<list_command>();
-    commands_["apply_all"]      = std::make_unique<apply_all_command>(std::unordered_set<std::string>{"get_lvl", "set_lvl", "set_pattern", "should_log", "log", "flush", "get_flush_lvl", "set_flush_lvl"});
+    commands_["apply_all"]      = std::make_unique<apply_all_command>();
     commands_["get_lvl"]        = std::make_unique<get_lvl_command>();
     commands_["set_lvl"]        = std::make_unique<set_lvl_command>();
     commands_["set_pattern"]    = std::make_unique<set_pattern_command>();
@@ -92,7 +92,7 @@ root_console_command_handler::root_console_command_handler() {
 }
 
 void root_console_command_handler::initialize_() {
-    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, "Log for SourcePawn command menu", this)) {
+    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, SMEXT_CONF_NAME " command menu", this)) {
         throw_log4sp_ex("SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\".");
     }
 }

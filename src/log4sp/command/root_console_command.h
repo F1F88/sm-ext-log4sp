@@ -8,6 +8,8 @@
 
 #include "log4sp/common.h"
 
+#define LOG4SP_ROOT_CMD     "log4sp"
+
 
 namespace log4sp {
 
@@ -45,11 +47,12 @@ public:
 
 class apply_all_command final : public command {
 public:
-    apply_all_command(std::unordered_set<std::string> functions) : functions_(functions) {}
     void execute(const std::vector<std::string> &args) override;
 
 private:
-    std::unordered_set<std::string> functions_;
+    inline static const std::unordered_set<std::string> functions_{
+        "get_lvl", "set_lvl", "set_pattern", "should_log", "log",
+        "flush", "get_flush_lvl", "set_flush_lvl"};
 };
 
 

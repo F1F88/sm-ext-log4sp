@@ -28,10 +28,21 @@ def Normalize(path):
 def SetArchFlags(compiler):
   if compiler.behavior == 'gcc':
     if compiler.target.arch == 'x86_64':
+      return
       compiler.cflags += ['-fPIC']
   elif compiler.like('msvc'):
     if compiler.target.arch == 'x86_64':
       compiler.defines += ['WIN64']
+
+# 获取最新 SHA（例如：a1b2c3d...）
+def GetGitHashCode():
+  try:
+    command = ["git", "rev-parse", "HEAD"]
+    result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
+    return result.strip()
+  except BaseException:
+    print('::warning file=AMBuildScript,line=372,title=get_git_hash::Unable to get git hash!')
+    return "unknown"
 
 class ExtensionConfig(object):
   def __init__(self):
@@ -47,8 +58,6 @@ class ExtensionConfig(object):
       target_archs = builder.options.targets.split(',')
     else:
       target_archs = ['x86', 'x86_64']
-
-    print(target_archs)
 
     for arch in target_archs:
         try:
@@ -112,38 +121,6 @@ class ExtensionConfig(object):
     for cxx in self.all_targets:
         self.configure_cxx(cxx)
 
-    #* spdlog settings *#
-    cxx.defines += [
-      'SPDLOG_FOLDER_SEPS="/\\\\"',
-      'SPDLOG_LEVEL_NAMES={{"trace", 5ULL}, {"debug", 5ULL}, {"info", 4ULL}, {"warn", 4ULL}, {"error", 5ULL}, {"fatal", 5ULL}, {"off", 3ULL}}',
-      'SPDLOG_SHORT_LEVEL_NAMES={"T", "D", "I", "W", "E", "F", "O"}',
-    ]
-
-    #* Make version *#
-    cxx.defines += [
-      'LOG4SP_SHA_SHORT="' + self.get_git_hash()[:7] + '"'
-    ]
-
-    # Optimization
-    if builder.options.opt == '1':
-      cxx.defines += [
-        'NDEBUG',
-        'SPDLOG_NO_SOURCE_LOC',
-        'SPDLOG_NO_THREAD_ID',
-        'SPDLOG_NO_TLS',
-        'SPDLOG_NO_ATOMIC_LEVELS',
-        'SPDLOG_DISABLE_DEFAULT_LOGGER',
-        'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_OFF',
-      ]
-
-    # Debugging
-    if builder.options.debug == '1':
-      cxx.defines += [
-        'DEBUG',
-        '_DEBUG',
-        'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE',
-      ]
-
   def configure_cxx(self, cxx):
     if cxx.family == 'msvc':
       if cxx.version < 1914 and builder.options.generator != 'vs':
@@ -162,11 +139,33 @@ class ExtensionConfig(object):
 
     # Optimization
     if builder.options.opt == '1':
-      cxx.defines += ['NDEBUG']
+      cxx.defines += [
+        'NDEBUG',
+        'SPDLOG_NO_SOURCE_LOC',
+        'SPDLOG_NO_THREAD_ID',
+        'SPDLOG_NO_TLS',
+        'SPDLOG_NO_ATOMIC_LEVELS',
+        'SPDLOG_DISABLE_DEFAULT_LOGGER',
+        'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_OFF',
+        'SPDLOG_FWRITE_UNLOCKED',
+        'SPDLOG_CLOCK_COARSE',
+      ]
 
     # Debugging
     if builder.options.debug == '1':
-      cxx.defines += ['DEBUG', '_DEBUG']
+      cxx.defines += [
+        'DEBUG',
+        '_DEBUG',
+        'SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE',
+      ]
+
+    #* log4sp settings *#
+    cxx.defines += [
+      'SPDLOG_FOLDER_SEPS="/\\\\"',
+      'SPDLOG_LEVEL_NAMES={{"trace", 5ULL}, {"debug", 5ULL}, {"info", 4ULL}, {"warn", 4ULL}, {"error", 5ULL}, {"fatal", 5ULL}, {"off", 3ULL}}',
+      'SPDLOG_SHORT_LEVEL_NAMES={"T", "D", "I", "W", "E", "F", "O"}',
+      'LOG4SP_SHA_SHORT="' + GetGitHashCode()[:7] + '"',
+    ]
 
     # Platform-specifics
     if cxx.target.platform == 'linux':
@@ -184,8 +183,6 @@ class ExtensionConfig(object):
       '_vsnprintf=vsnprintf',
       'HAVE_STDINT_H',
       'GNUC',
-
-      'HAVE_STRING_H',  #* log4sp addition *#
     ]
     cxx.cflags += [
       '-pipe',
@@ -234,14 +231,10 @@ class ExtensionConfig(object):
       cxx.cflags += ['-O3']
 
       #*** log4sp addition ***#
-      cxx.cxxflags += ['-g0']
-      cxx.defines += ['SPDLOG_CLOCK_COARSE']
-
       if os.environ.get('GITHUB_ACTIONS') != 'true':
         cxx.cflags += ['-march=native']
         cxx.cxxflags += ['-march=native']
-
-      if cxx.vendor == 'gcc':
+      if have_gcc:
         cxx.cxxflags += [
           '-flto=auto',
           '-funroll-loops',
@@ -307,9 +300,9 @@ class ExtensionConfig(object):
   def configure_linux(self, cxx):
     cxx.defines += ['LINUX', '_LINUX', 'POSIX', '_FILE_OFFSET_BITS=64']
     cxx.linkflags += ['-lm']
-    if cxx.vendor == 'gcc':
+    if cxx.family == 'gcc':
       cxx.linkflags += ['-static-libgcc']
-    elif cxx.vendor == 'clang':
+    elif cxx.family == 'clang':
       cxx.linkflags += ['-lgcc_eh']
     cxx.linkflags += ['-static-libstdc++']
 
@@ -338,8 +331,18 @@ class ExtensionConfig(object):
 
       #*** log4sp addition: 添加头文件、依赖库 ***#
       os.path.join(context.currentSourcePath, 'src'),
-      os.path.join(context.currentSourcePath, 'extern', 'spdlog', 'include' )
+      os.path.join(context.currentSourcePath, 'extern', 'spdlog', 'include'),
     ]
+
+    #*** log4sp addition ***#
+    if builder.options.debug == '1':
+      compiler.cxxincludes += [
+        os.path.join(context.currentSourcePath, 'tests'),
+      ]
+
+    #*** log4sp addition ***#
+    if builder.options.opt == '1':
+      compiler.symbol_files = 'separate'
     return compiler
 
   def ConfigureForHL2(self, binary):
@@ -367,18 +370,6 @@ class ExtensionConfig(object):
     binary = project.Configure(compiler, name, '{0} - {1}'.format(self.tag, compiler.target.arch))
     self.ConfigureForExtension(context, binary.compiler)
     return self.ConfigureForHL2(binary)
-
-  # 获取最新 SHA（例如：a1b2c3d...）
-  def get_git_hash(self):
-    try:
-      command = ["git", "rev-parse", "HEAD"]
-      result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
-      if builder.options.debug == '1':
-        print('Get the git hash is "' + result.strip() + '"')
-      return result.strip()
-    except BaseException:
-      print('::warning file=AMBuildScript,line=372,title=get_git_hash::Unable to get git hash!')
-      return "unknown"
 
 Extension = ExtensionConfig()
 Extension.detectSDKs()

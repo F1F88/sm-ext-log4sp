@@ -7,6 +7,8 @@ namespace log4sp {
 
 using spdlog::sink_ptr;
 using spdlog::sinks::sink;
+namespace fmt_lib = spdlog::fmt_lib;
+
 
 [[nodiscard]] sink_handler &sink_handler::instance() noexcept {
     static sink_handler instance;
@@ -29,7 +31,7 @@ void sink_handler::destroy() noexcept {
 [[nodiscard]] SourceMod::Handle_t sink_handler::create_handle(sink_ptr object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
     assert(handle_type_);
 
-    SourceMod::Handle_t handle{handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error)};
+    SourceMod::Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
     if (!handle) {
         return BAD_HANDLE;
     }
@@ -47,7 +49,7 @@ void sink_handler::destroy() noexcept {
     assert(handle_type_);
 
     sink *object;
-    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;
@@ -63,7 +65,7 @@ void sink_handler::destroy() noexcept {
     assert(handle_type_);
 
     sink *object;
-    SourceMod::HandleError err{handlesys->ReadHandle(handle, handle_type_, security, (void **)&object)};
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
     if (err != SourceMod::HandleError_None) {
         if (error) {
             *error = err;
@@ -90,13 +92,14 @@ void sink_handler::initialize_() {
     SourceMod::HandleAccess access;
     SourceMod::HandleError error;
 
-    // 默认情况下，创建的 handle 可以被任意插件释放
+    // Init plugin create Sinks access
+    // 插件创建的 Sink Handle 可以被任意插件释放
     handlesys->InitAccessDefaults(nullptr, &access);
     access.access[SourceMod::HandleAccess_Delete] = 0;
 
     handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (!handle_type_) {
-        throw_log4sp_ex("SM error! Could not create Sink handle type (error: " + std::to_string(error) + ")" );
+        throw_log4sp_ex(fmt_lib::format("Failed to creates a Sink Handle type (error code: {})", static_cast<int>(error)));
     }
 }
 

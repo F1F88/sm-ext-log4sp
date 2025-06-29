@@ -2,192 +2,183 @@
 
 #include "spdlog/pattern_formatter.h"
 
+#include "log4sp/format.h"
 #include "log4sp/adapter/logger_handler.h"
 
 
 namespace log4sp {
 
+namespace fmt_lib = spdlog::fmt_lib;
 using spdlog::pattern_formatter;
 using spdlog::pattern_time_type;
 using spdlog::sink_ptr;
 using spdlog::source_loc;
-using spdlog::fmt_lib::format;
 using spdlog::level::level_enum;
 
-void logger::log(const source_loc loc, const level_enum lvl, const string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
-    assert(!loc.empty() || ctx);
+// log with no format string, just string message
+void logger::log(const source_loc &loc, level_enum lvl, string_view_t msg) const noexcept {
+    assert(!loc.empty());
 
     if (should_log(lvl)) {
-        sink_it_({loc, name_, lvl, msg}, ctx);
+        sink_it_(log_msg(loc, name_, lvl, msg), src_helper(loc));
     }
 }
 
-void logger::log(const source_loc loc, const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept {
+void logger::log(plugin_ctx *ctx, level_enum lvl, string_view_t msg) const noexcept {
+    assert(ctx);
+
+    if (should_log(lvl)) {
+        sink_it_(log_msg(name_, lvl, msg), src_helper(ctx));
+    }
+}
+
+// log with log4sp format
+void logger::log(plugin_ctx *ctx, const source_loc &loc, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
     assert(ctx && params);
 
     if (should_log(lvl)) {
+        src_helper source(loc, ctx);
         std::string msg;
 
         try {
-            msg = format_cell_to_string(ctx, params, param);
+            msg = format_to_string(ctx, params, param);
         } catch (const std::exception &ex) {
-            err_helper_.handle_ex(name_, loc.empty() ? get_source_loc(ctx) : source_loc{}, ex);
+            err_helper_.handle_ex(name_, source, ex);
             return;
         } catch (...) {
-            err_helper_.handle_unknown_ex(name_, loc.empty() ? get_source_loc(ctx) : source_loc{});
+            err_helper_.handle_unknown_ex(name_, source);
             return;
         }
 
-        sink_it_({loc, name_, lvl, msg}, ctx);
+        sink_it_(log_msg(loc, name_, lvl, msg), source);
     }
 }
 
-void logger::log_amx_tpl(const source_loc loc, const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, const uint32_t param) const noexcept {
+// log with sourcemod format
+void logger::log_amx_tpl(plugin_ctx *ctx, const source_loc &loc, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
     assert(ctx && params);
 
     if (should_log(lvl)) {
+        src_helper source(loc, ctx);
         char msg[2048];
-        DetectExceptions eh{ctx};
+        DetectExceptions eh(ctx);
 
         smutils->FormatString(msg, sizeof(msg), ctx, params, param);
         if (eh.HasException()) {
-            sink_it_({name_, lvl, eh.Message()});
             return;
         }
 
-        sink_it_({loc, name_, lvl, msg}, ctx);
+        sink_it_(log_msg(loc, name_, lvl, msg), source);
     }
 }
 
-void logger::log_stack_trace(const level_enum lvl, string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
+// special log
+void logger::log_stack_trace(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
+    // ! FIXME: "ctx->GetContext()" 被标记为过时，但没找到可替代的方案
     assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()));
 
     if (should_log(lvl)) {
-        sink_it_({name_, lvl, format("Stack trace requested: {}", msg)});
-        sink_it_({name_, lvl, format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
-
-        std::vector<std::string> messages{get_stack_trace(ctx)};
-        for (auto &iter : messages) {
-            sink_it_({name_, lvl, iter}, ctx);
-        }
-    }
-}
-
-void logger::log_stack_trace(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
-    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()));
-
-    if (should_log(lvl)) {
+        src_helper source(ctx);
         std::string msg;
 
         try {
-            msg = format_cell_to_string(ctx, params, param);
+            msg = format_to_string(ctx, params, param);
         } catch (const std::exception &ex) {
-            err_helper_.handle_ex(name_, get_source_loc(ctx), ex);
+            err_helper_.handle_ex(name_, source, ex);
             return;
         } catch (...) {
-            err_helper_.handle_unknown_ex(name_, get_source_loc(ctx));
+            err_helper_.handle_unknown_ex(name_, source);
             return;
         }
 
-        sink_it_({name_, lvl, format("Stack trace requested: {}", msg)});
-        sink_it_({name_, lvl, format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Stack trace requested: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
 
-        std::vector<std::string> messages{get_stack_trace(ctx)};
+        std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
-            sink_it_({name_, lvl, iter}, ctx);
+            sink_it_(log_msg(name_, lvl, iter), source);
         }
     }
 }
 
-void logger::log_stack_trace_amx_tpl(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
+void logger::log_stack_trace_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
+    // ! FIXME: "ctx->GetContext()" 被标记为过时，但没找到可替代的方案
     assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()) && params);
 
     if (should_log(lvl)) {
+        src_helper source(ctx);
         char msg[2048];
-        DetectExceptions eh{ctx};
+        DetectExceptions eh(ctx);
 
         smutils->FormatString(msg, sizeof(msg), ctx, params, param);
         if (eh.HasException()) {
-            sink_it_({name_, lvl, eh.Message()});
             return;
         }
 
-        sink_it_({name_, lvl, format("Stack trace requested: {}", msg)});
-        sink_it_({name_, lvl, format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Stack trace requested: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
 
-        std::vector<std::string> messages{get_stack_trace(ctx)};
+        std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
-            sink_it_({name_, lvl, iter}, ctx);
+            sink_it_(log_msg(name_, lvl, iter), source);
         }
     }
 }
 
-void logger::throw_error(const level_enum lvl, string_view_t msg, SourcePawn::IPluginContext *ctx) const noexcept {
-    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()));
-
-    ctx->ReportError(msg.data());
-
-    if (should_log(lvl)) {
-        sink_it_({name_, lvl, format("Exception reported: {}", msg)});
-        sink_it_({name_, lvl, format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
-
-        std::vector<std::string> messages{get_stack_trace(ctx)};
-        for (auto &iter : messages) {
-            sink_it_({name_, lvl, iter}, ctx);
-        }
-    }
-}
-
-void logger::throw_error(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
+void logger::throw_error(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
+    // ! FIXME: "ctx->GetContext()" 被标记为过时，但没找到可替代的方案
     assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()) && params);
 
+    src_helper source(ctx);
     std::string msg;
     try {
-        msg = format_cell_to_string(ctx, params, param);
+        msg = format_to_string(ctx, params, param);
     } catch (const std::exception &ex) {
         ctx->ReportError(ex.what());
-        err_helper_.handle_ex(name_, get_source_loc(ctx), ex);
+        err_helper_.handle_ex(name_, source, ex);
         return;
     } catch (...) {
         ctx->ReportError("unknown exception");
-        err_helper_.handle_unknown_ex(name_, get_source_loc(ctx));
+        err_helper_.handle_unknown_ex(name_, source);
         return;
     }
 
     ctx->ReportError(msg.c_str());
 
     if (should_log(lvl)) {
-        sink_it_({name_, lvl, format("Exception reported: {}", msg)});
-        sink_it_({name_, lvl, format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Exception reported: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
 
-        std::vector<std::string> messages{get_stack_trace(ctx)};
+        std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
-            sink_it_({name_, lvl, iter}, ctx);
+            sink_it_(log_msg(name_, lvl, iter), source);
         }
     }
 }
 
-void logger::throw_error_amx_tpl(const level_enum lvl, SourcePawn::IPluginContext *ctx, const cell_t *params, uint32_t param) const noexcept {
+void logger::throw_error_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
+    // ! FIXME: "ctx->GetContext()" 被标记为过时，但没找到可替代的方案
     assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()) && params);
 
     char msg[2048];
-    DetectExceptions eh{ctx};
+    DetectExceptions eh(ctx);
 
     smutils->FormatString(msg, sizeof(msg), ctx, params, param);
     if (eh.HasException()) {
-        sink_it_({name_, lvl, eh.Message()});
         return;
     }
 
     ctx->ReportError(msg);
 
     if (should_log(lvl)) {
-        sink_it_({name_, lvl, format("Exception reported: {}", msg)});
-        sink_it_({name_, lvl, format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())});
+        src_helper source(ctx);
 
-        std::vector<std::string> messages{get_stack_trace(ctx)};
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Exception reported: {}", msg)), source);
+        sink_it_(log_msg(name_, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename())), source);
+
+        std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
         for (auto &iter : messages) {
-            sink_it_({name_, lvl, iter}, ctx);
+            sink_it_(log_msg(name_, lvl, iter), source);
         }
     }
 }
@@ -227,8 +218,12 @@ void logger::set_pattern(std::string pattern, pattern_time_type type) noexcept {
     set_formatter(std::make_unique<pattern_formatter>(pattern, type));
 }
 
-void logger::flush(const source_loc loc, SourcePawn::IPluginContext *ctx) noexcept {
-    flush_(loc, ctx);
+void logger::flush(plugin_ctx *ctx) noexcept {
+    flush_(src_helper(source_loc(), ctx));
+}
+
+void logger::flush(const source_loc &loc) noexcept {
+    flush_(src_helper(loc, nullptr));
 }
 
 void logger::flush_on(level_enum level) noexcept {
@@ -259,79 +254,33 @@ void logger::set_error_handler(SourceMod::IChangeableForward *handler) noexcept 
     err_helper_.set_err_handler(handler);
 }
 
-void logger::sink_it_(const log_msg &msg, SourcePawn::IPluginContext *ctx) const noexcept {
+void logger::sink_it_(const log_msg &msg, const src_helper &source) const noexcept {
     for (auto &sink : sinks_) {
         if (sink->should_log(msg.level)) {
             try {
                 sink->log(msg);
             } catch (const std::exception &ex) {
-                err_helper_.handle_ex(name_, msg.source.empty() && ctx ? get_source_loc(ctx) : source_loc{}, ex);
+                err_helper_.handle_ex(name_, source, ex);
             } catch (...) {
-                err_helper_.handle_unknown_ex(name_, msg.source.empty() && ctx ? get_source_loc(ctx) : source_loc{});
+                err_helper_.handle_unknown_ex(name_, source);
             }
         }
     }
 
     if (should_flush(msg)) {
-        flush_({msg.source.filename, msg.source.line, msg.source.funcname}, ctx);
+        flush_(source);
     }
 }
 
-void logger::flush_(const source_loc loc, SourcePawn::IPluginContext *ctx) const noexcept {
+void logger::flush_(const src_helper &source) const noexcept {
     for (auto &sink : sinks_) {
         try {
             sink->flush();
         } catch (const std::exception &ex) {
-            err_helper_.handle_ex(name_, loc.empty() && ctx ? get_source_loc(ctx) : source_loc{}, ex);
+            err_helper_.handle_ex(name_, source, ex);
         } catch (...) {
-            err_helper_.handle_unknown_ex(name_, loc.empty() && ctx ? get_source_loc(ctx) : source_loc{});
+            err_helper_.handle_unknown_ex(name_, source);
         }
-    }
-}
-
-
-// err_helper
-void logger::err_helper::handle_ex(const std::string &origin, const source_loc &loc, const std::exception &ex) const noexcept {
-    try {
-        if (custom_error_handler_) {
-            custom_error_handler_->PushString(ex.what());
-            custom_error_handler_->PushString(origin.c_str());
-            custom_error_handler_->PushString(loc.filename);
-            custom_error_handler_->PushCell(loc.line);
-            custom_error_handler_->PushString(loc.funcname);
-#ifndef DEBUG
-            custom_error_handler_->Execute();
-#else
-            assert(custom_error_handler_->Execute() == SP_ERROR_NONE);
-#endif
-            return;
-        }
-        smutils->LogError(myself, "[%s::%d] [%s] %s", get_path_filename(loc.filename), loc.line, origin.c_str(), ex.what());
-    } catch (const std::exception &handler_ex) {
-        smutils->LogError(myself, "[%s] caught exception during error handler: %s", origin.c_str(), handler_ex.what());
-    } catch (...) {
-        smutils->LogError(myself, "[%s] caught unknown exception during error handler", origin.c_str());
-    }
-}
-
-void logger::err_helper::handle_unknown_ex(const std::string &origin, const source_loc &loc) const noexcept {
-    handle_ex(origin, loc, std::runtime_error{"unknown exception"});
-}
-
-void logger::err_helper::set_err_handler(SourceMod::IChangeableForward *handler) noexcept {
-    assert(handler);
-    release_forward();
-    custom_error_handler_ = handler;
-}
-
-logger::err_helper::~err_helper() noexcept {
-    release_forward();
-}
-
-void logger::err_helper::release_forward() noexcept {
-    if (custom_error_handler_) {
-        forwards->ReleaseForward(custom_error_handler_);
-        custom_error_handler_ = nullptr;
     }
 }
 
