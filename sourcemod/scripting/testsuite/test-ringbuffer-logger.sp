@@ -177,7 +177,7 @@ void RBSink_Drain(const char[] name, LogLevel lvl, const char[] msg, const char[
     int counter = data.ReadCell();
 
     AssertStrEq("Drain name", name, LOGGER_NAME);
-    AssertEq("Drain lvl", lvl, LogLevel_Info);
+    AssertEq("Drain lvl", view_as<int>(lvl), LOG4SP_LEVEL_INFO);
     AssertEq("Drain msg", StringToInt(msg), counter);
 
     data.Reset(true);

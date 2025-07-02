@@ -126,7 +126,7 @@ void OnOpenPre(const char[] filename)
     AssertStrEq("OpenPre, file name", filename, path);
     AssertFalse("OpenPre, file exists", FileExists(path));
 
-    CreateDirectory(dir);
+    CreateDirectory(dir, FPERM_O_READ|FPERM_O_EXEC|FPERM_G_READ|FPERM_G_EXEC|FPERM_U_READ|FPERM_U_WRITE|FPERM_U_EXEC);
     File file = OpenFile(path, "wt");
     file.WriteString("Hello File Event Callback! ", false);
     file.Flush();

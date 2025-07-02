@@ -33,10 +33,10 @@ void TestDefaultLevel()
     SetTestContext("Test Default Log Level");
 
     TestSink sink = new TestSink();
-    AssertEq("Sink level", sink.GetLevel(), LogLevel_Trace);
+    AssertEq("Sink level", view_as<int>(sink.GetLevel()), LOG4SP_LEVEL_TRACE);
 
     Logger logger = new Logger("test-level");
-    AssertEq("Logger level", logger.GetLevel(), LogLevel_Info);
+    AssertEq("Logger level", view_as<int>(logger.GetLevel()), LOG4SP_LEVEL_INFO);
 
     logger.Close();
     sink.Close();
@@ -60,11 +60,11 @@ void TestLoggerLevel(LogLevel level)
     Logger logger = new Logger("test-level");
     logger.AddSink(sink);
 
-    AssertEq("Before set logger level, logger level", logger.GetLevel(), LogLevel_Info);
+    AssertEq("Before set logger level, logger level", view_as<int>(logger.GetLevel()), LOG4SP_LEVEL_INFO);
     logger.SetLevel(level);
-    AssertEq("After set logger level, logger level", logger.GetLevel(), level);
+    AssertEq("After set logger level, logger level", view_as<int>(logger.GetLevel()), view_as<int>(level));
 
-    AssertEq("After set logger level, sink level keep", sink.GetLevel(), LogLevel_Trace);
+    AssertEq("After set logger level, sink level keep", view_as<int>(sink.GetLevel()), LOG4SP_LEVEL_TRACE);
 
     logger.SetPattern("%l %v");
 
@@ -114,13 +114,13 @@ void TestSinkLevel(LogLevel level)
     Logger logger = new Logger("test-level");
     logger.AddSink(sink);
 
-    AssertEq("Before set logger level, logger level", logger.GetLevel(), LogLevel_Info);
+    AssertEq("Before set logger level, logger level", view_as<int>(logger.GetLevel()), LOG4SP_LEVEL_INFO);
     logger.SetLevel(level);
-    AssertEq("After set logger level, logger level", logger.GetLevel(), level);
+    AssertEq("After set logger level, logger level", view_as<int>(logger.GetLevel()), view_as<int>(level));
 
-    AssertEq("Before set sink level, sink level", sink.GetLevel(), LogLevel_Trace);
+    AssertEq("Before set sink level, sink level", view_as<int>(sink.GetLevel()), LOG4SP_LEVEL_TRACE);
     sink.SetLevel(level);
-    AssertEq("Before set sink level, sink level", sink.GetLevel(), level);
+    AssertEq("Before set sink level, sink level", view_as<int>(sink.GetLevel()), view_as<int>(level));
 
     logger.SetPattern("%l %v");
 

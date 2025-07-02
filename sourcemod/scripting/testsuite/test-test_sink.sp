@@ -2,7 +2,6 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <testing>
 #include <log4sp>
 
 #include "test_sink"
@@ -89,7 +88,7 @@ void TestTestSinkDrain()
 static void CB_DarinLastMsg(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data)
 {
     AssertStrEq("DrainLastMsg name", name, "test-sink");
-    AssertEq("DrainLastMsg lvl", lvl, LogLevel_Fatal);
+    AssertEq("DrainLastMsg lvl", view_as<int>(lvl), LOG4SP_LEVEL_FATAL);
     AssertStrEq("DrainLastMsg msg", msg, "hello test sink 6");
     AssertEq("DrainLastMsg data", data, 7);
 }

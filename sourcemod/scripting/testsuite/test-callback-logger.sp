@@ -64,7 +64,7 @@ void TestCustomCallbackLogger()
 void CBSink_OnLog(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int timePoint)
 {
     AssertStrEq("OnLog name", name, LOGGER_NAME);
-    AssertEq("OnLog lvl", lvl, view_as<LogLevel>(g_testSink.GetLogCount() + 1));
+    AssertEq("OnLog lvl", view_as<int>(lvl), g_testSink.GetLogCount() + 1);
     AssertStrMatch("OnLog msg match", msg, "test message [0-9]");
 }
 
