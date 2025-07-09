@@ -153,21 +153,21 @@ void TestLogStackTrace()
     AssertStrMatch("LogStackTraceAmxTpl line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrac");
     AssertStrMatch("LogStackTraceAmxTpl line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceAmxTpl");
     AssertStrMatch("LogStackTraceAmxTpl line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTraceAmxTpl line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTraceAmxTpl line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: .*test-logger-log.smx");
     AssertStrMatch("LogStackTraceAmxTpl line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 3");
 
     AssertStrMatch("LogStackTraceEx line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
     AssertStrMatch("LogStackTraceEx line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
     AssertStrMatch("LogStackTraceEx line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceE");
     AssertStrMatch("LogStackTraceEx line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTraceEx line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTraceEx line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: .*test-logger-log.smx");
     AssertStrMatch("LogStackTraceEx line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 2");
 
     AssertStrMatch("LogStackTrace line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
     AssertStrMatch("LogStackTrace line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
     AssertStrMatch("LogStackTrace line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTrace");
     AssertStrMatch("LogStackTrace line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTrace line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTrace line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: .*test-logger-log.smx");
     AssertStrMatch("LogStackTrace line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
     delete sink;
 }
@@ -264,7 +264,7 @@ static void Frame_AssertThrowErrorSinkMsgs(TestSink sink)
         AssertStrMatch("ThrowError sink msg 1 match", logMsg.msg, "Exception reported: test message (1|2|3)");
 
         messages.GetArray(i * 5 + 1, logMsg);
-        AssertStrEq("ThrowError sink msg 2", logMsg.msg, "Blaming: test-logger-log.smx");
+        AssertStrMatch("ThrowError sink msg 2 match", logMsg.msg, "Blaming: .*test-logger-log.smx");
 
         messages.GetArray(i * 5 + 2, logMsg);
         AssertStrEq("ThrowError sink msg 3", logMsg.msg, "Call stack trace:");
@@ -281,7 +281,7 @@ static void Frame_AssertThrowErrorSinkMsgs(TestSink sink)
 static void Frame_AssertThrowErrorLogFile()
 {
 #define THROW_ERROR_LOG_FILE_EXP   "(?:" ... P_PREFIX ... "Exception reported: test message (1|2|3)\
-(\n|\r\n)" ... P_PREFIX ... "Blaming: test-logger-log.smx\
+(\n|\r\n)" ... P_PREFIX ... "Blaming: .*test-logger-log.smx\
 (\n|\r\n)" ... P_PREFIX ... "Call stack trace:\
 (\n|\r\n)" ... P_PREFIX ... "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*\
 (\n|\r\n)" ... P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)(\n|\r\n)){3}"
@@ -294,7 +294,7 @@ static void Frame_AssertThrowErrorLogFile()
 static void Frame_AssertThrowErrorSMFile()
 {
 #define THROW_ERROR_SM_FILE_EXP   "(?:" ... P_SM_PREFIX ... "Exception reported: test message (1|2|3)\
-(\n|\r\n)" ... P_SM_PREFIX ... "Blaming: test-logger-log.smx\
+(\n|\r\n)" ... P_SM_PREFIX ... "Blaming: .*test-logger-log.smx\
 (\n|\r\n)" ... P_SM_PREFIX ... "Call stack trace:\
 (\n|\r\n)" ... P_SM_PREFIX ... "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*\
 (\n|\r\n)" ... P_SM_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)(\n|\r\n)){6}"
