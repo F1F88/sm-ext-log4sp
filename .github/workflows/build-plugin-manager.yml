@@ -39,7 +39,7 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Setup SourcePawn Compiler ${{ matrix.sm_latest }}
+      - name: Setup SourcePawn Compiler ${{ matrix.sm_version }}
         id: setup_sp
         uses: rumblefrog/setup-sp@master
         with:
