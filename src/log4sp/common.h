@@ -167,12 +167,6 @@ std::vector<std::string> stack_trace_info_from(SourcePawn::IPluginContext* ctx) 
         assert(!forward->PushStringEx(buffer, length, sz_flags, cp_flags));
 #endif
 
-#ifndef DEBUG
-    #define HANDLE_SYS_FREE_HANDLE(handle, security)        handlesys->FreeHandle(handle, security);
-#else
-    #define HANDLE_SYS_FREE_HANDLE(handle, security)        assert(!handlesys->FreeHandle(handle, security));
-#endif
-
 #define FILE_EVENT_CALLBACK(callback)                                                               \
     [callback](const filename_t &filename) {                                                        \
         if (callback) {                                                                             \

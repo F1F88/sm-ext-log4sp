@@ -1,10 +1,8 @@
 #include <regex>
-#include <stdlib.h>
 
 #include "spdlog/fmt/xchar.h"
 
 #include "log4sp/adapter/logger_handler.h"
-
 #include "log4sp/command/root_console_command.h"
 #include "log4sp/command/root_console_command_handler.h"
 
@@ -19,7 +17,7 @@ using spdlog::source_loc;
 
 std::shared_ptr<logger> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
-    auto logger = logger_handler::instance().find_logger(arg);
+    auto logger = logger_handler::instance().find_object(arg);
     if (!logger) {
         throw std::invalid_argument("Logger with name \"" + arg + "\" not exists.");
     }
@@ -47,7 +45,8 @@ level_enum command::arg_to_level(const std::string &arg) {
 void list_command::execute(const std::vector<std::string> &args) {
     std::vector<std::string> names;
     log4sp::logger_handler::instance().apply_all(
-        [&names](std::shared_ptr<logger> logger) {
+        [&names](const auto &value) {
+            const auto &[handle, logger] = value;
             names.push_back(logger->name());
         }
     );
@@ -69,7 +68,8 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
     std::vector<std::string> arguments = args;
 
     logger_handler::instance().apply_all(
-        [&function_name, &arguments](std::shared_ptr<logger> logger) {
+        [&function_name, &arguments](const auto &value) {
+            const auto &[handle, logger] = value;
             arguments[0] = logger->name();
 
             try {

@@ -1,26 +1,20 @@
 #pragma once
 
-#include <unordered_map>
-#include <vector>
-
-#include "extension.h"
-
 #include "log4sp/logger.h"
+#include "log4sp/adapter/handle_type_dispatch_adapter.h"
 
 
 namespace log4sp {
-/**
- * SourceMod handlesys 的适配器
- * 原版的 handlesys 不便于管理智能指针对象的生命周期
- * 所以这个类增强了对智能指针对象生命周期的管理
- * 同时提供了 find_handle 方法用于根据 logger name 查找已创建的 handle
- */
-class logger_handler final : public SourceMod::IHandleTypeDispatch {
+class logger_handler final : public handle_type_dispatch_adapter<std::string, logger> {
 public:
     /**
      * @brief 全局单例对象
      */
-    [[nodiscard]] static logger_handler &instance() noexcept;
+    [[nodiscard]]
+    static logger_handler &instance() noexcept {
+        static logger_handler instance;
+        return instance;
+    }
 
     /**
      * @brief 用于 SDK_OnLoad 时创建 handle type。
@@ -34,86 +28,20 @@ public:
      * @brief 用于 SDK_OnUnload 时移除 handle type。
      * @note  需要与 initialize 配对使用。
      * @note  为了避免影响其他清理工作，此方法不抛出异常。
-     * @note  移除后所有的 logger handle 都将被释放，所以 handles_ 和 loggers_ 会被清空。
+     * @note  移除后所有的 logger handle 都将被释放，所以 datas_ 会被清空。
      */
     static void destroy() noexcept;
 
     /**
-     * @brief 获取 handle type
-     *
-     * @return          handle type 或者 NO_HANDLE_TYPE 代表还没创建或创建失败
-     */
-    [[nodiscard]] SourceMod::HandleType_t handle_type() const noexcept;
-
-    /**
-     * @brief handlesys->CreateHandleEx 的适配器
-     *        除了创建 handle，还会保存对象的智能指针，以延长生命周期
-     *
-     * @param object    Object to bind to the handle.
-     * @param security  Security pointer; pOwner is written as the owner,
-     *                  pIdent is used as the parent identity for authorization.
-     * @param access    Access right descriptor for the Handle; NULL for type defaults.
-     * @param error     Optional pointer to store an error code on failure (undefined on success).
-     * @return          object 对象的 handle 或 BAD_HANDLE 表示创建失败
-     */
-    [[nodiscard]] SourceMod::Handle_t create_handle(std::shared_ptr<logger> object,
-                                                    const SourceMod::HandleSecurity *security,
-                                                    const SourceMod::HandleAccess *access,
-                                                    SourceMod::HandleError *error) noexcept;
-
-    /**
-     * @brief handlesys->ReadHandle 的适配器
-     *
-     * @param handle    Handle_t from which to retrieve contents.
-     * @param security  Security information struct (may be NULL).
-     * @param error     HandleError error code.
-     * @return          object 智能指针或 nullptr 表示读取失败.
-     */
-    [[nodiscard]] std::shared_ptr<logger> read_handle(const SourceMod::Handle_t handle,
-                                                      const SourceMod::HandleSecurity *security,
-                                                      SourceMod::HandleError *error) const noexcept;
-
-    /**
-     * @brief handlesys->ReadHandle 的适配器
-     *
-     * @param handle    Handle_t from which to retrieve contents.
-     * @param security  Security information struct (may be NULL).
-     * @param error     HandleError error code.
-     * @return          object 指针或 nullptr 表示读取失败.
-     */
-    [[nodiscard]] logger *read_handle_raw(const SourceMod::Handle_t handle,
-                                          const SourceMod::HandleSecurity *security,
-                                          SourceMod::HandleError *error) const noexcept;
-
-    /**
-     * @brief 根据 name 查找 handle
-     *
-     * @param name      logger 对象的名称
-     * @return          logger 对象的 handle 或 BAD_HANDLE 表示不存在
-     */
-    [[nodiscard]] SourceMod::Handle_t find_handle(const std::string &name) const noexcept;
-
-    /**
-     * @brief 根据 name 查找 logger
-     *
-     * @param name      logger 对象的名称
-     * @return          logger 对象的智能指针或 nullptr 表示不存在
-     */
-    [[nodiscard]] std::shared_ptr<logger> find_logger(const std::string &name) const noexcept;
-
-    /**
      * Apply a user defined function on all logger handles.
      */
-    void apply_all(const std::function<void(const SourceMod::Handle_t)> &fun);
-    void apply_all(const std::function<void(std::shared_ptr<logger>)> &fun);
+    void apply_all(const std::function<void(const std::pair<SourceMod::Handle_t, std::shared_ptr<logger>>)> &fun) {
+        for (auto &data : datas_) {
+            fun(data.second);
+        }
+    }
 
-    /**
-     * @brief Called when destroying a handle.  Must be implemented.
-     *
-     * @param type      Handle type.
-     * @param object    Handle internal object.
-     */
-    void OnHandleDestroy(SourceMod::HandleType_t type, void *object) override;
+    static constexpr const char *HANDLE_TYPE_NAME = "Logger";
 
     logger_handler(const logger_handler &) = delete;
     logger_handler &operator=(const logger_handler &) = delete;
@@ -123,12 +51,12 @@ private:
     logger_handler() = default;
     ~logger_handler() = default;
 
-    void initialize_();
-    void destroy_() noexcept;
+    void create_global_logger();
 
-    SourceMod::HandleType_t handle_type_{NO_HANDLE_TYPE};
-    std::unordered_map<std::string, SourceMod::Handle_t> handles_;
-    std::unordered_map<std::string, std::shared_ptr<logger>> loggers_;
+    [[nodiscard]]
+    const key_t &get_key(object_raw_t &raw) const noexcept override {
+        return raw->name();
+    }
 };
 
 

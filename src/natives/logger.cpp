@@ -123,7 +123,7 @@ static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *
 
     for (int i = 0; i < numSinks; ++i)
     {
-        HANDLE_SYS_FREE_HANDLE(sinks[i], &security);
+        log4sp::sink_handler::instance().free_handle(sinks[i], &security);
     }
 
     auto logger = std::make_shared<log4sp::logger>(name, sinkVector.begin(), sinkVector.end());
@@ -160,7 +160,8 @@ static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     auto data = params[2];
 
     log4sp::logger_handler::instance().apply_all(
-        [forward, data](const SourceMod::Handle_t handle) {
+        [forward, data](const auto &value) {
+            const auto &[handle, logger] = value;
             FWD_PUSH_CELL(handle);
             FWD_PUSH_CELL(data);
             FWD_EXECUTE();
@@ -644,7 +645,7 @@ static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) n
         return 0;
     }
 
-    HANDLE_SYS_FREE_HANDLE(params[2], &security);
+    log4sp::sink_handler::instance().free_handle(params[2], &security);
 
     logger->add_sink(sink);
     return 0;
