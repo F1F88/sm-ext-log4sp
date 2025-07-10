@@ -86,7 +86,7 @@ public void OnPluginStart()
 
 ### Log Levels
 
-Log4sp defines **`7`** log levels, from low to high: **`trace`**, **`debug`**, **`info`**, **`warn`**, **`error`**, **`fatal`**, **`off`**.
+Log4sp defines **`7`** log levels, from low to high: **`trace`** < **`debug`** < **`info`** < **`warn`** < **`error`** < **`fatal`** < **`off`**.
 
 Log messages are formatted and delivered to sinks only if message level **≥** logger log level;
 
@@ -113,14 +113,16 @@ Parameter formatting is performed at **Logger** layer and is triggered only if l
 |                                                              |    Log    |                            LogEx                             |                          LogAmxTpl                           |                       SM - LogMessage                        |
 | :----------------------------------------------------------: | :-------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 |                          **Speed**                           | Very Fast |                             Fast                             |                             Fast                             |                             Slow                             |
-|                      **Max character**                       | unlimited |                          unlimited                           |                             2048                             |                             2048                             |
+|                      **Max character**                       | unlimited |                          unlimited                           |                             2048                             |                             1024                             |
 |                       **Param format**                       |     ×     |                              √                               |                              √                               |                              √                               |
-|                       **Implemented**                        |     ×     |          [Log4sp Format](./src/log4sp/common.h#L95)          | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
-|                          **Usage**                           |     ×     | Same as [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | Same as [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | Same as [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
-|                       **Format error**                       |     ×     |                  Handover to Error Handler                   |                         Throw error                          |                         Throw error                          |
-|                         **flag %s**                          |     ×     |        Default right justify<br/>Support Left justify        |          Default left justify<br/>Not right justify          |          Default left justify<br/>Not right justify          |
+|                       **Implemented**                        |     ×     |          [Log4sp Format](./src/log4sp/format.h#L10)          | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
+|                          **Usage**                           |     ×     | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
+|                       **Format error**                       |     ×     |                      Call Error Handler                      |                         Throw error                          |                         Throw error                          |
+| **Justify [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |     ×     |                       Fixed in v1.5.0                        | Work in [#2332](https://github.com/alliedmodders/sourcemod/pull/2332) | Work in [#2332](https://github.com/alliedmodders/sourcemod/pull/2332) |
 | **Overflow [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |     ×     |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
-|                       **Symbols BUG**                        |     ×     |                       Fixed in v1.8.0                        |            **"%0[width]d"**<br> "-1" --> "000-1"             |            **"%0[width]d"**<br/> "-1" --> "000-1"            |
+| **Symbols [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |     ×     |                       Fixed in v1.8.0                        | Work in [#2329](https://github.com/alliedmodders/sourcemod/pull/2329) | Work in [#2329](https://github.com/alliedmodders/sourcemod/pull/2329) |
+| **Float Inf [BUG](https://github.com/alliedmodders/sourcemod/issues/2110)** |     ×     |                       Fixed in v1.10.0                       | Work in [#2324](https://github.com/alliedmodders/sourcemod/pull/2324) | Work in [#2324](https://github.com/alliedmodders/sourcemod/pull/2324) |
+| **Feature [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |     ×     |                       Added in v1.10.0                       | Work in [#2330](https://github.com/alliedmodders/sourcemod/pull/2330) | Work in [#2330](https://github.com/alliedmodders/sourcemod/pull/2330) |
 
 ### Pattern
 

@@ -83,7 +83,7 @@ public void OnPluginStart()
 
 ### 日志级别
 
-Log4sp 定义了 **`7`** 个日志级别，从低往高依次为：**`trace`**、**`debug`**、**`info`**、**`warn`**、**`error`**、**`fatal`**、**`off`**
+Log4sp 定义了 **`7`** 个日志级别，从低往高依次为：**`trace`** < **`debug`** < **`info`** < **`warn`** < **`error`** < **`fatal`** < **`off`**。
 
 仅当日志消息级别 **≥** Logger 的日志级别时，才会格式化日志消息并传递到 Sinks；
 
@@ -110,18 +110,20 @@ sink.ShouldLog(LogLevel_Trace);     // false
 |                                                              | Log  |                            LogEx                             |                          LogAmxTpl                           |                       SM - LogMessage                        |
 | :----------------------------------------------------------: | :--: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 |                         **运行效率**                         | 最快 |                             较快                             |                             较快                             |                             较慢                             |
-|                         **最多字符**                         | 无限 |                             无限                             |                             2048                             |                             2048                             |
+|                         **最多字符**                         | 无限 |                             无限                             |                             2048                             |                             1024                             |
 |                        **参数格式化**                        |  ×   |                              √                               |                              √                               |                              √                               |
-|                           **实现**                           |  ×   |          [Log4sp Format](./src/log4sp/common.h#L95)          | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
-|                           **用法**                           |  ×   | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 | 与 [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) 一致 |
-|                         **格式错误**                         |  ×   |                      移交 Error Handler                      |                           抛出错误                           |                           抛出错误                           |
-|                        **通配符 %s**                         |  ×   |                  默认右对齐<br/>支持左对齐                   |                 默认左对齐<br/>不支持右对齐                  |                 默认左对齐<br/>不支持右对齐                  |
+|                           **实现**                           |  ×   |          [Log4sp Format](./src/log4sp/format.h#L10)          | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SourceMod Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
+|                           **用法**                           |  ×   | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
+|                         **格式错误**                         |  ×   |                      调用 Error Handler                      |                           抛出错误                           |                           抛出错误                           |
+| **对齐 [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |  ×   |                        修复于 v1.5.0                         | 待合并 [SM #2332](https://github.com/alliedmodders/sourcemod/pull/2332) | 待合并 [SM #2332](https://github.com/alliedmodders/sourcemod/pull/2332) |
 | **溢出 [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |  ×   |                        修复于 v1.5.0                         | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
-|                         **符号 BUG**                         |  ×   |                        修复于 v1.8.0                         |            **"%0[width]d"**<br> "-1" --> "000-1"             |            **"%0[width]d"**<br/> "-1" --> "000-1"            |
+| **符号 [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |  ×   |                        修复于 v1.8.0                         | 待合并 [SM #2329](https://github.com/alliedmodders/sourcemod/pull/2329) | 待合并 [SM #2329](https://github.com/alliedmodders/sourcemod/pull/2329) |
+| **Float Inf [BUG](https://github.com/alliedmodders/sourcemod/issues/2110)** |  ×   |                        修复于 v1.10.0                        | 待合并 [SM #2324](https://github.com/alliedmodders/sourcemod/pull/2329) | 待合并 [SM #2324](https://github.com/alliedmodders/sourcemod/pull/2329) |
+| **通配符 [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |  ×   |                        新增于 v1.10.0                        | 待合并 [SM #2330](https://github.com/alliedmodders/sourcemod/pull/2330) | 待合并 [SM #2330](https://github.com/alliedmodders/sourcemod/pull/2330) |
 
 ### 模板格式化
 
-日志模板是定义日志消息样式的一种机制，支持自定义日志的输出样式（如附加logger 名称、日志时间、日志级别等）
+日志模板是定义日志消息样式的一种机制，支持自定义日志的输出样式（如附加 logger 名称、日志时间、日志级别等）
 
 模板格式化发生在 **Sink** 层，Sink 先模板格式化，再输出格式化的日志消息。
 
