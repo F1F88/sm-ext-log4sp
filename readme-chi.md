@@ -359,6 +359,10 @@ flowchart LR
     L_Start_LoggerShouldLog_0@{ animation: fast }
 ```
 
+## 要求
+
+- [SourceMod](https://www.sourcemod.net/downloads.php) ([1.11.6970](https://www.sourcemod.net/downloads.php?branch=1.11-dev) 或更高)
+
 ## 性能测试
 
 测试平台: Windows 11 + VMware + Ubuntu 24.04 LTS + SourceMod 1.13.0.7178

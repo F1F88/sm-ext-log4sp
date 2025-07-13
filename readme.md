@@ -353,6 +353,10 @@ flowchart LR
     L_Start_LoggerShouldLog_0@{ animation: fast }
 ```
 
+## Requirements
+
+- [SourceMod](https://www.sourcemod.net/downloads.php) ([1.11.6970](https://www.sourcemod.net/downloads.php?branch=1.11-dev) or higher)
+
 
 
 ## Benchmarks
