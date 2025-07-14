@@ -169,7 +169,7 @@ void TestLogStackTrace()
     AssertStrMatch("LogStackTrace line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
     AssertStrMatch("LogStackTrace line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: .*test-logger-log.smx");
     AssertStrMatch("LogStackTrace line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
-    delete sink;
+    sink.Close();
 }
 
 

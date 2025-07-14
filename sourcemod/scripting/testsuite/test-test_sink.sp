@@ -56,8 +56,8 @@ void TestTestSinkCount()
     AssertEq("Flush - log counter", sink.GetLogCount(), 5);
     AssertEq("Flush - flush counter", sink.GetFlushCount(), 1);
 
-    delete logger;
-    delete sink;
+    logger.Close();
+    sink.Close();
 }
 
 void TestTestSinkDrain()
@@ -81,8 +81,8 @@ void TestTestSinkDrain()
     sink.DrainLastLine(CB_DarinLastLine, 8);
     sink.DrainLastLine(CB_DarinLastLine2, 9);
 
-    delete logger;
-    delete sink;
+    logger.Close();
+    sink.Close();
 }
 
 static void CB_DarinLastMsg(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data)
@@ -109,22 +109,28 @@ void TestTestSinkDelay()
 {
     SetTestContext("Test TestSink Delay");
 
+    const int logDelay = 1001;
+    const int flushDelay = 2001;
+    int tolerance = RoundToCeil(GetTickInterval() * 1000) * 2;
+
     TestSink sink = new TestSink();
     Logger logger = new Logger("test-sink");
     logger.AddSink(sink);
 
-    int beforeTime = GetTime();
-    sink.SetLogDelay(2001);
-    sink.SetFlushDelay(2001);
+    int beforeTime = GetSysTickCount();
+    sink.SetLogDelay(logDelay);
+    sink.SetFlushDelay(flushDelay);
 
     logger.Info("hello test sink 1");
-    AssertTrue("Log delay >= 2", (GetTime() - beforeTime) >= 2);
+    AssertTrue("Log delay >= delay - tolerance", (GetSysTickCount() - beforeTime) >= (logDelay - tolerance));
+    AssertTrue("Log delay <= delay + tolerance", (GetSysTickCount() - beforeTime) <= (logDelay + tolerance));
 
     logger.Flush();
-    AssertTrue("Flush delay >= 4", (GetTime() - beforeTime) >= 4);
+    AssertTrue("Flush delay >= delay - tolerance", (GetSysTickCount() - beforeTime) >= logDelay + flushDelay - tolerance);
+    AssertTrue("Flush delay <= delay + tolerance", (GetSysTickCount() - beforeTime) <= logDelay + flushDelay + tolerance);
 
-    delete logger;
-    delete sink;
+    logger.Close();
+    sink.Close();
 }
 
 void TestTestSinkLogException()
