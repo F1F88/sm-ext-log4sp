@@ -20,6 +20,7 @@
  * @param line          The line number of the source code location.
  * @param func          The function name of the source code location.
  * @param logTime       The log message time point in seconds.
+ * @param data          Data value passed to callback.
  */
 typeset DrainCallback
 {
@@ -34,7 +35,7 @@ typeset DrainCallback
  * Callback function called on DrainCallback.DrainFormatted().
  *
  * @param msg           Log messages that have been formatted in a pre-set pattern.
- * @param data          Data value passed to Logger.ApplyAll().
+ * @param data          Data value passed to callback.
  */
 typeset DrainFormattedCallback
 {
@@ -85,8 +86,8 @@ methodmap RingBufferSink < Sink
      * @param           Amount of log messages in memory.
      * @return          Logger handle.
      * @error           Logger name already exits.
-     * @deprecated      This cannot be done using the RingbufferSink function.
+     * @deprecated      This cannot be using the RingbufferSink function.
      */
-    #pragma deprecated This cannot be done using the RingbufferSink function.
+    #pragma deprecated This cannot be using the RingbufferSink function.
     public static native Logger CreateLogger(const char[] name, int amount);
 }
