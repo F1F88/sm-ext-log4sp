@@ -16,7 +16,11 @@ Action Command_Test(int args)
 {
     PrintToServer("---- START TEST ROTATE LOGGER ----");
 
+    PrepareTestPath("rotate-file/");
+
     TestCalcFileName();
+
+    TestGetFilename();
 
     TestRotateLogger();
 
@@ -48,6 +52,25 @@ void TestCalcFileName()
     AssertStrEq("Calc file name 3", filename, "rotated.txt");
 }
 
+void TestGetFilename()
+{
+    SetTestContext("Test Daily File GetFilename");
+
+    const int maxSize = 1024 * 10;
+
+    char path[PLATFORM_MAX_PATH];
+    BuildTestPath(path, sizeof(path), "rotate-file/get_filename.log");
+
+    RotatingFileSink sink = new RotatingFileSink(path, maxSize, 1);
+
+    int length = sink.GetFilenameLength();
+    char[] filename = new char[length + 1];
+    sink.GetFilename(filename, length + 1);
+    delete sink;
+
+    AssertStrEq("Filename", filename, path);
+}
+
 void TestRotateLogger()
 {
     SetTestContext("Test Rotate Logger");
@@ -55,7 +78,7 @@ void TestRotateLogger()
     const int maxSize = 1024 * 10;
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("rotate-file/rotating_log.log");
+    BuildTestPath(path, sizeof(path), "rotate-file/rotating_log.log");
 
     Logger logger = RotatingFileSink.CreateLogger("test-rotate-logger", path, maxSize, 0);
     for (int i = 0; i < 10; ++i)
@@ -74,7 +97,7 @@ void TestAutoRotate()
     const int maxSize = 1024 * 10;
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("rotate-file/rotating_auto_rotate.log");
+    BuildTestPath(path, sizeof(path), "rotate-file/rotating_auto_rotate.log");
 
     // make an initial logger to create the first output file
     Logger logger = RotatingFileSink.CreateLogger("test-rotate-logger", path, maxSize, 2, true);
@@ -112,7 +135,7 @@ void TestManualRotate()
     const int maxSize = 1024 * 10;
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("rotate-file/rotating_manual_rotate.log");
+    BuildTestPath(path, sizeof(path), "rotate-file/rotating_manual_rotate.log");
 
     RotatingFileSink sink = new RotatingFileSink(path, maxSize, 2);
 
@@ -145,7 +168,7 @@ void TestFileCallback()
     const int maxSize = 1024 * 10;
 
     char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("rotate-file/file_callback.log");
+    BuildTestPath(path, sizeof(path), "rotate-file/file_callback.log");
 
     Logger logger = RotatingFileSink.CreateLogger("test-file-logger", path, maxSize, 1, .openPre=OnOpenPre, .closePost=OnClosePost);
     delete logger;

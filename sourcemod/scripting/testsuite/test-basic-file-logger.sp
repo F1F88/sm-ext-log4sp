@@ -25,6 +25,8 @@ Action Command_Test(int args)
 
     TestFlushOn();
 
+    TestGetFilename();
+
     TestTruncate();
 
     TestFileCallback();
@@ -75,6 +77,22 @@ void TestFlushOn()
 
     AssertEq("Flush by destructor, count lines", CountLines(path), 3);
     AssertFileMatch("Flush by destructor, contents match", path, "Test message 1" ... P_EOL ... "Should not be flushed" ... P_EOL ... "Test message 2" ... P_EOL);
+}
+
+void TestGetFilename()
+{
+    SetTestContext("Test Simple File GetFilename");
+
+    char path[PLATFORM_MAX_PATH];
+    BuildTestPath(path, sizeof(path), "basic-file/get_filename.log");
+
+    BasicFileSink sink = new BasicFileSink(path);
+
+    char filename[PLATFORM_MAX_PATH];
+    sink.GetFilename(filename, sizeof(filename));
+    delete sink;
+
+    AssertStrEq("Filename", filename, path);
 }
 
 void TestTruncate()

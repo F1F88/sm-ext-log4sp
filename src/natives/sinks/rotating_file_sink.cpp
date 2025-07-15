@@ -83,8 +83,10 @@ static cell_t RotatingFileSink_GetFilename(SourcePawn::IPluginContext *ctx, cons
 {
     READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
+    auto filename = log4sp::unbuild_path<SourceMod::PathType::Path_Game>(rotatingFileSink->filename());
+
     size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], rotatingFileSink->filename().c_str(), &bytes);
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], filename.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 
@@ -92,7 +94,9 @@ static cell_t RotatingFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx
 {
     READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
-    return static_cast<cell_t>(rotatingFileSink->filename().length());
+    auto filename = log4sp::unbuild_path<SourceMod::PathType::Path_Game>(rotatingFileSink->filename());
+
+    return static_cast<cell_t>(filename.length());
 }
 
 static cell_t RotatingFileSink_RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept

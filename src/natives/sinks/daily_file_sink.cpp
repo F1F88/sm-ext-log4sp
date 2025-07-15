@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include "spdlog/sinks/daily_file_sink.h"
 
 #include "log4sp/common.h"
@@ -138,8 +136,10 @@ static cell_t DailyFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
 {
     READ_DAILY_FIEL_SINK_HANDLE_OR_ERROR(params[1]);
 
+    auto filename = log4sp::unbuild_path<SourceMod::PathType::Path_Game>(dailyFileSink->filename());
+
     size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], dailyFileSink->filename().c_str(), &bytes);
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], filename.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 
@@ -147,7 +147,9 @@ static cell_t DailyFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx, c
 {
     READ_DAILY_FIEL_SINK_HANDLE_OR_ERROR(params[1]);
 
-    return static_cast<cell_t>(dailyFileSink->filename().length());
+    auto filename = log4sp::unbuild_path<SourceMod::PathType::Path_Game>(dailyFileSink->filename());
+
+    return static_cast<cell_t>(filename.length());
 }
 
 static cell_t DailyFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept

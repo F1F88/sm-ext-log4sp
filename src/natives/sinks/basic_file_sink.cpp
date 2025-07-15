@@ -81,8 +81,10 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
 {
     READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(params[1]);
 
+    auto filename = log4sp::unbuild_path<SourceMod::PathType::Path_Game>(basicFileSink->filename());
+
     size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], basicFileSink->filename().c_str(), &bytes);
+    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], filename.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }
 

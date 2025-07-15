@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-
 #include "spdlog/common.h"
 
 #include "extension.h"
@@ -87,7 +85,27 @@ namespace log4sp {
 [[noreturn]] void throw_log4sp_ex(std::string msg);
 [[noreturn]] void throw_log4sp_ex(const std::string &msg, int last_errno);
 
-[[nodiscard]] spdlog::filename_t unbuild_path(SourceMod::PathType type, const spdlog::filename_t &filename) noexcept;
+template <SourceMod::PathType T>
+[[nodiscard]] inline
+spdlog::filename_t unbuild_path(const spdlog::filename_t &filename) noexcept {
+    const char *base = nullptr;
+
+    if constexpr (T == SourceMod::PathType::Path_Game) {
+        base = smutils->GetGamePath();
+    } else if constexpr (T == SourceMod::PathType::Path_SM) {
+        base = smutils->GetSourceModPath();
+    } else if constexpr (T == SourceMod::PathType::Path_SM_Rel) {
+        // TODO
+        static_assert(T != T, "unbuild_path: Unsupported Path_SM_Rel used.");
+    } else {
+        static_assert(T != T, "unbuild_path: Unsupported PathType used.");
+    }
+
+    if (base) {
+        return filename.substr(std::strlen(base) + 1);
+    }
+    return filename;
+}
 
 
 }   // namespace log4sp
@@ -150,7 +168,7 @@ namespace log4sp {
 #define FILE_EVENT_CALLBACK(callback)                                                               \
     [callback](const filename_t &filename) {                                                        \
         if (callback) {                                                                             \
-            auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);             \
+            auto path = log4sp::unbuild_path<SourceMod::PathType::Path_Game>(filename);             \
             FWDS_CREATE_EX(nullptr, ET_Ignore, 1, nullptr, Param_String);                           \
             FWD_ADD_FUNCTION(callback);                                                             \
             FWD_PUSH_STRING(path.c_str());                                                          \
