@@ -57,7 +57,7 @@ methodmap RotatingFileSink < Sink
     public native int GetFilenameLength();
 
     /**
-     * Rotate log files on demand.
+     * Rotate the log files.
      */
     public native void RotateNow();
 
@@ -84,7 +84,7 @@ methodmap RotatingFileSink < Sink
      * @param openPre       Called before the sink open the file.
      * @param closePost     Called after the sink close the file.
      * @return              Logger handle.
-     * @error               Logger name already exits, or maxFileSize == 0, or maxFiles > 200000.
+     * @error               Logger name already exits, or maxFileSize <= 0, or maxFiles > 200000.
      */
     public static native Logger CreateLogger(
         const char[] name,
