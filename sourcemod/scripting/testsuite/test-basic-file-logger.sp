@@ -90,9 +90,11 @@ void TestGetFilename()
 
     char filename[PLATFORM_MAX_PATH];
     sink.GetFilename(filename, sizeof(filename));
+    int length = sink.GetFilenameLength();
     delete sink;
 
     AssertStrEq("Filename", filename, path);
+    AssertEq("FilenameLength", length, strlen(filename));
 }
 
 void TestTruncate()

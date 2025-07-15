@@ -39,6 +39,13 @@ methodmap BasicFileSink < Sink
     public native int GetFilename(char[] buffer, int maxlen);
 
     /**
+     * Gets the length of the filename.
+     *
+     * @return          Length of the filename string.
+     */
+    public native int GetFilenameLength();
+
+    /**
      * Truncate the log files.
      */
     public native void Truncate();

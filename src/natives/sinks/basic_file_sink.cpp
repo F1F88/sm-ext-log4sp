@@ -88,6 +88,15 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
     return static_cast<cell_t>(bytes);
 }
 
+static cell_t BasicFileSink_GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(params[1]);
+
+    auto filename = log4sp::unbuild_path<SourceMod::PathType::Path_Game>(basicFileSink->filename());
+
+    return static_cast<cell_t>(filename.length());
+}
+
 static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_BASIC_FILE_SINK_HANDLE_OR_ERROR(params[1]);
@@ -155,6 +164,7 @@ const sp_nativeinfo_t BasicFileSinkNatives[] =
 {
     {"BasicFileSink.BasicFileSink",             BasicFileSink},
     {"BasicFileSink.GetFilename",               BasicFileSink_GetFilename},
+    {"BasicFileSink.GetFilenameLength",         BasicFileSink_GetFilenameLength},
     {"BasicFileSink.Truncate",                  BasicFileSink_Truncate},
 
     {"BasicFileSink.CreateLogger",              BasicFileSink_CreateLogger},
