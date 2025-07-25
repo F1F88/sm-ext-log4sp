@@ -40,20 +40,10 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     SourcePawn::IPluginFunction *logPostFunction= ctx->GetFunctionById(params[2]);
     SourcePawn::IPluginFunction *flushFunction  = ctx->GetFunctionById(params[3]);
 
-    sink_ptr sink;
-    try
-    {
-        sink = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return BAD_HANDLE;
-    }
-
     SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
+    auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
@@ -67,14 +57,7 @@ static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const
 {
     READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
-    try
-    {
-        callbackSink->set_log_callback(ctx->GetFunctionById(params[2]));
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-    }
+    callbackSink->set_log_callback(ctx->GetFunctionById(params[2]));
     return 0;
 }
 
@@ -82,14 +65,7 @@ static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, c
 {
     READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
-    try
-    {
-        callbackSink->set_log_post_callback(ctx->GetFunctionById(params[2]));
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-    }
+    callbackSink->set_log_post_callback(ctx->GetFunctionById(params[2]));
     return 0;
 }
 
@@ -97,14 +73,7 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
 {
     READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
-    try
-    {
-        callbackSink->set_flush_callback(ctx->GetFunctionById(params[2]));
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-    }
+    callbackSink->set_flush_callback(ctx->GetFunctionById(params[2]));
     return 0;
 }
 
@@ -122,20 +91,10 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
     SourcePawn::IPluginFunction *logPostFunction = ctx->GetFunctionById(params[3]);
     SourcePawn::IPluginFunction *flushFunction   = ctx->GetFunctionById(params[4]);
 
-    sink_ptr sink;
-    try
-    {
-        sink = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return BAD_HANDLE;
-    }
-
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
+    auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
     auto logger = std::make_shared<log4sp::logger>(name, sink);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
