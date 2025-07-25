@@ -123,10 +123,10 @@ float BenchLogger(int howmany, int client, Logger logger)
             case 3:     logger.InfoEx("|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
             case 4:     logger.InfoEx("|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
             case 5:     logger.InfoEx("|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
-            case 6:     logger.InfoEx("|  6 |     34b:     %34b |      b:      %b |", float(i), float(-i));
-            case 7:     logger.InfoEx("|  7 |    034b:    %034b |      b:      %b |", float(-i), float(i));
-            case 8:     logger.InfoEx("|  8 |    -34b:    %-34b |      b:      %b |", float(i), float(-i));
-            case 9:     logger.InfoEx("|  9 |   -034b:   %-034b |      b:      %b |", float(-i), float(i));
+            case 6:     logger.InfoEx("|  6 |     34b:     %34b |      b:      %b |", i, -i);
+            case 7:     logger.InfoEx("|  7 |    034b:    %034b |      b:      %b |", -i, i);
+            case 8:     logger.InfoEx("|  8 |    -34b:    %-34b |      b:      %b |", i, -i);
+            case 9:     logger.InfoEx("|  9 |   -034b:   %-034b |      b:      %b |", -i, i);
             case 10:    logger.InfoEx("| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
             case 11:    logger.InfoEx("| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
             case 12:    logger.InfoEx("| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
@@ -137,8 +137,8 @@ float BenchLogger(int howmany, int client, Logger logger)
             case 18:    logger.InfoEx("| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
             case 19:    logger.InfoEx("| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
             case 20:    logger.InfoEx("| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
-            case 21:    logger.InfoEx("| 21 |  16.10s:  %16.10s |   .10s:   %.10f |", "some messages", "some messages");
-            case 22:    logger.InfoEx("| 22 | -16.10s: %-16.10s |  -.10s:  %-.10f |", "some messages", "some messages");
+            case 21:    logger.InfoEx("| 21 |  16.10s:  %16.10s |   .10s:   %.10s |", "some messages", "some messages");
+            case 22:    logger.InfoEx("| 22 | -16.10s: %-16.10s |  -.10s:  %-.10s |", "some messages", "some messages");
             case 23:    logger.InfoEx("| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
             case 24:    logger.InfoEx("| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
             case 25:    logger.InfoEx("| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
