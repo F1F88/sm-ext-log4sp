@@ -8,6 +8,9 @@
 #pragma newdecls required
 
 
+Profiler g_hProfiler = null;
+
+
 public void OnPluginStart()
 {
     LoadTranslations("common.phrases");
@@ -16,27 +19,22 @@ public void OnPluginStart()
     RegConsoleCmd("sm_log4sp_bench_logtofile",      CMD_Bench_LogToFile);
     RegConsoleCmd("sm_log4sp_bench_logtofileEx",    CMD_Bench_LogToFileEx);
     RegConsoleCmd("sm_log4sp_bench_printtoserver",  CMD_Bench_PrintToServer);
+
+    g_hProfiler = new Profiler();
 }
 
 Action CMD_Bench_LogMessage(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
+    int logEcho = (args >= 2) ? GetCmdArgInt(2) : 0;
 
-    int logEcho = 0;
-    if (args >= 2)
-    {
-        logEcho = GetCmdArgInt(2);
-    }
+    char BENCH_TITLE[]  = "LogMessage";
+
     int val = FindConVar("sv_logecho").IntValue;
     FindConVar("sv_logecho").SetInt(logEcho); // 如果为 1, 运行时长会大幅增加
 
     // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
+    g_hProfiler.Start();
     for (int i = 0; i < iters; ++i)
     {
         switch (i & 31)
@@ -74,13 +72,12 @@ Action CMD_Bench_LogMessage(int client, int args)
             case 31:    LogMessage("| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
         }
     }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
+    g_hProfiler.Stop();
+    float delta = g_hProfiler.Time;
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogMessage", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
     FindConVar("sv_logecho").SetInt(val);
@@ -89,67 +86,60 @@ Action CMD_Bench_LogMessage(int client, int args)
 
 Action CMD_Bench_LogToFile(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
+    int logEcho = (args >= 2) ? GetCmdArgInt(2) : 0;
 
-    int logEcho = 0;
-    if (args >= 2)
-    {
-        logEcho = GetCmdArgInt(2);
-    }
+    char BENCH_TITLE[]  = "LogToFile";
+    char FILE_PATH[]    = "addons/sourcemod/logs/benchmark/file-Z.log";
+
     int val = FindConVar("sv_logecho").IntValue;
     FindConVar("sv_logecho").SetInt(logEcho); // 如果为 1, 运行时长会大幅增加
 
     // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
+    g_hProfiler.Start();
     for (int i = 0; i < iters; ++i)
     {
         switch (i & 31)
         {
-            case 0:     LogToFile("logs/benchmark/file-Z.log", "|  0 |    010d:    %010d |    10d:    %10d | d: %d |", i, -i, i);
-            case 1:     LogToFile("logs/benchmark/file-Z.log", "|  1 |   -010i:   %-010i |   -10i:   %-10i | i: %i |", -i, i, -i);
-            case 2:     LogToFile("logs/benchmark/file-Z.log", "|  2 |    010u:    %010u |    10u:    %10u | u: %d |", i, -i, i);
-            case 3:     LogToFile("logs/benchmark/file-Z.log", "|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
-            case 4:     LogToFile("logs/benchmark/file-Z.log", "|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
-            case 5:     LogToFile("logs/benchmark/file-Z.log", "|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
-            case 6:     LogToFile("logs/benchmark/file-Z.log", "|  6 |     34b:     %34b |      b:      %b |", i, -i);
-            case 7:     LogToFile("logs/benchmark/file-Z.log", "|  7 |    034b:    %034b |      b:      %b |", -i, i);
-            case 8:     LogToFile("logs/benchmark/file-Z.log", "|  8 |    -34b:    %-34b |      b:      %b |", i, -i);
-            case 9:     LogToFile("logs/benchmark/file-Z.log", "|  9 |   -034b:   %-034b |      b:      %b |", -i, i);
-            case 10:    LogToFile("logs/benchmark/file-Z.log", "| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
-            case 11:    LogToFile("logs/benchmark/file-Z.log", "| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
-            case 12:    LogToFile("logs/benchmark/file-Z.log", "| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
-            case 14:    LogToFile("logs/benchmark/file-Z.log", "| 14 |    0.3f:    %0.3f |    .3f:    %.3f |", float(-i), float(i));
-            case 15:    LogToFile("logs/benchmark/file-Z.log", "| 15 |   -0.3f:   %-0.3f |   -.3f:   %0.3f |", float(i), float(-i));
-            case 16:    LogToFile("logs/benchmark/file-Z.log", "| 16 |  010.3f:  %010.3f |  10.3f:  %10.3f |", float(-i), float(i));
-            case 17:    LogToFile("logs/benchmark/file-Z.log", "| 17 | -010.3f: %-010.3f | -10.3f: %-10.3f |", float(i), float(-i));
-            case 18:    LogToFile("logs/benchmark/file-Z.log", "| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
-            case 19:    LogToFile("logs/benchmark/file-Z.log", "| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
-            case 20:    LogToFile("logs/benchmark/file-Z.log", "| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
-            case 21:    LogToFile("logs/benchmark/file-Z.log", "| 21 |  16.10s:  %16.10s |   .10s:   %.10s |", "some messages", "some messages");
-            case 22:    LogToFile("logs/benchmark/file-Z.log", "| 22 | -16.10s: %-16.10s |  -.10s:  %-.10s |", "some messages", "some messages");
-            case 23:    LogToFile("logs/benchmark/file-Z.log", "| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
-            case 24:    LogToFile("logs/benchmark/file-Z.log", "| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
-            case 25:    LogToFile("logs/benchmark/file-Z.log", "| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
-            case 26:    LogToFile("logs/benchmark/file-Z.log", "| 26 |  20.16t:  %20.16t | 1 N  t:      %t |", "See console for output", "Chat to admins", client);
-            case 27:    LogToFile("logs/benchmark/file-Z.log", "| 27 |   -.16t:   %-.16t | 2 N  t:      %t |", "See console for output", "Private say to", client, client);
-            case 28:    LogToFile("logs/benchmark/file-Z.log", "| 28 | -20.16t: %-20.16t | 2 s  t:      %t |", "See console for output", "Vote Select", "somebody", "somebuttom");
-            case 29:    LogToFile("logs/benchmark/file-Z.log", "| 29 |     16T:     %16T |  0   T:      %T |", "See console for output", client, "See console for output", client);
-            case 30:    LogToFile("logs/benchmark/file-Z.log", "| 30 |    -16T:    %-16T | 1 d  T:      %T |", "See console for output", client, "Vote Delay Seconds", client, 234567890);
-            case 31:    LogToFile("logs/benchmark/file-Z.log", "| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
+            case 0:     LogToFile(FILE_PATH, "|  0 |    010d:    %010d |    10d:    %10d | d: %d |", i, -i, i);
+            case 1:     LogToFile(FILE_PATH, "|  1 |   -010i:   %-010i |   -10i:   %-10i | i: %i |", -i, i, -i);
+            case 2:     LogToFile(FILE_PATH, "|  2 |    010u:    %010u |    10u:    %10u | u: %d |", i, -i, i);
+            case 3:     LogToFile(FILE_PATH, "|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
+            case 4:     LogToFile(FILE_PATH, "|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
+            case 5:     LogToFile(FILE_PATH, "|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
+            case 6:     LogToFile(FILE_PATH, "|  6 |     34b:     %34b |      b:      %b |", i, -i);
+            case 7:     LogToFile(FILE_PATH, "|  7 |    034b:    %034b |      b:      %b |", -i, i);
+            case 8:     LogToFile(FILE_PATH, "|  8 |    -34b:    %-34b |      b:      %b |", i, -i);
+            case 9:     LogToFile(FILE_PATH, "|  9 |   -034b:   %-034b |      b:      %b |", -i, i);
+            case 10:    LogToFile(FILE_PATH, "| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
+            case 11:    LogToFile(FILE_PATH, "| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
+            case 12:    LogToFile(FILE_PATH, "| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
+            case 14:    LogToFile(FILE_PATH, "| 14 |    0.3f:    %0.3f |    .3f:    %.3f |", float(-i), float(i));
+            case 15:    LogToFile(FILE_PATH, "| 15 |   -0.3f:   %-0.3f |   -.3f:   %0.3f |", float(i), float(-i));
+            case 16:    LogToFile(FILE_PATH, "| 16 |  010.3f:  %010.3f |  10.3f:  %10.3f |", float(-i), float(i));
+            case 17:    LogToFile(FILE_PATH, "| 17 | -010.3f: %-010.3f | -10.3f: %-10.3f |", float(i), float(-i));
+            case 18:    LogToFile(FILE_PATH, "| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
+            case 19:    LogToFile(FILE_PATH, "| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
+            case 20:    LogToFile(FILE_PATH, "| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
+            case 21:    LogToFile(FILE_PATH, "| 21 |  16.10s:  %16.10s |   .10s:   %.10s |", "some messages", "some messages");
+            case 22:    LogToFile(FILE_PATH, "| 22 | -16.10s: %-16.10s |  -.10s:  %-.10s |", "some messages", "some messages");
+            case 23:    LogToFile(FILE_PATH, "| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
+            case 24:    LogToFile(FILE_PATH, "| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
+            case 25:    LogToFile(FILE_PATH, "| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
+            case 26:    LogToFile(FILE_PATH, "| 26 |  20.16t:  %20.16t | 1 N  t:      %t |", "See console for output", "Chat to admins", client);
+            case 27:    LogToFile(FILE_PATH, "| 27 |   -.16t:   %-.16t | 2 N  t:      %t |", "See console for output", "Private say to", client, client);
+            case 28:    LogToFile(FILE_PATH, "| 28 | -20.16t: %-20.16t | 2 s  t:      %t |", "See console for output", "Vote Select", "somebody", "somebuttom");
+            case 29:    LogToFile(FILE_PATH, "| 29 |     16T:     %16T |  0   T:      %T |", "See console for output", client, "See console for output", client);
+            case 30:    LogToFile(FILE_PATH, "| 30 |    -16T:    %-16T | 1 d  T:      %T |", "See console for output", client, "Vote Delay Seconds", client, 234567890);
+            case 31:    LogToFile(FILE_PATH, "| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
         }
     }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
+    g_hProfiler.Stop();
+    float delta = g_hProfiler.Time;
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogToFile", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
     FindConVar("sv_logecho").SetInt(val);
@@ -158,67 +148,60 @@ Action CMD_Bench_LogToFile(int client, int args)
 
 Action CMD_Bench_LogToFileEx(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
+    int logEcho = (args >= 2) ? GetCmdArgInt(2) : 0;
 
-    int logEcho = 0;
-    if (args >= 2)
-    {
-        logEcho = GetCmdArgInt(2);
-    }
+    char BENCH_TITLE[]  = "LogToFileEx";
+    char FILE_PATH[]    = "addons/sourcemod/logs/benchmark/file-Y.log";
+
     int val = FindConVar("sv_logecho").IntValue;
     FindConVar("sv_logecho").SetInt(logEcho); // 如果为 1, 运行时长会大幅增加
 
     // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
+    g_hProfiler.Start();
     for (int i = 0; i < iters; ++i)
     {
         switch (i & 31)
         {
-            case 0:     LogToFileEx("logs/benchmark/file-Y.log", "|  0 |    010d:    %010d |    10d:    %10d | d: %d |", i, -i, i);
-            case 1:     LogToFileEx("logs/benchmark/file-Y.log", "|  1 |   -010i:   %-010i |   -10i:   %-10i | i: %i |", -i, i, -i);
-            case 2:     LogToFileEx("logs/benchmark/file-Y.log", "|  2 |    010u:    %010u |    10u:    %10u | u: %d |", i, -i, i);
-            case 3:     LogToFileEx("logs/benchmark/file-Y.log", "|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
-            case 4:     LogToFileEx("logs/benchmark/file-Y.log", "|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
-            case 5:     LogToFileEx("logs/benchmark/file-Y.log", "|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
-            case 6:     LogToFileEx("logs/benchmark/file-Y.log", "|  6 |     34b:     %34b |      b:      %b |", i, -i);
-            case 7:     LogToFileEx("logs/benchmark/file-Y.log", "|  7 |    034b:    %034b |      b:      %b |", -i, i);
-            case 8:     LogToFileEx("logs/benchmark/file-Y.log", "|  8 |    -34b:    %-34b |      b:      %b |", i, -i);
-            case 9:     LogToFileEx("logs/benchmark/file-Y.log", "|  9 |   -034b:   %-034b |      b:      %b |", -i, i);
-            case 10:    LogToFileEx("logs/benchmark/file-Y.log", "| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
-            case 11:    LogToFileEx("logs/benchmark/file-Y.log", "| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
-            case 12:    LogToFileEx("logs/benchmark/file-Y.log", "| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
-            case 14:    LogToFileEx("logs/benchmark/file-Y.log", "| 14 |    0.3f:    %0.3f |    .3f:    %.3f |", float(-i), float(i));
-            case 15:    LogToFileEx("logs/benchmark/file-Y.log", "| 15 |   -0.3f:   %-0.3f |   -.3f:   %0.3f |", float(i), float(-i));
-            case 16:    LogToFileEx("logs/benchmark/file-Y.log", "| 16 |  010.3f:  %010.3f |  10.3f:  %10.3f |", float(-i), float(i));
-            case 17:    LogToFileEx("logs/benchmark/file-Y.log", "| 17 | -010.3f: %-010.3f | -10.3f: %-10.3f |", float(i), float(-i));
-            case 18:    LogToFileEx("logs/benchmark/file-Y.log", "| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
-            case 19:    LogToFileEx("logs/benchmark/file-Y.log", "| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
-            case 20:    LogToFileEx("logs/benchmark/file-Y.log", "| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
-            case 21:    LogToFileEx("logs/benchmark/file-Y.log", "| 21 |  16.10s:  %16.10s |   .10s:   %.10s |", "some messages", "some messages");
-            case 22:    LogToFileEx("logs/benchmark/file-Y.log", "| 22 | -16.10s: %-16.10s |  -.10s:  %-.10s |", "some messages", "some messages");
-            case 23:    LogToFileEx("logs/benchmark/file-Y.log", "| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
-            case 24:    LogToFileEx("logs/benchmark/file-Y.log", "| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
-            case 25:    LogToFileEx("logs/benchmark/file-Y.log", "| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
-            case 26:    LogToFileEx("logs/benchmark/file-Y.log", "| 26 |  20.16t:  %20.16t | 1 N  t:      %t |", "See console for output", "Chat to admins", client);
-            case 27:    LogToFileEx("logs/benchmark/file-Y.log", "| 27 |   -.16t:   %-.16t | 2 N  t:      %t |", "See console for output", "Private say to", client, client);
-            case 28:    LogToFileEx("logs/benchmark/file-Y.log", "| 28 | -20.16t: %-20.16t | 2 s  t:      %t |", "See console for output", "Vote Select", "somebody", "somebuttom");
-            case 29:    LogToFileEx("logs/benchmark/file-Y.log", "| 29 |     16T:     %16T |  0   T:      %T |", "See console for output", client, "See console for output", client);
-            case 30:    LogToFileEx("logs/benchmark/file-Y.log", "| 30 |    -16T:    %-16T | 1 d  T:      %T |", "See console for output", client, "Vote Delay Seconds", client, 234567890);
-            case 31:    LogToFileEx("logs/benchmark/file-Y.log", "| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
+            case 0:     LogToFileEx(FILE_PATH, "|  0 |    010d:    %010d |    10d:    %10d | d: %d |", i, -i, i);
+            case 1:     LogToFileEx(FILE_PATH, "|  1 |   -010i:   %-010i |   -10i:   %-10i | i: %i |", -i, i, -i);
+            case 2:     LogToFileEx(FILE_PATH, "|  2 |    010u:    %010u |    10u:    %10u | u: %d |", i, -i, i);
+            case 3:     LogToFileEx(FILE_PATH, "|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
+            case 4:     LogToFileEx(FILE_PATH, "|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
+            case 5:     LogToFileEx(FILE_PATH, "|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
+            case 6:     LogToFileEx(FILE_PATH, "|  6 |     34b:     %34b |      b:      %b |", i, -i);
+            case 7:     LogToFileEx(FILE_PATH, "|  7 |    034b:    %034b |      b:      %b |", -i, i);
+            case 8:     LogToFileEx(FILE_PATH, "|  8 |    -34b:    %-34b |      b:      %b |", i, -i);
+            case 9:     LogToFileEx(FILE_PATH, "|  9 |   -034b:   %-034b |      b:      %b |", -i, i);
+            case 10:    LogToFileEx(FILE_PATH, "| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
+            case 11:    LogToFileEx(FILE_PATH, "| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
+            case 12:    LogToFileEx(FILE_PATH, "| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
+            case 14:    LogToFileEx(FILE_PATH, "| 14 |    0.3f:    %0.3f |    .3f:    %.3f |", float(-i), float(i));
+            case 15:    LogToFileEx(FILE_PATH, "| 15 |   -0.3f:   %-0.3f |   -.3f:   %0.3f |", float(i), float(-i));
+            case 16:    LogToFileEx(FILE_PATH, "| 16 |  010.3f:  %010.3f |  10.3f:  %10.3f |", float(-i), float(i));
+            case 17:    LogToFileEx(FILE_PATH, "| 17 | -010.3f: %-010.3f | -10.3f: %-10.3f |", float(i), float(-i));
+            case 18:    LogToFileEx(FILE_PATH, "| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
+            case 19:    LogToFileEx(FILE_PATH, "| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
+            case 20:    LogToFileEx(FILE_PATH, "| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
+            case 21:    LogToFileEx(FILE_PATH, "| 21 |  16.10s:  %16.10s |   .10s:   %.10s |", "some messages", "some messages");
+            case 22:    LogToFileEx(FILE_PATH, "| 22 | -16.10s: %-16.10s |  -.10s:  %-.10s |", "some messages", "some messages");
+            case 23:    LogToFileEx(FILE_PATH, "| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
+            case 24:    LogToFileEx(FILE_PATH, "| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
+            case 25:    LogToFileEx(FILE_PATH, "| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
+            case 26:    LogToFileEx(FILE_PATH, "| 26 |  20.16t:  %20.16t | 1 N  t:      %t |", "See console for output", "Chat to admins", client);
+            case 27:    LogToFileEx(FILE_PATH, "| 27 |   -.16t:   %-.16t | 2 N  t:      %t |", "See console for output", "Private say to", client, client);
+            case 28:    LogToFileEx(FILE_PATH, "| 28 | -20.16t: %-20.16t | 2 s  t:      %t |", "See console for output", "Vote Select", "somebody", "somebuttom");
+            case 29:    LogToFileEx(FILE_PATH, "| 29 |     16T:     %16T |  0   T:      %T |", "See console for output", client, "See console for output", client);
+            case 30:    LogToFileEx(FILE_PATH, "| 30 |    -16T:    %-16T | 1 d  T:      %T |", "See console for output", client, "Vote Delay Seconds", client, 234567890);
+            case 31:    LogToFileEx(FILE_PATH, "| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
         }
     }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
+    g_hProfiler.Stop();
+    float delta = g_hProfiler.Time;
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogToFileEx", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
 
     // 恢复原始值
     FindConVar("sv_logecho").SetInt(val);
@@ -227,15 +210,12 @@ Action CMD_Bench_LogToFileEx(int client, int args)
 
 Action CMD_Bench_PrintToServer(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
+
+    char BENCH_TITLE[]  = "PrintToServer";
 
     // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
+    g_hProfiler.Start();
     for (int i = 0; i < iters; ++i)
     {
         switch (i & 31)
@@ -273,13 +253,12 @@ Action CMD_Bench_PrintToServer(int client, int args)
             case 31:    PrintToServer("| 31 | [%s] |  -20.16T: %-20.16T | 2 s  T:      %T |", "name-X", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
         }
     }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
+    g_hProfiler.Stop();
+    float delta = g_hProfiler.Time;
 
     // 输出结果
     PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "PrintToServer", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 

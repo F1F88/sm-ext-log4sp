@@ -7,8 +7,7 @@
 #pragma newdecls required
 
 
-static const int g_iFileSize      = 30 * 1024 * 1024;
-static const int g_iRotatingFiles = 5;
+Profiler g_hProfiler = null;
 
 
 public void OnPluginStart()
@@ -21,98 +20,109 @@ public void OnPluginStart()
     RegConsoleCmd("sm_log4sp_bench_server_console",                 Command_BenchServerConsole);
 
     RegConsoleCmd("sm_log4sp_bench_callback",                       Command_BenchCallback);
+
+    g_hProfiler = new Profiler();
 }
 
 Action Command_BenchBaseFiles(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
 
-    float delta = BenchLogger(iters, client, BasicFileSink.CreateLogger("name-A", "logs/benchmark/file-A.log", .truncate=true));
+    char BENCH_TITLE[]  = "base-file";
+    char LOGGER_NAME[]  = "name-A";
+    char FILE_PATH[]    = "addons/sourcemod/logs/benchmark/file-A.log";
+
+    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, FILE_PATH, .truncate=true);
+
+    float delta = BenchLogEx(iters, client, logger);
+
+    delete logger;
 
     PrintToServer("");
-    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "base-file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
 Action Command_BenchDailyFiles(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
 
-    float delta = BenchLogger(iters, client, DailyFileSink.CreateLogger("name-B", "logs/benchmark/file-B.log", .truncate=true));
+    char BENCH_TITLE[]  = "daily-file";
+    char LOGGER_NAME[]  = "name-B";
+    char FILE_PATH[]    = "addons/sourcemod/logs/benchmark/file-B.log";
+
+    Logger logger = DailyFileSink.CreateLogger(LOGGER_NAME, FILE_PATH, .truncate=true);
+
+    float delta = BenchLogEx(iters, client, logger);
+
+    delete logger;
 
     PrintToServer("");
-    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "daily-file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
 Action Command_BenchRotatingFile(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
 
-    float delta = BenchLogger(iters, client, RotatingFileSink.CreateLogger("name-C", "logs/benchmark/file-C.log", g_iFileSize, g_iRotatingFiles));
+    char BENCH_TITLE[]  = "rotating-file";
+    char LOGGER_NAME[]  = "name-C";
+    char FILE_PATH[]    = "addons/sourcemod/logs/benchmark/file-C.log";
+    const int FILE_SIZE = 30 * 1024 * 1024;
+    const int FILES     = 5;
+
+    Logger logger = RotatingFileSink.CreateLogger(LOGGER_NAME, FILE_PATH, FILE_SIZE, FILES);
+
+    float delta = BenchLogEx(iters, client, logger);
+
+    delete logger;
 
     PrintToServer("");
-    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "rotating-file", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
 Action Command_BenchServerConsole(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
 
-    float delta = BenchLogger(iters, client, ServerConsoleSink.CreateLogger("name-D"));
+    char BENCH_TITLE[]  = "server-console";
+    char LOGGER_NAME[]  = "name-D";
+
+    Logger logger = ServerConsoleSink.CreateLogger(LOGGER_NAME);
+
+    float delta = BenchLogEx(iters, client, logger);
+
+    delete logger;
 
     PrintToServer("");
-    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "server-console", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
 
 Action Command_BenchCallback(int client, int args)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
 
-    Logger logger = new Logger("name-E");
-    logger.AddSinkEx(new CallbackSink(CallBackSink_CB));
+    char BENCH_TITLE[]  = "callback-sink";
+    char LOGGER_NAME[]  = "name-E";
 
-    float delta = BenchLogger(iters, client, logger);
+    Logger logger = CallbackSink.CreateLogger(LOGGER_NAME, CB_OnLog);
+
+    float delta = BenchLogEx(iters, client, logger);
+
+    delete logger;
 
     PrintToServer("");
-    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", "callback-sink", iters, delta, RoundToFloor(iters / delta));
+    PrintToServer("[benchmark] %17s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, iters, delta, RoundToFloor(iters / delta));
     return Plugin_Handled;
 }
 
-void CallBackSink_CB(const char[] name, LogLevel lvl, const char[] msg)
+float BenchLogEx(int howmany, int client, Logger logger)
 {
-    // Do something
-}
-
-
-float BenchLogger(int howmany, int client, Logger logger)
-{
-    Profiler profiler = new Profiler();
-
-    profiler.Start();
+    g_hProfiler.Start();
     for (int i = 0; i < howmany; ++i)
     {
         switch (i & 31)
@@ -150,14 +160,10 @@ float BenchLogger(int howmany, int client, Logger logger)
             case 31:    logger.InfoEx("| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
         }
     }
-    profiler.Stop();
-
-    float delta = profiler.Time;
-    delete profiler;
-
-    delete logger;
-
-    return delta;
+    g_hProfiler.Stop();
+    return g_hProfiler.Time;
 }
 
 
+
+static void CB_OnLog(const char[] name, LogLevel lvl, const char[] msg) {}
