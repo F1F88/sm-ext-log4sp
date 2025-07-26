@@ -1,4 +1,3 @@
-#include <cassert>
 #include "log4sp/common.h"
 #include "log4sp/sinks/callback_sink.h"
 

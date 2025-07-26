@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include "log4sp/format.h"
 #include "am-float.h"
 

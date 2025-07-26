@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <iterator>
-
 #include "log4sp/common.h"
 
 using spdlog::level::from_str;

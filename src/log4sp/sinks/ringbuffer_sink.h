@@ -5,8 +5,6 @@
 #include "spdlog/details/log_msg_buffer.h"
 #include "spdlog/sinks/base_sink.h"
 
-#include "extension.h"
-
 namespace log4sp {
 namespace sinks {
 
