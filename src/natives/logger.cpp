@@ -1,12 +1,6 @@
 #include "log4sp/common.h"
-#include "log4sp/source_helper.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
-
-namespace fmt_lib = spdlog::fmt_lib;
-using spdlog::level::level_enum;
-using spdlog::sink_ptr;
-using spdlog::source_loc;
 
 
 /**
@@ -53,6 +47,8 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::sink_ptr;
+
     char *name;
     CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
@@ -94,6 +90,8 @@ static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *pa
 
 static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::sink_ptr;
+
     char *name;
     CTX_LOCAL_TO_STRING(params[1], &name);
     if (log4sp::logger_handler::instance().find_handle(name))
@@ -270,7 +268,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     char *msg;
     CTX_LOCAL_TO_STRING(params[3], &msg);
 
-    logger->log(log4sp::src_helper::get_from_plugin_ctx(ctx), lvl, msg);
+    logger->log(log4sp::source_loc_from(ctx), lvl, msg);
     return 0;
 }
 
@@ -280,7 +278,7 @@ static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log(ctx, log4sp::src_helper::get_from_plugin_ctx(ctx), lvl, params, 3);
+    logger->log(ctx, log4sp::source_loc_from(ctx), lvl, params, 3);
     return 0;
 }
 
@@ -290,12 +288,13 @@ static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 
     auto lvl = log4sp::num_to_lvl(params[2]);
 
-    logger->log_amx_tpl(ctx, log4sp::src_helper::get_from_plugin_ctx(ctx), lvl, params, 3);
+    logger->log_amx_tpl(ctx, log4sp::source_loc_from(ctx), lvl, params, 3);
     return 0;
 }
 
 static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::source_loc;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func, *msg;
@@ -312,6 +311,7 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::source_loc;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func;
@@ -327,6 +327,7 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
 static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::source_loc;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *file, *func;
@@ -349,13 +350,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
     char *msg;
     CTX_LOCAL_TO_STRING(params[3], &msg);
 
-    logger->log(ctx, lvl, fmt_lib::format("Stack trace requested: {}", msg));
-    logger->log(ctx, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
-
-    std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
-    for (auto &iter : messages) {
-        logger->log(ctx, lvl, iter);
-    }
+    logger->log_stack_trace(ctx, lvl, msg);
     return 0;
 }
 
@@ -388,15 +383,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     char *msg;
     CTX_LOCAL_TO_STRING(params[3], &msg);
 
-    ctx->ReportError(msg);
-
-    logger->log(ctx, lvl, fmt_lib::format("Exception reported: {}", msg));
-    logger->log(ctx, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
-
-    std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
-    for (auto &iter : messages) {
-        logger->log(ctx, lvl, iter);
-    }
+    logger->throw_error(ctx, lvl, msg);
     return 0;
 }
 
@@ -422,6 +409,7 @@ static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *pa
 
 static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
@@ -433,6 +421,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::trace, params, 2);
@@ -441,6 +430,7 @@ static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::trace, params, 2);
@@ -449,6 +439,7 @@ static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
@@ -460,6 +451,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::debug, params, 2);
@@ -468,6 +460,7 @@ static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::debug, params, 2);
@@ -476,6 +469,7 @@ static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
@@ -487,6 +481,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
 
 static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::info, params, 2);
@@ -495,6 +490,7 @@ static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::info, params, 2);
@@ -503,6 +499,7 @@ static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
@@ -514,6 +511,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
 
 static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::warn, params, 2);
@@ -522,6 +520,7 @@ static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
 static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::warn, params, 2);
@@ -530,6 +529,7 @@ static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
 static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
@@ -541,6 +541,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::err, params, 2);
@@ -549,6 +550,7 @@ static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::err, params, 2);
@@ -557,6 +559,7 @@ static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
@@ -568,6 +571,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
 
 static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log(ctx, level_enum::critical, params, 2);
@@ -576,6 +580,7 @@ static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
 static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->log_amx_tpl(ctx, level_enum::critical, params, 2);
@@ -584,6 +589,7 @@ static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
+    using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->flush(ctx);
@@ -673,11 +679,7 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
         return 0;
     }
 
-    // void (const char[] msg, const char[] name, const char[] file, int line, const char[] func)
-    FWDS_CREATE_EX(nullptr, ET_Ignore, 5, nullptr, Param_String, Param_String, Param_String, Param_Cell, Param_String);
-    FWD_ADD_FUNCTION(function);
-
-    logger->set_error_handler(forward);
+    logger->set_error_handler(function);
     return 0;
 }
 

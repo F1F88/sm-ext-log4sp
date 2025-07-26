@@ -99,7 +99,7 @@ void sink_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (!handle_type_) {
-        throw_log4sp_ex(fmt_lib::format("Failed to creates a Sink Handle type (error code: {})", static_cast<int>(error)));
+        throw std::runtime_error(fmt_lib::format("Failed to creates a Sink Handle type (error code: {})", static_cast<int>(error)));
     }
 }
 

@@ -124,7 +124,7 @@ void logger_handler::initialize_() {
 
     handle_type_ = handlesys->CreateType("Logger", this, 0, nullptr, &access, myself->GetIdentity(), &error);
     if (!handle_type_)
-        throw_log4sp_ex(fmt_lib::format("Failed to creates a Logger Handle type (error code: {})", static_cast<int>(error)));
+        throw std::runtime_error(fmt_lib::format("Failed to creates a Logger Handle type (error code: {})", static_cast<int>(error)));
 
     // Init Global Logger access
     // 拓展创建的全局 Logger Handle 不可以被插件释放, 生命周期由拓展管控
@@ -137,9 +137,9 @@ void logger_handler::initialize_() {
         auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
         auto handle = logger_handler::instance().create_handle(logger, &security, &access, &error);
         if (!handle)
-            throw_log4sp_ex(fmt_lib::format("error code: {}", static_cast<int>(error)));
+            throw std::runtime_error(fmt_lib::format("error code: {}", static_cast<int>(error)));
     } catch (const std::exception &ex) {
-        throw_log4sp_ex(fmt_lib::format("Failed to creates a Global Logger Handle (reason: {})", ex.what()));
+        throw std::runtime_error(fmt_lib::format("Failed to creates a Global Logger Handle (reason: {})", ex.what()));
     }
 }
 

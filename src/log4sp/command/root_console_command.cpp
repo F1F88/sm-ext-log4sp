@@ -21,7 +21,7 @@ std::shared_ptr<logger> command::arg_to_logger(const std::string &arg) {
     // 尝试按名字查找 object
     auto logger = logger_handler::instance().find_logger(arg);
     if (!logger) {
-        throw_log4sp_ex("Logger with name \"" + arg + "\" not exists.");
+        throw std::invalid_argument("Logger with name \"" + arg + "\" not exists.");
     }
     return logger;
 }
@@ -58,12 +58,12 @@ void list_command::execute(const std::vector<std::string> &args) {
 
 void apply_all_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw_log4sp_ex(format("Usage: sm " LOG4SP_ROOT_CMD " apply_all <function_name> [arguments]\nFunction names: [{}]", join(functions_, ", ")));
+        throw std::invalid_argument(format("Usage: sm " LOG4SP_ROOT_CMD " apply_all <function_name> [arguments]\nFunction names: [{}]", join(functions_, ", ")));
     }
 
     auto function_name = args[0];
     if (functions_.find(function_name) == functions_.end()) {
-        throw_log4sp_ex("Command function name \"" + function_name + "\" not exists.");
+        throw std::invalid_argument("Command function name \"" + function_name + "\" not exists.");
     }
 
     std::vector<std::string> arguments = args;
@@ -85,7 +85,7 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
                     msg = std::regex_replace(msg, replace_logger_name_pattern, "");
                     msg = std::regex_replace(msg, replace_prefix_pattern, "Usage: sm " LOG4SP_ROOT_CMD " apply_all ");
                 }
-                throw_log4sp_ex(msg);
+                throw std::invalid_argument(msg);
             }
         }
     );
@@ -94,7 +94,7 @@ void apply_all_command::execute(const std::vector<std::string> &args) {
 
 void get_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " get_lvl <logger_name>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " get_lvl <logger_name>");
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -106,7 +106,7 @@ void get_lvl_command::execute(const std::vector<std::string> &args) {
 
 void set_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " set_lvl <logger_name> <level>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " set_lvl <logger_name> <level>");
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -124,7 +124,7 @@ void set_lvl_command::execute(const std::vector<std::string> &args) {
 
 void set_pattern_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " set_pattern <logger_name> <pattern>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " set_pattern <logger_name> <pattern>");
     }
 
     auto logger  = arg_to_logger(args[0]);
@@ -137,7 +137,7 @@ void set_pattern_command::execute(const std::vector<std::string> &args) {
 
 void should_log_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " should_log <logger_name> <level>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " should_log <logger_name> <level>");
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -150,7 +150,7 @@ void should_log_command::execute(const std::vector<std::string> &args) {
 
 void log_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 3) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " log <logger_name> <level> <message>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " log <logger_name> <level> <message>");
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -164,7 +164,7 @@ void log_command::execute(const std::vector<std::string> &args) {
 
 void flush_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " flush <logger_name>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " flush <logger_name>");
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -176,7 +176,7 @@ void flush_command::execute(const std::vector<std::string> &args) {
 
 void get_flush_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.empty()) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " get_flush_lvl <logger_name>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " get_flush_lvl <logger_name>");
     }
 
     auto logger = arg_to_logger(args[0]);
@@ -188,7 +188,7 @@ void get_flush_lvl_command::execute(const std::vector<std::string> &args) {
 
 void set_flush_lvl_command::execute(const std::vector<std::string> &args) {
     if (args.size() < 2) {
-        throw_log4sp_ex("Usage: sm " LOG4SP_ROOT_CMD " set_flush_lvl <logger_name> <level>");
+        throw std::invalid_argument("Usage: sm " LOG4SP_ROOT_CMD " set_flush_lvl <logger_name> <level>");
     }
 
     auto logger = arg_to_logger(args[0]);

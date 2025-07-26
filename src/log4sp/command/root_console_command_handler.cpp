@@ -50,7 +50,7 @@ void root_console_command_handler::execute(const std::string &cmdname, const std
     if (iter != commands_.end()) {
         iter->second->execute(args);
     } else {
-        throw_log4sp_ex("Command function \"" + cmdname + "\" not found.");
+        throw std::invalid_argument("Command function \"" + cmdname + "\" not found.");
     }
 }
 
@@ -93,7 +93,7 @@ root_console_command_handler::root_console_command_handler() {
 
 void root_console_command_handler::initialize_() {
     if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, SMEXT_CONF_NAME " command menu", this)) {
-        throw_log4sp_ex("SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\".");
+        throw std::runtime_error("SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\".");
     }
 }
 

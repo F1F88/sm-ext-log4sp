@@ -20,7 +20,7 @@ using spdlog::memory_buf_t;
 #define ENTREF_MASK     (1 << 31)       /* See: https://github.com/alliedmodders/sourcemod/blob/4afbf9d57328de327c504c4a184670d992ae1609/core/HalfLife2.h#L60 */
 
 #define THROW_ERROR(fmt, ...) \
-    throw_log4sp_ex(fmt_lib::format(fmt, __VA_ARGS__));
+    throw std::runtime_error(fmt_lib::format(fmt, __VA_ARGS__));
 
 #define CHECK_ARGS(x)   \
     if ((arg+x) > args) \

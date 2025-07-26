@@ -7,7 +7,8 @@
 
 namespace log4sp {
 
-[[nodiscard]] constexpr spdlog::level::level_enum num_to_lvl(const int value) noexcept {
+[[nodiscard]] constexpr
+spdlog::level::level_enum num_to_lvl(const int value) noexcept {
     using spdlog::level::level_enum;
     switch (value) {
         case SPDLOG_LEVEL_TRACE:    return level_enum::trace;
@@ -20,7 +21,8 @@ namespace log4sp {
     }
 }
 
-[[nodiscard]] constexpr spdlog::level::level_enum str_to_lvl(const char *name) noexcept {
+[[nodiscard]] constexpr
+spdlog::level::level_enum str_to_lvl(const char *name) noexcept {
     using spdlog::level::level_enum;
     using spdlog::string_view_t;
     constexpr string_view_t level_string_views[] SPDLOG_LEVEL_NAMES;
@@ -48,7 +50,8 @@ namespace log4sp {
     return level_enum::off;
 }
 
-[[nodiscard]] constexpr spdlog::level::level_enum str_short_to_lvl(const char *name) noexcept {
+[[nodiscard]] constexpr
+spdlog::level::level_enum str_short_to_lvl(const char *name) noexcept {
     using spdlog::level::level_enum;
     constexpr const char *short_level_names[] SPDLOG_SHORT_LEVEL_NAMES;
     constexpr int size = std::size(short_level_names);
@@ -62,12 +65,14 @@ namespace log4sp {
     return level_enum::off;
 }
 
-[[nodiscard]] constexpr spdlog::pattern_time_type number_to_pattern_time_type(const int type) noexcept {
+[[nodiscard]] constexpr
+spdlog::pattern_time_type number_to_pattern_time_type(const int type) noexcept {
     using spdlog::pattern_time_type;
     return type == 0 ? pattern_time_type::local : pattern_time_type::utc;
 }
 
-[[nodiscard]] constexpr const char *get_path_filename(const char *path) noexcept {
+[[nodiscard]] constexpr
+const char *filename_from(const char *path) noexcept {
     if (!path) {
         return path;
     }
@@ -81,9 +86,6 @@ namespace log4sp {
     }
     return file;
 }
-
-[[noreturn]] void throw_log4sp_ex(std::string msg);
-[[noreturn]] void throw_log4sp_ex(const std::string &msg, int last_errno);
 
 template <SourceMod::PathType T>
 [[nodiscard]] inline
@@ -106,6 +108,12 @@ spdlog::filename_t unbuild_path(const spdlog::filename_t &filename) noexcept {
     }
     return filename;
 }
+
+[[nodiscard]]
+spdlog::source_loc source_loc_from(SourcePawn::IPluginContext* ctx) noexcept;
+
+[[nodiscard]]
+std::vector<std::string> stack_trace_info_from(SourcePawn::IPluginContext* ctx) noexcept;
 
 
 }   // namespace log4sp
