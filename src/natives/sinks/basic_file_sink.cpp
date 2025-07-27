@@ -43,8 +43,8 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     char *file;
     CTX_LOCAL_TO_STRING(params[1], &file);
 
-    char path[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
+    std::array<char, PLATFORM_MAX_PATH> absPath;
+    smutils->BuildPath(Path_Game, absPath.data(), absPath.size(), file);
 
     auto truncate = static_cast<bool>(params[2]);
     SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[3]);
@@ -57,7 +57,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<basic_file_sink_st>(path, truncate, handlers);
+        sink = std::make_shared<basic_file_sink_st>(absPath.data(), truncate, handlers);
     }
     catch (const std::exception &ex)
     {
@@ -116,8 +116,8 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     char *file;
     CTX_LOCAL_TO_STRING(params[2], &file);
 
-    char path[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
+    std::array<char, PLATFORM_MAX_PATH> absPath;
+    smutils->BuildPath(Path_Game, absPath.data(), absPath.size(), file);
 
     auto truncate = static_cast<bool>(params[3]);
     SourcePawn::IPluginFunction *openPre   = ctx->GetFunctionById(params[4]);
@@ -130,7 +130,7 @@ static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const 
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<basic_file_sink_st>(path, truncate, handlers);
+        sink = std::make_shared<basic_file_sink_st>(absPath.data(), truncate, handlers);
     }
     catch (const std::exception &ex)
     {

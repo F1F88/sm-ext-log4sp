@@ -43,8 +43,8 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     char *file;
     CTX_LOCAL_TO_STRING(params[1], &file);
 
-    char path[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
+    std::array<char, PLATFORM_MAX_PATH> absPath;
+    smutils->BuildPath(Path_Game, absPath.data(), absPath.size(), file);
 
     auto maxFileSize  = static_cast<size_t>(params[2]);
     auto maxFiles     = static_cast<size_t>(params[3]);
@@ -59,7 +59,7 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen, handlers);
+        sink = std::make_shared<rotating_file_sink_st>(absPath.data(), maxFileSize, maxFiles, rotateOnOpen, handlers);
     }
     catch (const std::exception &ex)
     {
@@ -140,8 +140,8 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     char *file;
     CTX_LOCAL_TO_STRING(params[2], &file);
 
-    char path[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, path, sizeof(path), "%s", file);
+    std::array<char, PLATFORM_MAX_PATH> absPath;
+    smutils->BuildPath(Path_Game, absPath.data(), absPath.size(), file);
 
     auto maxFileSize  = static_cast<size_t>(params[3]);
     auto maxFiles     = static_cast<size_t>(params[4]);
@@ -156,7 +156,7 @@ static cell_t RotatingFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, con
     sink_ptr sink;
     try
     {
-        sink = std::make_shared<rotating_file_sink_st>(path, maxFileSize, maxFiles, rotateOnOpen, handlers);
+        sink = std::make_shared<rotating_file_sink_st>(absPath.data(), maxFileSize, maxFiles, rotateOnOpen, handlers);
     }
     catch (const std::exception &ex)
     {

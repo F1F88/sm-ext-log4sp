@@ -42,23 +42,24 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
     [](const filename_t &filename, const tm &now_tm) {                                              \
         filename_t basename, ext;                                                                   \
         std::tie(basename, ext) = file_helper::split_by_extension(filename);                        \
-        auto buffer = format(SPDLOG_FMT_STRING(SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),       \
+        auto relPath = format(SPDLOG_FMT_STRING(SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),      \
                     basename, now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday, ext);       \
-        char path[PLATFORM_MAX_PATH];                                                               \
-        smutils->BuildPath(Path_Game, path, sizeof(path), buffer.c_str());                          \
-        return filename_t(path);                                                                    \
+                                                                                                    \
+        std::array<char, PLATFORM_MAX_PATH> absPath;                                                \
+        smutils->BuildPath(Path_Game, absPath.data(), absPath.size(), relPath.data());              \
+        return filename_t(absPath.data());                                                          \
     }
 
 
 #define DAILY_FILE_CUSTOM_CALCULATOR(function)                                                      \
     [function](const filename_t &filename, const tm &now_tm) {                                      \
-        char buffer[PLATFORM_MAX_PATH];                                                             \
+        std::array<char, PLATFORM_MAX_PATH> relPath;                                                \
         size_t size = filename.size();                                                              \
-        if (size > sizeof(buffer) - 1) {                                                            \
-            size = sizeof(buffer) - 1;                                                              \
+        if (size > relPath.size() - 1) {                                                            \
+            size = relPath.size() - 1;                                                              \
         }                                                                                           \
-        memcpy(buffer, filename.data(), size);                                                      \
-        buffer[size] = '\0';                                                                        \
+        memcpy(relPath.data(), filename.data(), size);                                              \
+        relPath.at(size) = '\0';                                                                    \
                                                                                                     \
         tm tmp = now_tm;                                                                            \
         auto timestamp = static_cast<cell_t>(mktime(&tmp)); /* FIXME: Possible Year 2038 Problem */ \
@@ -66,14 +67,15 @@ using spdlog::sinks::log4sp_daily_filename_calculator;
         /* void (char[] filename, int maxlen, int sec); */                                          \
         FWDS_CREATE_EX(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);       \
         FWD_ADD_FUNCTION(function);                                                                 \
-        FWD_PUSH_STRING_EX(buffer, sizeof(buffer), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); \
-        FWD_PUSH_CELL(sizeof(buffer));                                                              \
+        FWD_PUSH_STRING_EX(relPath.data(), relPath.size(), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); \
+        FWD_PUSH_CELL(relPath.size());                                                              \
         FWD_PUSH_CELL(timestamp);                                                                   \
         FWD_EXECUTE();                                                                              \
         forwards->ReleaseForward(forward);                                                          \
                                                                                                     \
-        smutils->BuildPath(Path_Game, buffer, sizeof(buffer), buffer);                              \
-        return filename_t(buffer);                                                                  \
+        std::array<char, PLATFORM_MAX_PATH> absPath;                                                \
+        smutils->BuildPath(Path_Game, absPath.data(), absPath.size(), relPath.data());              \
+        return filename_t(absPath.data());                                                          \
     }
 
 

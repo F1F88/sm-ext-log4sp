@@ -1,41 +1,41 @@
-#include "log4sp/format.h"
+#include <array>
+
 #include "am-float.h"
+
+#include "log4sp/format.h"
 
 
 namespace log4sp {
 
-namespace fmt_lib = spdlog::fmt_lib;
-using spdlog::memory_buf_t;
-
 /**
  * ref: https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.cpp
  */
-#define LADJUST         0x00000001      /* left adjustment */
-#define ZEROPAD         0x00000002      /* zero (as opposed to blank) pad */
-#define UPPERDIGITS     0x00000004      /* make alpha digits uppercase */
-#define TO_DIGIT(c)     ((c) - '0')
-#define IS_DIGIT(c)     (c >= '0' && c <= '9')
-#define ENTREF_MASK     (1 << 31)       /* See: https://github.com/alliedmodders/sourcemod/blob/4afbf9d57328de327c504c4a184670d992ae1609/core/HalfLife2.h#L60 */
+inline static constexpr int LADJUST     = 0x00000001;   // left adjustment
+inline static constexpr int ZEROPAD     = 0x00000002;   // zero (as opposed to blank) pad
+inline static constexpr int UPPERDIGITS = 0x00000004;   // make alpha digits uppercase
 
 #define THROW_ERROR(fmt, ...) \
-    throw std::runtime_error(fmt_lib::format(fmt, __VA_ARGS__));
+    throw std::runtime_error(spdlog::fmt_lib::format(fmt, __VA_ARGS__));
 
 #define CHECK_ARGS(x)   \
     if ((arg+x) > args) \
         THROW_ERROR("String formatted incorrectly - parameter {} (total {})", arg, args);
 
 
-[[nodiscard]] std::string format_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, const unsigned int param) {
+[[nodiscard]]
+std::string format_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, const unsigned int param) {
+    using spdlog::fmt_lib::to_string;
     assert(ctx && params);
 
     char *format;
     CTX_LOCAL_TO_STRING(params[param], &format);
     unsigned int lparam = param + 1;
-    return fmt_lib::to_string(format_to_buffer(ctx, format, params, &lparam));
+    return to_string(format_to_buffer(ctx, format, params, &lparam));
 }
 
 
-static void ReorderTranslationParams(const SourceMod::Translation *pTrans, cell_t *params) noexcept {
+inline static
+void ReorderTranslationParams(const SourceMod::Translation *pTrans, cell_t *params) noexcept {
     cell_t new_params[MAX_TRANSLATE_PARAMS];
     for (unsigned int i = 0; i < pTrans->fmt_count; ++i) {
         new_params[i] = params[pTrans->fmt_order[i]];
@@ -43,7 +43,8 @@ static void ReorderTranslationParams(const SourceMod::Translation *pTrans, cell_
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-static memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, unsigned int *arg) {
+inline static
+spdlog::memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, unsigned int *arg) {
     unsigned int langid;
     SourceMod::Translation pTrans;
     SourceMod::IPhraseCollection *pPhrases = plsys->FindPluginByContext(ctx->GetContext())->GetPhrases();
@@ -93,10 +94,12 @@ try_serverlang:
     return format_to_buffer(ctx, pTrans.szPhrase, params, arg);
 }
 
-static void AddString(memory_buf_t &out, const char *string, unsigned int width, int prec, int flags) noexcept {
+inline static
+void AddString(spdlog::memory_buf_t &out, const char *string, unsigned int width, int prec, int flags) noexcept {
+    constexpr std::array<char, 6> nlstr{'(', 'n', 'u', 'l', 'l', ')'};
     if (string == nullptr) {
-        AddString(out, "(null)", width, prec, flags);
-        return;
+        string = nlstr.data();
+        prec = -1;
     }
 
     unsigned int size = std::strlen(string);
@@ -126,7 +129,8 @@ static void AddString(memory_buf_t &out, const char *string, unsigned int width,
     }
 }
 
-static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int prec, int flags) noexcept {
+inline static
+void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int prec, int flags) noexcept {
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
@@ -229,17 +233,19 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     }
 }
 
-static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
-    constexpr const int MAX_BINARY = 32;// FIXME: 如果 sourcemod 支持了 64 位 cell_t, 则此处需要修复
-    int iter = MAX_BINARY - 1;          // 从字符串末尾向前遍历, 以保证添加到输出时为正序
-    char text[MAX_BINARY];              // 值的二进制字符串
+inline static
+void AddBinary(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
+    constexpr const int MAX_BINARY = 32;        // FIXME: cell_t bit 位数
+    std::array<char, MAX_BINARY> text;          // 值的二进制字符串
+    int iter = MAX_BINARY - 1;                  // 从字符串末尾向前遍历, 以保证添加到输出时为正序
 
     do {
         text[iter--] = (val & 1) ? '1' : '0';
     } while (val >>= 1);
 
-    const char *begin = text + iter + 1;
-    unsigned int digits = MAX_BINARY - iter - 1;
+    const char *begin = text.data() + iter + 1;
+    const char *end = text.data() + MAX_BINARY;
+    const unsigned int digits = MAX_BINARY - iter - 1;
 
     // 需要填充的字符数
     unsigned int pads = (width <= digits) ? (0u) : (width - digits);
@@ -252,7 +258,7 @@ static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, i
         }
     }
 
-    out.append(begin, text + MAX_BINARY);
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST) {
@@ -263,8 +269,11 @@ static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, i
     }
 }
 
-static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
-    char text[10];
+inline static
+void AddUInt(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
+    constexpr int MAX_UINTEGER = 10;            // FIXME: Unsigned Integer 数值最大长度
+    std::array<char, MAX_UINTEGER> text;
+
     unsigned int digits = 0;
     do {
         text[digits++] = '0' + val % 10;
@@ -294,8 +303,10 @@ static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int
     }
 }
 
-static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) noexcept {
-    char text[10];
+inline static
+void AddInt(spdlog::memory_buf_t &out, int val, unsigned int width, int flags) noexcept {
+    constexpr int MAX_UINTEGER = 10;            // FIXME: Unsigned Integer 数值最大长度
+    std::array<char, MAX_UINTEGER> text;
     unsigned int digits = 0;
 
     bool negative = val < 0;
@@ -342,11 +353,14 @@ static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) no
     }
 }
 
-static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
-    constexpr const char *hexUpper = "0123456789ABCDEF";
-    constexpr const char *hexlower = "0123456789abcdef";
-    const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexlower;
-    char text[8];
+inline static
+void AddHex(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
+    constexpr std::array<char, 16> hexUpper = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    constexpr std::array<char, 16> hexLower = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    const std::array<char,16> &hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexLower;
+
+    constexpr int MAX_HEX = 8;                  // FIXME: Hex 数值最大长度
+    std::array<char, MAX_HEX> text;
     unsigned int digits = 0;
 
     do {
@@ -377,7 +391,11 @@ static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int 
     }
 }
 
-static bool DescribePlayer(int entRef, const char **namep, const char **authp, int *useridp) noexcept {
+inline static
+bool DescribePlayer(int entRef, const char **namep, const char **authp, int *useridp) noexcept {
+    // See: https://github.com/alliedmodders/sourcemod/blob/4afbf9d57328de327c504c4a184670d992ae1609/core/HalfLife2.h#L60
+    constexpr int ENTREF_MASK = (1 << 31);
+
     int index = entRef;
     if (entRef & ENTREF_MASK) {
         index = gamehelpers->ReferenceToIndex(entRef);
@@ -404,35 +422,38 @@ static bool DescribePlayer(int entRef, const char **namep, const char **authp, i
     return true;
 }
 
-[[nodiscard]] memory_buf_t format_to_buffer(SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, unsigned int *param) {
-    assert(ctx && format && params && *param > 0 && *param <= SP_MAX_EXEC_PARAMS);
+[[nodiscard]] inline
+spdlog::memory_buf_t format_to_buffer(SourcePawn::IPluginContext *ctx, const char *layout, const cell_t *params, unsigned int *param) {
+    using spdlog::memory_buf_t;
+    using spdlog::fmt_lib::format;
+    assert(ctx && layout && params && *param > 0 && *param <= SP_MAX_EXEC_PARAMS);
 
     memory_buf_t out;
 
     unsigned int args = params[0];  // params count
     unsigned int arg  = *param;     // 用于遍历 params 的指针
-    const char *fmt = format;       // 用于遍历 format 的指针
+    const char *iter  = layout;     // 用于遍历 layout 的指针
     int flags;                      // 对齐 (左 / 右) | 填充符 ('0' / ' ')
     int prec;                       // 精度
     unsigned int width;             // 宽度
 
     while (true) {
-        const char *begin = fmt;
+        const char *begin = iter;
 
         // run through the format string until we hit a '%' or '\0'
-        while (*fmt != '%' && *fmt != '\0') {
-            ++fmt;
+        while (*iter != '%' && *iter != '\0') {
+            ++iter;
         }
 
-        out.append(begin, fmt);
+        out.append(begin, iter);
 
-        if (*fmt == '\0') {
+        if (*iter == '\0') {
             *param = arg;
             return out;
         }
 
         // skip over the '%'
-        ++fmt;
+        ++iter;
 
         // reset formatting state
         flags = 0;
@@ -440,7 +461,7 @@ static bool DescribePlayer(int entRef, const char **namep, const char **authp, i
         prec = -1;
 
 rflag:
-        char ch = *fmt++;
+        char ch = *iter++;
 reswitch:
         switch(ch) {
         case '-': {
@@ -449,10 +470,10 @@ reswitch:
             }
         case '.': {
                 int n = 0;
-                ch = *fmt++;
-                while (IS_DIGIT(ch)) {
+                ch = *iter++;
+                while (ch >= '0' && ch <= '9') {
                     n = 10 * n + (ch - '0');
-                    ch = *fmt++;
+                    ch = *iter++;
                 }
                 prec = (n < 0) ? -1 : n;
                 goto reswitch;
@@ -473,8 +494,8 @@ reswitch:
                 unsigned int n = 0;
                 do {
                     n = 10 * n + (ch - '0');
-                    ch = *fmt++;
-                } while(IS_DIGIT(ch));
+                    ch = *iter++;
+                } while(ch >= '0' && ch <= '9');
                 width = n;
                 goto reswitch;
             }
@@ -536,7 +557,7 @@ reswitch:
                     if (!DescribePlayer(*value, &name, &auth, &userid))
                         THROW_ERROR("Client index {} is invalid (arg {})", *value, arg);
 
-                    AddString(out, fmt_lib::format("{}<{}><{}><>", name, userid, auth).c_str(), width, prec, flags);
+                    AddString(out, format("{}<{}><{}><>", name, userid, auth).data(), width, prec, flags);
                 } else {
                     AddString(out, "Console<0><Console><Console>", width, prec, flags);
                 }
