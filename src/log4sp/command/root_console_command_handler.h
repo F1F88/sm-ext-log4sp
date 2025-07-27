@@ -1,10 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "extension.h"
 
 #include "log4sp/command/root_console_command.h"
@@ -12,12 +7,16 @@
 
 namespace log4sp {
 
-class root_console_command_handler final : public SourceMod::IRootConsoleCommand {
+class root_console_command_handler final : public command,
+                                           private SourceMod::IRootConsoleCommand {
 public:
     /**
      * @brief 全局单例对象
      */
-    [[nodiscard]] static root_console_command_handler &instance();
+    [[nodiscard]] static root_console_command_handler &instance() {
+        static root_console_command_handler singleInstance;
+        return singleInstance;
+    }
 
     /**
      * @brief 用于 SDK_OnLoad 时添加控制台指令。
@@ -33,22 +32,20 @@ public:
      * @note            需要与 initialize 配对使用。
      * @note            为了避免影响其他清理工作，此方法不抛出异常。
      */
-    static void destroy();
+    static void destroy() noexcept;
 
     /**
      * @brief 绘制 log4sp 指令菜单
      */
-    void draw_menu();
+    void draw_menu() noexcept;
 
     /**
-     * @brief 执行命令
+     * @brief 执行 sm log4sp ... 指令
      *
-     * @param cmdname   命令名称
      * @param args      命令所需参数
-     * @exception       指令执行失败时抛出异常，消息为失败原因
-     *                  例如：指令不存在，或参数不匹配
+     * @return          命令执行结果
      */
-    void execute(const std::string &cmdname, const std::vector<std::string> &args);
+    command::result execute(const std::vector<std::string> &args) noexcept override;
 
     /**
      * @brief Handles a root console menu action.
@@ -59,12 +56,13 @@ public:
     root_console_command_handler &operator=(const root_console_command_handler &) = delete;
 
 private:
-    root_console_command_handler();
+    root_console_command_handler() = default;
+    ~root_console_command_handler() = default;
 
-    void initialize_();
-    void destroy_();
+    void add_root_console_command_();
+    void remove_root_console_command_() noexcept;
 
-    std::unordered_map<std::string, std::unique_ptr<command>> commands_;
+    static const std::unordered_map<std::string_view, std::unique_ptr<command>> commands_;
 };
 
 }       // namespace log4sp

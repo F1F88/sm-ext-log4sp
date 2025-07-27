@@ -1,112 +1,106 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <unordered_set>
-#include <vector>
-
-#include "log4sp/common.h"
-
-#define LOG4SP_ROOT_CMD     "log4sp"
+#include <optional>
 
 
 namespace log4sp {
 
-class logger;
+class logger;   // forward declaration
 
 class command {
 public:
-    using level_enum = spdlog::level::level_enum;
+    enum class status : std::uint8_t {
+        ok,
+        usage_error,
+        param_error,
+        execute_error
+    };
+    using result = std::pair<command::status, std::optional<std::string>>;
 
     virtual ~command() = default;
 
     /**
-     * 命令模式抽象类
+     * @brief 执行命令
      *
-     * 重复操作不算失败，不需要抛出异常，但可能响应一条消息
-     *
-     * @param args      参数列表
-     * @exception       指令执行失败时抛出异常，消息为失败原因
-     *                  例如：参数不匹配
+     * @param args      参数列表 (不包含 command 自身, 以及前缀指令)
+     * @return          命令执行结果
      */
-    virtual void execute(const std::vector<std::string> &args) = 0;
+    virtual result execute(const std::vector<std::string> &args) noexcept = 0;
 
-protected:
-    [[nodiscard]] std::shared_ptr<logger> arg_to_logger(const std::string &arg);
-
-    [[nodiscard]] level_enum arg_to_level(const std::string &arg);
+    static result ok()                             { return result{command::status::ok, std::nullopt}; }
+    static result usage_error(std::string err)     { return result{command::status::usage_error, std::move(err)}; }
+    static result param_error(std::string err)     { return result{command::status::param_error, std::move(err)}; }
+    static result execute_error(std::string err)   { return result{command::status::execute_error, std::move(err)}; }
 };
 
 
 class list_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class apply_all_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 
 private:
-    inline static const std::unordered_set<std::string> functions_{
-        "get_lvl", "set_lvl", "set_pattern", "should_log", "log",
-        "flush", "get_flush_lvl", "set_flush_lvl"};
+    static const std::unordered_map<std::string_view, std::unique_ptr<command>> functions_;
 };
 
 
 class get_lvl_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class set_lvl_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class set_pattern_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class should_log_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class log_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class flush_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class get_flush_lvl_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class set_flush_lvl_command final : public command {
 public:
-    void execute(const std::vector<std::string> &args) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
 class version_command final : public command {
 public:
-    void execute(const std::vector<std::string> &) override;
+    result execute(const std::vector<std::string> &args) noexcept override;
 };
 
 
