@@ -273,11 +273,15 @@ inline static
 void AddUInt(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
     constexpr int MAX_UINTEGER = 10;            // FIXME: Unsigned Integer 数值最大长度
     std::array<char, MAX_UINTEGER> text;
+    int iter = MAX_UINTEGER - 1;                // 从字符串末尾向前遍历, 以保证添加到输出时为正序
 
-    unsigned int digits = 0;
     do {
-        text[digits++] = '0' + val % 10;
+        text[iter--] = ('0' + val % 10);
     } while (val /= 10);
+
+    const char *begin = text.data() + iter + 1;
+    const char *end = text.data() + MAX_UINTEGER;
+    const unsigned int digits = MAX_UINTEGER - iter - 1;
 
     // 需要填充的字符数
     unsigned int pads = (width <= digits) ? (0u) : (width - digits);
@@ -290,9 +294,7 @@ void AddUInt(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, in
         }
     }
 
-    while (digits) {
-        out.push_back(text[--digits]);
-    }
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST) {
@@ -307,14 +309,18 @@ inline static
 void AddInt(spdlog::memory_buf_t &out, int val, unsigned int width, int flags) noexcept {
     constexpr int MAX_UINTEGER = 10;            // FIXME: Unsigned Integer 数值最大长度
     std::array<char, MAX_UINTEGER> text;
-    unsigned int digits = 0;
+    int iter = MAX_UINTEGER - 1;                // 从字符串末尾向前遍历, 以保证添加到输出时为正序
 
-    bool negative = val < 0;
+    const bool negative = val < 0;
     unsigned int unsignedVal = negative ? std::abs(val) : val;
 
     do {
-        text[digits++] = '0' + unsignedVal % 10;
+        text[iter--] = ('0' + unsignedVal % 10);
     } while (unsignedVal /= 10);
+
+    const char *begin = text.data() + iter + 1;
+    const char *end = text.data() + MAX_UINTEGER;
+    const unsigned int digits = MAX_UINTEGER - iter - 1;
 
     // 需要填充的字符数
     unsigned int pads = (width <= digits) ? (0u) : (width - digits);
@@ -340,9 +346,7 @@ void AddInt(spdlog::memory_buf_t &out, int val, unsigned int width, int flags) n
         out.push_back('-');
     }
 
-    while (digits) {
-        out.push_back(text[--digits]);
-    }
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST) {
@@ -361,13 +365,15 @@ void AddHex(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, int
 
     constexpr int MAX_HEX = 8;                  // FIXME: Hex 数值最大长度
     std::array<char, MAX_HEX> text;
-    unsigned int digits = 0;
+    int iter = MAX_HEX - 1;                     // 从字符串末尾向前遍历, 以保证添加到输出时为正序
 
     do {
-        text[digits++] = hexAdjust[val & 0xF];
+        text[iter--] = hexAdjust[val & 0xF];    // 倒序
     } while(val >>= 4);
 
-    // 需要填充的字符数
+    const char *begin = text.data() + iter + 1;
+    const char *end = text.data() + MAX_HEX;
+    const unsigned int digits = MAX_HEX - iter - 1;
     unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
@@ -378,9 +384,7 @@ void AddHex(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, int
         }
     }
 
-    while (digits) {
-        out.push_back(text[--digits]);
-    }
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST) {
