@@ -95,6 +95,30 @@ try_serverlang:
 }
 
 inline static
+void AddPads(spdlog::memory_buf_t &out, unsigned int pads, bool space) noexcept {
+    constexpr std::array<char, 64> SPACE_CHUNK = {
+        ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+        ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+        ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+        ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+    constexpr std::array<char, 64> ZERO_CHUNK = {
+        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'};
+
+    while (pads > 0) {
+        int size = pads < 64 ? pads : 64;
+        if (space) {
+            out.append(SPACE_CHUNK.data(), SPACE_CHUNK.data() + size);
+        } else {
+            out.append(ZERO_CHUNK.data(), ZERO_CHUNK.data() + size);
+        }
+        pads -= size;
+    }
+}
+
+inline static
 void AddString(spdlog::memory_buf_t &out, const char *string, unsigned int width, int prec, int flags) noexcept {
     constexpr std::array<char, 6> nlstr{'(', 'n', 'u', 'l', 'l', ')'};
     if (string == nullptr) {
@@ -112,20 +136,14 @@ void AddString(spdlog::memory_buf_t &out, const char *string, unsigned int width
 
     // right justify if required
     if (!(flags & LADJUST)) {
-        while (pads) {
-            pads--;
-            out.push_back(' ');
-        }
+        AddPads(out, pads, true);
     }
 
     out.append(string, string + size);
 
     // left justify if required
     if (flags & LADJUST) {
-        while (pads) {
-            pads--;
-            out.push_back(' ');
-        }
+        AddPads(out, pads, true);
     }
 }
 
@@ -170,6 +188,7 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
 
     // compute the field length
     fieldlength = digits + prec + ((prec > 0) ? 1 : 0) + (sign ? 1 : 0);
+    const unsigned int pads = (width <= fieldlength) ? (0u) : (width - fieldlength);
 
     // minus sign BEFORE left padding if padding with zeros
     if (sign && (flags & ZEROPAD)) {
@@ -178,9 +197,7 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
 
     // right justify if required
     if (!(flags & LADJUST)) {
-        while (fieldlength < width--) {
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 
     // minus sign AFTER left padding if padding with spaces
@@ -226,10 +243,8 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
 
     // left justify if required
     if (flags & LADJUST) {
-        while (fieldlength < width--) {
-            // right-padding only with spaces, ZEROPAD is ignored
-            out.push_back(' ');
-        }
+        // right-padding only with spaces, ZEROPAD is ignored
+        AddPads(out, pads, true);
     }
 }
 
@@ -246,26 +261,18 @@ void AddBinary(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, 
     const char *begin = text.data() + iter + 1;
     const char *end = text.data() + MAX_BINARY;
     const unsigned int digits = MAX_BINARY - iter - 1;
-
-    // 需要填充的字符数
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
+    const unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST)) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 
     out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 }
 
@@ -282,26 +289,18 @@ void AddUInt(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, in
     const char *begin = text.data() + iter + 1;
     const char *end = text.data() + MAX_UINTEGER;
     const unsigned int digits = MAX_UINTEGER - iter - 1;
-
-    // 需要填充的字符数
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
+    const unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST)) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 
     out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 }
 
@@ -321,12 +320,7 @@ void AddInt(spdlog::memory_buf_t &out, int val, unsigned int width, int flags) n
     const char *begin = text.data() + iter + 1;
     const char *end = text.data() + MAX_UINTEGER;
     const unsigned int digits = MAX_UINTEGER - iter - 1;
-
-    // 需要填充的字符数
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
-    if (pads > 0 && negative) {
-        pads--;
-    }
+    const unsigned int pads = (width <= digits) ? (0u) : (width - digits - (negative ? 1 : 0));
 
     // minus sign BEFORE left padding if padding with zeros
     if (negative && (flags & ZEROPAD)) {
@@ -335,10 +329,7 @@ void AddInt(spdlog::memory_buf_t &out, int val, unsigned int width, int flags) n
 
     // right justify if required
     if (!(flags & LADJUST)) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 
     // minus sign AFTER left padding if padding with spaces
@@ -350,10 +341,7 @@ void AddInt(spdlog::memory_buf_t &out, int val, unsigned int width, int flags) n
 
     // left justify if required
     if (flags & LADJUST) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 }
 
@@ -374,24 +362,18 @@ void AddHex(spdlog::memory_buf_t &out, unsigned int val, unsigned int width, int
     const char *begin = text.data() + iter + 1;
     const char *end = text.data() + MAX_HEX;
     const unsigned int digits = MAX_HEX - iter - 1;
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
+    const unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST)) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 
     out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST) {
-        while (pads) {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, pads, !(flags & ZEROPAD));
     }
 }
 

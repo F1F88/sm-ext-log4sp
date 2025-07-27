@@ -189,11 +189,17 @@ void TestStringEx()
     logger.InfoEx("'%20s'", TEST_STRING_TEXT);
     AssertStrEq("%20s", sink.DrainLastMsgFast().msg, "'    " ... TEST_STRING_TEXT ... "'");
 
+    logger.InfoEx("'%234s'", TEST_STRING_TEXT);
+    AssertStrEq("%234s", sink.DrainLastMsgFast().msg, "'                                                                                                                                                                                                                          " ... TEST_STRING_TEXT ... "'");
+
     logger.InfoEx("'%-10s'", TEST_STRING_TEXT);
     AssertStrEq("%-10s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "'");
 
     logger.InfoEx("'%-20s'", TEST_STRING_TEXT);
     AssertStrEq("%-20s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "    '");
+
+    logger.InfoEx("'%-234s'", TEST_STRING_TEXT);
+    AssertStrEq("%-234s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "                                                                                                                                                                                                                          '");
 
     logger.Close();
     sink.Close();
