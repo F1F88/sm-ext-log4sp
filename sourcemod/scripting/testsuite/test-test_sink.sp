@@ -67,42 +67,44 @@ void TestTestSinkDrain()
     TestSink sink = new TestSink();
     Logger logger = new Logger("test-sink");
     logger.AddSink(sink);
+    logger.SetPattern("%l %v");
 
     logger.Trace("hello test sink 1");
     logger.Debug("hello test sink 2");
     logger.Info("hello test sink 3");
     logger.Warn("hello test sink 4");
     logger.Error("hello test sink 5");
-
-    logger.SetPattern("%v");
     logger.Fatal("hello test sink 6");
 
-    sink.DrainLastMsg(CB_DarinLastMsg, 7);
-    sink.DrainLastLine(CB_DarinLastLine, 8);
-    sink.DrainLastLine(CB_DarinLastLine2, 9);
+    AssertEq("GetLogCount", sink.GetLogCount(), 4);
+    AssertEq("GetFlushCount", sink.GetFlushCount(), 0);
+
+    logger.Flush();
+    AssertEq("GetFlushCount", sink.GetFlushCount(), 1);
+
+    ArrayList logMessages = sink.DrainMsgs();
+
+    sLogMessage logMessage;
+    logMessages.GetArray(0, logMessage);
+    AssertStrEq("DrainMsgsEx name", logMessage.name, "test-sink");
+
+    logMessages.GetArray(1, logMessage);
+    AssertEq("DrainMsgsEx lvl", view_as<int>(logMessage.lvl), LOG4SP_LEVEL_WARN);
+
+    logMessages.GetArray(2, logMessage);
+    AssertStrEq("DrainMsgsEx msg", logMessage.msg, "hello test sink 5");
+
+    logMessages.GetArray(3, logMessage);
+    AssertStrEq("DrainMsgsEx file", logMessage.file, "");
+    delete logMessages;
+
+    AssertStrEq("DrainLastLine 6", sink.DrainLastLine(), LOG4SP_LEVEL_NAME_FATAL ... " hello test sink 6");
+    AssertStrEq("DrainLastLine 5", sink.DrainLastLine(), LOG4SP_LEVEL_NAME_ERROR ... " hello test sink 5");
+    AssertStrEq("DrainLastLine 4", sink.DrainLastLine(), LOG4SP_LEVEL_NAME_WARN ... " hello test sink 4");
+    AssertStrEq("DrainLastLine 3", sink.DrainLastLine(), LOG4SP_LEVEL_NAME_INFO ... " hello test sink 3");
 
     logger.Close();
     sink.Close();
-}
-
-static void CB_DarinLastMsg(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data)
-{
-    AssertStrEq("DrainLastMsg name", name, "test-sink");
-    AssertEq("DrainLastMsg lvl", view_as<int>(lvl), LOG4SP_LEVEL_FATAL);
-    AssertStrEq("DrainLastMsg msg", msg, "hello test sink 6");
-    AssertEq("DrainLastMsg data", data, 7);
-}
-
-static void CB_DarinLastLine(const char[] msg, any data)
-{
-    AssertStrEq("DrainLastLine msg", msg, "hello test sink 6");
-    AssertEq("DrainLastLine data", data, 8);
-}
-
-static void CB_DarinLastLine2(const char[] msg, any data)
-{
-    AssertStrMatch("DrainLastLine msg match", msg, P_PREFIX ... "hello test sink 5");
-    AssertEq("DrainLastLine data", data, 9);
 }
 
 void TestTestSinkDelay()

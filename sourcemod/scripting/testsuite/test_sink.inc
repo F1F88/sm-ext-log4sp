@@ -23,20 +23,6 @@
 #define TEST_SINK_LOG_LINE_LEN              2048
 
 
-typeset TestDrainCallback
-{
-    function void (const char[] name, LogLevel lvl, const char[] msg);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data);
-}
-
-typeset TestDrainLineCallback
-{
-    function void (const char[] line);
-    function void (const char[] line, any data);
-}
-
 enum struct sLogMessage
 {
     char name[64];
@@ -78,39 +64,7 @@ methodmap TestSink < Sink
         return this.Data.GetFlushCount();
     }
 
-    public void DrainMsgs(TestDrainCallback callback, any data = 0) {
-        ArrayList logMessages = this.Data.GetLogMessages();
-        if (logMessages.Length == 0)
-            AssertTrue("TestSink::LogMessages is empty", false);
-
-        PrivateForward fwd = new PrivateForward(ET_Ignore,
-                                                Param_String,   // name
-                                                Param_Cell,     // lvl
-                                                Param_String,   // msg
-                                                Param_String,   // file
-                                                Param_Cell,     // line
-                                                Param_String,   // func
-                                                Param_Cell,     // logTime
-                                                Param_Cell);    // data
-        sLogMessage logMsg;
-        for (int i = 0; i < logMessages.Length; ++i) {
-            logMessages.GetArray(i, logMsg);
-            Call_StartForward(fwd);
-            Call_PushString(logMsg.name);
-            Call_PushCell(logMsg.lvl);
-            Call_PushString(logMsg.msg);
-            Call_PushString(logMsg.file);
-            Call_PushCell(logMsg.line);
-            Call_PushString(logMsg.func);
-            Call_PushCell(logMsg.logTime);
-            Call_PushCell(data);
-            Call_Finish();
-        }
-        logMessages.Clear();
-        delete fwd;
-    }
-
-    public ArrayList DrainMsgsFast() {
+    public ArrayList DrainMsgs() {
         ArrayList logMessages = this.Data.GetLogMessages();
         if (logMessages.Length == 0)
             AssertTrue("TestSink::LogMessages is empty", false);
@@ -120,39 +74,7 @@ methodmap TestSink < Sink
         return copy;
     }
 
-    public void DrainLastMsg(TestDrainCallback callback, any data = 0) {
-        ArrayList logMessages = this.Data.GetLogMessages();
-        if (logMessages.Length == 0)
-            AssertTrue("TestSink::LogMessages is empty", false);
-
-        int index = logMessages.Length - 1;
-        sLogMessage logMsg;
-        logMessages.GetArray(index, logMsg);
-        logMessages.Erase(index);
-
-        PrivateForward fwd = new PrivateForward(ET_Ignore,
-                                                Param_String,   // name
-                                                Param_Cell,     // lvl
-                                                Param_String,   // msg
-                                                Param_String,   // file
-                                                Param_Cell,     // line
-                                                Param_String,   // func
-                                                Param_Cell,     // logTime
-                                                Param_Cell);    // data
-        Call_StartForward(fwd);
-        Call_PushString(logMsg.name);
-        Call_PushCell(logMsg.lvl);
-        Call_PushString(logMsg.msg);
-        Call_PushString(logMsg.file);
-        Call_PushCell(logMsg.line);
-        Call_PushString(logMsg.func);
-        Call_PushCell(logMsg.logTime);
-        Call_PushCell(data);
-        Call_Finish();
-        delete fwd;
-    }
-
-    public sLogMessage DrainLastMsgFast() {
+    public sLogMessage DrainLastMsg() {
         ArrayList logMessages = this.Data.GetLogMessages();
         if (logMessages.Length == 0)
             AssertTrue("TestSink::LogMessages is empty", false);
@@ -164,26 +86,7 @@ methodmap TestSink < Sink
         return logMsg;
     }
 
-    public void DrainLines(TestDrainLineCallback callback, any data = 0) {
-        ArrayList lines = this.Data.GetLogLines();
-        if (lines.Length == 0)
-            AssertTrue("TestSink::LogLines is empty", false);
-
-        PrivateForward fwd = new PrivateForward(ET_Ignore, Param_String, Param_Cell);
-
-        char line[TEST_SINK_LOG_LINE_LEN];
-        for (int i = 0; i < lines.Length; ++i) {
-            lines.GetString(i, line, sizeof(line));
-            Call_StartForward(fwd);
-            Call_PushString(line);
-            Call_PushCell(data);
-            Call_Finish();
-        }
-        lines.Clear();
-        delete fwd;
-    }
-
-    public ArrayList DrainLinesFast() {
+    public ArrayList DrainLines() {
         ArrayList lines = this.Data.GetLogLines();
         if (lines.Length == 0)
             AssertTrue("TestSink::LogLines is empty", false);
@@ -193,24 +96,7 @@ methodmap TestSink < Sink
         return copy;
     }
 
-    public void DrainLastLine(TestDrainLineCallback callback, any data = 0) {
-        ArrayList lines = this.Data.GetLogLines();
-        if (lines.Length == 0)
-            AssertTrue("TestSink::LogLines is empty", false);
-
-        char line[TEST_SINK_LOG_LINE_LEN];
-        lines.GetString(lines.Length - 1, line, sizeof(line));
-        lines.Erase(lines.Length - 1);
-
-        PrivateForward fwd = new PrivateForward(ET_Ignore, Param_String, Param_Cell);
-        Call_StartForward(fwd);
-        Call_PushString(line);
-        Call_PushCell(data);
-        Call_Finish();
-        delete fwd;
-    }
-
-    public char[] DrainLastLineFast() {
+    public char[] DrainLastLine() {
         ArrayList lines = this.Data.GetLogLines();
         if (lines.Length == 0)
             AssertTrue("TestSink::LogLines is empty", false);
