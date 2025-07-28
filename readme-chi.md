@@ -189,9 +189,19 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
 
 ### 错误处理器
 
-通常，Log4sp 的 Natives 只会在参数无效时抛出错误并中断代码的执行；对于拓展内部的错误（记录日志、刷写等），则交给 Error Handler 处理，且不会中断代码的执行。
+通常，Log4sp 的 Natives 会在参数无效时抛出错误并中断代码的执行。但以下情况不会直接抛出错误，而是调用错误处理器：
 
-默认情况下，Error Handler 会将错误信息记录到 SourceMod 的 errors.log 文件。
+1. Logger.LogEx 格式化参数时的错误
+2. Logger 遍历 Sinks 记录日志时的错误
+3. Logger 遍历 Sinks 刷写日志时的错误
+
+这意味着 `Logger.Log`，`Logger.LogEx`，`Logger.Flush` 方法出现错误时不会中断 SourcePawn 代码的执行。
+
+**注意:** `Logger.LogAmxTpl` 格式化参数时的错误会直接抛出，格式化成功后的遍历 Sinks 记录日志与刷写日志时的错误才会调用错误处理器。
+
+每个 Logger 都有一个错误处理器，默认处理器的方案是简单将错误信息记录到 SourceMod 的 errors.log 文件。
+
+您可以参考如下代码覆盖 Logger 的默认错误处理器：
 
 ```sourcepawn
 void SetMyErrorHandler(Logger logger)
@@ -204,8 +214,6 @@ void LogToSourceMod(const char[] msg, const char[] name, const char[] file, int 
     LogError("[%s::%d] [%s] %s", file, line, name, msg);
 }
 ```
-
-**注意:** 参数格式化的错误可以直接抛出，也可以交给 Error Handler 处理，这取决于是由 Log4sp（LogEx）还是由 SourceMod （LogAmxTpl）处理的格式化。
 
 ### 全局记录器
 

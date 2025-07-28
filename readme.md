@@ -190,9 +190,23 @@ You can override this with:
 
 ### Error Handler
 
-Normally, Log4sp Natives will only throw errors and interrupt code execution when the parameters are invalid; errors within the extension (logging, flushing, etc.) are handled by the Error Handler and will not interrupt code execution.
+Normally, Log4sp Natives will throw an error and interrupt code execution when the parameters are invalid.
 
-By default, the Error Handler only logs error information to the errors_date.log file of SourceMod.
+However, in the following situations, errors will not be thrown directly, but instead the error handler will be called:
+
+1. Error when Logger.LogEx formats parameters;
+
+2. Error when Logger traverses Sinks to log;
+
+3. Error when Logger traverses Sinks to flush.
+
+Therefore, when errors occur in the `Logger.Log`, `Logger.LogEx`, and `Logger.Flush` methods, SourcePawn code execution will not be interrupted.
+
+**Note:** Errors when `Logger.LogAmxTpl` formats parameters will be thrown directly, and errors when traversing Sinks to log and flush after formats parameters will call the error handler.
+
+Each Logger has an error handler, and the default handler solution is to simply log the error information to the SourceMod's errors.log file.
+
+You can refer to the following code to override the default error handler of the Logger:
 
 ```sourcepawn
 void SetMyErrorHandler(Logger logger)
@@ -205,8 +219,6 @@ void MyErrorHandler(const char[] msg, const char[] name, const char[] file, int 
     LogError("[%s::%d] [%s] %s", file, line, name, msg);
 }
 ```
-
-**Note:** Parameter formatting errors can be thrown directly or handed over to the Error Handler, depending on whether the formatting is handled by [Log4sp (LogEx)](#Format) or [SourceMod (LogAmxTpl)](#Format).
 
 ### Global Logger
 
