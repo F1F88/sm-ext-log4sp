@@ -78,7 +78,7 @@ methodmap Logger < Handle
     /**
      * Creating a logger handle with an array of sink handles.
      *
-     * @note After creation, all sink handles in the sinks are closed.
+     * @note After creating the logger handle, all sink handles in sinks are closed.
      *
      * @param name      The name of the new logger.
      * @param sinks     The sinks array to be added to the new logger.
@@ -136,12 +136,12 @@ methodmap Logger < Handle
     public native void SetLevel(LogLevel lvl);
 
     /**
-     * Sets formatting for the sinks in the logger.
+     * Sets formatting pattern for the sinks in the logger.
      *
      * @note each sink will get a new instance of a formatter object, replacing the old one.
-     * @note pattern flags: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
+     * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
      *
-     * @param pattern   Log message pattern.
+     * @param pattern   Formatting pattern.
      * @param type      Pattern time.
      */
     public native void SetPattern(const char[] pattern, PatternTimeType type = PatternTimeType_Local);
@@ -268,7 +268,7 @@ methodmap Logger < Handle
     /**
      * Add a new sink to sinks.
      *
-     * @note After creation, the sink handle is closed.
+     * @note After Adding the sink handle, the sink handle is closed.
      *
      * @param sink      Sink handle.
      * @error           Invalid sink handle.
