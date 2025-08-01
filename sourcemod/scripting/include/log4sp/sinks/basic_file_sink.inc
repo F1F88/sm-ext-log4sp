@@ -39,7 +39,7 @@ methodmap BasicFileSink < Sink
     public native int GetFilename(char[] buffer, int maxlen);
 
     /**
-     * Truncate log files on demand.
+     * Truncate the log files.
      */
     public native void Truncate();
 
