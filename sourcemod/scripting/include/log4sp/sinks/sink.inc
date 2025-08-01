@@ -40,11 +40,11 @@ methodmap Sink < Handle
     public native void SetLevel(LogLevel lvl);
 
     /**
-     * Change log pattern.
+     * Sets formatting pattern.
      *
-     * @note pattern flags: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
+     * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
      *
-     * @param pattern   Logger sinks pattern.
+     * @param pattern   Formatting pattern.
      * @param type      Pattern time.
      */
     public native void SetPattern(const char[] pattern);
