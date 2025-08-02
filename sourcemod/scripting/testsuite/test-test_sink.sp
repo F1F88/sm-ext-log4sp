@@ -131,52 +131,65 @@ void TestTestSinkLogException()
 {
     SetTestContext("Test TestSink Log Exception");
 
+    char errorDescription[] = "Manually set log exception";
+    char name[] = "test-sink";
+    const LogLevel lvl = LogLevel_Error;
+    char msg[] = "This log message will not be logging.";
+
     TestSink sink = new TestSink();
-    Logger logger = new Logger("test-sink");
-    logger.AddSink(sink);
+    sink.SetLogException(errorDescription);
 
-    sink.SetLogException("Manually set log exceptions");
-
-    MarkErrorTestStart("Test TestSink Log Exception");
-    logger.Info("hello test sink 1");
-    MarkErrorTestEnd("Test TestSink Log Exception");
-
-    AssertEq("Log cnt", sink.GetLogCount(), 0);
+    char error1[256];
+    int bytes1;
+    bool result1 = sink.LogTry(name, lvl, msg, .error=error1, .maxlen=sizeof(error1), .bytes=bytes1);
+    int  logCnt1 = sink.GetLogCount();
 
     sink.ClearLogException();
-    logger.Info("hello test sink 2");
-    AssertEq("Log cnt", sink.GetLogCount(), 1);
 
-    delete logger;
-    delete sink;
+    int bytes2;
+    bool result2 = sink.LogTry(name, lvl, msg, .error="", .maxlen=0, .bytes=bytes2);
+    int  logCnt2 = sink.GetLogCount();
 
-    // AssertEq("SM file line cnt", CountLines(GetErrorFilename()), 3);
-    // DeleteFile(GetErrorFilename());
+    sink.Close();
+
+    AssertTrue("LogTry 1 result", result1);
+    AssertStrEq("LogTry 1 error description", error1, errorDescription);
+    AssertEq("LogTry 1 error description bytes", bytes1, sizeof(errorDescription) - 1);
+    AssertEq("LogTry 1 log count", logCnt1, 0);
+
+    AssertFalse("LogTry 2 result", result2);
+    AssertEq("LogTry 2 error description bytes", bytes2, 0);
+    AssertEq("LogTry 2 log count", logCnt2, 1);
 }
 
 void TestTestSinkFlushException()
 {
     SetTestContext("Test TestSink Flush Exception");
 
+    char errorDescription[] = "Manually set flush exception";
+
     TestSink sink = new TestSink();
-    Logger logger = new Logger("test-sink");
-    logger.AddSink(sink);
+    sink.SetFlushException(errorDescription);
 
-    sink.SetFlushException("Manually set flush exceptions");
-
-    MarkErrorTestStart("Test TestSink Flush Exception");
-    logger.Flush();
-    MarkErrorTestEnd("Test TestSink Flush Exception");
-
-    AssertEq("Flush cnt", sink.GetFlushCount(), 0);
+    char error1[256];
+    int bytes1;
+    bool result1 = sink.FlushTry(error1, sizeof(error1), bytes1);
+    int flushCnt1 = sink.GetFlushCount();
 
     sink.ClearFlushException();
-    logger.Flush();
-    AssertEq("Flush cnt", sink.GetFlushCount(), 1);
 
-    delete logger;
-    delete sink;
+    int bytes2;
+    bool result2 = sink.FlushTry("", 0, bytes2);
+    int flushCnt2 = sink.GetFlushCount();
 
-    // AssertEq("SM file line cnt", CountLines(GetErrorFilename()), 3);
-    // DeleteFile(GetErrorFilename());
+    sink.Close();
+
+    AssertTrue("FlushTry 1 result", result1);
+    AssertStrEq("FlushTry 1 error description", error1, errorDescription);
+    AssertEq("FlushTry 1 error description bytes", bytes1, sizeof(errorDescription) - 1);
+    AssertEq("FlushTry 1 flush count", flushCnt1, 0);
+
+    AssertFalse("FlushTry 2 result", result2);
+    AssertEq("FlushTry 2 error description bytes", bytes2, 0);
+    AssertEq("FlushTry 2 flush count", flushCnt2, 1);
 }
