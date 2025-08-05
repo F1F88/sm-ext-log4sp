@@ -20,6 +20,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_log4sp_bench_server_console",                 Command_BenchServerConsole);
 
     RegConsoleCmd("sm_log4sp_bench_callback",                       Command_BenchCallback);
+    RegConsoleCmd("sm_log4sp_bench_callback2",                      Command_BenchCallback2);
 
     g_hProfiler = new Profiler();
 }
@@ -160,6 +161,29 @@ Action Command_BenchCallback(int client, int args)
     PrintToServer("[benchmark] %17s | %9s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, "LogAmxTpl", iters, delta3, RoundToFloor(iters / delta3));
     return Plugin_Handled;
 }
+
+Action Command_BenchCallback2(int client, int args)
+{
+    int iters = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
+
+    char BENCH_TITLE[]  = "callback-sink2";
+    char LOGGER_NAME[]  = "name-F";
+
+    Logger logger = CallbackSink2.CreateLogger(LOGGER_NAME, CB_OnLog, _, CB_OnFlush);
+
+    float delta1 = BenchLog(iters, logger);
+    float delta2 = BenchLogEx(iters, client, logger);
+    float delta3 = BenchLogAmxTpl(iters, client, logger);
+
+    delete logger;
+
+    PrintToServer("");
+    PrintToServer("[benchmark] %17s | %9s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, "Log", iters, delta1, RoundToFloor(iters / delta1));
+    PrintToServer("[benchmark] %17s | %9s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, "LogEx", iters, delta2, RoundToFloor(iters / delta2));
+    PrintToServer("[benchmark] %17s | %9s | Iters %7d | Elapsed %6.3f secs %9d/sec", BENCH_TITLE, "LogAmxTpl", iters, delta3, RoundToFloor(iters / delta3));
+    return Plugin_Handled;
+}
+
 
 float BenchLog(int howmany, Logger logger)
 {
