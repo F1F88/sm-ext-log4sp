@@ -12,6 +12,7 @@
 #include <log4sp/sinks/sink>
 #include <log4sp/sinks/basic_file_sink>
 #include <log4sp/sinks/callback_sink>
+#include <log4sp/sinks/callback_sink2>
 #include <log4sp/sinks/client_chat_all_sink>
 #include <log4sp/sinks/client_console_all_sink>
 #include <log4sp/sinks/daily_file_sink>

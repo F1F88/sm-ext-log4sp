@@ -10,6 +10,7 @@
 static const char g_sCommands[][] = {
     "sm_log4sp_test_basic_file_logger",
     "sm_log4sp_test_callback_logger",
+    "sm_log4sp_test_callback2",
     "sm_log4sp_test_common",
     "sm_log4sp_test_commands",
     "sm_log4sp_test_daily_logger",
