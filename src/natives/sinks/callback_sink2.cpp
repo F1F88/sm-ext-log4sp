@@ -44,7 +44,7 @@ static cell_t CallbackSink2(SourcePawn::IPluginContext *ctx, const cell_t *param
 
     SourceMod::Handle_t plugin = plsys->FindPluginByContext(ctx->GetContext())->GetMyHandle();
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink   = std::make_shared<callback_sink2>(logFn, logPostFn, flushFn, destroyFn, plugin, data);
@@ -93,7 +93,7 @@ static cell_t CallbackSink2_CreateLogger(SourcePawn::IPluginContext *ctx, const 
 
     SourceMod::Handle_t plugin = plsys->FindPluginByContext(ctx->GetContext())->GetMyHandle();
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink   = std::make_shared<callback_sink2>(logFn, logPostFn, flushFn, destroyFn, plugin, data);

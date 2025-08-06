@@ -40,7 +40,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     SourcePawn::IPluginFunction *logPostFunction= ctx->GetFunctionById(params[2]);
     SourcePawn::IPluginFunction *flushFunction  = ctx->GetFunctionById(params[3]);
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
