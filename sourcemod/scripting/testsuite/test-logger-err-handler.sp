@@ -36,6 +36,8 @@ void TestDefaultErrorHandler()
 
     MarkErrorTestStart("Test Default Error Handler");
 
+    int position = FileSize(GetErrorFilename());
+
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "err-handler/default_handler.log");
 
@@ -52,12 +54,8 @@ void TestDefaultErrorHandler()
     AssertEq("Skip param format error log, count lines", CountLines(path), 2);
     AssertFileMatch("Skip param format error log, contents match", path, "Test message 1" ... P_EOL ... "Test message 3" ... P_EOL);
 
-    // AssertEq("Default error handler log to SM file, count lines", CountLines(GetErrorFilename()), 3);
     char[] pattern = "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[.*\\] \\[test-logger-err-handler.sp::[0-9]+\\] \\[test-err-handler\\] String formatted incorrectly - parameter 4 \\(total 3\\)(\n|\r\n)";
-    AssertFileMatch("Default error handler log to SM file, contents match", GetErrorFilename(), pattern);
-
-    // 若检验通过，则删除本次测试生成的日志信息以保持 SM 错误日志的简洁
-    // DeleteFile(GetErrorFilename());
+    AssertFileMatch("Default error handler log to SM file, contents match", GetErrorFilename(), pattern, position, SEEK_SET);
 }
 
 

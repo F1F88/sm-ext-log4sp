@@ -198,7 +198,7 @@ void TestLogThrowError()
 
     RequestFrame(Frame_AssertThrowErrorSinkMsgs, sink);
     RequestFrame(Frame_AssertThrowErrorLogFile);
-    RequestFrame(Frame_AssertThrowErrorSMFile); // And DeleteSMErrorFile
+    RequestFrame(Frame_AssertThrowErrorSMFile, FileSize(GetErrorFilename()));
     RequestFrame(Frame_CloseSink, sink);
 }
 
@@ -291,7 +291,7 @@ static void Frame_AssertThrowErrorLogFile()
     AssertFileMatch("ThrowError log file match", path, THROW_ERROR_LOG_FILE_EXP);
 }
 
-static void Frame_AssertThrowErrorSMFile()
+static void Frame_AssertThrowErrorSMFile(int errorFileEndPosition)
 {
 #define THROW_ERROR_SM_FILE_EXP   "(?:" ... P_SM_PREFIX ... "Exception reported: test message (1|2|3)\
 (\n|\r\n)" ... P_SM_PREFIX ... "Blaming: .*test-logger-log.smx\
@@ -299,8 +299,5 @@ static void Frame_AssertThrowErrorSMFile()
 (\n|\r\n)" ... P_SM_PREFIX ... "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*\
 (\n|\r\n)" ... P_SM_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)(\n|\r\n)){6}"
 
-    AssertFileMatch("ThrowError sm file match", GetErrorFilename(), THROW_ERROR_SM_FILE_EXP);
-
-    // 若检验通过，则删除本次测试生成的日志信息以保持 SM 错误日志的简洁
-    // DeleteFile(GetErrorFilename());
+    AssertFileMatch("ThrowError sm file match", GetErrorFilename(), THROW_ERROR_SM_FILE_EXP, errorFileEndPosition, SEEK_SET);
 }
