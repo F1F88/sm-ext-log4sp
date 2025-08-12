@@ -43,8 +43,8 @@ methodmap DailyFileSink < Sink
      * @param truncate      If true, the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
      * @param calculator    Callback function called when calculating the daily log file name.
-     * @param openPre       Called before the sink open the file.
-     * @param closePost     Called after the sink close the file.
+     * @param onOpen        Called before the sink open the file.
+     * @param onClose       Called after the sink close the file.
      * @return              DailyFileSink handle.
      * @error               Invalid rotation time in ctor, or maxFiles < 0, or maxFiles > 65535.
      */
@@ -53,9 +53,9 @@ methodmap DailyFileSink < Sink
                                 int minute = 0,
                                 bool truncate = false,
                                 int maxFiles = 0,
-                                DailyFileCalculator calculator = INVALID_FUNCTION,
-                                SinkFileOpenPre openPre = INVALID_FUNCTION,
-                                SinkFileClosePost closePost = INVALID_FUNCTION);
+                                DailyFileCalculator calculator = null,
+                                OnFileOpen onOpen = null,
+                                OnFileClose onClose = null);
 
     /**
      * Get the current filename being used by the file sink.
@@ -83,8 +83,8 @@ methodmap DailyFileSink < Sink
      * @param truncate      If true, the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
      * @param calculator    For generate log file names.
-     * @param openPre       Called before the sink open the file.
-     * @param closePost     Called after the sink close the file.
+     * @param onOpen        Called before the sink open the file.
+     * @param onClose       Called after the sink close the file.
      * @return              Logger handle.
      * @error               Logger name already exits, or invalid rotation time, or maxFiles < 0, or maxFiles > 65535.
      */
@@ -95,9 +95,9 @@ methodmap DailyFileSink < Sink
         int minute = 0,
         bool truncate = false,
         int maxFiles = 0,
-        DailyFileCalculator callback = INVALID_FUNCTION,
-        SinkFileOpenPre openPre = INVALID_FUNCTION,
-        SinkFileClosePost closePost = INVALID_FUNCTION);
+        DailyFileCalculator calculator = null,
+        OnFileOpen onOpen = null,
+        OnFileClose onClose = null);
 }
 
 

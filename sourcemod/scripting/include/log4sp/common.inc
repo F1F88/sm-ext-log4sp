@@ -74,6 +74,23 @@ enum struct SourceLoc
 
 
 /**
+ * Called before opening the file.
+ */
+typeset OnFileOpen
+{
+    function void (const char[] filename);
+}
+
+/**
+ * Called after closing the file.
+ */
+typeset OnFileClose
+{
+    function void (const char[] filename);
+}
+
+
+/**
  * Convert a log level enum to name.
  *
  * @param buffer    Buffer to store log level name.
