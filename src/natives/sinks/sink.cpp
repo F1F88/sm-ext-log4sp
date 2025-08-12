@@ -100,51 +100,15 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     }
     catch (const std::exception &ex)
     {
-        ctx->ReportError(ex.what());
-    }
-    return 0;
-}
-
-static cell_t LogTry(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_SINK_HANDLE_OR_ERROR(params[1]);
-
-    char *name, *msg, *file, *func;
-    CTX_LOCAL_TO_STRING(params[2], &name);
-    CTX_LOCAL_TO_STRING(params[4], &msg);
-    CTX_LOCAL_TO_STRING_NULL(params[5], &file);
-    CTX_LOCAL_TO_STRING_NULL(params[7], &func);
-
-    auto lvl = log4sp::num_to_lvl(params[3]);
-    int line = params[8];
-
-    source_loc loc(file, line, func);
-
-    using std::chrono::duration_cast;
-    using std::chrono::system_clock;
-    std::chrono::system_clock::time_point logTime = now();
-    if (params[8] != -1)
-    {
-        // FIXME: Possible Year 2038 Problem
-        auto seconds = std::chrono::seconds(params[8]);
-        logTime = system_clock::time_point(duration_cast<system_clock::duration>(seconds));
-    }
-
-    try
-    {
-        sink->log(log_msg(logTime, loc, name, lvl, msg));
-    }
-    catch (const std::exception &ex)
-    {
         size_t wrtnbytes;
         CTX_STRING_TO_LOCAL_UTF8(params[9], params[10], ex.what(), &wrtnbytes);
 
         cell_t *bytes;
         CTX_LOCAL_TO_PHYS_ADDR(params[11], &bytes);
         *bytes = static_cast<cell_t>(wrtnbytes);
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -198,30 +162,15 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     }
     catch (const std::exception &ex)
     {
-        ctx->ReportError(ex.what());
-    }
-    return 0;
-}
-
-static cell_t FlushTry(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_SINK_HANDLE_OR_ERROR(params[1]);
-
-    try
-    {
-        sink->flush();
-    }
-    catch (const std::exception &ex)
-    {
         size_t wrtnbytes;
         CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], ex.what(), &wrtnbytes);
 
         cell_t *bytes;
         CTX_LOCAL_TO_PHYS_ADDR(params[4], &bytes);
         *bytes = static_cast<cell_t>(wrtnbytes);
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 static cell_t Clone(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -248,11 +197,9 @@ const sp_nativeinfo_t SinkNatives[] =
     {"Sink.SetPattern",                         SetPattern},
     {"Sink.ShouldLog",                          ShouldLog},
     {"Sink.Log",                                Log},
-    {"Sink.LogTry",                             LogTry},
     {"Sink.ToPattern",                          ToPattern},
     {"Sink.Flush",                              Flush},
     {"Sink.Clone",                              Clone},
-    {"Sink.FlushTry",                           FlushTry},
 
     {nullptr,                                   nullptr}
 };

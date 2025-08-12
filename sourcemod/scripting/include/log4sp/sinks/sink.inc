@@ -57,32 +57,15 @@ methodmap Sink < Handle
      * @param func      The function name of the source location.
      * @param logTime   The log message time point in seconds.
      *                  If -1, current time point is used as the time of the log message.
-     * @error           If an log error occurred.
-     */
-    public native void Log(const char[] name, LogLevel lvl, const char[] msg,
-        const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
-        int logTime = -1);
-
-    /**
-     * Logs a message.
-     *
-     * @param name      The name of a logger.
-     * @param lvl       Log level enum.
-     * @param msg       Pre formatted log message.
-     * @param file      The file name of the source location.
-     * @param line      The line number of the source location.
-     * @param func      The function name of the source location.
-     * @param logTime   The log message time point in seconds.
-     *                  If -1, current time point is used as the time of the log message.
      * @param error     Buffer to store error description.
      * @param maxlen    Maximum length of the error.
      * @param bytes     Number of characters written to the error, not including the null terminator.
-     * @return          Ture if an error occurred.
+     * @return          True on success, false on failure.
      */
-    public native bool LogTry(const char[] name, LogLevel lvl, const char[] msg,
+    public native bool Log(const char[] name, LogLevel lvl, const char[] msg,
         const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
         int logTime = -1,
-        char[] error, int maxlen, int &bytes = 0);
+        char[] error = "", int maxlen = 0, int &bytes = 0);
 
     /**
      * Format log message in a pre-set pattern.
@@ -106,19 +89,12 @@ methodmap Sink < Handle
     /**
      * Manual flush sink contents.
      *
-     * @error           If an flush error occurred.
-     */
-    public native void Flush();
-
-    /**
-     * Manual flush sink contents.
-     *
      * @param error     Buffer to store error description.
      * @param maxlen    Maximum length of the error.
      * @param bytes     Number of characters written to the error, not including the null terminator.
-     * @return          Ture if an error occurred.
+     * @return          True on success, false on failure.
      */
-    public native bool FlushTry(char[] error, int maxlen, int &bytes = 0);
+    public native bool Flush(char[] error = "", int maxlen = 0, int &bytes = 0);
 
     /**
      * Bind the underlying Sink object to a new Handle.

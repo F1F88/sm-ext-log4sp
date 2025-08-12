@@ -149,25 +149,25 @@ void TestTestSinkLogException()
 
     char error1[256];
     int bytes1;
-    bool result1 = sink.LogTry(name, lvl, msg, .error=error1, .maxlen=sizeof(error1), .bytes=bytes1);
+    bool result1 = sink.Log(name, lvl, msg, .error=error1, .maxlen=sizeof(error1), .bytes=bytes1);
     int  logCnt1 = sink.GetLogCount();
 
     sink.ClearLogException();
 
     int bytes2;
-    bool result2 = sink.LogTry(name, lvl, msg, .error="", .maxlen=0, .bytes=bytes2);
+    bool result2 = sink.Log(name, lvl, msg, .bytes=bytes2);
     int  logCnt2 = sink.GetLogCount();
 
     sink.Close();
 
-    AssertTrue("LogTry 1 result", result1);
-    AssertStrEq("LogTry 1 error description", error1, errorDescription);
-    AssertEq("LogTry 1 error description bytes", bytes1, sizeof(errorDescription) - 1);
-    AssertEq("LogTry 1 log count", logCnt1, 0);
+    AssertFalse("Log 1 result", result1);
+    AssertStrEq("Log 1 error description", error1, errorDescription);
+    AssertEq("Log 1 error description bytes", bytes1, sizeof(errorDescription) - 1);
+    AssertEq("Log 1 log count", logCnt1, 0);
 
-    AssertFalse("LogTry 2 result", result2);
-    AssertEq("LogTry 2 error description bytes", bytes2, 0);
-    AssertEq("LogTry 2 log count", logCnt2, 1);
+    AssertTrue("Log 2 result", result2);
+    AssertEq("Log 2 error description bytes", bytes2, 0);
+    AssertEq("Log 2 log count", logCnt2, 1);
 }
 
 void TestTestSinkFlushException()
@@ -181,23 +181,23 @@ void TestTestSinkFlushException()
 
     char error1[256];
     int bytes1;
-    bool result1 = sink.FlushTry(error1, sizeof(error1), bytes1);
+    bool result1 = sink.Flush(error1, sizeof(error1), bytes1);
     int flushCnt1 = sink.GetFlushCount();
 
     sink.ClearFlushException();
 
     int bytes2;
-    bool result2 = sink.FlushTry("", 0, bytes2);
+    bool result2 = sink.Flush(.bytes=bytes2);
     int flushCnt2 = sink.GetFlushCount();
 
     sink.Close();
 
-    AssertTrue("FlushTry 1 result", result1);
-    AssertStrEq("FlushTry 1 error description", error1, errorDescription);
-    AssertEq("FlushTry 1 error description bytes", bytes1, sizeof(errorDescription) - 1);
-    AssertEq("FlushTry 1 flush count", flushCnt1, 0);
+    AssertFalse("Flush 1 result", result1);
+    AssertStrEq("Flush 1 error description", error1, errorDescription);
+    AssertEq("FlushT 1 error description bytes", bytes1, sizeof(errorDescription) - 1);
+    AssertEq("Flush 1 flush count", flushCnt1, 0);
 
-    AssertFalse("FlushTry 2 result", result2);
-    AssertEq("FlushTry 2 error description bytes", bytes2, 0);
-    AssertEq("FlushTry 2 flush count", flushCnt2, 1);
+    AssertTrue("Flush 2 result", result2);
+    AssertEq("Flush 2 error description bytes", bytes2, 0);
+    AssertEq("Flush 2 flush count", flushCnt2, 1);
 }
