@@ -113,24 +113,6 @@ public:
     [[nodiscard]]
     virtual const key_t &get_key(object_raw_t &raw) const noexcept =0;
 
-    /**
-     * @brief Find Handle_t data by key.
-     *
-     * @param key       Datas key.
-     * @return          A Handle_t, or BAD_HANDLE on failure.
-     */
-    [[nodiscard]]
-    auto find_handle(const key_t &key) const noexcept -> handle_t;
-
-    /**
-     * @brief Find Handle_t data by key.
-     *
-     * @param key       Datas key.
-     * @return          A Handle_t, or BAD_HANDLE on failure.
-     */
-    [[nodiscard]]
-    auto find_object(const key_t &key) const noexcept -> object_ptr_t;
-
     [[nodiscard]]
     auto handle_type() const -> handle_type_t { return handle_type_; }
 
@@ -236,20 +218,6 @@ inline auto handle_type_dispatch_adapter<Key, Object>::read_handle_raw(
 
     assert(datas_.find(get_key(raw)) != datas_.end());
     return raw;
-}
-
-template <class Key, class Object>
-inline auto handle_type_dispatch_adapter<Key, Object>::find_handle(const key_t &key) const noexcept -> handle_t
-{
-    auto found = datas_.find(key);
-    return (found == datas_.end()) ? BAD_HANDLE : found->second.first;
-}
-
-template <class Key, class Object>
-inline auto handle_type_dispatch_adapter<Key, Object>::find_object(const key_t &key) const noexcept -> object_ptr_t
-{
-    auto found = datas_.find(key);
-    return (found == datas_.end()) ? nullptr : found->second.second;
 }
 
 

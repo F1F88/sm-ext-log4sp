@@ -41,6 +41,16 @@ public:
         }
     }
 
+    auto find_handle(const key_t &key) const noexcept -> handle_t {
+        auto found = datas_.find(key);
+        return (found == datas_.end()) ? BAD_HANDLE : found->second.first;
+    }
+
+    auto find_object(const key_t &key) const noexcept -> object_ptr_t {
+        auto found = datas_.find(key);
+        return (found == datas_.end()) ? nullptr : found->second.second;
+    }
+
     static constexpr const char *HANDLE_TYPE_NAME = "Logger";
 
     logger_handler(const logger_handler &) = delete;
