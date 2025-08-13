@@ -141,7 +141,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.ShouldLog");
     MarkNativeAsOptional("Sink.Log");
-    MarkNativeAsOptional("Sink.ToPattern");
     MarkNativeAsOptional("Sink.Flush");
 
     MarkNativeAsOptional("UDPSink.UDPSink");
