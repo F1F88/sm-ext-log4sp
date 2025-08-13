@@ -108,6 +108,7 @@ public void __ext_log4sp_SetNTVOptional()
 
     MarkNativeAsOptional("BasicFileSink.BasicFileSink");
     MarkNativeAsOptional("BasicFileSink.GetFilename");
+    MarkNativeAsOptional("BasicFileSink.GetFilenameLength");
     MarkNativeAsOptional("BasicFileSink.Truncate");
     MarkNativeAsOptional("BasicFileSink.CreateLogger");
 
@@ -119,6 +120,7 @@ public void __ext_log4sp_SetNTVOptional()
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
     MarkNativeAsOptional("DailyFileSink.GetFilename");
+    MarkNativeAsOptional("DailyFileSink.GetFilenameLength");
     MarkNativeAsOptional("DailyFileSink.CreateLogger");
 
     MarkNativeAsOptional("RingBufferSink.RingBufferSink");
@@ -128,6 +130,7 @@ public void __ext_log4sp_SetNTVOptional()
 
     MarkNativeAsOptional("RotatingFileSink.RotatingFileSink");
     MarkNativeAsOptional("RotatingFileSink.GetFilename");
+    MarkNativeAsOptional("RotatingFileSink.GetFilenameLength");
     MarkNativeAsOptional("RotatingFileSink.RotateNow");
     MarkNativeAsOptional("RotatingFileSink.CalcFilename");
     MarkNativeAsOptional("RotatingFileSink.CreateLogger");
