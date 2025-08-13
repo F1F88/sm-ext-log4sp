@@ -55,10 +55,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("NameToLogLevel");
 
     MarkNativeAsOptional("Logger.Logger");
-    MarkNativeAsOptional("Logger.CreateLoggerWith");
-    MarkNativeAsOptional("Logger.CreateLoggerWithEx");
-    MarkNativeAsOptional("Logger.Get");
-    MarkNativeAsOptional("Logger.ApplyAll");
     MarkNativeAsOptional("Logger.GetName");
     MarkNativeAsOptional("Logger.GetNameLength");
     MarkNativeAsOptional("Logger.GetLevel");
@@ -105,6 +101,10 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.AddSinkEx");
     MarkNativeAsOptional("Logger.DropSink");
     MarkNativeAsOptional("Logger.SetErrorHandler");
+    MarkNativeAsOptional("Logger.CreateLoggerWith");
+    MarkNativeAsOptional("Logger.CreateLoggerWithEx");
+    MarkNativeAsOptional("Logger.Get");
+    MarkNativeAsOptional("Logger.ApplyAll");
 
     MarkNativeAsOptional("BasicFileSink.BasicFileSink");
     MarkNativeAsOptional("BasicFileSink.GetFilename");
