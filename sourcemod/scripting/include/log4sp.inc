@@ -142,8 +142,5 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.ShouldLog");
     MarkNativeAsOptional("Sink.Log");
     MarkNativeAsOptional("Sink.Flush");
-
-    MarkNativeAsOptional("UDPSink.UDPSink");
-    MarkNativeAsOptional("UDPSink.CreateLogger");
 }
 #endif
