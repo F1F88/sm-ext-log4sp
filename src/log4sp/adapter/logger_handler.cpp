@@ -9,9 +9,10 @@ void logger_handler::initialize() {
     SourceMod::HandleAccess access;
 
     // Init plugin create Logger access
-    // 插件创建的 Logger Handle 可以被任意插件释放
+    // 插件创建的 Logger Handle 可以被任意插件释放, 但不允许克隆
     handlesys->InitAccessDefaults(nullptr, &access);
     access.access[SourceMod::HandleAccess_Delete] = 0;
+    access.access[SourceMod::HandleAccess_Clone] |= HANDLE_RESTRICT_IDENTITY;
 
     auto error = instance().create_handle_type_(HANDLE_TYPE_NAME, NO_HANDLE_TYPE, nullptr, &access, myself->GetIdentity());
     if (error != SourceMod::HandleError_None)
@@ -31,9 +32,10 @@ void logger_handler::create_global_logger() {
     SourceMod::HandleError error;
 
     // Init Global Logger access
-    // 拓展创建的全局 Logger Handle 不可以被插件释放, 生命周期由拓展管控
+    // 拓展创建的全局 Logger Handle 不可以被插件释放, 生命周期由拓展管控, 且不允许克隆
     handlesys->InitAccessDefaults(nullptr, &access);
     access.access[SourceMod::HandleAccess_Delete] |= HANDLE_RESTRICT_IDENTITY;
+    access.access[SourceMod::HandleAccess_Clone]  |= HANDLE_RESTRICT_IDENTITY;
     SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
 
     try {
