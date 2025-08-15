@@ -233,7 +233,7 @@ inline auto handle_type_dispatch_adapter<Key, Object>::create_handle_type_(
     using spdlog::fmt_lib::format;
 
     handle_error error = handle_error::HandleError_None;
-    handle_type_ = handlesys->CreateType(name, this, parent, typeAccess, hndlAccess, myself->GetIdentity(), &error);
+    handle_type_ = handlesys->CreateType(name, this, parent, typeAccess, hndlAccess, ident, &error);
     return error;
 }
 
