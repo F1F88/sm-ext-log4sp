@@ -119,4 +119,11 @@ methodmap Sink < Handle
      * @return          Ture if an error occurred.
      */
     public native bool FlushTry(char[] error, int maxlen, int &bytes = 0);
+
+    /**
+     * Bind the underlying Sink object to a new Handle.
+     *
+     * @return              Sink handle, or BAD_HANDLE on failure.
+     */
+    public native Sink Clone();
 }

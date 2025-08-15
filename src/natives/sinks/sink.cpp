@@ -224,6 +224,22 @@ static cell_t FlushTry(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     return false;
 }
 
+static cell_t Clone(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_SINK_HANDLE_OR_ERROR(params[1]);
+
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    if (!handle)
+    {
+        ctx->ReportError("Failed to clone Sink handle %x (error code: %d)", params[1], error);
+        return BAD_HANDLE;
+    }
+    return handle;
+}
+
 
 const sp_nativeinfo_t SinkNatives[] =
 {
@@ -235,6 +251,7 @@ const sp_nativeinfo_t SinkNatives[] =
     {"Sink.LogTry",                             LogTry},
     {"Sink.ToPattern",                          ToPattern},
     {"Sink.Flush",                              Flush},
+    {"Sink.Clone",                              Clone},
     {"Sink.FlushTry",                           FlushTry},
 
     {nullptr,                                   nullptr}
