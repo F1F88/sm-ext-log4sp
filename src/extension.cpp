@@ -68,7 +68,6 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, SinkNatives);
     sharesys->AddNatives(myself, BasicFileSinkNatives);
     sharesys->AddNatives(myself, CallbackSinkNatives);
-    sharesys->AddNatives(myself, CallbackSink2Natives);
     sharesys->AddNatives(myself, DailyFileSinkNatives);
     sharesys->AddNatives(myself, RingBufferSinkNatives);
     sharesys->AddNatives(myself, RotatingFileSinkNatives);

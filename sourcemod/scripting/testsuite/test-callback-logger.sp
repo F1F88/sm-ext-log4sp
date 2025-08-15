@@ -4,11 +4,17 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_sink"
 #include "test_utils"
 
 
 #define LOGGER_NAME     "test-callback"
+
+
+int g_iLogCount;
+int g_iLogPostCount;
+int g_iFlushCount;
+int g_iErrorcount;
+int g_iDestoryCount;
 
 
 public void OnPluginStart()
@@ -27,20 +33,16 @@ Action Command_Test(int args)
 }
 
 
-TestSink g_testSink;
-
 void TestCustomCallbackLogger()
 {
     SetTestContext("Test Custom Callback Logger");
 
-    // 基于 CallbackSink
-    g_testSink = new TestSink();
-    CallbackSink sink = new CallbackSink(CBSink_OnLog, CBSink_OnLogPost);
+    InitializeGlobal();
 
-    Logger logger = new Logger(LOGGER_NAME);
-    logger.AddSink(g_testSink);
-    logger.AddSink(sink);
+    Logger logger = CallbackSink.CreateLogger(LOGGER_NAME, CBSink_OnLog, CBSink_OnLogPost, CBSink_OnFlush, CBSink_OnDestory, 7);
+    logger.AddSinkEx(new CallbackSink(CBSink_OnLog2, CBSink_OnLogPost2, CBSink_OnFlush2, _, 9));
     logger.SetPattern("'%Y-%m-%d' '%l' '%n' '%v'");
+    logger.SetErrorHandler(CBLogger_ErrorHandler);
 
     for (int i = 0; i < TEST_LOG4SP_LEVEL_TOTAL; ++i)
     {
@@ -49,27 +51,118 @@ void TestCustomCallbackLogger()
 
     logger.Flush();
 
-    int logCnt      = g_testSink.GetLogCount();
-    int flushCnt    = g_testSink.GetFlushCount();
-
-    g_testSink.Close();
-    sink.Close();
     logger.Close();
 
-    //  total - 2 (trace、debug)
-    AssertEq("Log count", logCnt, 5);
-    AssertEq("Flush count", flushCnt, 1);
+    // log count = 7 [total] - 2 [trace, debug]
+    // log post count = 7 [total] - 2 [trace, debug] - 1 [throwException]
+    // flush count =  1 [manual]
+    // err count = 1 [log] + (7 [logPost] - 2 [trace, debug]) + 1 [flush]
+    // destroy count = 1 [CreateLogger]
+    AssertGlobal(5, 4, 1, 7, 1);
 }
 
-void CBSink_OnLog(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int timePoint)
+static bool CBSink_OnLog(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data, char error[256])
 {
+    g_iLogCount++;
     AssertStrEq("OnLog name", name, LOGGER_NAME);
-    AssertEq("OnLog lvl", view_as<int>(lvl), g_testSink.GetLogCount() + 1);
+    AssertTrue("OnLog lvl", lvl >= LogLevel_Info && lvl <= LogLevel_Off);
     AssertStrMatch("OnLog msg match", msg, "test message [0-9]");
+    AssertEq("OnLog data", data, 7);
+
+    if (lvl == LogLevel_Off)
+    {
+        strcopy(error, sizeof(error), "This error message will be thrown!");
+        return true;
+    }
+    return false;
 }
 
-void CBSink_OnLogPost(const char[] msg)
+static void CBSink_OnLogPost(const char[] msg, any data)
 {
+    g_iLogPostCount++;
     char[] pattern = "'[0-9]{4}-[0-9]{2}-[0-9]{2}' '(info|warn|error|fatal|off)' 'test-callback' 'test message [0-9]'(\n|\r\n)";
     AssertStrMatch("OnLogPost msg match", msg, pattern);
+    AssertEq("OnLogPost data", data, 7);
+}
+
+static bool CBSink_OnFlush(any data, char error[256])
+{
+    g_iFlushCount++;
+    AssertEq("OnFlush data", data, 7);
+
+    strcopy(error, sizeof(error), "This error message will be thrown!");
+    return true;
+}
+
+static void CBSink_OnLog2(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data)
+{
+    AssertStrEq("OnLog2 name", name, LOGGER_NAME);
+    AssertTrue("OnLog lvl", lvl >= LogLevel_Info && lvl <= LogLevel_Off);
+    AssertStrMatch("OnLog2 msg match", msg, "test message [0-9]");
+    AssertEq("OnLog2 data", data, 9);
+}
+
+static bool CBSink_OnLogPost2(const char[] msg, any data, char error[256])
+{
+    char[] pattern = "'[0-9]{4}-[0-9]{2}-[0-9]{2}' '(info|warn|error|fatal|off)' 'test-callback' 'test message [0-9]'(\n|\r\n)";
+    AssertStrMatch("OnLogPost2 msg match", msg, pattern);
+    AssertEq("OnLogPost2 data", data, 9);
+
+    strcopy(error, sizeof(error), "This error message will be thrown!");
+    return true;
+}
+
+static void CBSink_OnFlush2(any data)
+{
+    AssertEq("OnFlush2 data", data, 9);
+}
+
+static void CBSink_OnDestory(any data)
+{
+    g_iDestoryCount++;
+    AssertTrue("OnDestory data", data == 7 || data == 9);
+}
+
+static void CBLogger_ErrorHandler(const char[] msg)
+{
+    g_iErrorcount++;
+    AssertStrEq("OnError", msg, "This error message will be thrown!");
+}
+
+
+static void InitializeGlobal()
+{
+    g_iLogCount = 0;
+    g_iLogPostCount = 0;
+    g_iFlushCount = 0;
+    g_iErrorcount = 0;
+    g_iDestoryCount = 0;
+}
+
+static void AssertGlobal(int logCnt, int logPostCnt, int flushCnt, int errorCnt, int destoryCnt)
+{
+    DataPack data = new DataPack();
+    data.WriteCell(logCnt);
+    data.WriteCell(logPostCnt);
+    data.WriteCell(flushCnt);
+    data.WriteCell(errorCnt);
+    data.WriteCell(destoryCnt);
+    RequestFrame(Frame_AssertGlobal, data);
+}
+
+static void Frame_AssertGlobal(DataPack data)
+{
+    data.Reset();
+    int logCnt = data.ReadCell();
+    int logPostCnt = data.ReadCell();
+    int flushCnt = data.ReadCell();
+    int errorCnt = data.ReadCell();
+    int destoryCnt = data.ReadCell();
+    delete data;
+
+    AssertEq("Log count", g_iLogCount, logCnt);
+    AssertEq("LogPost count", g_iLogPostCount, logPostCnt);
+    AssertEq("Flush count", g_iFlushCount, flushCnt);
+    AssertEq("Error count", g_iErrorcount, errorCnt);
+    AssertEq("Destory count", g_iDestoryCount, destoryCnt);
 }

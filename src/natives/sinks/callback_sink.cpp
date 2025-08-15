@@ -1,7 +1,6 @@
-#include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_hanlder.h"
-#include "log4sp/sinks/callback_sink.h"
+#include "log4sp/sinks/callback_sink.hpp"
 
 using spdlog::sink_ptr;
 using log4sp::sinks::callback_sink;
@@ -39,11 +38,16 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     SourcePawn::IPluginFunction *logFunction    = ctx->GetFunctionById(params[1]);
     SourcePawn::IPluginFunction *logPostFunction= ctx->GetFunctionById(params[2]);
     SourcePawn::IPluginFunction *flushFunction  = ctx->GetFunctionById(params[3]);
+    SourcePawn::IPluginFunction *destoryFunction= ctx->GetFunctionById(params[4]);
+    cell_t data = params[5];
+
+    SourceMod::IdentityToken_t *identity = ctx->GetIdentity();
+    SourceMod::Handle_t plugin = plsys->FindPluginByContext(ctx->GetContext())->GetMyHandle();
 
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
+    auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction, destoryFunction, plugin, data);
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
     if (!handle)
     {
@@ -53,28 +57,19 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     return handle;
 }
 
-static cell_t CallbackSink_SetLogCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t CallbackSink_SetData(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
-    callbackSink->set_log_callback(ctx->GetFunctionById(params[2]));
+    callbackSink->set_data(params[2]);
     return 0;
 }
 
-static cell_t CallbackSink_SetLogPostCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t CallbackSink_GetData(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
 
-    callbackSink->set_log_post_callback(ctx->GetFunctionById(params[2]));
-    return 0;
-}
-
-static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_CALLBACK_SINK_HANDLE_OR_ERROR(params[1]);
-
-    callbackSink->set_flush_callback(ctx->GetFunctionById(params[2]));
-    return 0;
+    return callbackSink->get_data();
 }
 
 static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -90,11 +85,16 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
     SourcePawn::IPluginFunction *logFunction     = ctx->GetFunctionById(params[2]);
     SourcePawn::IPluginFunction *logPostFunction = ctx->GetFunctionById(params[3]);
     SourcePawn::IPluginFunction *flushFunction   = ctx->GetFunctionById(params[4]);
+    SourcePawn::IPluginFunction *destoryFunction = ctx->GetFunctionById(params[5]);
+    cell_t data = params[6];
+
+    SourceMod::IdentityToken_t *identity = ctx->GetIdentity();
+    SourceMod::Handle_t plugin = plsys->FindPluginByContext(ctx->GetContext())->GetMyHandle();
 
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction);
+    auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction, destoryFunction, plugin, data);
     auto logger = std::make_shared<log4sp::logger>(name, sink);
     auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
     if (!handle)
@@ -108,9 +108,8 @@ static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const c
 const sp_nativeinfo_t CallbackSinkNatives[] =
 {
     {"CallbackSink.CallbackSink",                   CallbackSink},
-    {"CallbackSink.SetLogCallback",                 CallbackSink_SetLogCallback},
-    {"CallbackSink.SetLogPostCallback",             CallbackSink_SetLogPostCallback},
-    {"CallbackSink.SetFlushCallback",               CallbackSink_SetFlushCallback},
+    {"CallbackSink.SetData",                        CallbackSink_SetData},
+    {"CallbackSink.GetData",                        CallbackSink_GetData},
     {"CallbackSink.CreateLogger",                   CallbackSink_CreateLogger},
 
     {nullptr,                                       nullptr}

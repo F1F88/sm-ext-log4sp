@@ -9,7 +9,7 @@
 #include <adt_array>
 #include <adt_trie>
 #include <profiler>
-#include <log4sp/sinks/callback_sink2>
+#include <log4sp/sinks/callback_sink>
 
 #define TEST_SINK_DATA_KEY_LOG_COUNT        "logCnt"
 #define TEST_SINK_DATA_KEY_LOG_DELAY        "logDelay"
@@ -48,11 +48,11 @@ enum struct sLogMessage
 methodmap TestSink < Sink
 {
     public TestSink() {
-        CallbackSink2 sink = new CallbackSink2(__Inner_OnLogCallback,
-                                               __Inner_OnLogPostCallback,
-                                               __Inner_OnFlushCallback,
-                                               __Inner_OnDestoryCallback,
-                                               new InnerTestSinkDataHelper());
+        CallbackSink sink = new CallbackSink(__Inner_OnLogCallback,
+                                             __Inner_OnLogPostCallback,
+                                             __Inner_OnFlushCallback,
+                                             __Inner_OnDestoryCallback,
+                                             new InnerTestSinkDataHelper());
         return view_as<TestSink>(sink);
     }
 
@@ -133,7 +133,7 @@ methodmap TestSink < Sink
 
     property InnerTestSinkDataHelper Data {
         public get() {
-            return view_as<InnerTestSinkDataHelper>(view_as<CallbackSink2>(this).GetData());
+            return view_as<InnerTestSinkDataHelper>(view_as<CallbackSink>(this).GetData());
         }
     }
 }

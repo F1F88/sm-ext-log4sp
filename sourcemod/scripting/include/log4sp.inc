@@ -12,7 +12,6 @@
 #include <log4sp/sinks/sink>
 #include <log4sp/sinks/basic_file_sink>
 #include <log4sp/sinks/callback_sink>
-#include <log4sp/sinks/callback_sink2>
 #include <log4sp/sinks/client_chat_all_sink>
 #include <log4sp/sinks/client_console_all_sink>
 #include <log4sp/sinks/daily_file_sink>
@@ -113,9 +112,8 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("BasicFileSink.CreateLogger");
 
     MarkNativeAsOptional("CallbackSink.CallbackSink");
-    MarkNativeAsOptional("CallbackSink.SetLogCallback");
-    MarkNativeAsOptional("CallbackSink.SetLogPostCallback");
-    MarkNativeAsOptional("CallbackSink.SetFlushCallback");
+    MarkNativeAsOptional("CallbackSink.SetData");
+    MarkNativeAsOptional("CallbackSink.GetData");
     MarkNativeAsOptional("CallbackSink.CreateLogger");
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");

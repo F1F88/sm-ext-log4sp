@@ -49,7 +49,6 @@ CopyFiles('sourcemod/scripting/include/log4sp/sinks', 'addons/sourcemod/scriptin
  [
    'basic_file_sink.inc',
    'callback_sink.inc',
-   'callback_sink2.inc',
    'client_chat_all_sink.inc',
    'client_console_all_sink.inc',
    'daily_file_sink.inc',

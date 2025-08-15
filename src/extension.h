@@ -121,7 +121,6 @@ extern const sp_nativeinfo_t    LoggerNatives[];
 extern const sp_nativeinfo_t    SinkNatives[];
 extern const sp_nativeinfo_t    BasicFileSinkNatives[];
 extern const sp_nativeinfo_t    CallbackSinkNatives[];
-extern const sp_nativeinfo_t    CallbackSink2Natives[];
 extern const sp_nativeinfo_t    DailyFileSinkNatives[];
 extern const sp_nativeinfo_t    RingBufferSinkNatives[];
 extern const sp_nativeinfo_t    RotatingFileSinkNatives[];

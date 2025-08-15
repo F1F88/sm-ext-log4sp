@@ -1,14 +1,10 @@
 #pragma once
 
-#include <tuple>
-
 #include "spdlog/sinks/base_sink.h"
-#include "spdlog/sinks/null_sink.h"
 
 #include "extension.h"
 
 #include "log4sp/common.h"
-#include "log4sp/adapter/sink_hanlder.h"
 
 
 namespace log4sp {
@@ -19,18 +15,18 @@ namespace sinks {
  * 且回调函数初始化完毕后无法修改，因此重新实现一个增强版
  * 初始化后仍支持修改似乎并不是一个特别好的特性，但目前没有遇到阻碍，暂时保留
  */
-class callback_sink2 final : public spdlog::sinks::base_sink<spdlog::details::null_mutex> {
+class callback_sink final : public spdlog::sinks::base_sink<spdlog::details::null_mutex> {
 public:
     using log_msg  = spdlog::details::log_msg;
     using pl_func  = SourcePawn::IPluginFunction;
     using handle_t = SourceMod::Handle_t;
 
-    callback_sink2(pl_func *log_fn,
-                   pl_func *log_post_fn,
-                   pl_func *flush_fn,
-                   pl_func *destory_fn,
-                   handle_t plugin_handle,
-                   cell_t data) noexcept
+    callback_sink(pl_func *log_fn,
+                  pl_func *log_post_fn,
+                  pl_func *flush_fn,
+                  pl_func *destory_fn,
+                  handle_t plugin_handle,
+                  cell_t data) noexcept
         : destory_function_(destory_fn), plugin_handle_(plugin_handle), data_(data) {
         if (log_fn) {
             // CallbackSink2Result (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data, char error[256]);
@@ -68,7 +64,7 @@ public:
         }
     }
 
-    ~callback_sink2() noexcept override {
+    ~callback_sink() noexcept override {
         if (log_callback_) {
             forwards->ReleaseForward(log_callback_);
             log_callback_ = nullptr;
@@ -118,11 +114,19 @@ private:
         }
 
         if (log_post_callback_) {
-            auto forward = log_post_callback_;
-            std::string formatted = to_pattern(log_msg);
+            using spdlog::memory_buf_t;
+            using spdlog::sinks::base_sink;
+            using Mutex = spdlog::details::null_mutex;
+
+            memory_buf_t formatted;
+            base_sink<Mutex>::formatter_->format(log_msg, formatted);
+            formatted.push_back('\0');
+
             std::array<char, 256> error;
             cell_t result = 0;
-            FWD_PUSH_STRING(formatted.c_str());                 // msg
+
+            auto forward = log_post_callback_;
+            FWD_PUSH_STRING(formatted.data());                  // msg
             FWD_PUSH_CELL(data_);                               // data
             FWD_PUSH_STRING_EX(error.data(), error.size(), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); // error
             FWD_EXECUTE(&result);
