@@ -230,7 +230,7 @@ inline auto handle_type_dispatch_adapter<Key, Object>::create_handle_type_(
     const handle_access *hndlAccess,
     identity_token_t *ident) noexcept -> handle_error
 {
-    using spdlog::fmt_lib::format;
+    static_assert(typeAccess->access[SourceMod::HandleAccess_Clone] & HANDLE_RESTRICT_IDENTITY);
 
     handle_error error = handle_error::HandleError_None;
     handle_type_ = handlesys->CreateType(name, this, parent, typeAccess, hndlAccess, ident, &error);
