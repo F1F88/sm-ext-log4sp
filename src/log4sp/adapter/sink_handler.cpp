@@ -8,9 +8,9 @@ void sink_handler::initialize() {
     SourceMod::HandleAccess access;
 
     // Init plugin create Sinks access
-    // 插件创建的 Sink Handle 可以被任意插件释放
+    // 插件创建的 Sink Handle 不允许克隆
     handlesys->InitAccessDefaults(nullptr, &access);
-    access.access[SourceMod::HandleAccess_Delete] = 0;
+    access.access[SourceMod::HandleAccess_Clone] |= HANDLE_RESTRICT_IDENTITY;
 
     auto error = instance().create_handle_type_(HANDLE_TYPE_NAME, NO_HANDLE_TYPE, nullptr, &access, myself->GetIdentity());
     if (error != SourceMod::HandleError_None)
