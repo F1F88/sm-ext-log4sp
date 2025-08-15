@@ -170,7 +170,7 @@ void TestFileCallback()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "rotate-file/file_callback.log");
 
-    Logger logger = RotatingFileSink.CreateLogger("test-file-logger", path, maxSize, 1, .openPre=OnOpenPre, .closePost=OnClosePost);
+    Logger logger = RotatingFileSink.CreateLogger("test-file-logger", path, maxSize, 1, .onOpen=OnOpenPre, .onClose=OnClosePost);
     delete logger;
 }
 

@@ -138,7 +138,7 @@ void TestFileCallback()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "daily/file_callback.log");
 
-    Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .openPre=OnOpenPre, .closePost=OnClosePost);
+    Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .onOpen=OnOpenPre, .onClose=OnClosePost);
     delete logger;
 }
 
