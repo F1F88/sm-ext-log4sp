@@ -219,7 +219,7 @@ void LogToSourceMod(const char[] msg, const char[] name, const char[] file, int 
 
 全局 logger 名为 "**`log4sp`**"，由拓展在加载时创建，其生命周期与拓展相同，且不会被任何插件释放。
 
-全局 logger 初始时仅有一个 ServerConsoleSink  类型的输出源，其余属性均为默认值。
+全局 logger 初始时没有输出源，其余属性均为默认值。
 
 ```sourcepawn
 Logger GetGlobalLogger()

@@ -38,15 +38,10 @@ void logger_handler::create_global_logger() {
     access.access[SourceMod::HandleAccess_Clone]  |= HANDLE_RESTRICT_IDENTITY;
     SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
 
-    try {
-        auto sink = std::make_shared<stdout_sink_st>();
-        auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG, sink);
-        auto handle = create_handle(logger, &security, &access, &error);
-        if (!handle)
-            throw std::runtime_error("error " + std::to_string(error));
-    } catch (const std::exception &ex) {
-        throw std::runtime_error("Failed to create global Logger Handle (reason: " + std::string(ex.what()) + ")");
-    }
+    auto logger = std::make_shared<log4sp::logger>(SMEXT_CONF_LOGTAG);
+    auto handle = create_handle(logger, &security, &access, &error);
+    if (!handle)
+        throw std::runtime_error("Failed to create global Logger Handle (error: " + std::to_string(error) + ")");
 }
 
 }       // namespace log4sp

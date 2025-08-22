@@ -224,7 +224,7 @@ void MyErrorHandler(const char[] msg, const char[] name, const char[] file, int 
 
 The global logger is named "**`log4sp`**" and is created by the extension when it is loaded. Its life cycle is the same as the extension and it will not be closed by any plugin.
 
-The global logger initially has only one sink of type ServerConsoleSink, and the rest of the properties are default values.
+The global logger initially has no sinks and all other properties are set to default values.
 
 ```sourcepawn
 Logger GetGlobalLogger()
