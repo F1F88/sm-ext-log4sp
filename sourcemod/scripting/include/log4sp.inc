@@ -72,9 +72,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.LogStackTrace");
     MarkNativeAsOptional("Logger.LogStackTraceEx");
     MarkNativeAsOptional("Logger.LogStackTraceAmxTpl");
-    MarkNativeAsOptional("Logger.ThrowError");
-    MarkNativeAsOptional("Logger.ThrowErrorEx");
-    MarkNativeAsOptional("Logger.ThrowErrorAmxTpl");
     MarkNativeAsOptional("Logger.Trace");
     MarkNativeAsOptional("Logger.TraceEx");
     MarkNativeAsOptional("Logger.TraceAmxTpl");

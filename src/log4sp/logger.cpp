@@ -86,48 +86,6 @@ void logger::log_stack_trace_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell
     }
 }
 
-// log with throw error
-void logger::throw_error(plugin_ctx *ctx, level_enum lvl, string_view_t msg) const noexcept {
-    using spdlog::fmt_lib::format;
-    assert(ctx && ctx->GetContext() && plsys->FindPluginByContext(ctx->GetContext()));  // ! FIXME: "ctx->GetContext()" 被标记为过时
-
-    ctx->ReportError(msg.data());               // 任何级别都不能跳过这一步
-
-    if (should_log(lvl)) {
-        log(ctx, lvl, format("Exception reported: {}", msg));
-        log(ctx, lvl, format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
-        for(const auto &stack : stack_trace_info_from(ctx)) {
-            log(ctx, lvl, stack);
-        }
-    }
-}
-
-void logger::throw_error(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
-    auto src = err_helper::src_helper(ctx);
-    try {
-        std::string msg = format_to_string(ctx, params, param);
-        throw_error(ctx, lvl, msg);
-    } catch (const std::exception &ex) {
-        ctx->ReportError(ex.what());            // 任何错误都不能跳过这一步
-        err_helper_.handle_ex(name_, src, ex);
-        return;
-    } catch (...) {
-        ctx->ReportError("unknown exception");  // 任何错误都不能跳过这一步
-        err_helper_.handle_unknown_ex(name_, src);
-        return;
-    }
-}
-
-void logger::throw_error_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept {
-    std::array<char, 2048> msg;
-    DetectExceptions eh(ctx);
-    smutils->FormatString(msg.data(), msg.size(), ctx, params, param);
-    if (eh.HasException()) {
-        return;
-    }
-    throw_error(ctx, lvl, msg.data());
-}
-
 void logger::set_formatter(std::unique_ptr<formatter> fmt) noexcept {
     for (auto it = sinks_.begin(); it != sinks_.end(); ++it) {
         if (std::next(it) == sinks_.end()) {

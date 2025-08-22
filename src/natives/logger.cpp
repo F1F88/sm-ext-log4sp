@@ -375,39 +375,6 @@ static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t 
     return 0;
 }
 
-static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = log4sp::num_to_lvl(params[2]);
-
-    char *msg;
-    CTX_LOCAL_TO_STRING(params[3], &msg);
-
-    logger->throw_error(ctx, lvl, msg);
-    return 0;
-}
-
-static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = log4sp::num_to_lvl(params[2]);
-
-    logger->throw_error(ctx, lvl, params, 3);
-    return 0;
-}
-
-static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = log4sp::num_to_lvl(params[2]);
-
-    logger->throw_error_amx_tpl(ctx, lvl, params, 3);
-    return 0;
-}
-
 static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
@@ -711,9 +678,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.LogStackTrace",                    LogStackTrace},
     {"Logger.LogStackTraceEx",                  LogStackTraceEx},
     {"Logger.LogStackTraceAmxTpl",              LogStackTraceAmxTpl},
-    {"Logger.ThrowError",                       ThrowError},
-    {"Logger.ThrowErrorEx",                     ThrowErrorEx},
-    {"Logger.ThrowErrorAmxTpl",                 ThrowErrorAmxTpl},
 
     {"Logger.Trace",                            Trace},
     {"Logger.TraceEx",                          TraceEx},

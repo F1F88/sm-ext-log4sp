@@ -70,11 +70,6 @@ public:
     void log_stack_trace(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
     void log_stack_trace_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
 
-    // log with throw error
-    void throw_error(plugin_ctx *ctx, level_enum lvl, string_view_t msg) const noexcept;
-    void throw_error(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
-    void throw_error_amx_tpl(plugin_ctx *ctx, level_enum lvl, const cell_t *params, unsigned int param) const noexcept;
-
     // return true if logging is enabled for the given level.
     [[nodiscard]]
     bool should_log(level_enum msg_level) const noexcept {
