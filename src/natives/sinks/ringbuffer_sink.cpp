@@ -42,7 +42,7 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
     auto amount = static_cast<size_t>(params[1]);
     sink_ptr sink = std::make_shared<ringbuffer_sink_st>(amount);
 
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);

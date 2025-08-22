@@ -44,7 +44,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     SourceMod::IdentityToken_t *identity = ctx->GetIdentity();
     SourceMod::Handle_t plugin = plsys->FindPluginByContext(ctx->GetContext())->GetMyHandle();
 
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto sink   = std::make_shared<callback_sink>(logFunction, logPostFunction, flushFunction, destoryFunction, plugin, data);
