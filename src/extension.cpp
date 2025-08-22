@@ -74,8 +74,6 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, ServerConsoleSinkNatives);
 
     sharesys->RegisterLibrary(myself, SMEXT_CONF_LOGTAG);
-
-    rootconsole->ConsolePrint("****************** log4sp.ext initialize complete! ******************");
     return true;
 }
 
