@@ -1,4 +1,6 @@
 #include <cassert>
+#include <type_traits>
+#include <limits>
 
 #include "log4sp/format.h"
 #include "am-float.h"
@@ -233,10 +235,13 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     }
 }
 
-static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
-    constexpr const int MAX_BINARY = 32;// FIXME: 如果 sourcemod 支持了 64 位 cell_t, 则此处需要修复
-    int iter = MAX_BINARY - 1;          // 从字符串末尾向前遍历, 以保证添加到输出时为正序
-    char text[MAX_BINARY];              // 值的二进制字符串
+template <typename T>
+inline static void AddBinary(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+    static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
+
+    constexpr const int MAX_BINARY = sizeof(T) * CHAR_BIT;
+    char text[MAX_BINARY];
+    int iter = MAX_BINARY - 1;
 
     do {
         text[iter--] = (val & 1) ? '1' : '0';
@@ -267,9 +272,16 @@ static void AddBinary(memory_buf_t &out, unsigned int val, unsigned int width, i
     }
 }
 
-static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
-    char text[10];
+template <typename T>
+inline static void AddUInt(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+    static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
+    static_assert(std::numeric_limits<std::uint32_t>::digits10 == 9);
+    static_assert(std::numeric_limits<std::uint64_t>::digits10 == 19);
+
+    constexpr unsigned int MAX_TEXT = std::numeric_limits<T>::digits10 + 1;
+    char text[MAX_TEXT];
     unsigned int digits = 0;
+
     do {
         text[digits++] = '0' + val % 10;
     } while (val /= 10);
@@ -298,12 +310,18 @@ static void AddUInt(memory_buf_t &out, unsigned int val, unsigned int width, int
     }
 }
 
-static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) noexcept {
-    char text[10];
+template <typename T>
+inline static void AddInt(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+    static_assert(std::is_integral_v<T>, "T must be an integral type");
+    static_assert(std::numeric_limits<std::int32_t>::digits10 == 9);
+    static_assert(std::numeric_limits<std::int64_t>::digits10 == 18);
+
+    constexpr unsigned int MAX_TEXT = std::numeric_limits<int64_t>::digits10 + 2;
+    char text[MAX_TEXT];
     unsigned int digits = 0;
 
     bool negative = val < 0;
-    unsigned int unsignedVal = negative ? std::abs(val) : val;
+    std::make_unsigned_t<T> unsignedVal = negative ? std::abs(val) : val;
 
     do {
         text[digits++] = '0' + unsignedVal % 10;
@@ -346,11 +364,16 @@ static void AddInt(memory_buf_t &out, int val, unsigned int width, int flags) no
     }
 }
 
-static void AddHex(memory_buf_t &out, unsigned int val, unsigned int width, int flags) noexcept {
+template <typename T>
+inline static void AddHex(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+    static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
+
     constexpr const char *hexUpper = "0123456789ABCDEF";
     constexpr const char *hexlower = "0123456789abcdef";
     const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexlower;
-    char text[8];
+
+    constexpr unsigned int MAX_TEXT = sizeof(T) * 16 / CHAR_BIT;
+    char text[MAX_TEXT];
     unsigned int digits = 0;
 
     do {
@@ -496,7 +519,7 @@ reswitch:
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
-                AddBinary(out, *value, width, flags);
+                AddBinary(out, static_cast<unsigned int>(*value), width, flags);
                 ++arg;
                 break;
             }
@@ -625,6 +648,57 @@ reswitch:
 
                 AddHex(out, static_cast<unsigned int>(*value), width, flags);
                 ++arg;
+                break;
+            }
+        case 'l': {
+                CHECK_ARGS(0);
+                ch = *fmt++;
+
+                switch (ch) {
+                case 'b': {
+                        cell_t *value;
+                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
+                        AddBinary(out, *reinterpret_cast<std::uint64_t*>(value), width, flags);
+                        ++arg;
+                        break;
+                    }
+                case 'd':
+                case 'i': {
+                        cell_t *value;
+                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
+                        AddInt(out, *reinterpret_cast<std::int64_t*>(value), width, flags);
+                        ++arg;
+                        break;
+                    }
+                case 'u': {
+                        cell_t *value;
+                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
+                        AddUInt(out, *reinterpret_cast<std::uint64_t*>(value), width, flags);
+                        ++arg;
+                        break;
+                    }
+                case 'X': {
+                        cell_t *value;
+                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
+                        AddHex(out, *reinterpret_cast<std::uint64_t*>(value), width, flags | UPPERDIGITS);
+                        ++arg;
+                        break;
+                    }
+                case 'x': {
+                        cell_t *value;
+                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+
+                        AddHex(out, *reinterpret_cast<std::uint64_t*>(value), width, flags);
+                        ++arg;
+                        break;
+                    }
+                default:
+                    THROW_ERROR("{}", "Invalid formatter. Only %lb, %ld, %li, %lu, %lX, %lx are allowed.");
+                }
                 break;
             }
         case '%': {
