@@ -144,7 +144,8 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     }
 
     if (ke::IsInfinite(static_cast<float>(fval))) {
-        AddString(out, "Inf", width, prec, flags);
+        const char *str = ((fval < 0.0f) ? "-Inf" : "Inf");
+        AddString(out, str, width, prec, flags);
         return;
     }
 

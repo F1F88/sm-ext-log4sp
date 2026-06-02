@@ -666,9 +666,11 @@ void TestFloatAmxTpl()
     logger.InfoAmxTpl("'%f'", 0.0 / 0.0);
     AssertStrEq("'%f' - NaN", sink.DrainLastMsgFast().msg, "'NaN'");
 
-    // https://github.com/alliedmodders/sourcemod/pull/2324
-    // logger.InfoAmxTpl("'%f'", 1.0 / 0.0);
-    // AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'Inf'");
+    logger.InfoAmxTpl("'%f'", 1.0 / 0.0);
+    AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'Inf'");
+
+    logger.InfoAmxTpl("'%f'", -1.0 / 0.0);
+    AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'-Inf'");
 
     logger.Close();
     sink.Close();
@@ -1137,6 +1139,9 @@ void TestFloatEx()
 
     logger.InfoEx("'%f'", 1.0 / 0.0);
     AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'Inf'");
+
+    logger.InfoEx("'%f'", -1.0 / 0.0);
+    AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'-Inf'");
 
     logger.Close();
     sink.Close();
