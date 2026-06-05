@@ -1,286 +1,1853 @@
+#pragma semicolon 1
+#pragma newdecls required
+
 #include <sourcemod>
 #include <profiler>
 
-#undef REQUIRE_EXTENSIONS
-#include <log4sp>
+enum
+{
+    CmdFuncs_LogMessage     = (1 << 0),
+    CmdFuncs_LogToFile      = (1 << 1),
+    CmdFuncs_LogToFileEx    = (1 << 2),
+    CmdFuncs_PrintToServer  = (1 << 3),
+    CmdFuncs_All            = (~0)
+};
 
-#pragma semicolon 1
-#pragma newdecls required
+
+Profiler g_hProfiler = null;
+int      g_iBenchRound = 0;
 
 
 public void OnPluginStart()
 {
     LoadTranslations("common.phrases");
 
-    RegConsoleCmd("sm_log4sp_bench_logmessage",     CMD_Bench_LogMessage);
-    RegConsoleCmd("sm_log4sp_bench_logtofile",      CMD_Bench_LogToFile);
-    RegConsoleCmd("sm_log4sp_bench_logtofileEx",    CMD_Bench_LogToFileEx);
-    RegConsoleCmd("sm_log4sp_bench_printtoserver",  CMD_Bench_PrintToServer);
+    RegConsoleCmd("sm_bench_sm_logging", CMD_Bench);
+
+    g_hProfiler = new Profiler();
+
+    BenchDB.Initialize();
 }
 
-Action CMD_Bench_LogMessage(int client, int args)
+public void OnPluginEnd()
 {
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
-    }
+    BenchDB.Destroy();
+}
 
-    int logEcho = 0;
-    if (args >= 2)
-    {
-        logEcho = GetCmdArgInt(2);
-    }
+
+Action CMD_Bench(int client, int args)
+{
+    // sm_bench_sm_logging <calls> <functions> <fmts>
+    //    calls: Integer - Default 1_000_000
+    //    funcs: Integer - Default All(~0)
+    //       LogMessage     1
+    //       LogToFile      2
+    //       LogToFileEx    4
+    //       PrintToServer  8
+    //    fmts: Boolean - Default false
+    //       true           all
+    //       false          mock
+    //    echo: Boolean - Default false
+    //       true           logecho
+    //       false          silent
+    int calls = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
+    int funcs = (args >= 2) ? GetCmdArgInt(2) : CmdFuncs_All;
+    bool fmts = (args >= 3) ? (!!GetCmdArgInt(3)) : false;
+    bool echo = (args >= 4) ? (!!GetCmdArgInt(4)) : false;
+
     int val = FindConVar("sv_logecho").IntValue;
-    FindConVar("sv_logecho").SetInt(logEcho); // 如果为 1, 运行时长会大幅增加
+    FindConVar("sv_logecho").SetInt(echo ? 1 : 0); // 如果为 1, 运行时长会大幅增加
 
-    // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
-    for (int i = 0; i < iters; ++i)
-    {
-        switch (i & 31)
-        {
-            case 0:     LogMessage("|  0 |    010d:    %010d |    10d:    %10d | d: %d |", i, -i, i);
-            case 1:     LogMessage("|  1 |   -010i:   %-010i |   -10i:   %-10i | i: %i |", -i, i, -i);
-            case 2:     LogMessage("|  2 |    010u:    %010u |    10u:    %10u | u: %d |", i, -i, i);
-            case 3:     LogMessage("|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
-            case 4:     LogMessage("|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
-            case 5:     LogMessage("|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
-            case 6:     LogMessage("|  6 |     34b:     %34b |      b:      %b |", float(i), float(-i));
-            case 7:     LogMessage("|  7 |    034b:    %034b |      b:      %b |", float(-i), float(i));
-            case 8:     LogMessage("|  8 |    -34b:    %-34b |      b:      %b |", float(i), float(-i));
-            case 9:     LogMessage("|  9 |   -034b:   %-034b |      b:      %b |", float(-i), float(i));
-            case 10:    LogMessage("| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
-            case 11:    LogMessage("| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
-            case 12:    LogMessage("| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
-            case 14:    LogMessage("| 14 |    0.3f:    %0.3f |    .3f:    %.3f |", float(-i), float(i));
-            case 15:    LogMessage("| 15 |   -0.3f:   %-0.3f |   -.3f:   %0.3f |", float(i), float(-i));
-            case 16:    LogMessage("| 16 |  010.3f:  %010.3f |  10.3f:  %10.3f |", float(-i), float(i));
-            case 17:    LogMessage("| 17 | -010.3f: %-010.3f | -10.3f: %-10.3f |", float(i), float(-i));
-            case 18:    LogMessage("| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
-            case 19:    LogMessage("| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
-            case 20:    LogMessage("| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
-            case 21:    LogMessage("| 21 |  16.10s:  %16.10s |   .10s:   %.10f |", "some messages", "some messages");
-            case 22:    LogMessage("| 22 | -16.10s: %-16.10s |  -.10s:  %-.10f |", "some messages", "some messages");
-            case 23:    LogMessage("| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
-            case 24:    LogMessage("| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
-            case 25:    LogMessage("| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
-            case 26:    LogMessage("| 26 |  20.16t:  %20.16t | 1 N  t:      %t |", "See console for output", "Chat to admins", client);
-            case 27:    LogMessage("| 27 |   -.16t:   %-.16t | 2 N  t:      %t |", "See console for output", "Private say to", client, client);
-            case 28:    LogMessage("| 28 | -20.16t: %-20.16t | 2 s  t:      %t |", "See console for output", "Vote Select", "somebody", "somebuttom");
-            case 29:    LogMessage("| 29 |     16T:     %16T |  0   T:      %T |", "See console for output", client, "See console for output", client);
-            case 30:    LogMessage("| 30 |    -16T:    %-16T | 1 d  T:      %T |", "See console for output", client, "Vote Delay Seconds", client, 234567890);
-            case 31:    LogMessage("| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
-        }
-    }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
-
-    // 输出结果
-    PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogMessage", iters, delta, RoundToFloor(iters / delta));
+    BenchAll(calls, funcs, fmts);
 
     // 恢复原始值
     FindConVar("sv_logecho").SetInt(val);
     return Plugin_Handled;
 }
 
-Action CMD_Bench_LogToFile(int client, int args)
+
+void BenchAll(int calls, int funcs, bool fmts)
 {
-    int iters = 1_000_000;
-    if (args >= 1)
+    g_iBenchRound++;
+
+    if (funcs & CmdFuncs_LogMessage)
     {
-        iters = GetCmdArgInt(1);
+        char filename[PLATFORM_MAX_PATH];
+        FormatTime(filename, sizeof(filename), "addons/sourcemod/logs/L%Y%m%d.log");
+
+        if (FileExists(filename))
+            DeleteFile(filename);
+
+        BenchLogMessage(calls, fmts);
     }
 
-    int logEcho = 0;
-    if (args >= 2)
+    if (funcs & CmdFuncs_LogToFile)
     {
-        logEcho = GetCmdArgInt(2);
-    }
-    int val = FindConVar("sv_logecho").IntValue;
-    FindConVar("sv_logecho").SetInt(logEcho); // 如果为 1, 运行时长会大幅增加
+        char filename[PLATFORM_MAX_PATH];
+        BuildPath(Path_SM, filename, sizeof(filename), "logs/log-to-file.log");
 
-    // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
-    for (int i = 0; i < iters; ++i)
-    {
-        switch (i & 31)
-        {
-            case 0:     LogToFile("logs/benchmark/file-Z.log", "|  0 |    010d:    %010d |    10d:    %10d | d: %d |", i, -i, i);
-            case 1:     LogToFile("logs/benchmark/file-Z.log", "|  1 |   -010i:   %-010i |   -10i:   %-10i | i: %i |", -i, i, -i);
-            case 2:     LogToFile("logs/benchmark/file-Z.log", "|  2 |    010u:    %010u |    10u:    %10u | u: %d |", i, -i, i);
-            case 3:     LogToFile("logs/benchmark/file-Z.log", "|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
-            case 4:     LogToFile("logs/benchmark/file-Z.log", "|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
-            case 5:     LogToFile("logs/benchmark/file-Z.log", "|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
-            case 6:     LogToFile("logs/benchmark/file-Z.log", "|  6 |     34b:     %34b |      b:      %b |", float(i), float(-i));
-            case 7:     LogToFile("logs/benchmark/file-Z.log", "|  7 |    034b:    %034b |      b:      %b |", float(-i), float(i));
-            case 8:     LogToFile("logs/benchmark/file-Z.log", "|  8 |    -34b:    %-34b |      b:      %b |", float(i), float(-i));
-            case 9:     LogToFile("logs/benchmark/file-Z.log", "|  9 |   -034b:   %-034b |      b:      %b |", float(-i), float(i));
-            case 10:    LogToFile("logs/benchmark/file-Z.log", "| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
-            case 11:    LogToFile("logs/benchmark/file-Z.log", "| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
-            case 12:    LogToFile("logs/benchmark/file-Z.log", "| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
-            case 14:    LogToFile("logs/benchmark/file-Z.log", "| 14 |    0.3f:    %0.3f |    .3f:    %.3f |", float(-i), float(i));
-            case 15:    LogToFile("logs/benchmark/file-Z.log", "| 15 |   -0.3f:   %-0.3f |   -.3f:   %0.3f |", float(i), float(-i));
-            case 16:    LogToFile("logs/benchmark/file-Z.log", "| 16 |  010.3f:  %010.3f |  10.3f:  %10.3f |", float(-i), float(i));
-            case 17:    LogToFile("logs/benchmark/file-Z.log", "| 17 | -010.3f: %-010.3f | -10.3f: %-10.3f |", float(i), float(-i));
-            case 18:    LogToFile("logs/benchmark/file-Z.log", "| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
-            case 19:    LogToFile("logs/benchmark/file-Z.log", "| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
-            case 20:    LogToFile("logs/benchmark/file-Z.log", "| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
-            case 21:    LogToFile("logs/benchmark/file-Z.log", "| 21 |  16.10s:  %16.10s |   .10s:   %.10f |", "some messages", "some messages");
-            case 22:    LogToFile("logs/benchmark/file-Z.log", "| 22 | -16.10s: %-16.10s |  -.10s:  %-.10f |", "some messages", "some messages");
-            case 23:    LogToFile("logs/benchmark/file-Z.log", "| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
-            case 24:    LogToFile("logs/benchmark/file-Z.log", "| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
-            case 25:    LogToFile("logs/benchmark/file-Z.log", "| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
-            case 26:    LogToFile("logs/benchmark/file-Z.log", "| 26 |  20.16t:  %20.16t | 1 N  t:      %t |", "See console for output", "Chat to admins", client);
-            case 27:    LogToFile("logs/benchmark/file-Z.log", "| 27 |   -.16t:   %-.16t | 2 N  t:      %t |", "See console for output", "Private say to", client, client);
-            case 28:    LogToFile("logs/benchmark/file-Z.log", "| 28 | -20.16t: %-20.16t | 2 s  t:      %t |", "See console for output", "Vote Select", "somebody", "somebuttom");
-            case 29:    LogToFile("logs/benchmark/file-Z.log", "| 29 |     16T:     %16T |  0   T:      %T |", "See console for output", client, "See console for output", client);
-            case 30:    LogToFile("logs/benchmark/file-Z.log", "| 30 |    -16T:    %-16T | 1 d  T:      %T |", "See console for output", client, "Vote Delay Seconds", client, 234567890);
-            case 31:    LogToFile("logs/benchmark/file-Z.log", "| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
-        }
-    }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
+        if (FileExists(filename))
+            DeleteFile(filename);
 
-    // 输出结果
-    PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogToFile", iters, delta, RoundToFloor(iters / delta));
-
-    // 恢复原始值
-    FindConVar("sv_logecho").SetInt(val);
-    return Plugin_Handled;
-}
-
-Action CMD_Bench_LogToFileEx(int client, int args)
-{
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
+        BenchLogToFile(filename, calls, fmts);
     }
 
-    int logEcho = 0;
-    if (args >= 2)
+    if (funcs & CmdFuncs_LogToFileEx)
     {
-        logEcho = GetCmdArgInt(2);
-    }
-    int val = FindConVar("sv_logecho").IntValue;
-    FindConVar("sv_logecho").SetInt(logEcho); // 如果为 1, 运行时长会大幅增加
+        char filename[PLATFORM_MAX_PATH];
+        BuildPath(Path_SM, filename, sizeof(filename), "logs/log-to-file-ex.log");
 
-    // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
-    for (int i = 0; i < iters; ++i)
-    {
-        switch (i & 31)
-        {
-            case 0:     LogToFileEx("logs/benchmark/file-Y.log", "|  0 |    010d:    %010d |    10d:    %10d | d: %d |", i, -i, i);
-            case 1:     LogToFileEx("logs/benchmark/file-Y.log", "|  1 |   -010i:   %-010i |   -10i:   %-10i | i: %i |", -i, i, -i);
-            case 2:     LogToFileEx("logs/benchmark/file-Y.log", "|  2 |    010u:    %010u |    10u:    %10u | u: %d |", i, -i, i);
-            case 3:     LogToFileEx("logs/benchmark/file-Y.log", "|  3 |   -010u:   %-010u |   -10u:   %-10u | u: %i |", -i, i, -i);
-            case 4:     LogToFileEx("logs/benchmark/file-Y.log", "|  4 |    010x:    %010x |    10x:    %10x | x: %x |", i, -i, i);
-            case 5:     LogToFileEx("logs/benchmark/file-Y.log", "|  5 |   -010x:   %-010x |   -10x:   %-10x | x: %x |", -i, i, -i);
-            case 6:     LogToFileEx("logs/benchmark/file-Y.log", "|  6 |     34b:     %34b |      b:      %b |", float(i), float(-i));
-            case 7:     LogToFileEx("logs/benchmark/file-Y.log", "|  7 |    034b:    %034b |      b:      %b |", float(-i), float(i));
-            case 8:     LogToFileEx("logs/benchmark/file-Y.log", "|  8 |    -34b:    %-34b |      b:      %b |", float(i), float(-i));
-            case 9:     LogToFileEx("logs/benchmark/file-Y.log", "|  9 |   -034b:   %-034b |      b:      %b |", float(-i), float(i));
-            case 10:    LogToFileEx("logs/benchmark/file-Y.log", "| 10 |     10f:     %10f |      f:      %f |", float(i), float(-i));
-            case 11:    LogToFileEx("logs/benchmark/file-Y.log", "| 11 |    010f:    %010f |      f:      %f |", float(-i), float(i));
-            case 12:    LogToFileEx("logs/benchmark/file-Y.log", "| 12 |   -010f:   %-010f |   -10f:   %-10f |", float(i), float(-i));
-            case 14:    LogToFileEx("logs/benchmark/file-Y.log", "| 14 |    0.3f:    %0.3f |    .3f:    %.3f |", float(-i), float(i));
-            case 15:    LogToFileEx("logs/benchmark/file-Y.log", "| 15 |   -0.3f:   %-0.3f |   -.3f:   %0.3f |", float(i), float(-i));
-            case 16:    LogToFileEx("logs/benchmark/file-Y.log", "| 16 |  010.3f:  %010.3f |  10.3f:  %10.3f |", float(-i), float(i));
-            case 17:    LogToFileEx("logs/benchmark/file-Y.log", "| 17 | -010.3f: %-010.3f | -10.3f: %-10.3f |", float(i), float(-i));
-            case 18:    LogToFileEx("logs/benchmark/file-Y.log", "| 18 | %% | %c | %c | %c | %c | %c | %c | %c |", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
-            case 19:    LogToFileEx("logs/benchmark/file-Y.log", "| 19 |     10s:     %10s |      s:      %s |", "some messages", "some messages");
-            case 20:    LogToFileEx("logs/benchmark/file-Y.log", "| 20 |    -10s:    %-10s |      s:      %s |", "some messages", "some string messages");
-            case 21:    LogToFileEx("logs/benchmark/file-Y.log", "| 21 |  16.10s:  %16.10s |   .10s:   %.10f |", "some messages", "some messages");
-            case 22:    LogToFileEx("logs/benchmark/file-Y.log", "| 22 | -16.10s: %-16.10s |  -.10s:  %-.10f |", "some messages", "some messages");
-            case 23:    LogToFileEx("logs/benchmark/file-Y.log", "| 23 |     16t:     %16t |  0   t:      %t |", "See console for output", "See console for output");
-            case 24:    LogToFileEx("logs/benchmark/file-Y.log", "| 24 |    -16t:    %-16t | 1 d  t:      %t |", "See console for output", "Vote Delay Seconds", 234567890);
-            case 25:    LogToFileEx("logs/benchmark/file-Y.log", "| 25 |    .16t:    %.16t | 1 s  t:      %t |", "See console for output", "Unable to find cvar", "some_cvar");
-            case 26:    LogToFileEx("logs/benchmark/file-Y.log", "| 26 |  20.16t:  %20.16t | 1 N  t:      %t |", "See console for output", "Chat to admins", client);
-            case 27:    LogToFileEx("logs/benchmark/file-Y.log", "| 27 |   -.16t:   %-.16t | 2 N  t:      %t |", "See console for output", "Private say to", client, client);
-            case 28:    LogToFileEx("logs/benchmark/file-Y.log", "| 28 | -20.16t: %-20.16t | 2 s  t:      %t |", "See console for output", "Vote Select", "somebody", "somebuttom");
-            case 29:    LogToFileEx("logs/benchmark/file-Y.log", "| 29 |     16T:     %16T |  0   T:      %T |", "See console for output", client, "See console for output", client);
-            case 30:    LogToFileEx("logs/benchmark/file-Y.log", "| 30 |    -16T:    %-16T | 1 d  T:      %T |", "See console for output", client, "Vote Delay Seconds", client, 234567890);
-            case 31:    LogToFileEx("logs/benchmark/file-Y.log", "| 31 | -20.16T: %-20.16T | 2 s  T:      %T |", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
-        }
-    }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
+        if (FileExists(filename))
+            DeleteFile(filename);
 
-    // 输出结果
-    PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "LogToFileEx", iters, delta, RoundToFloor(iters / delta));
-
-    // 恢复原始值
-    FindConVar("sv_logecho").SetInt(val);
-    return Plugin_Handled;
-}
-
-Action CMD_Bench_PrintToServer(int client, int args)
-{
-    int iters = 1_000_000;
-    if (args >= 1)
-    {
-        iters = GetCmdArgInt(1);
+        BenchLogToFileEx(filename, calls, fmts);
     }
 
-    // 测速
-    Profiler profiler = new Profiler();
-    profiler.Start();
-    for (int i = 0; i < iters; ++i)
-    {
-        switch (i & 31)
-        {
-            case 0:     PrintToServer("|  0 | [%s] |     010d:    %010d |    10d:    %10d | d: %d |", "name-X", i, -i, i);
-            case 1:     PrintToServer("|  1 | [%s] |    -010i:   %-010i |   -10i:   %-10i | i: %i |", "name-X", -i, i, -i);
-            case 2:     PrintToServer("|  2 | [%s] |     010u:    %010u |    10u:    %10u | u: %d |", "name-X", i, -i, i);
-            case 3:     PrintToServer("|  3 | [%s] |    -010u:   %-010u |   -10u:   %-10u | u: %i |", "name-X", -i, i, -i);
-            case 4:     PrintToServer("|  4 | [%s] |     010x:    %010x |    10x:    %10x | x: %x |", "name-X", i, -i, i);
-            case 5:     PrintToServer("|  5 | [%s] |    -010x:   %-010x |   -10x:   %-10x | x: %x |", "name-X", -i, i, -i);
-            case 6:     PrintToServer("|  6 | [%s] |      34b:     %34b |      b:      %b |", "name-X", float(i), float(-i));
-            case 7:     PrintToServer("|  7 | [%s] |     034b:    %034b |      b:      %b |", "name-X", float(-i), float(i));
-            case 8:     PrintToServer("|  8 | [%s] |     -34b:    %-34b |      b:      %b |", "name-X", float(i), float(-i));
-            case 9:     PrintToServer("|  9 | [%s] |    -034b:   %-034b |      b:      %b |", "name-X", float(-i), float(i));
-            case 10:    PrintToServer("| 10 | [%s] |      10f:     %10f |      f:      %f |", "name-X", float(i), float(-i));
-            case 11:    PrintToServer("| 11 | [%s] |     010f:    %010f |      f:      %f |", "name-X", float(-i), float(i));
-            case 12:    PrintToServer("| 12 | [%s] |    -010f:   %-010f |   -10f:   %-10f |", "name-X", float(i), float(-i));
-            case 14:    PrintToServer("| 14 | [%s] |     0.3f:    %0.3f |    .3f:    %.3f |", "name-X", float(-i), float(i));
-            case 15:    PrintToServer("| 15 | [%s] |    -0.3f:   %-0.3f |   -.3f:   %0.3f |", "name-X", float(i), float(-i));
-            case 16:    PrintToServer("| 16 | [%s] |   010.3f:  %010.3f |  10.3f:  %10.3f |", "name-X", float(-i), float(i));
-            case 17:    PrintToServer("| 17 | [%s] |  -010.3f: %-010.3f | -10.3f: %-10.3f |", "name-X", float(i), float(-i));
-            case 18:    PrintToServer("| 18 | [%s] |  %% | %c | %c | %c | %c | %c | %c | %c |", "name-X", 'a', 'b', 'c', 'd', 'e', 'f', 'g');
-            case 19:    PrintToServer("| 19 | [%s] |      10s:     %10s |      s:      %s |", "name-X", "some messages", "some messages");
-            case 20:    PrintToServer("| 20 | [%s] |     -10s:    %-10s |      s:      %s |", "name-X", "some messages", "some string messages");
-            case 21:    PrintToServer("| 21 | [%s] |   16.10s:  %16.10s |   .10s:   %.10f |", "name-X", "some messages", "some messages");
-            case 22:    PrintToServer("| 22 | [%s] |  -16.10s: %-16.10s |  -.10s:  %-.10f |", "name-X", "some messages", "some messages");
-            case 23:    PrintToServer("| 23 | [%s] |      16t:     %16t |  0   t:      %t |", "name-X", "See console for output", "See console for output");
-            case 24:    PrintToServer("| 24 | [%s] |     -16t:    %-16t | 1 d  t:      %t |", "name-X", "See console for output", "Vote Delay Seconds", 234567890);
-            case 25:    PrintToServer("| 25 | [%s] |     .16t:    %.16t | 1 s  t:      %t |", "name-X", "See console for output", "Unable to find cvar", "some_cvar");
-            case 26:    PrintToServer("| 26 | [%s] |   20.16t:  %20.16t | 1 N  t:      %t |", "name-X", "See console for output", "Chat to admins", client);
-            case 27:    PrintToServer("| 27 | [%s] |    -.16t:   %-.16t | 2 N  t:      %t |", "name-X", "See console for output", "Private say to", client, client);
-            case 28:    PrintToServer("| 28 | [%s] |  -20.16t: %-20.16t | 2 s  t:      %t |", "name-X", "See console for output", "Vote Select", "somebody", "somebuttom");
-            case 29:    PrintToServer("| 29 | [%s] |      16T:     %16T |  0   T:      %T |", "name-X", "See console for output", client, "See console for output", client);
-            case 30:    PrintToServer("| 30 | [%s] |     -16T:    %-16T | 1 d  T:      %T |", "name-X", "See console for output", client, "Vote Delay Seconds", client, 234567890);
-            case 31:    PrintToServer("| 31 | [%s] |  -20.16T: %-20.16T | 2 s  T:      %T |", "name-X", "See console for output", client, "Vote Select", client, "somebody", "somebuttom");
-        }
-    }
-    profiler.Stop();
-    float delta = profiler.Time;
-    delete profiler;
+    if (funcs & CmdFuncs_PrintToServer)
+        BenchPrintToServer(calls, fmts);
 
-    // 输出结果
-    PrintToServer("");
-    PrintToServer("[benchmark] %13s | Iters %7d | Elapsed %6.3f secs %9d/sec", "PrintToServer", iters, delta, RoundToFloor(iters / delta));
-    return Plugin_Handled;
+    BenchDB.Instance().ExportToFile();
+    BenchDB.Instance().PrintToServer();
 }
 
 
+void BenchLogMessage(int calls, bool fmts)
+{
+    // mock
+    {
+        int value = 777;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage("Hello logger: msg number %d", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", "mock", calls, g_hProfiler.Time);
+    }
+
+    if (!fmts)
+        return;
+
+    // Binary
+    {
+        char fmt[] = "%b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer
+    {
+        char fmt[] = "%d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer
+    {
+        char fmt[] = "%u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Float
+    {
+        char fmt[] = "%f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%6.3f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Special
+    {
+        char fmt[] = "%L";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%N";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%E";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // String
+    {
+        char fmt[] = "%s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%30s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Translation
+    LoadTranslations("common.phrases");
+    {
+        char fmt[] = "%t";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%T";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value, LANG_SERVER);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex
+    {
+        char fmt[] = "%X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage("%X", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+#if defined SM_INT64_SUPPORTED
+    // Binary 64
+    {
+        char fmt[] = "%lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer 64
+    {
+        char fmt[] = "%ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer 64
+    {
+        char fmt[] = "%lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex 64
+    {
+        char fmt[] = "%lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogMessage(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogMessage", fmt, calls, g_hProfiler.Time);
+    }
+#endif      // SM_INT64_SUPPORTED
+}
+
+
+void BenchLogToFile(const char[] filename, int calls, bool fmts)
+{
+    // mock
+    {
+        int value = 777;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, "Hello logger: msg number %d", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", "mock", calls, g_hProfiler.Time);
+    }
+
+    if (!fmts)
+        return;
+
+    // Binary
+    {
+        char fmt[] = "%b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer
+    {
+        char fmt[] = "%d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer
+    {
+        char fmt[] = "%u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Float
+    {
+        char fmt[] = "%f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%6.3f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Special
+    {
+        char fmt[] = "%L";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%N";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%E";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // String
+    {
+        char fmt[] = "%s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%30s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Translation
+    LoadTranslations("common.phrases");
+    {
+        char fmt[] = "%t";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%T";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value, LANG_SERVER);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex
+    {
+        char fmt[] = "%X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, "%X", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+#if defined SM_INT64_SUPPORTED
+    // Binary 64
+    {
+        char fmt[] = "%lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer 64
+    {
+        char fmt[] = "%ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer 64
+    {
+        char fmt[] = "%lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex 64
+    {
+        char fmt[] = "%lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFile(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFile", fmt, calls, g_hProfiler.Time);
+    }
+#endif      // SM_INT64_SUPPORTED
+}
+
+void BenchLogToFileEx(const char[] filename, int calls, bool fmts)
+{
+    // mock
+    {
+        int value = 777;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, "Hello logger: msg number %d", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", "mock", calls, g_hProfiler.Time);
+    }
+
+    if (!fmts)
+        return;
+
+    // Binary
+    {
+        char fmt[] = "%b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer
+    {
+        char fmt[] = "%d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer
+    {
+        char fmt[] = "%u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Float
+    {
+        char fmt[] = "%f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%6.3f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Special
+    {
+        char fmt[] = "%L";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%N";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%E";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // String
+    {
+        char fmt[] = "%s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%30s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Translation
+    LoadTranslations("common.phrases");
+    {
+        char fmt[] = "%t";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%T";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value, LANG_SERVER);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex
+    {
+        char fmt[] = "%X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, "%X", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+#if defined SM_INT64_SUPPORTED
+    // Binary 64
+    {
+        char fmt[] = "%lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer 64
+    {
+        char fmt[] = "%ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer 64
+    {
+        char fmt[] = "%lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex 64
+    {
+        char fmt[] = "%lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            LogToFileEx(filename, fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert("LogToFileEx", fmt, calls, g_hProfiler.Time);
+    }
+#endif      // SM_INT64_SUPPORTED
+}
+
+void BenchPrintToServer(int calls, bool fmts)
+{
+    char name[] = "PrintToServer";
+
+    // mock
+    {
+        int value = 777;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer("Hello logger: msg number %d", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, "mock", calls, g_hProfiler.Time);
+    }
+
+    if (!fmts)
+        return;
+
+    // Binary
+    {
+        char fmt[] = "%b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032b";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer
+    {
+        char fmt[] = "%d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010d";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer
+    {
+        char fmt[] = "%u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010u";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Float
+    {
+        char fmt[] = "%f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%6.3f";
+        float value = 3.1415926;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Special
+    {
+        char fmt[] = "%L";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%N";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%E";
+        int value = 0;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // String
+    {
+        char fmt[] = "%s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%30s";
+        char value[] = "some message...";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Translation
+    LoadTranslations("common.phrases");
+    {
+        char fmt[] = "%t";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%T";
+        char value[] = "Unable to target";
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value, LANG_SERVER);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex
+    {
+        char fmt[] = "%X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer("%X", value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08X";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08x";
+        int value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+#if defined SM_INT64_SUPPORTED
+    // Binary 64
+    {
+        char fmt[] = "%lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%032lb";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Integer 64
+    {
+        char fmt[] = "%ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010ld";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Unsigned Integer 64
+    {
+        char fmt[] = "%lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%010lu";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+
+    // Hex 64
+    {
+        char fmt[] = "%lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lX";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+    {
+        char fmt[] = "%08lx";
+        int64 value = 1234567;
+        g_hProfiler.Start();
+        for (int i = 0; i < calls; ++i)
+        {
+            PrintToServer(fmt, value);
+        }
+        g_hProfiler.Stop();
+        BenchDB.Instance().Insert(name, fmt, calls, g_hProfiler.Time);
+    }
+#endif      // SM_INT64_SUPPORTED
+}
+
+
+#define BENCH_DB_CONF   "storage-local"
+#define BENCH_DB_TABLE  "bench_sm_logging"
+
+static Database         __hDatabase = null;
+
+enum struct BenchData
+{
+    int   num;      // round OR runs
+    char  func[128];
+    char  fmt[128];
+    int   calls;
+    float delta;
+}
+
+methodmap BenchDB
+{
+    public void CreateTable() {
+        if (!SQL_FastQuery(this.db, "CREATE TABLE " ... BENCH_DB_TABLE ... " (round INTEGER NOT NULL, func VARCHAR(128) NOT NULL, fmt VARCHAR(128), calls INTEGER NOT NULL, delta REAL NOT NULL);")) {
+            char error[256];
+            SQL_GetError(this.db, error, sizeof(error));
+            ThrowError("Create table error %s.", error);
+        }
+    }
+
+    // public void DeleteTable() {
+    //     if (!SQL_FastQuery(this.db, "DELETE TABLE " ... BENCH_DB_TABLE ... ";")) {
+    //         char error[256];
+    //         SQL_GetError(this.db, error, sizeof(error));
+    //         ThrowError("Delete table error %s.", error);
+    //     }
+    // }
+
+    public void DropTable() {
+        if (!SQL_FastQuery(this.db, "DROP TABLE IF EXISTS " ... BENCH_DB_TABLE ... ";")) {
+            char error[256];
+            SQL_GetError(this.db, error, sizeof(error));
+            ThrowError("Drop table error %s.", error);
+        }
+    }
+
+    // <round, func, fmt, calls, delta>
+    public DBResultSet SelectList() {
+        // 所有测试的完整结果
+        DBResultSet result = SQL_Query(this.db, "SELECT round, func, COALESCE(fmt, 'null'), calls, delta FROM " ... BENCH_DB_TABLE);
+        if (!result) {
+            char error[256];
+            SQL_GetError(this.db, error, sizeof(error));
+            ThrowError("SelectList error %s.", error);
+        }
+        return result;
+    }
+
+    // DBResultSet<round, func, fmt, calls, delta>
+    public DBResultSet SelectMaxRound() {
+        // 最近一次测试的完整结果
+        DBResultSet result = SQL_Query(this.db, "SELECT round, func, COALESCE(fmt, 'null'), calls, delta FROM " ... BENCH_DB_TABLE ... " WHERE round = (SELECT MAX(round) FROM " ... BENCH_DB_TABLE ... ") GROUP BY func, fmt ORDER BY func, fmt;");
+        if (!result) {
+            char error[256];
+            SQL_GetError(this.db, error, sizeof(error));
+            ThrowError("SelectMaxRound error %s.", error);
+        }
+        return result;
+    }
+
+    // DBResultSet<runs, func, fmt, calls, delta>
+    public DBResultSet SelectSumGroupyByFuncFmt() {
+        // 所有 sink 不同 log 方法的不同 fmt 的测试结果
+        DBResultSet result = SQL_Query(this.db, "SELECT COUNT(DISTINCT round), func, COALESCE(fmt, 'null'), SUM(calls), SUM(delta) FROM " ... BENCH_DB_TABLE ... " GROUP BY func, fmt ORDER BY func, fmt;");
+        if (!result) {
+            char error[256];
+            SQL_GetError(this.db, error, sizeof(error));
+            ThrowError("SelectSumGroupyByFmt error %s.", error);
+        }
+        return result;
+    }
+
+    // DBResultSet<runs, func, 'null', calls, delta>
+    public DBResultSet SelectSumGroupyByFunc() {
+        // 所有 sink 不同 log 方法的测试结果 (LogF 方法只取 mock fmt)
+        DBResultSet result = SQL_Query(this.db, "SELECT COUNT(DISTINCT round), func, 'null', SUM(calls), SUM(delta) FROM " ... BENCH_DB_TABLE ... " WHERE (fmt IS NULL OR fmt = '' OR fmt = 'null' OR fmt = 'mock') GROUP BY func ORDER BY func;");
+        if (!result) {
+            char error[256];
+            SQL_GetError(this.db, error, sizeof(error));
+            ThrowError("SelectSumGroupyByFunc error %s.", error);
+        }
+        return result;
+    }
+
+    // ArrayList<BenchData<num, func, fmt, calls, delta>>
+    public ArrayList ParseResultSetToDatas(DBResultSet result) {
+        if (!result)
+            ThrowError("Invalid DBResultSet.");
+
+        BenchData data;
+        ArrayList datas = new ArrayList(.blocksize=sizeof(BenchData));
+
+        for (int i = 0; result.FetchRow(); ++i) {
+            data.num = result.FetchInt(0);
+            result.FetchString(1, data.func, sizeof(BenchData::func));
+            result.FetchString(2, data.fmt,  sizeof(BenchData::fmt));
+            data.calls = result.FetchInt(3);
+            data.delta = result.FetchFloat(4);
+            datas.PushArray(data);
+        }
+        return datas;
+    }
+
+    public void Insert(const char[] func, const char[] fmt, int calls, float delta) {
+        char query[512];
+        FormatEx(query, sizeof(query),
+                "INSERT INTO " ... BENCH_DB_TABLE ... " (round, func, fmt, calls, delta) VALUES (%d, '%s', '%s', %d, %f)",
+                g_iBenchRound, func, fmt, calls, delta);
+
+        if (!SQL_FastQuery(this.db, query)) {
+            char error[256];
+            SQL_GetError(this.db, error, sizeof(error));
+            ThrowError("Insert data error %s.", error);
+        }
+    }
+
+    public void ExportToFile(const char[] filename="logs/output-bench-sm-logging", const char[] ext="csv", const char[] sep=",") {
+        {
+            DBResultSet result = this.SelectList();
+            ArrayList   datas  = this.ParseResultSetToDatas(result);
+            delete result;
+            if (datas.Length == 0) {
+                PrintToServer("[%d] SelectList empty!", __LINE__);
+                delete datas;
+                return;
+            }
+
+            char buffer[PLATFORM_MAX_PATH];
+            BuildPath(Path_SM, buffer, sizeof(buffer), "%s_all.%s", filename, ext);
+            PrintToServer("Export SelectList to file: \"%s\".", buffer);
+
+            File file = OpenFile(buffer, "w");
+            file.WriteLine("round%sfunc%sfmt%scalls%sdelta%ssecs", sep, sep, sep, sep, sep);
+
+            for (int i = 0; i < datas.Length; ++i) {
+                BenchData data;
+                datas.GetArray(i, data);
+                file.WriteLine("%d%s%s%s%s%s%d%s%f%s%d",
+                    data.num,   sep, data.func,  sep, data.fmt, sep,
+                    data.calls, sep, data.delta, sep, RoundToFloor(data.calls / data.delta));
+            }
+            delete datas;
+            delete file;
+        }
+
+        {
+            DBResultSet result = this.SelectMaxRound();
+            ArrayList   datas  = this.ParseResultSetToDatas(result);
+            delete result;
+            if (datas.Length == 0) {
+                PrintToServer("[Line::%d] SelectMaxRound empty!", __LINE__);
+                delete datas;
+                return;
+            }
+
+            char buffer[PLATFORM_MAX_PATH];
+            BuildPath(Path_SM, buffer, sizeof(buffer), "%s_latest.%s", filename, ext);
+            PrintToServer("Export SelectMaxRound to file: \"%s\".", buffer);
+
+            File file = OpenFile(buffer, "w");
+            file.WriteLine("round%sfunc%sfmt%scalls%sdelta%ssecs", sep, sep, sep, sep, sep);
+
+            for (int i = 0; i < datas.Length; ++i) {
+                BenchData data;
+                datas.GetArray(i, data);
+                file.WriteLine("%d%s%s%s%s%s%d%s%f%s%d",
+                    data.num,   sep, data.func,  sep, data.fmt, sep,
+                    data.calls, sep, data.delta, sep, RoundToFloor(data.calls / data.delta));
+            }
+            delete datas;
+            delete file;
+        }
+
+        {
+            DBResultSet result = this.SelectSumGroupyByFuncFmt();
+            ArrayList   datas  = this.ParseResultSetToDatas(result);
+            delete result;
+            if (datas.Length == 0) {
+                PrintToServer("[Line::%d] SelectSumGroupyByFuncFmt empty!", __LINE__);
+                delete datas;
+                return;
+            }
+
+            char buffer[PLATFORM_MAX_PATH];
+            BuildPath(Path_SM, buffer, sizeof(buffer), "%s_sum_group_by_func_fmt.%s", filename, ext);
+            PrintToServer("Export SelectSumGroupyByFuncFmt to file: \"%s\".", buffer);
+
+            File file = OpenFile(buffer, "w");
+            file.WriteLine("runs%sfunc%sfmt%scalls%sdelta%ssecs", sep, sep, sep, sep, sep, sep);
+
+            for (int i = 0; i < datas.Length; ++i) {
+                BenchData data;
+                datas.GetArray(i, data);
+                file.WriteLine("%d%s%s%s%s%s%d%s%f%s%d",
+                    data.num,   sep, data.func,  sep, data.fmt, sep,
+                    data.calls, sep, data.delta, sep, RoundToFloor(data.calls / data.delta));
+            }
+            delete datas;
+            delete file;
+        }
+
+        {
+            DBResultSet result = this.SelectSumGroupyByFunc();
+            ArrayList   datas  = this.ParseResultSetToDatas(result);
+            delete result;
+            if (datas.Length == 0) {
+                PrintToServer("[Line::%d] SelectSumGroupyByFunc empty!", __LINE__);
+                delete datas;
+                return;
+            }
+
+            char buffer[PLATFORM_MAX_PATH];
+            BuildPath(Path_SM, buffer, sizeof(buffer), "%s_sum_group_by_func.%s", filename, ext);
+            PrintToServer("Export SelectSumGroupyByFunc to file: \"%s\".", buffer);
+
+            File file = OpenFile(buffer, "w");
+            file.WriteLine("runs%sfunc%scalls%sdelta%ssecs", sep, sep, sep, sep);
+
+            for (int i = 0; i < datas.Length; ++i) {
+                BenchData data;
+                datas.GetArray(i, data);
+                file.WriteLine("%d%s%s%s%d%s%f%s%d",  data.num, sep, data.func, sep,
+                    data.calls, sep, data.delta, sep, RoundToFloor(data.calls / data.delta));
+            }
+            delete datas;
+            delete file;
+        }
+    }
+
+    public void PrintToServer() {
+        DBResultSet result = this.SelectSumGroupyByFunc();
+        ArrayList   datas  = this.ParseResultSetToDatas(result);
+        delete result;
+        if (datas.Length == 0) {
+            PrintToServer("[Line::%d] SelectSumGroupyByFunc empty!", __LINE__);
+            delete datas;
+            return;
+        }
+
+        BenchData data;
+        datas.GetArray(0, data);
+
+        for (int i = 0; i < datas.Length; ++i) {
+            datas.GetArray(i, data);
+            PrintToServer("[benchmark] %-15s Runs: %-2d   Calls: %-7d   Elapsed: %-8.3f %7d/sec",
+                data.func, data.num, data.calls, data.delta, RoundToFloor(data.calls / data.delta));
+        }
+        delete datas;
+    }
+
+    public static void Initialize() {
+        char error[256];
+        __hDatabase = SQL_Connect(BENCH_DB_CONF, false, error, sizeof(error));
+        if (!BenchDB.Instance().db)
+            ThrowError("Creating an SQL connection for \"" ... BENCH_DB_CONF ... "\" failed (error: %s)", error);
+
+        BenchDB.Instance().DropTable();
+        BenchDB.Instance().CreateTable();
+    }
+
+    public static void Destroy() {
+        BenchDB.Instance().DropTable();
+        delete __hDatabase;
+    }
+
+    public static BenchDB Instance() {
+        return view_as<BenchDB>(true);
+    }
+
+    property Database db {
+        public get() { return __hDatabase; }
+    }
+};
+
+#undef BENCH_DB_CONF
+#undef BENCH_DB_TABLE

@@ -12,107 +12,108 @@
 #include "spdlog/sinks/base_sink.h"
 
 
-namespace log4sp {
-namespace sinks {
+namespace Log4sp {
+namespace Sinks {
 
 template <typename Mutex>
-class test_sink final : public spdlog::sinks::base_sink<Mutex> {
-    using log_msg = spdlog::details::log_msg;
-    using log_msg_buffer = spdlog::details::log_msg_buffer;
-    using drain_cb = std::function<void(const log_msg_buffer &)>;
-    using drain_line_cb = std::function<void(std::string_view)>;
+class TestSink final : public spdlog::sinks::base_sink<Mutex>
+{
+    using LogMsg        = spdlog::details::log_msg;
+    using LogMsgBuffer  = spdlog::details::log_msg_buffer;
+    using DrainFunc     = std::function<void(const LogMsgBuffer &)>;
+    using DrainLineFunc = std::function<void(std::string_view)>;
 
 public:
-    [[nodiscard]] unsigned int get_log_counter() noexcept {
+    [[nodiscard]]
+    unsigned int GetLogCounter() noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-        return log_counter_;
+        return m_LogCounter;
     }
-    [[nodiscard]] unsigned int get_flush_counter() noexcept {
+    [[nodiscard]]
+    unsigned int GetFlushCounter() noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-        return flush_counter_;
-    }
-
-    void drain_msgs(drain_cb callback) noexcept {
-        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-        for (auto msg : msgs_) {
-            callback(msg);
-        }
-        msgs_.clear();
-    }
-    void drain_last_msg(drain_cb callback) noexcept {
-        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-        if (!msgs_.empty()) {
-            callback(msgs_.back());
-            msgs_.pop_back();
-        }
+        return m_FlushCounter;
     }
 
-    void drain_lines(drain_line_cb callback) noexcept {
+    void DrainMsgs(DrainFunc func) noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-        for (auto line : lines_) {
-            callback(line);
+        for (auto msg : m_Msgs) {
+            func(msg);
         }
-        lines_.clear();
+        m_Msgs.clear();
     }
-    void drain_last_line(drain_line_cb callback) noexcept {
+    void DrainLastMsgs(DrainFunc func) noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-        if (!lines_.empty()) {
-            callback(lines_.back());
-            lines_.pop_back();
+        if (!m_Msgs.empty()) {
+            func(m_Msgs.back());
+            m_Msgs.pop_back();
         }
     }
 
-    void set_log_delay(std::chrono::milliseconds delay) noexcept { log_delay_ = delay; }
-    void set_flush_delay(std::chrono::milliseconds delay) noexcept { flush_delay_ = delay; }
+    void DrainLines(DrainLineFunc func) noexcept {
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
+        for (auto line : m_Lines) {
+            func(line);
+        }
+        m_Lines.clear();
+    }
+    void DrainLastLines(DrainLineFunc func) noexcept {
+        std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
+        if (!m_Lines.empty()) {
+            func(m_Lines.back());
+            m_Lines.pop_back();
+        }
+    }
 
-    void set_log_exception(const std::runtime_error &ex) noexcept { log_exception_ptr_ = std::make_exception_ptr(ex); }
-    void clear_log_exception() noexcept { log_exception_ptr_ = nullptr; }
+    void SetLogDelay(std::chrono::milliseconds delay) noexcept { m_LogDelay = delay; }
+    void SetFlushDelay(std::chrono::milliseconds delay) noexcept { m_FlushDelay = delay; }
 
-    void set_flush_exception(const std::runtime_error &ex) noexcept { flush_exception_ptr_ = std::make_exception_ptr(ex); }
-    void clear_flush_exception() noexcept { flush_exception_ptr_ = nullptr; }
+    void SetLogException(const std::runtime_error &ex) noexcept { m_LogExceptionPtr = std::make_exception_ptr(ex); }
+    void ClearLogException() noexcept { m_LogExceptionPtr = nullptr; }
+
+    void SetFlushException(const std::runtime_error &ex) noexcept { m_FlushExceptionPtr = std::make_exception_ptr(ex); }
+    void ClearFlushException() noexcept { m_FlushExceptionPtr = nullptr; }
 
 protected:
-    void sink_it_(const log_msg &msg) override {
-        if (log_exception_ptr_) {
-            std::rethrow_exception(log_exception_ptr_);
-        }
+    void sink_it_(const LogMsg &msg) override {
+        if (m_LogExceptionPtr)
+            std::rethrow_exception(m_LogExceptionPtr);
 
-        msgs_.emplace_back(log_msg_buffer(msg));
+        m_Msgs.emplace_back(LogMsgBuffer(msg));
 
         spdlog::memory_buf_t formatted;
         spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
         // save the line without the eol
         auto eol_len = strlen(spdlog::details::os::default_eol);
-        lines_.emplace_back(formatted.begin(), formatted.end() - eol_len);
+        m_Lines.emplace_back(formatted.begin(), formatted.end() - eol_len);
 
-        log_counter_++;
-        std::this_thread::sleep_for(log_delay_);
+        m_LogCounter++;
+        std::this_thread::sleep_for(m_LogDelay);
     }
 
     void flush_() override {
-        if (flush_exception_ptr_) {
-            std::rethrow_exception(flush_exception_ptr_);
-        }
-        flush_counter_++;
-        std::this_thread::sleep_for(flush_delay_);
+        if (m_FlushExceptionPtr)
+            std::rethrow_exception(m_FlushExceptionPtr);
+
+        m_FlushCounter++;
+        std::this_thread::sleep_for(m_FlushDelay);
     }
 
-    unsigned int log_counter_   = 0u;
-    unsigned int flush_counter_ = 0u;
+    unsigned int m_LogCounter   = 0u;
+    unsigned int m_FlushCounter = 0u;
 
+    std::vector<LogMsgBuffer> m_Msgs;
+    std::vector<std::string> m_Lines;
 
-    std::vector<log_msg_buffer> msgs_;
-    std::vector<std::string> lines_;
+    std::chrono::milliseconds m_LogDelay   = std::chrono::milliseconds::zero();
+    std::chrono::milliseconds m_FlushDelay = std::chrono::milliseconds::zero();
 
-    std::chrono::milliseconds log_delay_   = std::chrono::milliseconds::zero();
-    std::chrono::milliseconds flush_delay_ = std::chrono::milliseconds::zero();
-
-    std::exception_ptr log_exception_ptr_;  // will be thrown on next log if not null
-    std::exception_ptr flush_exception_ptr_;// will be thrown on next flush if not null
+    std::exception_ptr m_LogExceptionPtr;  // will be thrown on next log if not null
+    std::exception_ptr m_FlushExceptionPtr;// will be thrown on next flush if not null
 };
 
-using test_sink_mt = test_sink<std::mutex>;
-using test_sink_st = test_sink<spdlog::details::null_mutex>;
+using TestSinkMT = TestSink<std::mutex>;
+using TestSinkST = TestSink<spdlog::details::null_mutex>;
 
-}  // namespace sinks
-}  // namespace spdlog
+}  // namespace Sinks
+}  // namespace Log4sp

@@ -6,7 +6,6 @@ projectName = 'log4sp'
 # smsdk_ext.cpp will be automatically added later
 sourceFiles = [
   'src/extension.cpp',
-  'src/log4sp/common.cpp',
   'src/log4sp/format.cpp',
   'src/log4sp/logger.cpp',
   'src/log4sp/source_helper.cpp',
@@ -14,7 +13,6 @@ sourceFiles = [
   'src/log4sp/adapter/sink_handler.cpp',
   'src/log4sp/command/root_console_command.cpp',
   'src/log4sp/command/root_console_command_handler.cpp',
-  'src/log4sp/sinks/callback_sink.cpp',
   'src/natives/common.cpp',
   'src/natives/logger.cpp',
   'src/natives/sinks/sink.cpp',

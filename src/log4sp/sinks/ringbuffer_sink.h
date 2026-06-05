@@ -7,8 +7,9 @@
 
 #include "extension.h"
 
-namespace log4sp {
-namespace sinks {
+
+namespace Log4sp {
+namespace Sinks {
 
 /*
  * Ring buffer sink. Holds fixed amount of log messages in memory. When the buffer is full, new
@@ -17,48 +18,49 @@ namespace sinks {
  * logger("rb_logger", rb_sink); rb->drain([](const std::string_view msg) { process(msg);});
  */
 template <typename Mutex>
-class ringbuffer_sink final : public spdlog::sinks::base_sink<Mutex>  {
-    using log_msg = spdlog::details::log_msg;
-    using log_msg_buffer = spdlog::details::log_msg_buffer;
+class RingBufferSink final : public spdlog::sinks::base_sink<Mutex>
+{
+    using LogMsg        = spdlog::details::log_msg;
+    using LogMsgBuffer  = spdlog::details::log_msg_buffer;
 
 public:
-    explicit ringbuffer_sink(size_t n_items) noexcept
-        : q_{n_items} {}
-    ~ringbuffer_sink() override = default;
+    explicit RingBufferSink(std::size_t maxSize) noexcept
+        : m_Buffer{maxSize} {}
+    ~RingBufferSink() override = default;
 
-    void drain(std::function<void(const log_msg_buffer &)> callback) noexcept {
+    void Drain(std::function<void(const LogMsgBuffer &)> func) noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
-        while (!q_.empty()) {
-            callback(q_.front());
-            q_.pop_front();
+        while (!m_Buffer.empty()) {
+            func(m_Buffer.front());
+            m_Buffer.pop_front();
         }
     }
 
-    void drain_formatted(std::function<void(std::string_view)> callback) noexcept {
+    void DrainFormatted(std::function<void(std::string_view)> func) noexcept {
         std::lock_guard<Mutex> lock(spdlog::sinks::base_sink<Mutex>::mutex_);
         spdlog::memory_buf_t formatted;
-        while (!q_.empty()) {
+        while (!m_Buffer.empty()) {
             formatted.clear();
-            spdlog::sinks::base_sink<Mutex>::formatter_->format(q_.front(), formatted);
-            callback(std::string_view(formatted.data(), formatted.size()));
-            q_.pop_front();
+            spdlog::sinks::base_sink<Mutex>::formatter_->format(m_Buffer.front(), formatted);
+            func(std::string_view(formatted.data(), formatted.size()));
+            m_Buffer.pop_front();
         }
     }
 
 private:
-    spdlog::details::circular_q<log_msg_buffer> q_;
+    spdlog::details::circular_q<LogMsgBuffer> m_Buffer;
 
-    void sink_it_(const log_msg &log_msg) noexcept override {
-        q_.push_back(log_msg_buffer(log_msg));
+    void sink_it_(const LogMsg &logMsg) noexcept override {
+        m_Buffer.push_back(LogMsgBuffer(logMsg));
     }
 
     void flush_() noexcept override {}
 };
 
-using ringbuffer_sink_mt = ringbuffer_sink<std::mutex>;
-using ringbuffer_sink_st = ringbuffer_sink<spdlog::details::null_mutex>;
+using RingBufferSinkMT = RingBufferSink<std::mutex>;
+using RingBufferSinkST = RingBufferSink<spdlog::details::null_mutex>;
 
 
-}       // namespace sinks
-}       // namespace log4sp
+}       // namespace Sinks
+}       // namespace Log4sp
 

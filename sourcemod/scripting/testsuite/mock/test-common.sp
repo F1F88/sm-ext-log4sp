@@ -6,8 +6,6 @@
 
 #include "../test_utils"
 
-#pragma semicolon 1
-#pragma newdecls required
 
 static const char g_expectedLevelNames[][] = {LOG4SP_LEVEL_NAME_TRACE, LOG4SP_LEVEL_NAME_DEBUG,
                                               LOG4SP_LEVEL_NAME_INFO,  LOG4SP_LEVEL_NAME_WARN,
@@ -18,6 +16,7 @@ static const char g_expectedLevelShortNames[][] = {LOG4SP_LEVEL_SHORT_NAME_TRACE
                                                    LOG4SP_LEVEL_SHORT_NAME_INFO,  LOG4SP_LEVEL_SHORT_NAME_WARN,
                                                    LOG4SP_LEVEL_SHORT_NAME_ERROR, LOG4SP_LEVEL_SHORT_NAME_FATAL,
                                                    LOG4SP_LEVEL_SHORT_NAME_OFF};
+
 
 public void OnPluginStart()
 {

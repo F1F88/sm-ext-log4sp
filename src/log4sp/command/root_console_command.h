@@ -8,18 +8,19 @@
 
 #include "log4sp/common.h"
 
+
+namespace Log4sp {
+
 #define LOG4SP_ROOT_CMD     "log4sp"
 
+class Logger;
 
-namespace log4sp {
-
-class logger;
-
-class command {
+class Command
+{
 public:
-    using level_enum = spdlog::level::level_enum;
+    using LevelEnum = spdlog::level::level_enum;
 
-    virtual ~command() = default;
+    virtual ~Command() = default;
 
     /**
      * 命令模式抽象类
@@ -30,84 +31,95 @@ public:
      * @exception       指令执行失败时抛出异常，消息为失败原因
      *                  例如：参数不匹配
      */
-    virtual void execute(const std::vector<std::string> &args) = 0;
+    virtual void Execute(const std::vector<std::string> &args) = 0;
 
 protected:
-    [[nodiscard]] std::shared_ptr<logger> arg_to_logger(const std::string &arg);
+    [[nodiscard]] std::shared_ptr<Logger> ArgToLogger(const std::string &arg);
 
-    [[nodiscard]] level_enum arg_to_level(const std::string &arg);
+    [[nodiscard]] LevelEnum ArgToLevel(const std::string &arg);
 };
 
 
-class list_command final : public command {
+class ListCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class apply_all_command final : public command {
+class ApplyAllCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 
 private:
-    inline static const std::unordered_set<std::string> functions_{
+    inline static const std::unordered_set<std::string> m_Functions{
         "get_lvl", "set_lvl", "set_pattern", "should_log", "log",
         "flush", "get_flush_lvl", "set_flush_lvl"};
 };
 
 
-class get_lvl_command final : public command {
+class GetLvlCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class set_lvl_command final : public command {
+class SetLvlCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class set_pattern_command final : public command {
+class SetPatternCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class should_log_command final : public command {
+class ShouldLogCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class log_command final : public command {
+class LogCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class flush_command final : public command {
+class FlushCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class get_flush_lvl_command final : public command {
+class GetFlushLvlCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class set_flush_lvl_command final : public command {
+class SetFlushLvlCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &args) override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class version_command final : public command {
+class VersionCommand final : public Command
+{
 public:
-    void execute(const std::vector<std::string> &) override;
+    void Execute(const std::vector<std::string> &) override;
 };
 
 
-}       // namespace log4sp
+}       // namespace Log4sp

@@ -32,7 +32,7 @@
 #include "extension.h"
 
 #include "log4sp/adapter/logger_handler.h"
-#include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/adapter/sink_handler.h"
 #include "log4sp/command/root_console_command_handler.h"
 
 
@@ -41,21 +41,21 @@
  * @brief Implement extension code here.
  */
 
-Log4sp g_Log4sp;    /**< Global singleton for extension's main interface */
+Log4spExtension g_Log4sp; /**< Global singleton for extension's main interface */
 SMEXT_LINK(&g_Log4sp);
 
 
-bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
+bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
-    static_assert(!NO_HANDLE_TYPE, "NO_HANDLE_TYPE has changed, conditional statement for handle needs to be modified!");
-    static_assert(!BAD_HANDLE, "BAD_HANDLE has changed, conditional statement for handle needs to be modified!");
-    static_assert(!SP_ERROR_NONE, "SP_ERROR_NONE has changed, conditional statement for forward needs to be modified!");
+    static_assert(!NO_HANDLE_TYPE,  "NO_HANDLE_TYPE has changed, conditional statement for handle needs to be modified!");
+    static_assert(!BAD_HANDLE,      "BAD_HANDLE has changed, conditional statement for handle needs to be modified!");
+    static_assert(!SP_ERROR_NONE,   "SP_ERROR_NONE has changed, conditional statement for forward needs to be modified!");
 
     try
     {
-        log4sp::logger_handler::initialize();
-        log4sp::sink_handler::initialize();
-        log4sp::root_console_command_handler::initialize();
+        Log4sp::LoggerHandler::Initialize();
+        Log4sp::SinkHandler::Initialize();
+        Log4sp::RootConsoleCommandHandler::Initialize();
     }
     catch (const std::exception &ex)
     {
@@ -77,15 +77,16 @@ bool Log4sp::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, TestSinkNatives);
 #endif
 
-    sharesys->RegisterLibrary(myself, SMEXT_CONF_LOGTAG);
+    sharesys->RegisterLibrary(myself, "log4sp");
 
     rootconsole->ConsolePrint("****************** log4sp.ext initialize complete! ******************");
     return true;
 }
 
-void Log4sp::SDK_OnUnload()
+void Log4spExtension::SDK_OnUnload()
 {
-    log4sp::root_console_command_handler::destroy();
-    log4sp::sink_handler::destroy();
-    log4sp::logger_handler::destroy();
+    Log4sp::RootConsoleCommandHandler::Destroy();
+    Log4sp::LoggerHandler::Destroy();
+    Log4sp::SinkHandler::Destroy();
 }
+

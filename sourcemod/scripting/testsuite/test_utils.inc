@@ -40,7 +40,7 @@ stock int CountLines(const char[] path)
 {
     File file = OpenFile(path, "r");
     if (!file)
-        ThrowError("Failed open file: (%s).", file);
+        ThrowError("Failed open file: (%s).", path);
 
     char buffer[2048];
     int counter = 0;
@@ -171,7 +171,7 @@ stock char[] GetFileContents(const char[] path)
 {
     File file = OpenFile(path, "rt");
     if (!file)
-        ThrowError("Failed open file '%s'.", file);
+        ThrowError("Failed open file '%s'.", path);
 
     char buffer[2048 * 2];
     file.ReadString(buffer, sizeof(buffer));

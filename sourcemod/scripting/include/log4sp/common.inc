@@ -79,7 +79,7 @@ enum struct SourceLoc
  * @param buffer    Buffer to store log level name.
  * @param maxlen    Maximum length of the buffer.
  * @param lvl       Log level enum.
- * @return          Number of characters written to the buffer, not including the null terminator.
+ * @return          Number of bytes written.
  */
 native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
 
@@ -89,7 +89,7 @@ native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
  * @param buffer    Buffer to store log level short name.
  * @param maxlen    Maximum length of the buffer.
  * @param lvl       Log level enum.
- * @return          Number of characters written to the buffer, not including the null terminator.
+ * @return          Number of bytes written.
  */
 native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
 

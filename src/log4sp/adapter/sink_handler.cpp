@@ -1,94 +1,104 @@
 #include <cassert>
 
-#include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/adapter/sink_handler.h"
 
 
-namespace log4sp {
+namespace Log4sp {
 
-using spdlog::sink_ptr;
-using spdlog::sinks::sink;
-namespace fmt_lib = spdlog::fmt_lib;
-
-
-[[nodiscard]] sink_handler &sink_handler::instance() noexcept {
-    static sink_handler instance;
+[[nodiscard]]
+SinkHandler &SinkHandler::Instance() noexcept
+{
+    static SinkHandler instance;
     return instance;
 }
 
-void sink_handler::initialize() {
-    instance().initialize_();
+void SinkHandler::Initialize()
+{
+    Instance().Initialize_();
 }
 
-void sink_handler::destroy() noexcept {
-    instance().destroy_();
+void SinkHandler::Destroy() noexcept
+{
+    Instance().Destroy_();
 }
 
 
-[[nodiscard]] SourceMod::HandleType_t sink_handler::handle_type() const noexcept {
-    return handle_type_;
+[[nodiscard]]
+SourceMod::HandleType_t SinkHandler::HandleType() const noexcept
+{
+    return m_HandleType;
 }
 
-[[nodiscard]] SourceMod::Handle_t sink_handler::create_handle(sink_ptr object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept {
-    assert(handle_type_);
+[[nodiscard]]
+SourceMod::Handle_t SinkHandler::CreateHandle(SinkPtr object, const SourceMod::HandleSecurity *security, const SourceMod::HandleAccess *access, SourceMod::HandleError *error) noexcept
+{
+    assert(m_HandleType);
 
-    SourceMod::Handle_t handle = handlesys->CreateHandleEx(handle_type_, object.get(), security, access, error);
-    if (!handle) {
+    SourceMod::Handle_t handle = handlesys->CreateHandleEx(m_HandleType, object.get(), security, access, error);
+    if (!handle)
         return BAD_HANDLE;
-    }
 
-    assert(handles_.find(object.get()) == handles_.end());
-    assert(sinks_.find(object.get()) == sinks_.end());
+    assert(m_Handles.find(object.get()) == m_Handles.end());
+    assert(m_Sinks.find(object.get()) == m_Sinks.end());
 
-    handles_[object.get()] = handle;
-    sinks_[object.get()] = object;
+    m_Handles[object.get()] = handle;
+    m_Sinks[object.get()] = object;
 
     return handle;
 }
 
-[[nodiscard]] sink_ptr sink_handler::read_handle(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
-    assert(handle_type_);
+[[nodiscard]]
+spdlog::sink_ptr SinkHandler::ReadHandle(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept
+{
+    assert(m_HandleType);
 
-    sink *object;
-    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
-    if (err != SourceMod::HandleError_None) {
-        if (error) {
+    Sink *object;
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, m_HandleType, security, (void **)&object);
+    if (err != SourceMod::HandleError_None)
+    {
+        if (error)
             *error = err;
-        }
         return nullptr;
     }
 
-    assert(sinks_.find(object) != sinks_.end());
-    return sinks_.find(object)->second;
+    assert(m_Sinks.find(object) != m_Sinks.end());
+    return m_Sinks.find(object)->second;
 }
 
-[[nodiscard]] sink *sink_handler::read_handle_raw(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept {
-    assert(handle_type_);
+[[nodiscard]]
+spdlog::sinks::sink *SinkHandler::ReadHandleRaw(SourceMod::Handle_t handle, SourceMod::HandleSecurity *security, SourceMod::HandleError *error) const noexcept
+{
+    assert(m_HandleType);
 
-    sink *object;
-    SourceMod::HandleError err = handlesys->ReadHandle(handle, handle_type_, security, (void **)&object);
-    if (err != SourceMod::HandleError_None) {
-        if (error) {
+    Sink *object;
+    SourceMod::HandleError err = handlesys->ReadHandle(handle, m_HandleType, security, (void **)&object);
+    if (err != SourceMod::HandleError_None)
+    {
+        if (error)
             *error = err;
-        }
         return nullptr;
     }
 
-    assert(sinks_.find(object) != sinks_.end());
+    assert(m_Sinks.find(object) != m_Sinks.end());
     return object;
 }
 
-void sink_handler::OnHandleDestroy(SourceMod::HandleType_t type, void *object) {
-    auto sink_obj = static_cast<sink*>(object);
+void SinkHandler::OnHandleDestroy(SourceMod::HandleType_t type, void *object)
+{
+    auto sink_obj = static_cast<Sink*>(object);
 
-    assert(handles_.find(sink_obj) != handles_.end());
-    assert(sinks_.find(sink_obj) != sinks_.end());
+    assert(m_Handles.find(sink_obj) != m_Handles.end());
+    assert(m_Sinks.find(sink_obj) != m_Sinks.end());
 
-    handles_.erase(sink_obj);
-    sinks_.erase(sink_obj);
+    m_Handles.erase(sink_obj);
+    m_Sinks.erase(sink_obj);
 }
 
 
-void sink_handler::initialize_() {
+void SinkHandler::Initialize_()
+{
+    using spdlog::fmt_lib::format;
+
     SourceMod::HandleAccess access;
     SourceMod::HandleError error;
 
@@ -97,18 +107,19 @@ void sink_handler::initialize_() {
     handlesys->InitAccessDefaults(nullptr, &access);
     access.access[SourceMod::HandleAccess_Delete] = 0;
 
-    handle_type_ = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
-    if (!handle_type_) {
-        throw_log4sp_ex(fmt_lib::format("Failed to creates a Sink Handle type (error code: {})", static_cast<int>(error)));
+    m_HandleType = handlesys->CreateType("Sink", this, 0, nullptr, &access, myself->GetIdentity(), &error);
+    if (!m_HandleType)
+        ThrowLog4spEx(format("Failed to creates a Sink Handle type (error code: {})", static_cast<int>(error)));
+}
+
+void SinkHandler::Destroy_() noexcept
+{
+    if (m_HandleType)
+    {
+        handlesys->RemoveType(m_HandleType, myself->GetIdentity());
+        m_HandleType = NO_HANDLE_TYPE;
     }
 }
 
-void sink_handler::destroy_() noexcept {
-    if (handle_type_) {
-        handlesys->RemoveType(handle_type_, myself->GetIdentity());
-        handle_type_ = NO_HANDLE_TYPE;
-    }
-}
 
-
-}       // namespace log4sp
+}       // namespace Log4sp

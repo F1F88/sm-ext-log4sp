@@ -6,21 +6,23 @@
 #include "log4sp/common.h"
 
 
-namespace log4sp {
+namespace Log4sp {
 /**
  * SourceMod handlesys 的适配器
  * 原版的 handlesys 不便于管理智能指针对象的生命周期
  * 所以这个类增强了对智能指针对象生命周期的管理
  */
-class sink_handler final : public SourceMod::IHandleTypeDispatch {
+class SinkHandler final : public SourceMod::IHandleTypeDispatch
+{
 public:
-    using sink      = spdlog::sinks::sink;
-    using sink_ptr  = spdlog::sink_ptr;
+    using Sink      = spdlog::sinks::sink;
+    using SinkPtr   = spdlog::sink_ptr;
 
     /**
      * @brief 全局单例对象
      */
-    [[nodiscard]] static sink_handler &instance() noexcept;
+    [[nodiscard]]
+    static SinkHandler &Instance() noexcept;
 
     /**
      * @brief 用于 SDK_OnLoad 时创建 handle type。
@@ -28,23 +30,24 @@ public:
      * @exception       Sink handle type 已存在，或创建失败。
      * @note            需要与 destroy 配对使用。
      */
-    static void initialize();
+    static void Initialize();
 
     /**
      * @brief 用于 SDK_OnUnload 时移除 handle type。
      *
      * @note            需要与 initialize 配对使用。
      * @note            为了避免影响其他清理工作，此方法不抛出异常。
-     * @note            移除后所有的 sink handle 都将被释放，所以 handles_ 和 sinks_ 会被清空。
+     * @note            移除后所有的 sink handle 都将被释放，所以 m_Handles 和 m_Sinks 会被清空。
      */
-    static void destroy() noexcept;
+    static void Destroy() noexcept;
 
     /**
      * @brief 获取 handle type
      *
      * @return          handle type 或者 NO_HANDLE_TYPE 代表还没创建或创建失败
      */
-    [[nodiscard]] SourceMod::HandleType_t handle_type() const noexcept;
+    [[nodiscard]]
+    SourceMod::HandleType_t HandleType() const noexcept;
 
     /**
      * @brief handlesys->CreateHandleEx 的适配器
@@ -57,10 +60,11 @@ public:
      * @param error     Optional pointer to store an error code on failure (undefined on success).
      * @return          object 对象的 handle 或 BAD_HANDLE 表示创建失败
      */
-    [[nodiscard]] SourceMod::Handle_t create_handle(sink_ptr object,
-                                                    const SourceMod::HandleSecurity *security,
-                                                    const SourceMod::HandleAccess *access,
-                                                    SourceMod::HandleError *error) noexcept;
+    [[nodiscard]]
+    SourceMod::Handle_t CreateHandle(SinkPtr object,
+                                     const SourceMod::HandleSecurity *security,
+                                     const SourceMod::HandleAccess *access,
+                                     SourceMod::HandleError *error) noexcept;
 
     /**
      * @brief handlesys->ReadHandle 的适配器
@@ -70,9 +74,10 @@ public:
      * @param error     HandleError error code.
      * @return          object 智能指针或 nullptr 表示读取失败.
      */
-    [[nodiscard]] sink_ptr read_handle(SourceMod::Handle_t handle,
-                                       SourceMod::HandleSecurity *security,
-                                       SourceMod::HandleError *error) const noexcept;
+    [[nodiscard]]
+    SinkPtr ReadHandle(SourceMod::Handle_t handle,
+                       SourceMod::HandleSecurity *security,
+                       SourceMod::HandleError *error) const noexcept;
 
     /**
      * @brief handlesys->ReadHandle 的适配器
@@ -82,9 +87,10 @@ public:
      * @param error     HandleError error code.
      * @return          object 指针或 nullptr 表示读取失败.
      */
-    [[nodiscard]] sink *read_handle_raw(SourceMod::Handle_t handle,
-                                        SourceMod::HandleSecurity *security,
-                                        SourceMod::HandleError *error) const noexcept;
+    [[nodiscard]]
+    Sink *ReadHandleRaw(SourceMod::Handle_t handle,
+                        SourceMod::HandleSecurity *security,
+                        SourceMod::HandleError *error) const noexcept;
 
     /**
      * @brief Called when destroying a handle.  Must be implemented.
@@ -94,21 +100,21 @@ public:
      */
     void OnHandleDestroy(SourceMod::HandleType_t type, void *object) override;
 
-    sink_handler(const sink_handler &) = delete;
-    sink_handler &operator=(const sink_handler &) = delete;
-    sink_handler(const sink_handler &&) = delete;
+    SinkHandler(const SinkHandler &) = delete;
+    SinkHandler(const SinkHandler &&) = delete;
+    SinkHandler &operator=(const SinkHandler &) = delete;
 
 private:
-    sink_handler() = default;
-    ~sink_handler() = default;
+    SinkHandler() = default;
+    ~SinkHandler() = default;
 
-    void initialize_();
-    void destroy_() noexcept;
+    void Initialize_();
+    void Destroy_() noexcept;
 
-    SourceMod::HandleType_t handle_type_{NO_HANDLE_TYPE};
-    std::unordered_map<sink*, SourceMod::Handle_t> handles_;
-    std::unordered_map<sink*, sink_ptr> sinks_;
+    SourceMod::HandleType_t m_HandleType{NO_HANDLE_TYPE};
+    std::unordered_map<Sink*, SourceMod::Handle_t> m_Handles;
+    std::unordered_map<Sink*, SinkPtr> m_Sinks;
 };
 
 
-}       // namespace log4sp
+}       // namespace Log4sp

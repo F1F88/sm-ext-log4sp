@@ -2,41 +2,35 @@
 
 #include "log4sp/logger.h"
 #include "log4sp/adapter/logger_handler.h"
-#include "log4sp/adapter/sink_hanlder.h"
-
-
-using log4sp::sinks::test_sink_st;
-using spdlog::sink_ptr;
-using spdlog::details::log_msg_buffer;
+#include "log4sp/adapter/sink_handler.h"
 
 
 #define READ_TEST_SINK_HANDLE_OR_ERROR(handle)                                                      \
     SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
     SourceMod::HandleError error;                                                                   \
-    auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);            \
-    if (!sink) {                                                                                    \
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(handle, &security, &error);              \
+    if (!sink)                                                                                      \
+    {                                                                                               \
         ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);                      \
         return 0;                                                                                   \
     }                                                                                               \
-    auto testSink = std::dynamic_pointer_cast<test_sink_st>(sink);                                  \
-    if (!testSink) {                                                                                \
-        ctx->ReportError("Invalid test sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter); \
+    auto testSink = std::dynamic_pointer_cast<Log4sp::Sinks::TestSinkST>(sink);                     \
+    if (!testSink)                                                                                  \
+    {                                                                                               \
+        ctx->ReportError("Invalid test sink handle %x (error: %d)", handle, SourceMod::HandleError::HandleError_Parameter);\
         return 0;                                                                                   \
     }
 
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// *                                      TestSink Functions
-///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t TestSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    sink_ptr sink = std::make_shared<test_sink_st>();
+    auto sink = std::make_shared<Log4sp::Sinks::TestSinkST>();
 
     SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
         ctx->ReportError("SM error! Could not create test sink handle (error: %d)", error);
@@ -49,22 +43,22 @@ static cell_t GetLogCount(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    return testSink->get_log_counter();
+    return testSink->GetLogCounter();
 }
 
 static cell_t GetFlushCount(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    return testSink->get_flush_counter();
+    return testSink->GetFlushCounter();
 }
 
 static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto function = ctx->GetFunctionById(params[2]);
-    if (!function)
+    auto func = ctx->GetFunctionById(params[2]);
+    if (!func)
     {
         ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
@@ -81,24 +75,25 @@ static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) n
                    Param_String,    // func
                    Param_Cell,      // logTime
                    Param_Cell);     // data
-    FWD_ADD_FUNCTION(function);
+    FWD_ADD_FUNCTION(func);
 
     auto data = params[3];
 
-    testSink->drain_msgs(
-        [forward, data](const log_msg_buffer &log_msg) {
-            auto name = to_string(log_msg.logger_name);
-            auto payload = to_string(log_msg.payload);
-            auto seconds = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
+    testSink->DrainMsgs(
+        [fwd, data](const spdlog::details::log_msg_buffer &logMsg)
+        {
+            auto name = to_string(logMsg.logger_name);
+            auto payload = to_string(logMsg.payload);
+            auto seconds = std::chrono::duration_cast<std::chrono::seconds>(logMsg.time.time_since_epoch());
             auto logTime = static_cast<cell_t>(seconds.count());    // FIXME: Possible Year 2038 Problem
-            auto file    = log_msg.source.filename ? log_msg.source.filename : "";
-            auto func    = log_msg.source.funcname ? log_msg.source.funcname : "";
+            auto file    = logMsg.source.filename ? logMsg.source.filename : "";
+            auto func    = logMsg.source.funcname ? logMsg.source.funcname : "";
 
             FWD_PUSH_STRING(name.c_str());                          // name
-            FWD_PUSH_CELL(log_msg.level);                           // lvl
+            FWD_PUSH_CELL(logMsg.level);                            // lvl
             FWD_PUSH_STRING(payload.c_str());                       // msg
             FWD_PUSH_STRING(file);                                  // file
-            FWD_PUSH_CELL(log_msg.source.line);                     // line
+            FWD_PUSH_CELL(logMsg.source.line);                      // line
             FWD_PUSH_STRING(func);                                  // func
             FWD_PUSH_CELL(logTime);                                 // logTime
             FWD_PUSH_CELL(data);                                    // data
@@ -106,7 +101,7 @@ static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) n
         }
     );
 
-    forwards->ReleaseForward(forward);
+    forwards->ReleaseForward(fwd);
     return 0;
 }
 
@@ -114,8 +109,8 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto function = ctx->GetFunctionById(params[2]);
-    if (!function)
+    auto func = ctx->GetFunctionById(params[2]);
+    if (!func)
     {
         ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
@@ -132,12 +127,13 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
                    Param_String,    // func
                    Param_Cell,      // logTime
                    Param_Cell);     // data
-    FWD_ADD_FUNCTION(function);
+    FWD_ADD_FUNCTION(func);
 
     auto data = params[3];
 
-    testSink->drain_last_msg(
-        [forward, data](const log_msg_buffer &log_msg) {
+    testSink->DrainLastMsgs(
+        [fwd, data](const spdlog::details::log_msg_buffer &log_msg)
+        {
             auto name = to_string(log_msg.logger_name);
             auto payload = to_string(log_msg.payload);
             auto seconds = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
@@ -157,7 +153,7 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
         }
     );
 
-    forwards->ReleaseForward(forward);
+    forwards->ReleaseForward(fwd);
     return 0;
 }
 
@@ -165,8 +161,8 @@ static cell_t DrainLines(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto function = ctx->GetFunctionById(params[2]);
-    if (!function)
+    auto func = ctx->GetFunctionById(params[2]);
+    if (!func)
     {
         ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
@@ -174,19 +170,20 @@ static cell_t DrainLines(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 
     // void (const char[] line, any data);
     FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
-    FWD_ADD_FUNCTION(function);
+    FWD_ADD_FUNCTION(func);
 
     auto data = params[3];
 
-    testSink->drain_lines(
-        [forward, data](std::string_view line) {
+    testSink->DrainLines(
+        [fwd, data](std::string_view line)
+        {
             FWD_PUSH_STRING(line.data());
             FWD_PUSH_CELL(data);
             FWD_EXECUTE();
         }
     );
 
-    forwards->ReleaseForward(forward);
+    forwards->ReleaseForward(fwd);
     return 0;
 }
 
@@ -194,8 +191,8 @@ static cell_t DrainLastLine(SourcePawn::IPluginContext *ctx, const cell_t *param
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto function = ctx->GetFunctionById(params[2]);
-    if (!function)
+    auto func = ctx->GetFunctionById(params[2]);
+    if (!func)
     {
         ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
@@ -203,19 +200,20 @@ static cell_t DrainLastLine(SourcePawn::IPluginContext *ctx, const cell_t *param
 
     // void (const char[] line, any data);
     FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
-    FWD_ADD_FUNCTION(function);
+    FWD_ADD_FUNCTION(func);
 
     auto data = params[3];
 
-    testSink->drain_last_line(
-        [forward, data](std::string_view line) {
+    testSink->DrainLastLines(
+        [fwd, data](std::string_view line)
+        {
             FWD_PUSH_STRING(line.data());
             FWD_PUSH_CELL(data);
             FWD_EXECUTE();
         }
     );
 
-    forwards->ReleaseForward(forward);
+    forwards->ReleaseForward(fwd);
     return 0;
 }
 
@@ -223,7 +221,7 @@ static cell_t SetLogDelay(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    testSink->set_log_delay(std::chrono::milliseconds(params[2]));
+    testSink->SetLogDelay(std::chrono::milliseconds(params[2]));
     return 0;
 }
 
@@ -231,7 +229,7 @@ static cell_t SetFlushDelay(SourcePawn::IPluginContext *ctx, const cell_t *param
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    testSink->set_flush_delay(std::chrono::milliseconds(params[2]));
+    testSink->SetFlushDelay(std::chrono::milliseconds(params[2]));
     return 0;
 }
 
@@ -242,7 +240,7 @@ static cell_t SetLogException(SourcePawn::IPluginContext *ctx, const cell_t *par
     char *msg;
     CTX_LOCAL_TO_STRING(params[2], &msg);
 
-    testSink->set_log_exception(std::runtime_error(msg));
+    testSink->SetLogException(std::runtime_error(msg));
     return 0;
 }
 
@@ -250,7 +248,7 @@ static cell_t ClearLogException(SourcePawn::IPluginContext *ctx, const cell_t *p
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    testSink->clear_log_exception();
+    testSink->ClearLogException();
     return 0;
 }
 
@@ -261,7 +259,7 @@ static cell_t SetFlushException(SourcePawn::IPluginContext *ctx, const cell_t *p
     char *msg;
     CTX_LOCAL_TO_STRING(params[2], &msg);
 
-    testSink->set_flush_exception(std::runtime_error(msg));
+    testSink->SetFlushException(std::runtime_error(msg));
     return 0;
 }
 
@@ -269,7 +267,7 @@ static cell_t ClearFlushException(SourcePawn::IPluginContext *ctx, const cell_t 
 {
     READ_TEST_SINK_HANDLE_OR_ERROR(params[1]);
 
-    testSink->clear_flush_exception();
+    testSink->ClearFlushException();
     return 0;
 }
 

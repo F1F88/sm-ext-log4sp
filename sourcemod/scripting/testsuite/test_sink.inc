@@ -42,7 +42,7 @@ methodmap TestSink < Sink
     public native int GetLogCount();
     public native int GetFlushCount();
 
-    public native void DrainMsgs(TestDrainCallback callback, any data = 0);
+    public native void DrainMsgs(TestDrainCallback callback, any data=0);
     public ArrayList DrainMsgsFast() {
         ArrayList msgs = new ArrayList(.blocksize=ByteCountToCells(sizeof(sLogMessage)));
         this.DrainMsgs(__CB_DrainMsgs, msgs);
@@ -52,7 +52,7 @@ methodmap TestSink < Sink
         return msgs;
     }
 
-    public native void DrainLastMsg(TestDrainCallback callback, any data = 0);
+    public native void DrainLastMsg(TestDrainCallback callback, any data=0);
     public sLogMessage DrainLastMsgFast() {
         ArrayList msg = new ArrayList(.blocksize=ByteCountToCells(sizeof(sLogMessage)));
         this.DrainLastMsg(__CB_DrainMsgs, msg);
@@ -65,7 +65,7 @@ methodmap TestSink < Sink
         return logMsg;
     }
 
-    public native void DrainLines(TestDrainLineCallback callback, any data = 0);
+    public native void DrainLines(TestDrainLineCallback callback, any data=0);
     public ArrayList DrainLinesFast() {
         ArrayList lines = new ArrayList(.blocksize=ByteCountToCells(2048));
         this.DrainLines(__CB_DrainLines, lines);
@@ -75,7 +75,7 @@ methodmap TestSink < Sink
         return lines;
     }
 
-    public native void DrainLastLine(TestDrainLineCallback callback, any data = 0);
+    public native void DrainLastLine(TestDrainLineCallback callback, any data=0);
     public char[] DrainLastLineFast() {
         ArrayList line = new ArrayList(.blocksize=ByteCountToCells(2048));
         this.DrainLastLine(__CB_DrainLines, line);

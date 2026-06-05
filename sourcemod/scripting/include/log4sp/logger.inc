@@ -58,9 +58,11 @@ methodmap Logger < Handle
     /**
      * Creating a logger handle.
      *
+     * @note Logger handles must be freed via delete or CloseHandle().
+     *
      * @param name      The name of the new logger.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
+     * @return          A new logger handle.
+     * @error           Logger name already exists.
      */
     public native Logger(const char[] name);
 
@@ -71,7 +73,7 @@ methodmap Logger < Handle
      * @param sinks     The sinks array to be added to the new logger.
      * @param numSinks  The number of slots in the sinks array.
      * @return          Logger handle.
-     * @error           Logger name already exits, or the sinks has an invalid handle.
+     * @error           Logger name already exists, or the sinks has an invalid handle.
      */
     public static native Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
 
@@ -84,7 +86,7 @@ methodmap Logger < Handle
      * @param sinks     The sinks array to be added to the new logger.
      * @param numSinks  The number of slots in the sinks array.
      * @return          Logger handle.
-     * @error           Logger name already exits, or the sinks has an invalid handle.
+     * @error           Logger name already exists, or the sinks has an invalid handle.
      */
     public static native Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
 
@@ -103,14 +105,14 @@ methodmap Logger < Handle
      * @param data      Extra data value to pass to the callback.
      * @error           Invalid apply all callback.
      */
-    public static native void ApplyAll(LoggerApplyAllCallback callback, any data = 0);
+    public static native void ApplyAll(LoggerApplyAllCallback callback, any data=0);
 
     /**
      * Gets the logger name.
      *
      * @param buffer    Buffer to store logger name.
      * @param maxlen    Maximum length of the buffer.
-     * @return          Number of characters written to the buffer, not including the null terminator.
+     * @return          Number of bytes written.
      */
     public native int GetName(char[] buffer, int maxlen);
 
@@ -136,15 +138,15 @@ methodmap Logger < Handle
     public native void SetLevel(LogLevel lvl);
 
     /**
-     * Sets formatting for the sinks in the logger.
+     * Sets formatting pattern for the sinks in the logger.
      *
      * @note each sink will get a new instance of a formatter object, replacing the old one.
-     * @note pattern flags: https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#pattern-flags
+     * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
      *
-     * @param pattern   Log message pattern.
-     * @param type      Pattern time.
+     * @param pattern   Formatting pattern.
+     * @param type      Pattern time type.
      */
-    public native void SetPattern(const char[] pattern, PatternTimeType type = PatternTimeType_Local);
+    public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
 
     /**
      * Gets whether logging is enabled for the given log level.
@@ -246,7 +248,7 @@ methodmap Logger < Handle
     /**
      * Gets the minimum log level that will trigger automatic flush.
      *
-     * @return          the minimum log level that will trigger automatic flush.
+     * @return          Minimum log level that will trigger automatic flush.
      */
     public native LogLevel GetFlushLevel();
 
@@ -261,7 +263,7 @@ methodmap Logger < Handle
      * Add a new sink to sinks.
      *
      * @param sink      Sink handle.
-     * @error           Invalid sink handle.
+     * @error           Invalid Sink handle.
      */
     public native void AddSink(Sink sink);
 
@@ -271,22 +273,22 @@ methodmap Logger < Handle
      * @note After creation, the sink handle is closed.
      *
      * @param sink      Sink handle.
-     * @error           Invalid sink handle.
+     * @error           Invalid Sink handle.
      */
     public native void AddSinkEx(Sink sink);
 
     /**
-     * Remove a sink from the sinks.
+     * Close the cloned sink handle and remove from logger.
      *
      * @param sink      Sink handle.
-     * @error           Invalid sink handle.
+     * @error           Invalid Sink handle.
      */
     public native void DropSink(Sink sink);
 
     /**
      * Sets the handler function for logging errors.
      *
-     * @param handler   A handler function that is called when an error occurs.
+     * @param handler   Callback function to call when an error occurs.
      * @error           Invalid error handler function.
      */
     public native void SetErrorHandler(LoggerErrorHandler handler);

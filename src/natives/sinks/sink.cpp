@@ -2,13 +2,7 @@
 #include "spdlog/pattern_formatter.h"
 
 #include "log4sp/common.h"
-#include "log4sp/adapter/sink_hanlder.h"
-
-using spdlog::sink_ptr;
-using spdlog::source_loc;
-using spdlog::details::log_msg;
-using spdlog::details::os::now;
-using spdlog::level::level_enum;
+#include "log4sp/adapter/sink_handler.h"
 
 
 /**
@@ -18,21 +12,19 @@ using spdlog::level::level_enum;
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_SINK_HANDLE_OR_ERROR(handle)                                                           \
-    sink_ptr sink;                                                                                  \
-    do {                                                                                            \
+    spdlog::sink_ptr sink;                                                                          \
+    {                                                                                               \
         SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
         SourceMod::HandleError error;                                                               \
-        sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);             \
-        if (!sink) {                                                                                \
+        sink = Log4sp::SinkHandler::Instance().ReadHandle(handle, &security, &error);               \
+        if (!sink)                                                                                  \
+        {                                                                                           \
             ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
             return 0;                                                                               \
         }                                                                                           \
-    } while(0);
+    }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// *                                       Sink Functions
-///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_SINK_HANDLE_OR_ERROR(params[1]);
@@ -44,7 +36,7 @@ static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 {
     READ_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto lvl = log4sp::num_to_lvl(params[2]);
+    auto lvl = Log4sp::NumToLvl(params[2]);
 
     sink->set_level(lvl);
     return 0;
@@ -57,7 +49,7 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     char *pattern;
     CTX_LOCAL_TO_STRING(params[2], &pattern);
 
-    auto type = log4sp::number_to_pattern_time_type(params[3]);
+    auto type = Log4sp::NumToPatternTimeType(params[3]);
 
     using spdlog::pattern_formatter;
     sink->set_formatter(std::make_unique<pattern_formatter>(pattern, type));
@@ -68,7 +60,7 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 {
     READ_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto lvl = log4sp::num_to_lvl(params[2]);
+    auto lvl = Log4sp::NumToLvl(params[2]);
 
     return sink->should_log(lvl);
 }
@@ -83,13 +75,14 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     CTX_LOCAL_TO_STRING_NULL(params[5], &file);
     CTX_LOCAL_TO_STRING_NULL(params[7], &func);
 
-    auto lvl = log4sp::num_to_lvl(params[3]);
-    int line = params[8];
+    auto lvl = Log4sp::NumToLvl(params[3]);
+    int line = params[6];
 
-    source_loc loc(file, line, func);
+    spdlog::source_loc loc(file, line, func);
 
     using std::chrono::duration_cast;
     using std::chrono::system_clock;
+    using spdlog::details::os::now;
     std::chrono::system_clock::time_point logTime = now();
     if (params[8] != -1)
     {
@@ -100,6 +93,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
 
     try
     {
+        using spdlog::details::log_msg;
         sink->log(log_msg(logTime, loc, name, lvl, msg));
     }
     catch (const std::exception &ex)
@@ -119,13 +113,14 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     CTX_LOCAL_TO_STRING_NULL(params[7], &file);
     CTX_LOCAL_TO_STRING_NULL(params[9], &func);
 
-    auto lvl = log4sp::num_to_lvl(params[5]);
+    auto lvl = Log4sp::NumToLvl(params[5]);
     int line = params[8];
 
-    source_loc loc(file, line, func);
+    spdlog::source_loc loc(file, line, func);
 
     using std::chrono::duration_cast;
     using std::chrono::system_clock;
+    using spdlog::details::os::now;
     system_clock::time_point logTime = now();
     if (params[10] != -1)
     {
@@ -137,6 +132,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     std::string formatted;
     try
     {
+        using spdlog::details::log_msg;
         formatted = sink->to_pattern(log_msg(logTime, loc, name, lvl, msg));
     }
     catch (const std::exception &ex)
@@ -145,7 +141,7 @@ static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) n
         return 0;
     }
 
-    size_t bytes = 0;
+    std::size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], formatted.c_str(), &bytes);
     return static_cast<cell_t>(bytes);
 }

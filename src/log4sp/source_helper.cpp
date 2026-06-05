@@ -3,24 +3,28 @@
 #include "log4sp/common.h"
 #include "log4sp/source_helper.h"
 
-namespace log4sp {
+namespace Log4sp {
 
-namespace fmt_lib = spdlog::fmt_lib;
-using spdlog::source_loc;
-
-[[nodiscard]] source_loc src_helper::get() const noexcept {
-    if (!loc_.empty()) {
-        return loc_;
-    } else if (ctx_) {
-        loc_ = get_from_plugin_ctx(ctx_); // 缓存以用于下一个节点(sink)也出错时
-        return loc_;
+[[nodiscard]]
+spdlog::source_loc SrcHelper::Get() const noexcept
+{
+    if (!m_Loc.empty())
+    {
+        return m_Loc;
+    }
+    else if (m_Ctx)
+    {
+        m_Loc = GetFromPluginCtx(m_Ctx);    // 缓存以用于下一个节点(sink)也出错时
+        return m_Loc;
     }
 
     assert(false);                        // 说明初始化的代码存在错误 (至少一项有效)
-    return source_loc();
+    return spdlog::source_loc();
 }
 
-[[nodiscard]] source_loc src_helper::get_from_plugin_ctx(SourcePawn::IPluginContext *ctx) noexcept {
+[[nodiscard]]
+spdlog::source_loc SrcHelper::GetFromPluginCtx(SourcePawn::IPluginContext *ctx) noexcept
+{
     assert(ctx);
 
     unsigned int line = 0;
@@ -28,8 +32,10 @@ using spdlog::source_loc;
     const char *func = nullptr;
 
     SourcePawn::IFrameIterator *iter = ctx->CreateFrameIterator();
-    do {
-        if (iter->IsScriptedFrame()) {
+    do
+    {
+        if (iter->IsScriptedFrame())
+        {
             line = iter->LineNumber();
             file = iter->FilePath();
             func = iter->FunctionName();
@@ -39,40 +45,52 @@ using spdlog::source_loc;
     } while (!iter->Done());
     ctx->DestroyFrameIterator(iter);
 
-    return source_loc(file, static_cast<int>(line), func);
+    return spdlog::source_loc(file, static_cast<int>(line), func);
 }
 
-[[nodiscard]] std::vector<std::string> src_helper::get_stack_trace(SourcePawn::IPluginContext *ctx) noexcept {
+[[nodiscard]]
+std::vector<std::string> SrcHelper::GetStackTrace(SourcePawn::IPluginContext *ctx) noexcept
+{
     assert(ctx);
 
     SourcePawn::IFrameIterator *iter = ctx->CreateFrameIterator();
-    if (iter->Done()) {
+    if (iter->Done())
+    {
         ctx->DestroyFrameIterator(iter);
         return {};
     }
 
     std::vector<std::string> trace{"Call stack trace:"};
 
-    for (int index = 0; !iter->Done(); iter->Next(), ++index) {
-        if (iter->IsNativeFrame()) {
+    for (int index = 0; !iter->Done(); iter->Next(), ++index)
+    {
+        using spdlog::fmt_lib::format;
+
+        if (iter->IsNativeFrame())
+        {
             const char *func = iter->FunctionName();
-            if (!func) {
+            if (!func)
+            {
                 func = "<unknown function>";
             }
 
-            trace.emplace_back(fmt_lib::format("  [{}] {}", index, func));
-        } else if (iter->IsScriptedFrame()) {
+            trace.emplace_back(format("  [{}] {}", index, func));
+        }
+        else if (iter->IsScriptedFrame())
+        {
             const char *func = iter->FunctionName();
-            if (!func) {
+            if (!func)
+            {
                 func = "<unknown function>";
             }
 
             const char *file = iter->FilePath();
-            if (!file) {
-                func = "<unknown>";
+            if (!file)
+            {
+                file = "<unknown>";
             }
 
-            trace.emplace_back(fmt_lib::format("  [{}] Line {}, {}::{}", index, iter->LineNumber(), file, func));
+            trace.emplace_back(format("  [{}] Line {}, {}::{}", index, iter->LineNumber(), file, func));
         }
     }
 
@@ -80,12 +98,15 @@ using spdlog::source_loc;
     return trace;
 }
 
-// err_helper
-void err_helper::handle_ex(const std::string &origin, const src_helper &src, const std::exception &ex) const noexcept {
-    try {
-        const source_loc loc = src.get();
-        if (custom_error_handler_) {
-            auto forward = custom_error_handler_;
+// ErrHelper
+void ErrHelper::HandleEx(const std::string &origin, const SrcHelper &src, const std::exception &ex) const noexcept
+{
+    try
+    {
+        const spdlog::source_loc loc = src.Get();
+        if (m_CustomErrorHandler)
+        {
+            auto fwd = m_CustomErrorHandler;
             FWD_PUSH_STRING(ex.what());             // msg
             FWD_PUSH_STRING(origin.c_str());        // name
             FWD_PUSH_STRING(loc.filename);          // file
@@ -94,34 +115,43 @@ void err_helper::handle_ex(const std::string &origin, const src_helper &src, con
             FWD_EXECUTE();
             return;
         }
-        smutils->LogError(myself, "[%s::%d] [%s] %s", get_path_filename(loc.filename), loc.line, origin.c_str(), ex.what());
-    } catch (const std::exception &handler_ex) {
+        smutils->LogError(myself, "[%s::%d] [%s] %s", FilenameFrom(loc.filename), loc.line, origin.c_str(), ex.what());
+    }
+    catch (const std::exception &handler_ex)
+    {
         smutils->LogError(myself, "[%s] caught exception during error handler: %s", origin.c_str(), handler_ex.what());
-    } catch (...) {
+    }
+    catch (...)
+    {
         smutils->LogError(myself, "[%s] caught unknown exception during error handler", origin.c_str());
     }
 }
 
-void err_helper::handle_unknown_ex(const std::string &origin, const src_helper &src) const noexcept {
-    handle_ex(origin, src, std::runtime_error("unknown exception"));
+void ErrHelper::HandleUnknownEx(const std::string &origin, const SrcHelper &src) const noexcept
+{
+    HandleEx(origin, src, std::runtime_error("unknown exception"));
 }
 
-void err_helper::set_err_handler(SourceMod::IChangeableForward *handler) noexcept {
+void ErrHelper::SetErrHandler(SourceMod::IChangeableForward *handler) noexcept
+{
     assert(handler);
-    release_forward();
-    custom_error_handler_ = handler;
+    ReleaseForward();
+    m_CustomErrorHandler = handler;
 }
 
-err_helper::~err_helper() noexcept {
-    release_forward();
+ErrHelper::~ErrHelper() noexcept
+{
+    ReleaseForward();
 }
 
-void err_helper::release_forward() noexcept {
-    if (custom_error_handler_) {
-        forwards->ReleaseForward(custom_error_handler_);
-        custom_error_handler_ = nullptr;
+void ErrHelper::ReleaseForward() noexcept
+{
+    if (m_CustomErrorHandler)
+    {
+        forwards->ReleaseForward(m_CustomErrorHandler);
+        m_CustomErrorHandler = nullptr;
     }
 }
 
 
-}       // namespace log4sp
+}       // namespace Log4sp

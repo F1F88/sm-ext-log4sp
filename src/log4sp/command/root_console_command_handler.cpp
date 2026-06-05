@@ -7,27 +7,31 @@
 #include "log4sp/command/root_console_command_handler.h"
 
 
-namespace log4sp {
+namespace Log4sp {
 
-using spdlog::fmt_lib::format;
-using spdlog::fmt_lib::join;
-using spdlog::level::level_string_views;
-
-root_console_command_handler &root_console_command_handler::instance() {
-    static root_console_command_handler singleInstance;
+RootConsoleCommandHandler &RootConsoleCommandHandler::Instance()
+{
+    static RootConsoleCommandHandler singleInstance;
     return singleInstance;
 }
 
-void root_console_command_handler::initialize() {
-    instance().initialize_();
+void RootConsoleCommandHandler::Initialize()
+{
+    Instance().Initialize_();
 }
 
-void root_console_command_handler::destroy() {
-    instance().destroy_();
+void RootConsoleCommandHandler::Destroy()
+{
+    Instance().Destroy_();
 }
 
 
-void root_console_command_handler::draw_menu() {
+void RootConsoleCommandHandler::DrawMenu()
+{
+    using spdlog::fmt_lib::format;
+    using spdlog::fmt_lib::join;
+    using spdlog::level::level_string_views;
+
     rootconsole->ConsolePrint(SMEXT_CONF_NAME " Menu:");
     rootconsole->ConsolePrint("Usage: sm " LOG4SP_ROOT_CMD " <function_name> [arguments]");
 
@@ -45,62 +49,70 @@ void root_console_command_handler::draw_menu() {
 }
 
 
-void root_console_command_handler::execute(const std::string &cmdname, const std::vector<std::string> &args) {
-    auto iter = commands_.find(cmdname);
-    if (iter != commands_.end()) {
-        iter->second->execute(args);
-    } else {
-        throw_log4sp_ex("Command function \"" + cmdname + "\" not found.");
-    }
+void RootConsoleCommandHandler::Execute(const std::string &cmdname, const std::vector<std::string> &args)
+{
+    auto iter = m_Commands.find(cmdname);
+    if (iter == m_Commands.end())
+        ThrowLog4spEx("Command function \"" + cmdname + "\" not found.");
+
+    iter->second->Execute(args);
 }
 
 
-void root_console_command_handler::OnRootConsoleCommand(const char *cmdname, const SourceMod::ICommandArgs *args) {
+void RootConsoleCommandHandler::OnRootConsoleCommand(const char *cmdname, const SourceMod::ICommandArgs *args)
+{
     // 0-sm  |  1-log4sp  |  2-function name  |  3-logger name  |  x-params
     int argCnt = args->ArgC();
-    if (argCnt <= 2) {
-        draw_menu();
+    if (argCnt <= 2)
+    {
+        DrawMenu();
         return;
     }
 
     std::string function_name = args->Arg(2);
 
     std::vector<std::string> arguments;
-    for (int i = 3; i < argCnt; ++i) {
+    for (int i = 3; i < argCnt; ++i)
+    {
         arguments.push_back(args->Arg(i));
     }
 
-    try {
-        execute(function_name, arguments);
-    } catch (const std::exception &ex) {
+    try
+    {
+        Execute(function_name, arguments);
+    }
+    catch (const std::exception &ex)
+    {
         rootconsole->ConsolePrint("[SM] %s", ex.what());
     }
 }
 
-root_console_command_handler::root_console_command_handler() {
-    commands_["list"]           = std::make_unique<list_command>();
-    commands_["apply_all"]      = std::make_unique<apply_all_command>();
-    commands_["get_lvl"]        = std::make_unique<get_lvl_command>();
-    commands_["set_lvl"]        = std::make_unique<set_lvl_command>();
-    commands_["set_pattern"]    = std::make_unique<set_pattern_command>();
-    commands_["should_log"]     = std::make_unique<should_log_command>();
-    commands_["log"]            = std::make_unique<log_command>();
-    commands_["flush"]          = std::make_unique<flush_command>();
-    commands_["get_flush_lvl"]  = std::make_unique<get_flush_lvl_command>();
-    commands_["set_flush_lvl"]  = std::make_unique<set_flush_lvl_command>();
-    commands_["version"]        = std::make_unique<version_command>();
+RootConsoleCommandHandler::RootConsoleCommandHandler()
+{
+    m_Commands["list"]           = std::make_unique<ListCommand>();
+    m_Commands["apply_all"]      = std::make_unique<ApplyAllCommand>();
+    m_Commands["get_lvl"]        = std::make_unique<GetLvlCommand>();
+    m_Commands["set_lvl"]        = std::make_unique<SetLvlCommand>();
+    m_Commands["set_pattern"]    = std::make_unique<SetPatternCommand>();
+    m_Commands["should_log"]     = std::make_unique<ShouldLogCommand>();
+    m_Commands["log"]            = std::make_unique<LogCommand>();
+    m_Commands["flush"]          = std::make_unique<FlushCommand>();
+    m_Commands["get_flush_lvl"]  = std::make_unique<GetFlushLvlCommand>();
+    m_Commands["set_flush_lvl"]  = std::make_unique<SetFlushLvlCommand>();
+    m_Commands["version"]        = std::make_unique<VersionCommand>();
 }
 
-void root_console_command_handler::initialize_() {
-    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, SMEXT_CONF_NAME " command menu", this)) {
-        throw_log4sp_ex("SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\".");
-    }
+void RootConsoleCommandHandler::Initialize_()
+{
+    if (!rootconsole->AddRootConsoleCommand3(SMEXT_CONF_LOGTAG, SMEXT_CONF_NAME " command menu", this))
+        ThrowLog4spEx("SM error! Could not add root console commmand \"" SMEXT_CONF_LOGTAG "\".");
 }
 
-void root_console_command_handler::destroy_() {
+void RootConsoleCommandHandler::Destroy_()
+{
     bool result = rootconsole->RemoveRootConsoleCommand(SMEXT_CONF_LOGTAG, this);
     assert(result);
 }
 
 
-}       // namespace log4sp
+}       // namespace Log4sp

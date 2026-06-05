@@ -1,13 +1,7 @@
 #include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
-#include "log4sp/adapter/sink_hanlder.h"
+#include "log4sp/adapter/sink_handler.h"
 #include "log4sp/sinks/ringbuffer_sink.h"
-
-using spdlog::sink_ptr;
-using spdlog::details::log_msg_buffer;
-using spdlog::fmt_lib::to_string;
-using log4sp::sinks::ringbuffer_sink_mt;
-using log4sp::sinks::ringbuffer_sink_st;
 
 
 /**
@@ -17,35 +11,34 @@ using log4sp::sinks::ringbuffer_sink_st;
  *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
  */
 #define READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(handle)                                               \
-    std::shared_ptr<ringbuffer_sink_st> ringBufferSink;                                             \
-    do {                                                                                            \
+    std::shared_ptr<Log4sp::Sinks::RingBufferSinkST> ringBufferSink;                                \
+    {                                                                                               \
         SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
         SourceMod::HandleError error;                                                               \
-        auto sink = log4sp::sink_handler::instance().read_handle(handle, &security, &error);        \
-        if (!sink) {                                                                                \
+        auto sink = Log4sp::SinkHandler::Instance().ReadHandle(handle, &security, &error);          \
+        if (!sink)                                                                                  \
+        {                                                                                           \
             ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
             return 0;                                                                               \
         }                                                                                           \
-        ringBufferSink = std::dynamic_pointer_cast<ringbuffer_sink_st>(sink);                       \
-        if (!ringBufferSink) {                                                                      \
+        ringBufferSink = std::dynamic_pointer_cast<Log4sp::Sinks::RingBufferSinkST>(sink);          \
+        if (!ringBufferSink)                                                                        \
+        {                                                                                           \
             ctx->ReportError("Invalid RingBufferSink Handle %x.", handle);                          \
             return 0;                                                                               \
         }                                                                                           \
     } while(0);
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// *                                 RingBufferSink Functions
-///////////////////////////////////////////////////////////////////////////////////////////////////
 static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    auto amount = static_cast<size_t>(params[1]);
-    sink_ptr sink = std::make_shared<ringbuffer_sink_st>(amount);
+    auto amount = static_cast<std::size_t>(params[1]);
 
     SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto handle = log4sp::sink_handler::instance().create_handle(sink, &security, nullptr, &error);
+    auto sink = std::make_shared<Log4sp::Sinks::RingBufferSinkST>(amount);
+    auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
         ctx->ReportError("Failed to creates a RingBufferSink Handle (error code: %d)", error);
@@ -58,8 +51,8 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
 {
     READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto function = ctx->GetFunctionById(params[2]);
-    if (!function)
+    auto func = ctx->GetFunctionById(params[2]);
+    if (!func)
     {
         ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
@@ -76,30 +69,35 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
                    Param_Cell,                              // logTime
                    Param_Cell);                             // data
 
-    FWD_ADD_FUNCTION(function);
+    FWD_ADD_FUNCTION(func);
 
     auto data = params[3];
 
-    ringBufferSink->drain([&forward, &data](const log_msg_buffer &log_msg) {
-        auto name = to_string(log_msg.logger_name);
-        auto payload = to_string(log_msg.payload);
-        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
-        auto logTime = static_cast<cell_t>(seconds.count());// FIXME: Possible Year 2038 Problem
-        auto file    = log_msg.source.filename ? log_msg.source.filename : "";
-        auto func    = log_msg.source.funcname ? log_msg.source.funcname : "";
+    ringBufferSink->Drain(
+        [&fwd, &data](const spdlog::details::log_msg_buffer &log_msg)
+        {
+            using spdlog::fmt_lib::to_string;
+            using std::chrono::duration_cast;
+            auto name = to_string(log_msg.logger_name);
+            auto payload = to_string(log_msg.payload);
+            auto seconds = duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
+            auto logTime = static_cast<cell_t>(seconds.count());// FIXME: Possible Year 2038 Problem
+            auto file    = log_msg.source.filename ? log_msg.source.filename : "";
+            auto func    = log_msg.source.funcname ? log_msg.source.funcname : "";
 
-        FWD_PUSH_STRING(name.c_str());                      // name
-        FWD_PUSH_CELL(log_msg.level);                       // lvl
-        FWD_PUSH_STRING(payload.c_str());                   // msg
-        FWD_PUSH_STRING(file);                              // file
-        FWD_PUSH_CELL(log_msg.source.line);                 // line
-        FWD_PUSH_STRING(func);                              // func
-        FWD_PUSH_CELL(logTime);                             // logTime
-        FWD_PUSH_CELL(data);                                // data
-        FWD_EXECUTE();
-    });
+            FWD_PUSH_STRING(name.c_str());                  // name
+            FWD_PUSH_CELL(log_msg.level);                   // lvl
+            FWD_PUSH_STRING(payload.c_str());               // msg
+            FWD_PUSH_STRING(file);                          // file
+            FWD_PUSH_CELL(log_msg.source.line);             // line
+            FWD_PUSH_STRING(func);                          // func
+            FWD_PUSH_CELL(logTime);                         // logTime
+            FWD_PUSH_CELL(data);                            // data
+            FWD_EXECUTE();
+        }
+    );
 
-    forwards->ReleaseForward(forward);
+    forwards->ReleaseForward(fwd);
     return 0;
 }
 
@@ -107,8 +105,8 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
 {
     READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(params[1]);
 
-    auto function = ctx->GetFunctionById(params[2]);
-    if (!function)
+    auto func = ctx->GetFunctionById(params[2]);
+    if (!func)
     {
         ctx->ReportError("Invalid function id: 0x%08x", params[2]);
         return 0;
@@ -116,17 +114,20 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
 
     // void (const char[] msg, any data)
     FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_String, Param_Cell);
-    FWD_ADD_FUNCTION(function);
+    FWD_ADD_FUNCTION(func);
 
     auto data = params[3];
 
-    ringBufferSink->drain_formatted([&forward, &data](std::string_view msg) {
-        FWD_PUSH_STRING(msg.data());
-        FWD_PUSH_CELL(data);
-        FWD_EXECUTE();
-    });
+    ringBufferSink->DrainFormatted(
+        [&fwd, &data](std::string_view msg)
+        {
+            FWD_PUSH_STRING(msg.data());
+            FWD_PUSH_CELL(data);
+            FWD_EXECUTE();
+        }
+    );
 
-    forwards->ReleaseForward(forward);
+    forwards->ReleaseForward(fwd);
     return 0;
 }
 
@@ -134,21 +135,20 @@ static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const
 {
     char *name;
     CTX_LOCAL_TO_STRING(params[1], &name);
-    if (log4sp::logger_handler::instance().find_handle(name))
+    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
     {
         ctx->ReportError("Logger with name \"%s\" already exists.", name);
         return BAD_HANDLE;
     }
 
-    auto amount = static_cast<size_t>(params[2]);
-
-    sink_ptr sink = std::make_shared<ringbuffer_sink_st>(amount);
+    auto amount = static_cast<std::size_t>(params[2]);
+    auto sink = std::make_shared<Log4sp::Sinks::RingBufferSinkST>(amount);
 
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto logger = std::make_shared<log4sp::logger>(name, sink);
-    auto handle = log4sp::logger_handler::instance().create_handle(logger, &security, nullptr, &error);
+    auto logger = std::make_shared<Log4sp::Logger>(name, sink);
+    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
     if (!handle)
     {
         ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);

@@ -1,17 +1,18 @@
 #pragma once
 
-#include <functional>
-
 #include "spdlog/common.h"
 
 #include "extension.h"
 
 
-namespace log4sp {
+namespace Log4sp {
 
-[[nodiscard]] constexpr spdlog::level::level_enum num_to_lvl(const int value) noexcept {
+[[nodiscard]] constexpr
+spdlog::level::level_enum NumToLvl(const int value) noexcept
+{
     using spdlog::level::level_enum;
-    switch (value) {
+    switch (value)
+    {
         case SPDLOG_LEVEL_TRACE:    return level_enum::trace;
         case SPDLOG_LEVEL_DEBUG:    return level_enum::debug;
         case SPDLOG_LEVEL_INFO:     return level_enum::info;
@@ -22,61 +23,67 @@ namespace log4sp {
     }
 }
 
-[[nodiscard]] constexpr spdlog::level::level_enum str_to_lvl(const char *name) noexcept {
+[[nodiscard]] constexpr
+spdlog::level::level_enum StrToLvl(const char *name) noexcept
+{
     using spdlog::level::level_enum;
     using spdlog::string_view_t;
-    constexpr string_view_t level_string_views[] SPDLOG_LEVEL_NAMES;
-    constexpr int size = std::size(level_string_views);
+    constexpr string_view_t levels[] SPDLOG_LEVEL_NAMES;
+    constexpr int size = std::size(levels);
     static_assert(size == level_enum::n_levels);
 
-    for (int i = 0; i < size; ++i) {
-        if (!strcmp(name, level_string_views[i].data())) {
-            return num_to_lvl(i);
-        }
+    for (int i = 0; i < size; ++i)
+    {
+        if (!strcmp(name, levels[i].data()))
+            return NumToLvl(i);
     }
 
-    if (!strcmp(name, "warning")) {
+    if (!strcmp(name, "warning"))
         return level_enum::warn;
-    }
 
-    if (!strcmp(name, "err")) {
+    if (!strcmp(name, "err"))
         return level_enum::err;
-    }
 
-    if (!strcmp(name, "critical")) {
+    if (!strcmp(name, "critical"))
         return level_enum::critical;
-    }
 
     return level_enum::off;
 }
 
-[[nodiscard]] constexpr spdlog::level::level_enum str_short_to_lvl(const char *name) noexcept {
+[[nodiscard]] constexpr
+spdlog::level::level_enum ShortNameToLevel(const char *name) noexcept
+{
     using spdlog::level::level_enum;
-    constexpr const char *short_level_names[] SPDLOG_SHORT_LEVEL_NAMES;
-    constexpr int size = std::size(short_level_names);
+    constexpr const char *levels[] SPDLOG_SHORT_LEVEL_NAMES;
+    constexpr int size = std::size(levels);
     static_assert(size == level_enum::n_levels);
 
-    for (int i = 0; i < size; ++i) {
-        if (!strcmp(name, short_level_names[i])) {
-            return num_to_lvl(i);
-        }
+    for (int i = 0; i < size; ++i)
+    {
+        if (!strcmp(name, levels[i]))
+            return NumToLvl(i);
     }
     return level_enum::off;
 }
 
-[[nodiscard]] constexpr spdlog::pattern_time_type number_to_pattern_time_type(const int type) noexcept {
+[[nodiscard]] constexpr
+spdlog::pattern_time_type NumToPatternTimeType(const int type) noexcept
+{
     using spdlog::pattern_time_type;
     return type == 0 ? pattern_time_type::local : pattern_time_type::utc;
 }
 
-[[nodiscard]] constexpr const char *get_path_filename(const char *path) noexcept {
-    if (!path) {
+[[nodiscard]] constexpr
+const char *FilenameFrom(const char *path) noexcept
+{
+    if (!path)
         return path;
-    }
 
     const char *file = path;
-    while (*path) {
-        if (*path == '\\' || *path == '/') {
+    while (*path)
+    {
+        if (*path == '\\' || *path == '/')
+        {
             file = path + 1;
         }
         ++path;
@@ -84,15 +91,59 @@ namespace log4sp {
     return file;
 }
 
-[[noreturn]] void throw_log4sp_ex(std::string msg);
-[[noreturn]] void throw_log4sp_ex(const std::string &msg, int last_errno);
+template <SourceMod::PathType T>
+[[nodiscard]] inline
+spdlog::filename_t UnbuildPath(const spdlog::filename_t &filename) noexcept
+{
+    const char *base = nullptr;
 
-[[nodiscard]] spdlog::filename_t unbuild_path(SourceMod::PathType type, const spdlog::filename_t &filename) noexcept;
+    if constexpr (T == SourceMod::PathType::Path_Game)
+    {
+        base = smutils->GetGamePath();
+    }
+    else if constexpr (T == SourceMod::PathType::Path_SM)
+    {
+        base = smutils->GetSourceModPath();
+    }
+    else if constexpr (T == SourceMod::PathType::Path_SM_Rel)
+    {
+        // TODO
+        static_assert(T != T, "UnbuildPath: Unsupported Path_SM_Rel used.");
+    }
+    else
+    {
+        static_assert(T != T, "UnbuildPath: Unsupported PathType used.");
+    }
 
-[[nodiscard]] SourceMod::IPlugin* plsys_find_plugin_by_ctx(SourcePawn::IPluginContext *ctx) noexcept;
+    if (base)
+        return filename.substr(std::strlen(base) + 1);
+    return filename;
+}
+
+[[noreturn]] inline
+void ThrowLog4spEx(std::string msg)
+{
+    spdlog::throw_spdlog_ex(std::move(msg));
+}
+
+[[noreturn]] inline
+void ThrowLog4spEx(const std::string &msg, int last_errno)
+{
+    spdlog::throw_spdlog_ex(msg, last_errno);
+}
+
+[[nodiscard]] inline
+SourceMod::IPlugin* PluginSysFindPluginByCtx(SourcePawn::IPluginContext *ctx) noexcept
+{
+#if SMINTERFACE_EXTENSIONAPI_VERSION < 9
+    return plsys->FindPluginByContext(ctx->GetContext());
+#else
+    return plsys->FindPluginByContext(ctx);
+#endif
+}
 
 
-}   // namespace log4sp
+}   // namespace Log4sp
 
 #ifndef DEBUG
     #define CTX_LOCAL_TO_PHYS_ADDR(local_addr, phys_addr)   ctx->LocalToPhysAddr(local_addr, phys_addr);
@@ -112,35 +163,35 @@ namespace log4sp {
 
 #ifndef DEBUG
     #define FWDS_CREATE_EX(name, et, num_params, types, ...) \
-        auto forward = forwards->CreateForwardEx(name, et, num_params, types, ##__VA_ARGS__);
+        auto fwd = forwards->CreateForwardEx(name, et, num_params, types, ##__VA_ARGS__);
 #else
     #define FWDS_CREATE_EX(name, et, num_params, types, ...) \
-        auto forward = forwards->CreateForwardEx(name, et, num_params, types, ##__VA_ARGS__); \
-        assert(forward);
+        auto fwd = forwards->CreateForwardEx(name, et, num_params, types, ##__VA_ARGS__); \
+        assert(fwd);
 #endif
 
 #ifndef DEBUG
-    #define FWD_ADD_FUNCTION(function)                      forward->AddFunction(function);
-    #define FWD_EXECUTE(...)                                forward->Execute(##__VA_ARGS__);
-    #define FWD_PUSH_ARRAY(inarray, cells, ...)             forward->PushArray(inarray, cells, ##__VA_ARGS__);
-    #define FWD_PUSH_CELL(cell)                             forward->PushCell(cell);
-    #define FWD_PUSH_CELL_BY_REF(cell, ...)                 forward->PushCellByRef(cell, ##__VA_ARGS__);
-    #define FWD_PUSH_FLOAT(number)                          forward->PushFloat(cell);
-    #define FWD_PUSH_FLOAT_BY_REF(number, ...)              forward->PushFloatByRef(cell, ##__VA_ARGS__);
-    #define FWD_PUSH_STRING(string)                         forward->PushString(string);
+    #define FWD_ADD_FUNCTION(func)                          fwd->AddFunction(func);
+    #define FWD_EXECUTE(...)                                fwd->Execute(##__VA_ARGS__);
+    #define FWD_PUSH_ARRAY(inarray, cells, ...)             fwd->PushArray(inarray, cells, ##__VA_ARGS__);
+    #define FWD_PUSH_CELL(cell)                             fwd->PushCell(cell);
+    #define FWD_PUSH_CELL_BY_REF(cell, ...)                 fwd->PushCellByRef(cell, ##__VA_ARGS__);
+    #define FWD_PUSH_FLOAT(cell)                            fwd->PushFloat(cell);
+    #define FWD_PUSH_FLOAT_BY_REF(cell, ...)                fwd->PushFloatByRef(cell, ##__VA_ARGS__);
+    #define FWD_PUSH_STRING(str)                            fwd->PushString(str);
     #define FWD_PUSH_STRING_EX(buffer, length, sz_flags, cp_flags) \
-        forward->PushStringEx(buffer, length, sz_flags, cp_flags);
+        fwd->PushStringEx(buffer, length, sz_flags, cp_flags);
 #else
-    #define FWD_ADD_FUNCTION(function)                      assert(forward->AddFunction(function));
-    #define FWD_EXECUTE(...)                                assert(!forward->Execute(##__VA_ARGS__));
-    #define FWD_PUSH_ARRAY(inarray, cells, ...)             assert(!forward->PushArray(inarray, cells, ##__VA_ARGS__));
-    #define FWD_PUSH_CELL(cell)                             assert(!forward->PushCell(cell));
-    #define FWD_PUSH_CELL_BY_REF(cell, ...)                 assert(!forward->PushCellByRef(cell, ##__VA_ARGS__));
-    #define FWD_PUSH_FLOAT(number)                          assert(!forward->PushFloat(cell));
-    #define FWD_PUSH_FLOAT_BY_REF(number, ...)              assert(!forward->PushFloatByRef(cell, ##__VA_ARGS__));
-    #define FWD_PUSH_STRING(string)                         assert(!forward->PushString(string));
+    #define FWD_ADD_FUNCTION(func)                          assert(fwd->AddFunction(func));
+    #define FWD_EXECUTE(...)                                assert(!fwd->Execute(##__VA_ARGS__));
+    #define FWD_PUSH_ARRAY(inarray, cells, ...)             assert(!fwd->PushArray(inarray, cells, ##__VA_ARGS__));
+    #define FWD_PUSH_CELL(cell)                             assert(!fwd->PushCell(cell));
+    #define FWD_PUSH_CELL_BY_REF(cell, ...)                 assert(!fwd->PushCellByRef(cell, ##__VA_ARGS__));
+    #define FWD_PUSH_FLOAT(cell)                            assert(!fwd->PushFloat(cell));
+    #define FWD_PUSH_FLOAT_BY_REF(cell, ...)                assert(!fwd->PushFloatByRef(cell, ##__VA_ARGS__));
+    #define FWD_PUSH_STRING(str)                            assert(!fwd->PushString(str));
     #define FWD_PUSH_STRING_EX(buffer, length, sz_flags, cp_flags) \
-        assert(!forward->PushStringEx(buffer, length, sz_flags, cp_flags));
+        assert(!fwd->PushStringEx(buffer, length, sz_flags, cp_flags));
 #endif
 
 #ifndef DEBUG
@@ -149,14 +200,16 @@ namespace log4sp {
     #define HANDLE_SYS_FREE_HANDLE(handle, security)        assert(!handlesys->FreeHandle(handle, security));
 #endif
 
-#define FILE_EVENT_CALLBACK(callback)                                                               \
-    [callback](const filename_t &filename) {                                                        \
-        if (callback) {                                                                             \
-            auto path = log4sp::unbuild_path(SourceMod::PathType::Path_Game, filename);             \
+#define FILE_EVENT_FUNCTION(func)                                                                   \
+    [func](const spdlog::filename_t &filename)                                                      \
+    {                                                                                               \
+        if (func)                                                                                   \
+        {                                                                                           \
+            auto path = Log4sp::UnbuildPath<SourceMod::PathType::Path_Game>(filename);              \
             FWDS_CREATE_EX(nullptr, ET_Ignore, 1, nullptr, Param_String);                           \
-            FWD_ADD_FUNCTION(callback);                                                             \
+            FWD_ADD_FUNCTION(func);                                                                 \
             FWD_PUSH_STRING(path.c_str());                                                          \
             FWD_EXECUTE();                                                                          \
-            forwards->ReleaseForward(forward);                                                      \
+            forwards->ReleaseForward(fwd);                                                          \
         }                                                                                           \
     }

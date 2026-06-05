@@ -2,88 +2,106 @@
 #include <type_traits>
 #include <limits>
 
-#include "log4sp/format.h"
 #include "am-float.h"
 
+#include "log4sp/format.h"
 
-namespace log4sp {
 
-namespace fmt_lib = spdlog::fmt_lib;
-using spdlog::memory_buf_t;
+namespace Log4sp {
 
-/**
- * ref: https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.cpp
- */
-#define LADJUST         0x00000001      /* left adjustment */
-#define ZEROPAD         0x00000002      /* zero (as opposed to blank) pad */
-#define UPPERDIGITS     0x00000004      /* make alpha digits uppercase */
-#define TO_DIGIT(c)     ((c) - '0')
-#define IS_DIGIT(c)     (c >= '0' && c <= '9')
-#define ENTREF_MASK     (1 << 31)       /* See: https://github.com/alliedmodders/sourcemod/blob/4afbf9d57328de327c504c4a184670d992ae1609/core/HalfLife2.h#L60 */
-
-#define THROW_ERROR(fmt, ...) \
-    throw_log4sp_ex(fmt_lib::format(fmt, __VA_ARGS__));
+// ref: https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.cpp
+inline static constexpr int LADJUST     = 0x00000001;   // left adjustment
+inline static constexpr int ZEROPAD     = 0x00000002;   // zero (as opposed to blank) pad
+inline static constexpr int UPPERDIGITS = 0x00000004;   // make alpha digits uppercase
 
 #define CHECK_ARGS(x)   \
     if ((arg+x) > args) \
-        THROW_ERROR("String formatted incorrectly - parameter {} (total {})", arg, args);
+        ThrowError("String formatted incorrectly - parameter {} (total {})", arg, args);
 
 
-[[nodiscard]] std::string format_to_string(SourcePawn::IPluginContext *ctx, const cell_t *params, const unsigned int param) {
+template <class... Args>
+[[noreturn]]
+inline static
+void ThrowError(spdlog::format_string_t<Args...> fmt, Args&&... args)
+{
+    spdlog::throw_spdlog_ex(spdlog::fmt_lib::format(fmt, std::forward<Args>(args)...));
+}
+
+[[nodiscard]]
+std::string FormatToString(SourcePawn::IPluginContext *ctx, const cell_t *params, const unsigned int param)
+{
     assert(ctx && params);
 
     char *format;
     CTX_LOCAL_TO_STRING(params[param], &format);
     unsigned int lparam = param + 1;
-    return fmt_lib::to_string(format_to_buffer(ctx, format, params, &lparam));
+    return spdlog::fmt_lib::to_string(FormatToBuffer(ctx, format, params, &lparam));
 }
 
 
-static void ReorderTranslationParams(const SourceMod::Translation *pTrans, cell_t *params) noexcept {
+inline static
+void ReorderTranslationParams(const SourceMod::Translation *pTrans, cell_t *params) noexcept
+{
     cell_t new_params[MAX_TRANSLATE_PARAMS];
-    for (unsigned int i = 0; i < pTrans->fmt_count; ++i) {
+    for (unsigned int i = 0; i < pTrans->fmt_count; ++i)
+    {
         new_params[i] = params[pTrans->fmt_order[i]];
     }
     memcpy(params, new_params, pTrans->fmt_count * sizeof(cell_t));
 }
 
-static memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, unsigned int *arg) {
+inline static
+spdlog::memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, unsigned int *arg)
+{
     unsigned int langid;
     SourceMod::Translation pTrans;
-    SourceMod::IPlugin *pPlugin = plsys_find_plugin_by_ctx(ctx);
+    SourceMod::IPlugin *pPlugin = PluginSysFindPluginByCtx(ctx);
     SourceMod::IPhraseCollection *pPhrases = pPlugin->GetPhrases();
 
 try_serverlang:
-    if (target == SOURCEMOD_SERVER_LANGUAGE) {
+    if (target == SOURCEMOD_SERVER_LANGUAGE)
+    {
         langid = translator->GetServerLanguage();
-    } else if ((target >= 1) && (target <= playerhelpers->GetMaxClients())) {
+    }
+    else if ((target >= 1) && (target <= playerhelpers->GetMaxClients()))
+    {
         langid = translator->GetClientLanguage(target);
-    } else {
-        THROW_ERROR("Translation failed: invalid client index {} (arg {})", target, *arg);
+    }
+    else
+    {
+        ThrowError("Translation failed: invalid client index {} (arg {})", target, *arg);
     }
 
-    if (pPhrases->FindTranslation(key, langid, &pTrans) != Trans_Okay) {
-        if (target != SOURCEMOD_SERVER_LANGUAGE && langid != translator->GetServerLanguage()) {
+    if (pPhrases->FindTranslation(key, langid, &pTrans) != Trans_Okay)
+    {
+        if (target != SOURCEMOD_SERVER_LANGUAGE && langid != translator->GetServerLanguage())
+        {
             target = SOURCEMOD_SERVER_LANGUAGE;
             goto try_serverlang;
-        } else if (langid != SOURCEMOD_LANGUAGE_ENGLISH) {
-            if (pPhrases->FindTranslation(key, SOURCEMOD_LANGUAGE_ENGLISH, &pTrans) != Trans_Okay) {
-                THROW_ERROR("Language phrase \"{}\" not found (arg {})", key, *arg);
+        }
+        else if (langid != SOURCEMOD_LANGUAGE_ENGLISH)
+        {
+            if (pPhrases->FindTranslation(key, SOURCEMOD_LANGUAGE_ENGLISH, &pTrans) != Trans_Okay)
+            {
+                ThrowError("Language phrase \"{}\" not found (arg {})", key, *arg);
             }
-        } else {
-            THROW_ERROR("Language phrase \"{}\" not found (arg {})", key, *arg);
+        }
+        else
+        {
+            ThrowError("Language phrase \"{}\" not found (arg {})", key, *arg);
         }
     }
 
     unsigned int max_params = pTrans.fmt_count;
 
-    if (max_params) {
+    if (max_params)
+    {
         cell_t new_params[MAX_TRANSLATE_PARAMS];
 
         /* Check if we're going to over the limit */
-        if ((*arg) + (max_params - 1) > static_cast<unsigned int>(params[0])) {
-            THROW_ERROR("Translation string formatted incorrectly - missing at least {} parameters (arg {})", ((*arg + (max_params - 1)) - params[0]), *arg);
-        }
+        if ((*arg) + (max_params - 1) > static_cast<unsigned int>(params[0]))
+            ThrowError("Translation string formatted incorrectly - missing at least {} parameters (arg {})",
+                        ((*arg + (max_params - 1)) - params[0]), *arg);
 
         /**
          * If we need to re-order the parameters, do so with a temporary array.
@@ -92,29 +110,35 @@ try_serverlang:
         memcpy(new_params, params, sizeof(cell_t) * (params[0] + 1));
         ReorderTranslationParams(&pTrans, &new_params[*arg]);
 
-        return format_to_buffer(ctx, pTrans.szPhrase, new_params, arg);
+        return FormatToBuffer(ctx, pTrans.szPhrase, new_params, arg);
     }
 
-    return format_to_buffer(ctx, pTrans.szPhrase, params, arg);
+    return FormatToBuffer(ctx, pTrans.szPhrase, params, arg);
 }
 
-static void AddString(memory_buf_t &out, const char *string, unsigned int width, int prec, int flags) noexcept {
-    if (string == nullptr) {
+inline static
+void AddString(spdlog::memory_buf_t &out, const char *string, unsigned int width, int prec, int flags) noexcept
+{
+    if (string == nullptr)
+    {
         AddString(out, "(null)", width, prec, flags);
         return;
     }
 
-    unsigned int size = std::strlen(string);
-    if (prec >= 0 && static_cast<unsigned int>(prec) < size) {
+    unsigned int size = static_cast<unsigned int>(std::strlen(string));
+    if (prec >= 0 && static_cast<unsigned int>(prec) < size)
+    {
         size = static_cast<unsigned int>(prec);
     }
 
-    // 需要填充的字符数
+    // Number of spaces to be pad
     unsigned int pads = (width <= size) ? (0u) : (width - size);
 
     // right justify if required
-    if (!(flags & LADJUST)) {
-        while (pads) {
+    if (!(flags & LADJUST))
+    {
+        while (pads)
+        {
             pads--;
             out.push_back(' ');
         }
@@ -123,15 +147,19 @@ static void AddString(memory_buf_t &out, const char *string, unsigned int width,
     out.append(string, string + size);
 
     // left justify if required
-    if (flags & LADJUST) {
-        while (pads) {
+    if (flags & LADJUST)
+    {
+        while (pads)
+        {
             pads--;
             out.push_back(' ');
         }
     }
 }
 
-static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int prec, int flags) noexcept {
+inline static
+void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int prec, int flags) noexcept
+{
     int digits;                 // non-fraction part digits
     double tmp;                 // temporary
     int val;                    // temporary
@@ -140,24 +168,28 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     int significant_digits = 0; // number of significant digits written
     constexpr const int MAX_SIGNIFICANT_DIGITS = 16;
 
-    if (ke::IsNaN(static_cast<float>(fval))) {
+    if (ke::IsNaN(static_cast<float>(fval)))
+    {
         AddString(out, "NaN", width, prec, flags);
         return;
     }
 
-    if (ke::IsInfinite(static_cast<float>(fval))) {
+    if (ke::IsInfinite(static_cast<float>(fval)))
+    {
         const char *str = ((fval < 0.0f) ? "-Inf" : "Inf");
         AddString(out, str, width, prec, flags);
         return;
     }
 
     // default precision
-    if (prec < 0) {
+    if (prec < 0)
+    {
         prec = 6;
     }
 
     // get the sign
-    if (fval < 0) {
+    if (fval < 0)
+    {
         fval = -fval;
         sign = true;
     }
@@ -166,7 +198,8 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     digits = (int)std::log10(fval) + 1;
 
     // Only print 0.something if 0 < fval < 1
-    if (digits < 1) {
+    if (digits < 1)
+    {
         digits = 1;
     }
 
@@ -174,30 +207,39 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     fieldlength = digits + prec + ((prec > 0) ? 1 : 0) + (sign ? 1 : 0);
 
     // minus sign BEFORE left padding if padding with zeros
-    if (sign && (flags & ZEROPAD)) {
+    if (sign && (flags & ZEROPAD))
+    {
         out.push_back('-');
     }
 
     // right justify if required
-    if (!(flags & LADJUST)) {
-        while (fieldlength < width--) {
+    if (!(flags & LADJUST))
+    {
+        while (fieldlength < width--)
+        {
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
     }
 
     // minus sign AFTER left padding if padding with spaces
-    if (sign && !(flags & ZEROPAD)) {
+    if (sign && !(flags & ZEROPAD))
+    {
         out.push_back('-');
     }
 
     // write the whole part
     tmp = std::pow(10.0, digits - 1);
-    if (++significant_digits > MAX_SIGNIFICANT_DIGITS) {
-        while (digits--) {
+    if (++significant_digits > MAX_SIGNIFICANT_DIGITS)
+    {
+        while (digits--)
+        {
             out.push_back('0');
         }
-    } else {
-        while (digits--) {
+    }
+    else
+    {
+        while (digits--)
+        {
             val = (int)(fval / tmp);
             out.push_back('0' + static_cast<char>(val));
             fval -= val * tmp;
@@ -206,19 +248,25 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     }
 
     // write the fraction part
-    if (prec) {
+    if (prec)
+    {
         out.push_back('.');
     }
 
     tmp = std::pow(10.0, prec);
 
     fval *= tmp;
-    if (++significant_digits > MAX_SIGNIFICANT_DIGITS) {
-        while (prec--) {
+    if (++significant_digits > MAX_SIGNIFICANT_DIGITS)
+    {
+        while (prec--)
+        {
             out.push_back('0');
         }
-    } else {
-        while (prec--) {
+    }
+    else
+    {
+        while (prec--)
+        {
             tmp *= 0.1;
             val = (int)(fval / tmp);
             out.push_back('0' + static_cast<char>(val));
@@ -227,8 +275,10 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
     }
 
     // left justify if required
-    if (flags & LADJUST) {
-        while (fieldlength < width--) {
+    if (flags & LADJUST)
+    {
+        while (fieldlength < width--)
+        {
             // right-padding only with spaces, ZEROPAD is ignored
             out.push_back(' ');
         }
@@ -236,36 +286,41 @@ static void AddFloat(memory_buf_t &out, double fval, unsigned int width, int pre
 }
 
 template <typename T>
-inline static void AddBinary(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+inline static
+void AddBinary(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
+{
     static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
 
-    constexpr const int MAX_BINARY = sizeof(T) * CHAR_BIT;
-    char text[MAX_BINARY];
-    int iter = MAX_BINARY - 1;
+    constexpr const int MAX_TEXT = sizeof(T) * CHAR_BIT;
+    char text[MAX_TEXT];
+    int iter = MAX_TEXT - 1;
 
-    do {
+    do
+    {
         text[iter--] = (val & 1) ? '1' : '0';
     } while (val >>= 1);
 
-    const char *begin = text + iter + 1;
-    unsigned int digits = MAX_BINARY - iter - 1;
-
-    // 需要填充的字符数
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
+    const char *begin   = text + iter + 1;
+    unsigned int digits = MAX_TEXT - iter - 1;
+    unsigned int pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
-    if (!(flags & LADJUST)) {
-        while (pads) {
+    if (!(flags & LADJUST))
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
     }
 
-    out.append(begin, text + MAX_BINARY);
+    out.append(begin, text + MAX_TEXT);
 
     // left justify if required
-    if (flags & LADJUST) {
-        while (pads) {
+    if (flags & LADJUST)
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
@@ -273,7 +328,8 @@ inline static void AddBinary(memory_buf_t &out, T val, unsigned int width, int f
 }
 
 template <typename T>
-inline static void AddUInt(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+inline static void AddUInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
+{
     static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
     static_assert(std::numeric_limits<std::uint32_t>::digits10 == 9);
     static_assert(std::numeric_limits<std::uint64_t>::digits10 == 19);
@@ -286,24 +342,28 @@ inline static void AddUInt(memory_buf_t &out, T val, unsigned int width, int fla
         text[digits++] = '0' + val % 10;
     } while (val /= 10);
 
-    // 需要填充的字符数
     unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
-    if (!(flags & LADJUST)) {
-        while (pads) {
+    if (!(flags & LADJUST))
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
     }
 
-    while (digits) {
+    while (digits)
+    {
         out.push_back(text[--digits]);
     }
 
     // left justify if required
-    if (flags & LADJUST) {
-        while (pads) {
+    if (flags & LADJUST)
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
@@ -311,7 +371,9 @@ inline static void AddUInt(memory_buf_t &out, T val, unsigned int width, int fla
 }
 
 template <typename T>
-inline static void AddInt(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+inline static
+void AddInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
+{
     static_assert(std::is_integral_v<T>, "T must be an integral type");
     static_assert(std::numeric_limits<std::int32_t>::digits10 == 9);
     static_assert(std::numeric_limits<std::int64_t>::digits10 == 18);
@@ -320,44 +382,50 @@ inline static void AddInt(memory_buf_t &out, T val, unsigned int width, int flag
     char text[MAX_TEXT];
     unsigned int digits = 0;
 
-    bool negative = val < 0;
+    const bool negative = val < 0;
     std::make_unsigned_t<T> unsignedVal = negative ? std::abs(val) : val;
 
     do {
         text[digits++] = '0' + unsignedVal % 10;
     } while (unsignedVal /= 10);
 
-    // 需要填充的字符数
     unsigned int pads = (width <= digits) ? (0u) : (width - digits);
     if (pads > 0 && negative) {
         pads--;
     }
 
     // minus sign BEFORE left padding if padding with zeros
-    if (negative && (flags & ZEROPAD)) {
+    if (negative && (flags & ZEROPAD))
+    {
         out.push_back('-');
     }
 
     // right justify if required
-    if (!(flags & LADJUST)) {
-        while (pads) {
+    if (!(flags & LADJUST))
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
     }
 
     // minus sign AFTER left padding if padding with spaces
-    if (negative && !(flags & ZEROPAD)) {
+    if (negative && !(flags & ZEROPAD))
+    {
         out.push_back('-');
     }
 
-    while (digits) {
+    while (digits)
+    {
         out.push_back(text[--digits]);
     }
 
     // left justify if required
-    if (flags & LADJUST) {
-        while (pads) {
+    if (flags & LADJUST)
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
@@ -365,12 +433,14 @@ inline static void AddInt(memory_buf_t &out, T val, unsigned int width, int flag
 }
 
 template <typename T>
-inline static void AddHex(memory_buf_t &out, T val, unsigned int width, int flags) noexcept {
+inline static
+void AddHex(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
+{
     static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
 
     constexpr const char *hexUpper = "0123456789ABCDEF";
-    constexpr const char *hexlower = "0123456789abcdef";
-    const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexlower;
+    constexpr const char *hexLower = "0123456789abcdef";
+    const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexLower;
 
     constexpr unsigned int MAX_TEXT = sizeof(T) * 16 / CHAR_BIT;
     char text[MAX_TEXT];
@@ -380,86 +450,108 @@ inline static void AddHex(memory_buf_t &out, T val, unsigned int width, int flag
         text[digits++] = hexAdjust[val & 0xF];
     } while(val >>= 4);
 
-    // 需要填充的字符数
     unsigned int pads = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
-    if (!(flags & LADJUST)) {
-        while (pads) {
+    if (!(flags & LADJUST))
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
     }
 
-    while (digits) {
+    while (digits)
+    {
         out.push_back(text[--digits]);
     }
 
     // left justify if required
-    if (flags & LADJUST) {
-        while (pads) {
+    if (flags & LADJUST)
+    {
+        while (pads)
+        {
             pads--;
             out.push_back((flags & ZEROPAD) ? '0' : ' ');
         }
     }
 }
 
-static bool DescribePlayer(int entRef, const char **namep, const char **authp, int *useridp) noexcept {
+inline static
+bool DescribePlayer(int entRef, const char **namep, const char **authp, int *useridp) noexcept
+{
+    // ref: https://github.com/alliedmodders/sourcemod/blob/4afbf9d57328de327c504c4a184670d992ae1609/core/HalfLife2.h#L60
+    constexpr int ENTREF_MASK = (1 << 31);
+
     int index = entRef;
-    if (entRef & ENTREF_MASK) {
+    if (entRef & ENTREF_MASK)
+    {
         index = gamehelpers->ReferenceToIndex(entRef);
     }
 
     SourceMod::IGamePlayer *player = playerhelpers->GetGamePlayer(index);
-    if (!player || !player->IsConnected()) {
+    if (!player || !player->IsConnected())
+    {
         return false;
     }
 
-    if (namep != nullptr) {
+    if (namep != nullptr)
+    {
         *namep = player->GetName();
     }
 
-    if (authp != nullptr) {
+    if (authp != nullptr)
+    {
         const char *auth = player->GetAuthString();
         *authp = (auth && *auth) ? auth : "STEAM_ID_PENDING";
     }
 
-    if (useridp != nullptr) {
+    if (useridp != nullptr)
+    {
         *useridp = player->GetUserId();
     }
 
     return true;
 }
 
-[[nodiscard]] memory_buf_t format_to_buffer(SourcePawn::IPluginContext *ctx, const char *format, const cell_t *params, unsigned int *param) {
-    assert(ctx && format && params && *param > 0 && *param <= SP_MAX_EXEC_PARAMS);
+[[nodiscard]]
+inline
+spdlog::memory_buf_t FormatToBuffer(SourcePawn::IPluginContext *ctx, const char *layout, const cell_t *params, unsigned int *param)
+{
+    assert(ctx && layout && params && *param <= SP_MAX_EXEC_PARAMS);
+
+    using spdlog::memory_buf_t;
+    using spdlog::fmt_lib::format;
 
     memory_buf_t out;
-
     unsigned int args = params[0];  // params count
     unsigned int arg  = *param;     // 用于遍历 params 的指针
-    const char *fmt = format;       // 用于遍历 format 的指针
+    const char *iter  = layout;     // 用于遍历 layout 的指针
     int flags;                      // 对齐 (左 / 右) | 填充符 ('0' / ' ')
     int prec;                       // 精度
     unsigned int width;             // 宽度
 
-    while (true) {
-        const char *begin = fmt;
+    while (true)
+    {
+        const char *begin = iter;
 
-        // run through the format string until we hit a '%' or '\0'
-        while (*fmt != '%' && *fmt != '\0') {
-            ++fmt;
+        // run through the layout string until we hit a '%' or '\0'
+        while (*iter != '%' && *iter != '\0')
+        {
+            ++iter;
         }
 
-        out.append(begin, fmt);
+        out.append(begin, iter);
 
-        if (*fmt == '\0') {
+        if (*iter == '\0')
+        {
             *param = arg;
             return out;
         }
 
         // skip over the '%'
-        ++fmt;
+        ++iter;
 
         // reset formatting state
         flags = 0;
@@ -467,24 +559,29 @@ static bool DescribePlayer(int entRef, const char **namep, const char **authp, i
         prec = -1;
 
 rflag:
-        char ch = *fmt++;
+        char ch = *iter++;
 reswitch:
-        switch(ch) {
-        case '-': {
+        switch(ch)
+        {
+        case '-':
+            {
                 flags |= LADJUST;
                 goto rflag;
             }
-        case '.': {
+        case '.':
+            {
                 int n = 0;
-                ch = *fmt++;
-                while (IS_DIGIT(ch)) {
+                ch = *iter++;
+                while (ch >= '0' && ch <= '9')
+                {
                     n = 10 * n + (ch - '0');
-                    ch = *fmt++;
+                    ch = *iter++;
                 }
                 prec = (n < 0) ? -1 : n;
                 goto reswitch;
             }
-        case '0': {
+        case '0':
+            {
                 flags |= ZEROPAD;
                 goto rflag;
             }
@@ -496,16 +593,19 @@ reswitch:
         case '6':
         case '7':
         case '8':
-        case '9': {
+        case '9':
+            {
                 unsigned int n = 0;
-                do {
+                do
+                {
                     n = 10 * n + (ch - '0');
-                    ch = *fmt++;
-                } while(IS_DIGIT(ch));
+                    ch = *iter++;
+                } while(ch >= '0' && ch <= '9');
                 width = n;
                 goto reswitch;
             }
-        case 'c': {
+        case 'c':
+            {
                 CHECK_ARGS(0);
                 char *c;
                 CTX_LOCAL_TO_STRING(params[arg], &c);
@@ -514,17 +614,19 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'b': {
+        case 'b':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
-                AddBinary(out, static_cast<unsigned int>(*value), width, flags);
+                AddBinary(out, static_cast<std::uint32_t>(*value), width, flags);
                 ++arg;
                 break;
             }
         case 'd':
-        case 'i': {
+        case 'i':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
@@ -533,16 +635,18 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'u': {
+        case 'u':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
-                AddUInt(out, static_cast<unsigned int>(*value), width, flags);
+                AddUInt(out, static_cast<std::uint32_t>(*value), width, flags);
                 ++arg;
                 break;
             }
-        case 'f': {
+        case 'f':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
@@ -551,50 +655,59 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'L': {
+        case 'L':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
-                if (*value) {
+                if (*value)
+                {
                     const char *name;
                     const char *auth;
                     int userid;
                     if (!DescribePlayer(*value, &name, &auth, &userid))
-                        THROW_ERROR("Client index {} is invalid (arg {})", *value, arg);
+                        ThrowError("Client index {} is invalid (arg {})", *value, arg);
 
-                    AddString(out, fmt_lib::format("{}<{}><{}><>", name, userid, auth).c_str(), width, prec, flags);
-                } else {
+                    AddString(out, format("{}<{}><{}><>", name, userid, auth).c_str(), width, prec, flags);
+                }
+                else
+                {
                     AddString(out, "Console<0><Console><Console>", width, prec, flags);
                 }
                 ++arg;
                 break;
             }
-        case 'N': {
+        case 'N':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
-                if (*value) {
+                if (*value)
+                {
                     const char *name;
                     if (!DescribePlayer(*value, &name, nullptr, nullptr))
-                        THROW_ERROR("Client index {} is invalid (arg {})", *value, arg);
+                        ThrowError("Client index {} is invalid (arg {})", *value, arg);
 
                     AddString(out, name, width, prec, flags);
-                } else {
+                }
+                else
+                {
                     AddString(out, "Console", width, prec, flags);
                 }
                 ++arg;
                 break;
             }
-        case 'E': {
+        case 'E':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
                 CBaseEntity *entity = gamehelpers->ReferenceToEntity(*value);
                 if (!entity)
-                    THROW_ERROR("Entity index {} is invalid (arg {})", *value, arg);
+                    ThrowError("Entity index {} is invalid (arg {})", *value, arg);
 
                 // 可能返回 nullptr, 但 AddString 有保障机制
                 const char *classname = gamehelpers->GetEntityClassname(entity);
@@ -602,7 +715,8 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 's': {
+        case 's':
+            {
                 CHECK_ARGS(0);
                 char *str;
                 CTX_LOCAL_TO_STRING(params[arg], &str);
@@ -611,28 +725,31 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'T': {
+        case 'T':
+            {
                 CHECK_ARGS(1);
                 char *key;
                 cell_t *target;
                 CTX_LOCAL_TO_STRING(params[arg++], &key);
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg++], &target);
 
-                memory_buf_t phrase = Translate(ctx, key, *target, params, &arg);
+                spdlog::memory_buf_t phrase = Translate(ctx, key, *target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
-        case 't': {
+        case 't':
+            {
                 CHECK_ARGS(0);
                 char *key;
                 CTX_LOCAL_TO_STRING(params[arg++], &key);
                 auto target = static_cast<cell_t>(translator->GetGlobalTarget());
 
-                memory_buf_t phrase = Translate(ctx, key, target, params, &arg);
+                spdlog::memory_buf_t phrase = Translate(ctx, key, target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
-        case 'X': {
+        case 'X':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
@@ -641,7 +758,8 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'x': {
+        case 'x':
+            {
                 CHECK_ARGS(0);
                 cell_t *value;
                 CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
@@ -650,12 +768,15 @@ reswitch:
                 ++arg;
                 break;
             }
-        case 'l': {
+        case 'l':
+            {
                 CHECK_ARGS(0);
-                ch = *fmt++;
+                ch = *iter++;
 
-                switch (ch) {
-                case 'b': {
+                switch (ch)
+                {
+                case 'b':
+                    {
                         cell_t *value;
                         CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
@@ -664,7 +785,8 @@ reswitch:
                         break;
                     }
                 case 'd':
-                case 'i': {
+                case 'i':
+                    {
                         cell_t *value;
                         CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
@@ -672,7 +794,8 @@ reswitch:
                         ++arg;
                         break;
                     }
-                case 'u': {
+                case 'u':
+                    {
                         cell_t *value;
                         CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
@@ -680,7 +803,8 @@ reswitch:
                         ++arg;
                         break;
                     }
-                case 'X': {
+                case 'X':
+                    {
                         cell_t *value;
                         CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
@@ -688,7 +812,8 @@ reswitch:
                         ++arg;
                         break;
                     }
-                case 'x': {
+                case 'x':
+                    {
                         cell_t *value;
                         CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
 
@@ -697,20 +822,23 @@ reswitch:
                         break;
                     }
                 default:
-                    THROW_ERROR("{}", "Invalid formatter. Only %lb, %ld, %li, %lu, %lX, %lx are allowed.");
+                    ThrowError("{}", "Invalid formatter. Only %lb, %ld, %li, %lu, %lX, %lx are allowed.");
                 }
                 break;
             }
-        case '%': {
+        case '%':
+            {
                 out.push_back(ch);
                 break;
             }
-        case '\0': {
+        case '\0':
+            {
                 out.push_back('%');
                 *param = arg;
                 return out;
             }
-        default: {
+        default:
+            {
                 out.push_back(ch);
                 break;
             }
@@ -722,4 +850,4 @@ reswitch:
 }
 
 
-}       // namespace log4sp
+}       // namespace Log4sp
