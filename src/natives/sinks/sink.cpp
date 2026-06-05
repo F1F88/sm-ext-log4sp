@@ -1,4 +1,5 @@
 #include "spdlog/sinks/sink.h"
+#include "spdlog/pattern_formatter.h"
 
 #include "log4sp/common.h"
 #include "log4sp/adapter/sink_hanlder.h"
@@ -56,7 +57,10 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     char *pattern;
     CTX_LOCAL_TO_STRING(params[2], &pattern);
 
-    sink->set_pattern(pattern);
+    auto type = log4sp::number_to_pattern_time_type(params[3]);
+
+    using spdlog::pattern_formatter;
+    sink->set_formatter(std::make_unique<pattern_formatter>(pattern, type));
     return 0;
 }
 
