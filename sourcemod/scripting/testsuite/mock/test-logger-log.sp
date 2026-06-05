@@ -10,8 +10,8 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_sink"
-#include "test_utils"
+#include "../test_sink"
+#include "../test_utils"
 
 
 #define LOGGER_NAME             "test-log"

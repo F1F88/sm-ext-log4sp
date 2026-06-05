@@ -5,8 +5,8 @@
 #include <testing>
 #include <log4sp>
 
-#include "test_sink"
-#include "test_utils"
+#include "../test_sink"
+#include "../test_utils"
 
 
 public void OnPluginStart()

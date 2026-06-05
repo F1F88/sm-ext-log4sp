@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_utils"
+#include "../test_utils"
 
 #pragma semicolon 1
 #pragma newdecls required

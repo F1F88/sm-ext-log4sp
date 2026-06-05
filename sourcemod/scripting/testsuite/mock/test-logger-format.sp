@@ -11,7 +11,7 @@
 #include <testing>
 #include <log4sp>
 
-#include "test_sink"
+#include "../test_sink"
 
 /**
  * Full syntax

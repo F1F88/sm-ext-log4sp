@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_utils"
+#include "../test_utils"
 
 
 #define PLUGIN_PATTERN  ".*test-ringbuffer-logger.sp"
