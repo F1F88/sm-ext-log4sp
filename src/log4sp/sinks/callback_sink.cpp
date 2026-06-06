@@ -90,13 +90,15 @@ void callback_sink::sink_it_(const log_msg &log_msg) noexcept {
     if (log_callback_) {
         auto forward = log_callback_;
         auto logTime = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
+        auto file    = log_msg.source.filename ? log_msg.source.filename : "";
+        auto func    = log_msg.source.funcname ? log_msg.source.funcname : "";
 
         FWD_PUSH_STRING(log_msg.logger_name.data());            // name
         FWD_PUSH_CELL(log_msg.level);                           // lvl
         FWD_PUSH_STRING(log_msg.payload.data());                // msg
-        FWD_PUSH_STRING(log_msg.source.filename);               // file
+        FWD_PUSH_STRING(file);                                  // file
         FWD_PUSH_CELL(log_msg.source.line);                     // line
-        FWD_PUSH_STRING(log_msg.source.funcname);               // func
+        FWD_PUSH_STRING(func);                                  // func
         FWD_PUSH_CELL(static_cast<cell_t>(logTime.count()));    // logTime
         FWD_EXECUTE();
     }

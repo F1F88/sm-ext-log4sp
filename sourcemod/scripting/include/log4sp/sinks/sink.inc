@@ -47,7 +47,7 @@ methodmap Sink < Handle
      * @param pattern   Logger sinks pattern.
      * @param type      Pattern time.
      */
-    public native void SetPattern(const char[] pattern);
+    public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
 
     /**
      * Gets whether logging is enabled for the given log level.
