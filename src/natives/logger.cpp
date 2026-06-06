@@ -350,7 +350,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
     CTX_LOCAL_TO_STRING(params[3], &msg);
 
     logger->log(ctx, lvl, fmt_lib::format("Stack trace requested: {}", msg));
-    logger->log(ctx, lvl, fmt_lib::format("Called from: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
+    logger->log(ctx, lvl, fmt_lib::format("Called from: {}", log4sp::plsys_find_plugin_by_ctx(ctx)->GetFilename()));
 
     std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
     for (auto &iter : messages) {
@@ -391,7 +391,7 @@ static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     ctx->ReportError(msg);
 
     logger->log(ctx, lvl, fmt_lib::format("Exception reported: {}", msg));
-    logger->log(ctx, lvl, fmt_lib::format("Blaming: {}", plsys->FindPluginByContext(ctx->GetContext())->GetFilename()));
+    logger->log(ctx, lvl, fmt_lib::format("Blaming: {}", log4sp::plsys_find_plugin_by_ctx(ctx)->GetFilename()));
 
     std::vector<std::string> messages = log4sp::src_helper::get_stack_trace(ctx);
     for (auto &iter : messages) {

@@ -48,7 +48,8 @@ static void ReorderTranslationParams(const SourceMod::Translation *pTrans, cell_
 static memory_buf_t Translate(SourcePawn::IPluginContext *ctx, const char *key, cell_t target, const cell_t *params, unsigned int *arg) {
     unsigned int langid;
     SourceMod::Translation pTrans;
-    SourceMod::IPhraseCollection *pPhrases = plsys->FindPluginByContext(ctx->GetContext())->GetPhrases();
+    SourceMod::IPlugin *pPlugin = plsys_find_plugin_by_ctx(ctx);
+    SourceMod::IPhraseCollection *pPhrases = pPlugin->GetPhrases();
 
 try_serverlang:
     if (target == SOURCEMOD_SERVER_LANGUAGE) {

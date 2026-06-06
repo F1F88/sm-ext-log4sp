@@ -89,6 +89,8 @@ namespace log4sp {
 
 [[nodiscard]] spdlog::filename_t unbuild_path(SourceMod::PathType type, const spdlog::filename_t &filename) noexcept;
 
+[[nodiscard]] SourceMod::IPlugin* plsys_find_plugin_by_ctx(SourcePawn::IPluginContext *ctx) noexcept;
+
 
 }   // namespace log4sp
 

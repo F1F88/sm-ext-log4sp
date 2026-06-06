@@ -40,5 +40,15 @@ using spdlog::filename_t;
     return filename;
 }
 
+[[nodiscard]]
+SourceMod::IPlugin *plsys_find_plugin_by_ctx(SourcePawn::IPluginContext *ctx) noexcept
+{
+#if SMINTERFACE_EXTENSIONAPI_VERSION < 9
+    return plsys->FindPluginByContext(ctx->GetContext());
+#else
+    return plsys->FindPluginByContext(ctx);
+#endif
+}
+
 
 }       // namespace log4sp
