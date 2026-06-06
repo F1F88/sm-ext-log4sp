@@ -91,13 +91,15 @@ static cell_t DrainMsgs(SourcePawn::IPluginContext *ctx, const cell_t *params) n
             auto payload = to_string(log_msg.payload);
             auto seconds = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
             auto logTime = static_cast<cell_t>(seconds.count());    // FIXME: Possible Year 2038 Problem
+            auto file    = log_msg.source.filename ? log_msg.source.filename : "";
+            auto func    = log_msg.source.funcname ? log_msg.source.funcname : "";
 
             FWD_PUSH_STRING(name.c_str());                          // name
             FWD_PUSH_CELL(log_msg.level);                           // lvl
             FWD_PUSH_STRING(payload.c_str());                       // msg
-            FWD_PUSH_STRING(log_msg.source.filename);               // file
+            FWD_PUSH_STRING(file);                                  // file
             FWD_PUSH_CELL(log_msg.source.line);                     // line
-            FWD_PUSH_STRING(log_msg.source.funcname);               // func
+            FWD_PUSH_STRING(func);                                  // func
             FWD_PUSH_CELL(logTime);                                 // logTime
             FWD_PUSH_CELL(data);                                    // data
             FWD_EXECUTE();
@@ -140,13 +142,15 @@ static cell_t DrainLastMsg(SourcePawn::IPluginContext *ctx, const cell_t *params
             auto payload = to_string(log_msg.payload);
             auto seconds = std::chrono::duration_cast<std::chrono::seconds>(log_msg.time.time_since_epoch());
             auto logTime = static_cast<cell_t>(seconds.count());    // FIXME: Possible Year 2038 Problem
+            auto file    = log_msg.source.filename ? log_msg.source.filename : "";
+            auto func    = log_msg.source.funcname ? log_msg.source.funcname : "";
 
             FWD_PUSH_STRING(name.c_str());                          // name
             FWD_PUSH_CELL(log_msg.level);                           // lvl
             FWD_PUSH_STRING(payload.c_str());                       // msg
-            FWD_PUSH_STRING(log_msg.source.filename);               // file
+            FWD_PUSH_STRING(file);                                  // file
             FWD_PUSH_CELL(log_msg.source.line);                     // line
-            FWD_PUSH_STRING(log_msg.source.funcname);               // func
+            FWD_PUSH_STRING(func);                                  // func
             FWD_PUSH_CELL(logTime);                                 // logTime
             FWD_PUSH_CELL(data);                                    // data
             FWD_EXECUTE();
