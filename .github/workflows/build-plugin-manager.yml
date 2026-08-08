@@ -33,11 +33,9 @@ jobs:
           echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Getting own repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: extension
-          submodules: true
-          fetch-depth: 0
 
       - name: Setup SourcePawn Compiler ${{ matrix.sm_latest }}
         id: setup_sp
@@ -51,7 +49,7 @@ jobs:
         working-directory: extension/sourcemod/scripting
         run: |
           mkdir -p ../plugins
-          spcomp log4sp_manager.sp -o "../plugins/log4sp_manager.smx" -i "include"
+          spcomp log4sp_manager.sp -o "../plugins/log4sp_manager.smx" -i "include" -E
           echo "PLUGIN_VERSION=${{ steps.setup_sp.outputs.plugin-version }}" >> $GITHUB_ENV
 
       - name: Uploading package
