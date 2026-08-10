@@ -39,10 +39,10 @@
 #include "smsdk_ext.h"
 
 /**
- * @brief Implementation of the logger in SourcePawn Extension.
+ * @brief Implementation of the log4sp Extension.
  * Note: Uncomment one of the pre-defined virtual functions in order to use it.
  */
-class Log4sp : public SDKExtension
+class Log4spExtension : public SDKExtension
 {
 public:
     /**
@@ -114,7 +114,7 @@ public:
     #endif
 };
 
-extern Log4sp                   g_Log4sp;
+extern Log4spExtension          g_Log4sp;
 
 extern const sp_nativeinfo_t    CommonNatives[];
 extern const sp_nativeinfo_t    LoggerNatives[];
@@ -125,5 +125,9 @@ extern const sp_nativeinfo_t    DailyFileSinkNatives[];
 extern const sp_nativeinfo_t    RingBufferSinkNatives[];
 extern const sp_nativeinfo_t    RotatingFileSinkNatives[];
 extern const sp_nativeinfo_t    ServerConsoleSinkNatives[];
+
+#ifdef DEBUG
+extern const sp_nativeinfo_t    TestSinkNatives[];
+#endif
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_

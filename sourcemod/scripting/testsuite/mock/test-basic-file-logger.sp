@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_utils"
+#include "../test_utils"
 
 
 #define LOGGER_NAME     "test-file-logger"
@@ -24,8 +24,6 @@ Action Command_Test(int args)
     TestFileLogger();
 
     TestFlushOn();
-
-    TestGetFilename();
 
     TestTruncate();
 
@@ -79,24 +77,6 @@ void TestFlushOn()
     AssertFileMatch("Flush by destructor, contents match", path, "Test message 1" ... P_EOL ... "Should not be flushed" ... P_EOL ... "Test message 2" ... P_EOL);
 }
 
-void TestGetFilename()
-{
-    SetTestContext("Test Simple File GetFilename");
-
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "basic-file/get_filename.log");
-
-    BasicFileSink sink = new BasicFileSink(path);
-
-    char filename[PLATFORM_MAX_PATH];
-    sink.GetFilename(filename, sizeof(filename));
-    int length = sink.GetFilenameLength();
-    delete sink;
-
-    AssertStrEq("Filename", filename, path);
-    AssertEq("FilenameLength", length, strlen(filename));
-}
-
 void TestTruncate()
 {
     SetTestContext("Test Simple File Truncate");
@@ -146,7 +126,7 @@ void OnOpenPre(const char[] filename)
     AssertStrEq("OpenPre, file name", filename, path);
     AssertFalse("OpenPre, file exists", FileExists(path));
 
-    CreateDirectory(dir, FPERM_O_READ|FPERM_O_EXEC|FPERM_G_READ|FPERM_G_EXEC|FPERM_U_READ|FPERM_U_WRITE|FPERM_U_EXEC);
+    CreateDirectory(dir);
     File file = OpenFile(path, "wt");
     file.WriteString("Hello File Event Callback! ", false);
     file.Flush();

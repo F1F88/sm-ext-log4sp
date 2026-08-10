@@ -40,7 +40,7 @@ stock int CountLines(const char[] path)
 {
     File file = OpenFile(path, "r");
     if (!file)
-        ThrowError("Failed open file: (%s).", file);
+        ThrowError("Failed open file: (%s).", path);
 
     char buffer[2048];
     int counter = 0;
@@ -79,9 +79,9 @@ stock int CountFiles(const char[] folder, any ...)
     return __CountFiles(buffer);
 }
 
-stock void AssertFileMatch(const char[] text, const char[] path, const char[] expectedPattern, int position=0, int where=SEEK_SET)
+stock void AssertFileMatch(const char[] text, const char[] path, const char[] expectedPattern)
 {
-    AssertTrue(text, StringMatch(GetFileContents(path, position, where), expectedPattern) > 0);
+    AssertTrue(text, StringMatch(GetFileContents(path), expectedPattern) > 0);
 }
 
 stock void AssertStrMatch(const char[] text, const char[] str, const char[] expectedPattern)
@@ -167,14 +167,13 @@ stock void MarkErrorTestEnd(const char[] fmt, any ...)
     FindConVar("sv_logecho").SetBool(true); // HACK: 重新启用控制台回显日志消息
 }
 
-stock char[] GetFileContents(const char[] path, int position=0, int where=SEEK_SET)
+stock char[] GetFileContents(const char[] path)
 {
     File file = OpenFile(path, "rt");
     if (!file)
-        ThrowError("Failed open file '%s'.", file);
+        ThrowError("Failed open file '%s'.", path);
 
     char buffer[2048 * 2];
-    file.Seek(position, where);
     file.ReadString(buffer, sizeof(buffer));
     delete file;
     return buffer;

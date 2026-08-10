@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_utils"
+#include "../test_utils"
 
 
 public void OnPluginStart()
@@ -21,8 +21,6 @@ Action Command_Test(int args)
     TestDefaultCalculator();
 
     TestFormatCalculator();
-
-    TestGetFilename();
 
     TestRotates();
 
@@ -72,25 +70,6 @@ void TestFormatCalculator()
     AssertEq("Generated log file, count lines", CountLines(path), 10);
 }
 
-void TestGetFilename()
-{
-    SetTestContext("Test Daily File GetFilename");
-
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "daily/filename.log");
-
-    DailyFileSink sink = new DailyFileSink(path);
-
-    int length = sink.GetFilenameLength();
-    char[] filename = new char[length + 1];
-    sink.GetFilename(filename, length + 1);
-    delete sink;
-
-    FormatTime(path, sizeof(path), "daily/filename_%Y%m%d.log");
-    BuildTestPath(path, sizeof(path), path);
-    AssertStrEq("Filename", filename, path);
-}
-
 /* Test removal of old files */
 void TestRotates()
 {
@@ -113,12 +92,7 @@ void TestRotates()
 void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)
 {
     char path[PLATFORM_MAX_PATH];
-    FormatEx(path, sizeof(path), "daily/rotate_%d_%d_%d", daysToRun, maxDays, expectedNumFiles);
-    if (DirExists(path))
-        AssertTrue("Directory already exists", false);
-
-    Format(path, sizeof(path), "%s/daily_rotate.log", path);
-    BuildTestPath(path, sizeof(path), path);
+    path = PrepareTestPath("daily/rotate/daily_rotate.log");
 
     DailyFileSink sink = new DailyFileSink(path, 2, 30, true, maxDays);
     for (int i = 0; i < daysToRun; ++i)
@@ -138,7 +112,7 @@ void TestFileCallback()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "daily/file_callback.log");
 
-    Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .onOpen=OnOpenPre, .onClose=OnClosePost);
+    Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .openPre=OnOpenPre, .closePost=OnClosePost);
     delete logger;
 }
 

@@ -43,6 +43,9 @@ public:
     void set_pattern(const std::string &pattern) final override;
     void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) override;
 
+    //* @log4sp hack *//
+    [[nodiscard]] std::string to_pattern(const details::log_msg &log_msg) final override;
+
     // Formatting codes
     const string_view_t reset = "\033[m";
     const string_view_t bold = "\033[1m";

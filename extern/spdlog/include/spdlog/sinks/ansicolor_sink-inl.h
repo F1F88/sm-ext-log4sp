@@ -81,6 +81,15 @@ SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_formatter(
     formatter_ = std::move(sink_formatter);
 }
 
+//* @log4sp hack *//
+template <typename ConsoleMutex>
+[[nodiscard]] SPDLOG_INLINE std::string ansicolor_sink<ConsoleMutex>::to_pattern(const details::log_msg &log_msg) {
+    std::lock_guard<mutex_t> lock(mutex_);
+    memory_buf_t formatted;
+    formatter_->format(log_msg, formatted);
+    return fmt_lib::to_string(formatted);
+}
+
 template <typename ConsoleMutex>
 SPDLOG_INLINE bool ansicolor_sink<ConsoleMutex>::should_color() const {
     return should_do_colors_;

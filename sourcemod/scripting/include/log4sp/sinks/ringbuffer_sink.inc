@@ -13,14 +13,13 @@
 /**
  * Callback function called on DrainCallback.Drain().
  *
- * @param name          The name of a logger.
+ * @param name          The name of the logger.
  * @param lvl           Log level enum.
  * @param msg           Pre formatted log message.
  * @param file          The file name of the source code location.
  * @param line          The line number of the source code location.
  * @param func          The function name of the source code location.
  * @param logTime       The log message time point in seconds.
- * @param data          Data value passed to callback.
  */
 typeset DrainCallback
 {
@@ -35,7 +34,7 @@ typeset DrainCallback
  * Callback function called on DrainCallback.DrainFormatted().
  *
  * @param msg           Log messages that have been formatted in a pre-set pattern.
- * @param data          Data value passed to callback.
+ * @param data          Data value passed to Logger.ApplyAll().
  */
 typeset DrainFormattedCallback
 {
@@ -56,38 +55,42 @@ methodmap RingBufferSink < Sink
      * When the buffer is full, new messages override the old ones.
      * Useful for storing debug data in memory in case of error.
      *
-     * @param           Amount of log messages in memory.
-     * @return          RingBufferSink handle.
+     * @note RingBufferSink handles must be freed via delete or CloseHandle().
+     *
+     * @param amount    Maximum number of log messages.
+     * @return          A new RingBufferSink Handle.
      */
     public native RingBufferSink(int amount);
 
     /**
      * Apply a user defined function on all buffered log messages.
      *
-     * @param callback  A callback that apply a user defined function on all buffered log messages.
+     * @param callback  Function to call.
      * @param data      Extra data value to pass to the callback.
-     * @error           Invalid drain callback.
+     * @error           Invalid drain function.
      */
-    public native void Drain(DrainCallback callback, any data = 0);
+    public native void Drain(DrainCallback callback, any data=0);
 
     /**
      * Apply a user defined function on all buffered log messages.
      *
-     * @param callback  A callback that apply a user defined function on all buffered log messages.
+     * @param callback  Function to call.
      * @param data      Extra data value to pass to the callback.
-     * @error           Invalid drain formatted callback.
+     * @error           Invalid drain formatted function.
      */
-    public native void DrainFormatted(DrainFormattedCallback callback, any data = 0);
+    public native void DrainFormatted(DrainFormattedCallback callback, any data=0);
 
     /**
      * Create a logger handle that holds fixed amount of log messages in memory.
      *
+     * @note Logger handles must be freed via delete or CloseHandle().
+     *
      * @param name      The name of the new logger.
-     * @param           Amount of log messages in memory.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
-     * @deprecated      This cannot be using the RingbufferSink function.
+     * @param amount    Maximum number of log messages.
+     * @return          A new Logger Handle.
+     * @error           Logger name already exists.
+     * @deprecated      This cannot be done using the RingbufferSink function.
      */
-    #pragma deprecated This cannot be using the RingbufferSink function.
+    #pragma deprecated This cannot be done using the RingbufferSink function.
     public static native Logger CreateLogger(const char[] name, int amount);
 }

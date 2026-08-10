@@ -58,18 +58,61 @@ methodmap Logger < Handle
     /**
      * Creating a logger handle.
      *
+     * @note Logger handles must be freed via delete or CloseHandle().
+     *
      * @param name      The name of the new logger.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
+     * @return          A new logger handle.
+     * @error           Logger name already exists.
      */
     public native Logger(const char[] name);
+
+    /**
+     * Creating a logger handle with an array of sink handles.
+     *
+     * @param name      The name of the new logger.
+     * @param sinks     The sinks array to be added to the new logger.
+     * @param numSinks  The number of slots in the sinks array.
+     * @return          Logger handle.
+     * @error           Logger name already exists, or the sinks has an invalid handle.
+     */
+    public static native Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
+
+    /**
+     * Creating a logger handle with an array of sink handles.
+     *
+     * @note After creation, all sink handles in the sinks are closed.
+     *
+     * @param name      The name of the new logger.
+     * @param sinks     The sinks array to be added to the new logger.
+     * @param numSinks  The number of slots in the sinks array.
+     * @return          Logger handle.
+     * @error           Logger name already exists, or the sinks has an invalid handle.
+     */
+    public static native Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
+
+    /**
+     * Gets a logger handle by logger name.
+     *
+     * @param name      The name of the logger.
+     * @return          Logger handle or INVALID_HANDLE if the logger name does not exist.
+     */
+    public static native Logger Get(const char[] name);
+
+    /**
+     * Apply a user defined function on all loggers.
+     *
+     * @param callback  A callback that apply a user defined function on all loggers.
+     * @param data      Extra data value to pass to the callback.
+     * @error           Invalid apply all callback.
+     */
+    public static native void ApplyAll(LoggerApplyAllCallback callback, any data=0);
 
     /**
      * Gets the logger name.
      *
      * @param buffer    Buffer to store logger name.
      * @param maxlen    Maximum length of the buffer.
-     * @return          Number of characters written to the buffer, not including the null terminator.
+     * @return          Number of bytes written.
      */
     public native int GetName(char[] buffer, int maxlen);
 
@@ -101,9 +144,9 @@ methodmap Logger < Handle
      * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
      *
      * @param pattern   Formatting pattern.
-     * @param type      Pattern time.
+     * @param type      Pattern time type.
      */
-    public native void SetPattern(const char[] pattern, PatternTimeType type = PatternTimeType_Local);
+    public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
 
     /**
      * Gets whether logging is enabled for the given log level.
@@ -157,6 +200,22 @@ methodmap Logger < Handle
     public native void LogStackTraceEx(LogLevel lvl, const char[] fmt, any ...);
     public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...);
 
+    /**
+     * Aborts the current callback and throws an error.
+     * This function does not return in that no code is executed following it.
+     *
+     * @note This will call SourceMod native ThrowError() first and then log the message using the logger.
+     * @note A low log level does not skip the call of ThrowError()!
+     * @note A low log level will skip log the message using the logger!
+     *
+     * @param lvl       Log level enum.
+     * @param msg       Log message.
+     * @error           Always!
+     */
+    public native void ThrowError(LogLevel lvl, const char[] msg);
+    public native void ThrowErrorEx(LogLevel lvl, const char[] fmt, any ...);
+    public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...);
+
     public native void Trace(const char[] msg);
     public native void TraceEx(const char[] fmt, any ...);
     public native void TraceAmxTpl(const char[] fmt, any ...);
@@ -189,7 +248,7 @@ methodmap Logger < Handle
     /**
      * Gets the minimum log level that will trigger automatic flush.
      *
-     * @return          the minimum log level that will trigger automatic flush.
+     * @return          Minimum log level that will trigger automatic flush.
      */
     public native LogLevel GetFlushLevel();
 
@@ -204,74 +263,33 @@ methodmap Logger < Handle
      * Add a new sink to sinks.
      *
      * @param sink      Sink handle.
-     * @error           Invalid sink handle.
+     * @error           Invalid Sink handle.
      */
     public native void AddSink(Sink sink);
 
     /**
      * Add a new sink to sinks.
      *
-     * @note After Adding the sink handle, the sink handle is closed.
+     * @note After creation, the sink handle is closed.
      *
      * @param sink      Sink handle.
-     * @error           Invalid sink handle.
+     * @error           Invalid Sink handle.
      */
     public native void AddSinkEx(Sink sink);
 
     /**
-     * Remove a sink from the sinks.
+     * Close the cloned sink handle and remove from logger.
      *
      * @param sink      Sink handle.
-     * @error           Invalid sink handle.
+     * @error           Invalid Sink handle.
      */
     public native void DropSink(Sink sink);
 
     /**
      * Sets the handler function for logging errors.
      *
-     * @param handler   A handler function that is called when an error occurs.
+     * @param handler   Callback function to call when an error occurs.
      * @error           Invalid error handler function.
      */
     public native void SetErrorHandler(LoggerErrorHandler handler);
-
-    /**
-     * Creating a logger handle with an array of sink handles.
-     *
-     * @param name      The name of the new logger.
-     * @param sinks     The sinks array to be added to the new logger.
-     * @param numSinks  The number of slots in the sinks array.
-     * @return          Logger handle.
-     * @error           Logger name already exits, or the sinks has an invalid handle.
-     */
-    public static native Logger CreateLoggerWith(const char[] name, Sink[] sinks, int numSinks);
-
-    /**
-     * Creating a logger handle with an array of sink handles.
-     *
-     * @note After creating the logger handle, all sink handles in sinks are closed.
-     *
-     * @param name      The name of the new logger.
-     * @param sinks     The sinks array to be added to the new logger.
-     * @param numSinks  The number of slots in the sinks array.
-     * @return          Logger handle.
-     * @error           Logger name already exits, or the sinks has an invalid handle.
-     */
-    public static native Logger CreateLoggerWithEx(const char[] name, Sink[] sinks, int numSinks);
-
-    /**
-     * Gets a logger handle by logger name.
-     *
-     * @param name      The name of the logger.
-     * @return          Logger handle or INVALID_HANDLE if the logger name does not exist.
-     */
-    public static native Logger Get(const char[] name);
-
-    /**
-     * Apply a user defined function on all loggers.
-     *
-     * @param callback  A callback that apply a user defined function on all loggers.
-     * @param data      Extra data value to pass to the callback.
-     * @error           Invalid apply all callback.
-     */
-    public static native void ApplyAll(LoggerApplyAllCallback callback, any data = 0);
 }

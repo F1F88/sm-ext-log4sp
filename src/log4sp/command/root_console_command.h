@@ -1,107 +1,125 @@
 
 #pragma once
 
-#include <optional>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <vector>
+
+#include "log4sp/common.h"
 
 
-namespace log4sp {
+namespace Log4sp {
 
-class logger;   // forward declaration
+#define LOG4SP_ROOT_CMD     "log4sp"
 
-class command {
+class Logger;
+
+class Command
+{
 public:
-    enum class status : std::uint8_t {
-        ok,
-        usage_error,
-        param_error,
-        execute_error
-    };
-    using result = std::pair<command::status, std::optional<std::string>>;
+    using LevelEnum = spdlog::level::level_enum;
 
-    virtual ~command() = default;
+    virtual ~Command() = default;
 
     /**
-     * @brief 执行命令
+     * 命令模式抽象类
      *
-     * @param args      参数列表 (不包含 command 自身, 以及前缀指令)
-     * @return          命令执行结果
+     * 重复操作不算失败，不需要抛出异常，但可能响应一条消息
+     *
+     * @param args      参数列表
+     * @exception       指令执行失败时抛出异常，消息为失败原因
+     *                  例如：参数不匹配
      */
-    virtual result execute(const std::vector<std::string> &args) noexcept = 0;
+    virtual void Execute(const std::vector<std::string> &args) = 0;
 
-    static result ok()                             { return result{command::status::ok, std::nullopt}; }
-    static result usage_error(std::string err)     { return result{command::status::usage_error, std::move(err)}; }
-    static result param_error(std::string err)     { return result{command::status::param_error, std::move(err)}; }
-    static result execute_error(std::string err)   { return result{command::status::execute_error, std::move(err)}; }
+protected:
+    [[nodiscard]] std::shared_ptr<Logger> ArgToLogger(const std::string &arg);
+
+    [[nodiscard]] LevelEnum ArgToLevel(const std::string &arg);
 };
 
 
-class list_command final : public command {
+class ListCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class apply_all_command final : public command {
+class ApplyAllCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 
 private:
-    static const std::unordered_map<std::string_view, std::unique_ptr<command>> functions_;
+    inline static const std::unordered_set<std::string> m_Functions{
+        "get_lvl", "set_lvl", "set_pattern", "should_log", "log",
+        "flush", "get_flush_lvl", "set_flush_lvl"};
 };
 
 
-class get_lvl_command final : public command {
+class GetLvlCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class set_lvl_command final : public command {
+class SetLvlCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class set_pattern_command final : public command {
+class SetPatternCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class should_log_command final : public command {
+class ShouldLogCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class log_command final : public command {
+class LogCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class flush_command final : public command {
+class FlushCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class get_flush_lvl_command final : public command {
+class GetFlushLvlCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class set_flush_lvl_command final : public command {
+class SetFlushLvlCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &args) override;
 };
 
 
-class version_command final : public command {
+class VersionCommand final : public Command
+{
 public:
-    result execute(const std::vector<std::string> &args) noexcept override;
+    void Execute(const std::vector<std::string> &) override;
 };
 
 
-}       // namespace log4sp
+}       // namespace Log4sp

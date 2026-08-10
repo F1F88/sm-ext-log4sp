@@ -13,25 +13,19 @@
 /**
  * Callback function called when Sink.Log() is called.
  *
- * @param name          The name of a logger.
+ * @param name          The name of the logger.
  * @param lvl           Log level enum.
  * @param msg           Pre formatted log message.
  * @param file          The file name of the source code location.
  * @param line          The line number of the source code location.
  * @param func          The function name of the source code location.
- * @param logTime       The log message time point in seconds.
- * @param data          Data value passed to the CallbackSink callbacks.
- * @param error         Error message buffer in case of log failure.
- * @return              False for log success, True otherwise.
- *                      If True, an exception with error description will be thrown.
+ * @param logTime       Log message timestamps (in seconds).
  */
 typeset CustomLogCallback
 {
     function void (const char[] name, LogLevel lvl, const char[] msg);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
     function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data);
-    function bool (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data, char error[256]);
 }
 
 
@@ -39,48 +33,14 @@ typeset CustomLogCallback
  * Callback function called after Sink.Log() is called.
  *
  * @param msg           Log messages that have been formatted in a pre-set pattern.
- * @param data          Data value passed to the CallbackSink callbacks.
- * @param error         Error message buffer in case of log failure.
- * @return              False for log success, True otherwise.
- *                      If True, an exception with error description will be thrown.
  */
-typeset CustomLogPostCallback
-{
-    function void (const char[] msg);
-    function void (const char[] msg, any data);
-    function bool (const char[] msg, any data, char error[256]);
-}
+typedef CustomLogPostCallback = function void (const char[] msg);
 
 
 /**
  * Callback function called when Sink.Flush() is called.
- *
- * @param error         Error message buffer in case of flush failure.
- * @param data          Data value passed to the CallbackSink callbacks.
- * @return              False for flush success, True otherwise.
- *                      If True, an exception with error description will be thrown.
  */
-typeset CustomFlushCallback
-{
-    function void ();
-    function void (any data);
-    function bool (any data, char error[256]);
-}
-
-
-/**
- * Callback function called after the underlying CallbackSink object is destroyed.
- *
- * @note Can be used to close Handles in data.
- * @note The CallbackSink Handle is closed.
- *
- * @param data          Data value passed to the CallbackSink callbacks.
- */
-typeset CustomDestoryPostCallback
-{
-    function void ();
-    function void (any data);
-}
+typedef CustomFlushCallback = function void ();
 
 
 /**
@@ -91,49 +51,52 @@ methodmap CallbackSink < Sink
     /**
      * Trivial callback sink, gets a callback function and calls it on each log or flush.
      *
-     * @param logCB         Callback function called when Sink.Log() is called.
-     * @param logPostCB     Callback function called after Sink.Log() is called.
-     * @param flushCB       Callback function called when Sink.Flush() is called.
-     * @param destoryPostCB Callback function called after the underlying CallbackSink object is destroyed.
-     * @param data          Data value passed to the CallbackSin callbacks.
-     * @return              CallbackSink handle.
-     */
-    public native CallbackSink(
-        CustomLogCallback         logCB         = INVALID_FUNCTION,
-        CustomLogPostCallback     logPostCB     = INVALID_FUNCTION,
-        CustomFlushCallback       flushCB       = INVALID_FUNCTION,
-        CustomDestoryPostCallback destoryPostCB = INVALID_FUNCTION,
-        any data = 0);
-
-    /**
-     * Set data value passed to the CallbackSink callbacks.
+     * @note CallbackSink handles must be freed via delete or CloseHandle().
      *
-     * @param data              Data value.
+     * @param logCallback       Function to call when CallbackSink.Log() is called.
+     * @param logPostCallback   Function to call after CallbackSink.Log() is called.
+     * @param flushCallback     Function to call when CallbackSink.Flush() is called.
+     * @return                  A new CallbackSink Handle.
      */
-    public native void SetData(any data);
+    public native CallbackSink(CustomLogCallback logCallback=INVALID_FUNCTION,
+        CustomLogPostCallback logPostCallback=INVALID_FUNCTION,
+        CustomFlushCallback flushCallback=INVALID_FUNCTION);
 
     /**
-     * Get data value passed to the CallbackSink callbacks.
+     * Set the callback sink log callback.
+     *
+     * @param logCallback       Callback function called when Sink.Log() is called.
      */
-    public native any GetData();
+    public native void SetLogCallback(CustomLogCallback logCallback);
+
+    /**
+     * Set the callback sink log post callback.
+     *
+     * @param logPostCallback   Callback function called after Sink.Log() is called.
+     */
+    public native void SetLogPostCallback(CustomLogPostCallback logPostCallback);
+
+    /**
+     * Set the callback sink flush callback.
+     *
+     * @param flushCallback     Callback function called when Sink.Flush() is called.
+     */
+    public native void SetFlushCallback(CustomFlushCallback flushCallback);
 
     /**
      * Create a logger handle that gets a callback function and calls it on each log or flush.
      *
-     * @param name          The name of the new logger.
-     * @param logCB         Callback function called when Sink.Log() is called.
-     * @param logPostCB     Callback function called after Sink.Log() is called.
-     * @param flushCB       Callback function called when Sink.Flush() is called.
-     * @param destoryPostCB Callback function called after the underlying CallbackSink object is destroyed.
-     * @param data          Data value passed to the CallbackSink callbacks.
-     * @return              Logger handle.
-     * @error               Logger name already exits.
+     * @note Logger handles must be freed via delete or CloseHandle().
+     *
+     * @param name              The name of the new logger.
+     * @param logCallback       Function to call when CallbackSink.Log() is called.
+     * @param logPostCallback   Function to call after CallbackSink.Log() is called.
+     * @param flushCallback     Function to call when CallbackSink.Flush() is called.
+     * @return                  A new Logger Handle.
+     * @error                   Logger name already exists.
      */
-    public static native Logger CreateLogger(
-        const char[] name,
-        CustomLogCallback         logCB         = INVALID_FUNCTION,
-        CustomLogPostCallback     logPostCB     = INVALID_FUNCTION,
-        CustomFlushCallback       flushCB       = INVALID_FUNCTION,
-        CustomDestoryPostCallback destoryPostCB = INVALID_FUNCTION,
-        any data = 0);
+    public static native Logger CreateLogger(const char[] name,
+        CustomLogCallback logCallback=INVALID_FUNCTION,
+        CustomLogPostCallback logPostCallback=INVALID_FUNCTION,
+        CustomFlushCallback flushCallback=INVALID_FUNCTION);
 }

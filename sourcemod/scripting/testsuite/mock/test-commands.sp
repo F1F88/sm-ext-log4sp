@@ -4,8 +4,8 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_sink"
-#include "test_utils"
+#include "../test_sink"
+#include "../test_utils"
 
 
 public void OnPluginStart()
@@ -45,10 +45,10 @@ void TestCommands()
     AssertStrMatch("Commands get_lvl match", buffer, "\\[SM\\] Logger 'test-commands' log level is 'info'\\.(\n|\r\n)");
 
     ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_lvl test-commands trace");
-    AssertStrMatch("Commands set_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set log level 'info' to 'trace'(\n|\r\n)");
+    AssertStrMatch("Commands set_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set log level to 'trace'(\n|\r\n)");
 
     ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_lvl test-commands 1");
-    AssertStrMatch("Commands set_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set log level 'trace' to 'debug'(\n|\r\n)");
+    AssertStrMatch("Commands set_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set log level to 'debug'(\n|\r\n)");
 
     ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_pattern test-commands %%v");
     AssertStrMatch("Commands set_pattern match", buffer, "\\[SM\\] Logger 'test-commands' will set log pattern to '%v'(\n|\r\n)");

@@ -4,10 +4,8 @@
 #include <sourcemod>
 #include <log4sp>
 
-#include "test_utils"
+#include "../test_utils"
 
-#pragma semicolon 1
-#pragma newdecls required
 
 static const char g_expectedLevelNames[][] = {LOG4SP_LEVEL_NAME_TRACE, LOG4SP_LEVEL_NAME_DEBUG,
                                               LOG4SP_LEVEL_NAME_INFO,  LOG4SP_LEVEL_NAME_WARN,
@@ -18,6 +16,7 @@ static const char g_expectedLevelShortNames[][] = {LOG4SP_LEVEL_SHORT_NAME_TRACE
                                                    LOG4SP_LEVEL_SHORT_NAME_INFO,  LOG4SP_LEVEL_SHORT_NAME_WARN,
                                                    LOG4SP_LEVEL_SHORT_NAME_ERROR, LOG4SP_LEVEL_SHORT_NAME_FATAL,
                                                    LOG4SP_LEVEL_SHORT_NAME_OFF};
+
 
 public void OnPluginStart()
 {
@@ -53,15 +52,15 @@ void TestCommon()
         AssertStrEq("Log level short name", levelShort, g_expectedLevelShortNames[i]);
     }
 
-    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_TRACE ... "' to lvl", view_as<int>(NameToLogLevel(LOG4SP_LEVEL_NAME_TRACE)), LOG4SP_LEVEL_TRACE);
-    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_DEBUG ... "' to lvl", view_as<int>(NameToLogLevel(LOG4SP_LEVEL_NAME_DEBUG)), LOG4SP_LEVEL_DEBUG);
-    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_INFO  ... "' to lvl", view_as<int>(NameToLogLevel(LOG4SP_LEVEL_NAME_INFO)),  LOG4SP_LEVEL_INFO);
-    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_WARN  ... "' to lvl", view_as<int>(NameToLogLevel(LOG4SP_LEVEL_NAME_WARN)),  LOG4SP_LEVEL_WARN);
-    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_ERROR ... "' to lvl", view_as<int>(NameToLogLevel(LOG4SP_LEVEL_NAME_ERROR)), LOG4SP_LEVEL_ERROR);
-    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_FATAL ... "' to lvl", view_as<int>(NameToLogLevel(LOG4SP_LEVEL_NAME_FATAL)), LOG4SP_LEVEL_FATAL);
-    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_OFF   ... "' to lvl", view_as<int>(NameToLogLevel(LOG4SP_LEVEL_NAME_OFF)),   LOG4SP_LEVEL_OFF);
-    AssertEq("Name '' to lvl", view_as<int>(NameToLogLevel("")), LOG4SP_LEVEL_OFF);
-    AssertEq("Name 'some string' to lvl", view_as<int>(NameToLogLevel("some string")), LOG4SP_LEVEL_OFF);
+    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_TRACE ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_TRACE), LogLevel_Trace);
+    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_DEBUG ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_DEBUG), LogLevel_Debug);
+    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_INFO  ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_INFO),  LogLevel_Info);
+    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_WARN  ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_WARN),  LogLevel_Warn);
+    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_ERROR ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_ERROR), LogLevel_Error);
+    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_FATAL ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_FATAL), LogLevel_Fatal);
+    AssertEq("Name '" ... LOG4SP_LEVEL_NAME_OFF   ... "' to lvl", NameToLogLevel(LOG4SP_LEVEL_NAME_OFF),   LogLevel_Off);
+    AssertEq("Name '' to lvl", NameToLogLevel(""), LogLevel_Off);
+    AssertEq("Name 'some string' to lvl", NameToLogLevel("some string"), LogLevel_Off);
 
     SourceLoc loc;
     AssertTrue("Empty source location", loc.IsEmpty());

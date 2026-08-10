@@ -10,7 +10,20 @@
 
 
 /**
- * Base Sink
+ * Called before the sink open the file.
+ */
+typedef SinkFileOpenPre = function void (const char[] filename);
+
+/**
+ * Called after the sink close the file.
+ */
+typedef SinkFileClosePost = function void (const char[] filename);
+
+
+/**
+ * The Sink is the core component of the logging library responsible for the
+ * actual output of log messages. Each Sink corresponds to a single log output
+ * target, such as a file or the console.
  */
 methodmap Sink < Handle
 {
@@ -29,14 +42,14 @@ methodmap Sink < Handle
     public native void SetLevel(LogLevel lvl);
 
     /**
-     * Sets formatting pattern.
+     * Change log pattern.
      *
      * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
      *
-     * @param pattern   Formatting pattern.
+     * @param pattern   Logger sinks pattern.
      * @param type      Pattern time.
      */
-    public native void SetPattern(const char[] pattern);
+    public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
 
     /**
      * Gets whether logging is enabled for the given log level.
@@ -49,7 +62,7 @@ methodmap Sink < Handle
     /**
      * Logs a message.
      *
-     * @param name      The name of a logger.
+     * @param name      The name of the logger.
      * @param lvl       Log level enum.
      * @param msg       Pre formatted log message.
      * @param file      The file name of the source location.
@@ -57,30 +70,32 @@ methodmap Sink < Handle
      * @param func      The function name of the source location.
      * @param logTime   The log message time point in seconds.
      *                  If -1, current time point is used as the time of the log message.
-     * @param error     Buffer to store error description.
-     * @param maxlen    Maximum length of the error.
-     * @param bytes     Number of characters written to the error, not including the null terminator.
-     * @return          True on success, false on failure.
      */
-    public native bool Log(const char[] name, LogLevel lvl, const char[] msg,
-        const char[] file = NULL_STRING, int line = 0, const char[] func = NULL_STRING,
-        int logTime = -1,
-        char[] error = "", int maxlen = 0, int &bytes = 0);
+    public native void Log(const char[] name, LogLevel lvl, const char[] msg,
+        const char[] file=NULL_STRING, int line=0, const char[] func=NULL_STRING,
+        int logTime=-1);
+
+    /**
+     * Format log message in a pre-set pattern.
+     *
+     * @param buffer    Buffer to store logger name.
+     * @param maxlen    Maximum length of the buffer.
+     * @param lvl       Log level enum.
+     * @param msg       Pre formatted log message.
+     * @param file      The file name of the source location.
+     * @param line      The line number of the source location.
+     * @param func      The function name of the source location.
+     * @param logTime   The log message time point in seconds.
+     *                  If -1, current time point is used as the time of the log message.
+     * @return          Number of characters written to the buffer, not including the null terminator.
+     */
+    public native int ToPattern(char[] buffer, int maxlen,
+        const char[] name, LogLevel lvl, const char[] msg,
+        const char[] file=NULL_STRING, int line=0, const char[] func=NULL_STRING,
+        int logTime=-1);
 
     /**
      * Manual flush sink contents.
-     *
-     * @param error     Buffer to store error description.
-     * @param maxlen    Maximum length of the error.
-     * @param bytes     Number of characters written to the error, not including the null terminator.
-     * @return          True on success, false on failure.
      */
-    public native bool Flush(char[] error = "", int maxlen = 0, int &bytes = 0);
-
-    /**
-     * Bind the underlying Sink object to a new Handle.
-     *
-     * @return              Sink handle, or BAD_HANDLE on failure.
-     */
-    public native Sink Clone();
+    public native void Flush();
 }

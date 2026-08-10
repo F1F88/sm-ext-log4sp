@@ -54,6 +54,10 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("NameToLogLevel");
 
     MarkNativeAsOptional("Logger.Logger");
+    MarkNativeAsOptional("Logger.CreateLoggerWith");
+    MarkNativeAsOptional("Logger.CreateLoggerWithEx");
+    MarkNativeAsOptional("Logger.Get");
+    MarkNativeAsOptional("Logger.ApplyAll");
     MarkNativeAsOptional("Logger.GetName");
     MarkNativeAsOptional("Logger.GetNameLength");
     MarkNativeAsOptional("Logger.GetLevel");
@@ -72,6 +76,9 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.LogStackTrace");
     MarkNativeAsOptional("Logger.LogStackTraceEx");
     MarkNativeAsOptional("Logger.LogStackTraceAmxTpl");
+    MarkNativeAsOptional("Logger.ThrowError");
+    MarkNativeAsOptional("Logger.ThrowErrorEx");
+    MarkNativeAsOptional("Logger.ThrowErrorAmxTpl");
     MarkNativeAsOptional("Logger.Trace");
     MarkNativeAsOptional("Logger.TraceEx");
     MarkNativeAsOptional("Logger.TraceAmxTpl");
@@ -97,20 +104,16 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.AddSinkEx");
     MarkNativeAsOptional("Logger.DropSink");
     MarkNativeAsOptional("Logger.SetErrorHandler");
-    MarkNativeAsOptional("Logger.CreateLoggerWith");
-    MarkNativeAsOptional("Logger.CreateLoggerWithEx");
-    MarkNativeAsOptional("Logger.Get");
-    MarkNativeAsOptional("Logger.ApplyAll");
 
     MarkNativeAsOptional("BasicFileSink.BasicFileSink");
     MarkNativeAsOptional("BasicFileSink.GetFilename");
-    MarkNativeAsOptional("BasicFileSink.GetFilenameLength");
     MarkNativeAsOptional("BasicFileSink.Truncate");
     MarkNativeAsOptional("BasicFileSink.CreateLogger");
 
     MarkNativeAsOptional("CallbackSink.CallbackSink");
-    MarkNativeAsOptional("CallbackSink.SetData");
-    MarkNativeAsOptional("CallbackSink.GetData");
+    MarkNativeAsOptional("CallbackSink.SetLogCallback");
+    MarkNativeAsOptional("CallbackSink.SetLogPostCallback");
+    MarkNativeAsOptional("CallbackSink.SetFlushCallback");
     MarkNativeAsOptional("CallbackSink.CreateLogger");
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
@@ -138,6 +141,7 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.ShouldLog");
     MarkNativeAsOptional("Sink.Log");
+    MarkNativeAsOptional("Sink.ToPattern");
     MarkNativeAsOptional("Sink.Flush");
 }
 #endif

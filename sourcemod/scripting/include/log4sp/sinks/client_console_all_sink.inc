@@ -15,10 +15,9 @@ methodmap ClientConsoleAllSink < CallbackSink
     /**
      * This sink is output to all client console.
      *
-     * @return              ClientConsoleSink handle.
+     * @return          A new ClientConsoleAllSink Handle.
      */
-    public ClientConsoleAllSink()
-    {
+    public ClientConsoleAllSink() {
         return view_as<ClientConsoleAllSink>(new CallbackSink(_, __CBSink_PrintToClientConsoleAll));
     }
 
@@ -26,11 +25,10 @@ methodmap ClientConsoleAllSink < CallbackSink
      * Create a logger handle that outputs to all client console.
      *
      * @param name      The name of the new logger.
-     * @return          Logger handle.
-     * @error           Logger name already exits.
+     * @return          A new Logger Handle.
+     * @error           Logger name already exists.
      */
-    public static Logger CreateLogger(const char[] name)
-    {
+    public static Logger CreateLogger(const char[] name) {
         Logger logger = new Logger(name);
         logger.AddSinkEx(new ClientConsoleAllSink());
         return logger;
