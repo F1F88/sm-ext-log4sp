@@ -103,52 +103,22 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     return 0;
 }
 
-static cell_t ToPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+/**
+ * public native void Flush();
+ */
+static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params)
 {
-    READ_SINK_HANDLE_OR_ERROR(params[1]);
+    auto handle = static_cast<SourceMod::Handle_t>(params[1]);
 
-    char *name, *msg, *file, *func;
-    CTX_LOCAL_TO_STRING(params[4], &name);
-    CTX_LOCAL_TO_STRING(params[6], &msg);
-    CTX_LOCAL_TO_STRING_NULL(params[7], &file);
-    CTX_LOCAL_TO_STRING_NULL(params[9], &func);
+    SourceMod::HandleSecurity security{nullptr, myself->GetIdentity()};
+    SourceMod::HandleError error;
 
-    auto lvl = Log4sp::NumToLvl(params[5]);
-    int line = params[8];
-
-    spdlog::source_loc loc(file, line, func);
-
-    using std::chrono::duration_cast;
-    using std::chrono::system_clock;
-    using spdlog::details::os::now;
-    system_clock::time_point logTime = now();
-    if (params[10] != -1)
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandleRaw(handle, &security, &error);
+    if (!sink)
     {
-        // FIXME: Possible Year 2038 Problem
-        auto seconds = std::chrono::seconds(params[10]);
-        logTime = system_clock::time_point(duration_cast<system_clock::duration>(seconds));
-    }
-
-    std::string formatted;
-    try
-    {
-        using spdlog::details::log_msg;
-        formatted = sink->to_pattern(log_msg(logTime, loc, name, lvl, msg));
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
+        ctx->ReportError("Invalid sink handle %x (error: %d)", handle, error);
         return 0;
     }
-
-    std::size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], formatted.c_str(), &bytes);
-    return static_cast<cell_t>(bytes);
-}
-
-static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_SINK_HANDLE_OR_ERROR(params[1]);
 
     try
     {
@@ -169,7 +139,6 @@ const sp_nativeinfo_t SinkNatives[] =
     {"Sink.SetPattern",                         SetPattern},
     {"Sink.ShouldLog",                          ShouldLog},
     {"Sink.Log",                                Log},
-    {"Sink.ToPattern",                          ToPattern},
     {"Sink.Flush",                              Flush},
 
     {nullptr,                                   nullptr}

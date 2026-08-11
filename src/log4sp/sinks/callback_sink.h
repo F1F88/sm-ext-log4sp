@@ -102,10 +102,12 @@ private:
         }
 
         if (m_LogPostFwd) {
-            auto fwd = m_LogPostFwd;
-            std::string formatted = to_pattern(logMsg);
+            spdlog::memory_buf_t formatted;
+            formatted.clear();
+            formatter_->format(logMsg, formatted);
 
-            FWD_PUSH_STRING(formatted.c_str());
+            auto fwd = m_LogPostFwd;
+            FWD_PUSH_STRING(formatted.data());
             FWD_EXECUTE();
         }
     }
