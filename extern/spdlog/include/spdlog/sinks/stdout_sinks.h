@@ -35,9 +35,6 @@ public:
 
     void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) override;
 
-    //* @log4sp hack *//
-    [[nodiscard]] std::string to_pattern(const details::log_msg &log_msg) final override;
-
 protected:
     mutex_t &mutex_;
     FILE *file_;
