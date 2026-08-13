@@ -53,13 +53,6 @@ methodmap RotatingFileSink < Sink
     public native int GetFilename(char[] buffer, int maxlen);
 
     /**
-     * Gets the length of the filename.
-     *
-     * @return              Length of the filename string.
-     */
-    public native int GetFilenameLength();
-
-    /**
      * Rotate log files on demand.
      */
     public native void RotateNow();

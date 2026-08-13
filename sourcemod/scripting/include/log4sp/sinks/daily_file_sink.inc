@@ -68,13 +68,6 @@ methodmap DailyFileSink < Sink
      * @return              Number of bytes written.
      */
     public native int GetFilename(char[] buffer, int maxlen);
-
-    /**
-     * Gets the length of the filename.
-     *
-     * @return              Length of the filename string.
-     */
-    public native int GetFilenameLength();
 }
 
 

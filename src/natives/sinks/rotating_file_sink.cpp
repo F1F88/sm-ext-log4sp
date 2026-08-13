@@ -81,13 +81,6 @@ static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
     return static_cast<cell_t>(bytes);
 }
 
-static cell_t GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
-
-    return static_cast<cell_t>(rotatingFileSink->filename().length());
-}
-
 static cell_t RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
@@ -120,7 +113,6 @@ const sp_nativeinfo_t RotatingFileSinkNatives[] =
 {
     {"RotatingFileSink.RotatingFileSink",       RotatingFileSink},
     {"RotatingFileSink.GetFilename",            GetFilename},
-    {"RotatingFileSink.GetFilenameLength",      GetFilenameLength},
     {"RotatingFileSink.RotateNow",              RotateNow},
 
     {"RotatingFileSink.CalcFilename",           CalcFilename},

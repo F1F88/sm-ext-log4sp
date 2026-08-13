@@ -134,18 +134,10 @@ static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
     return static_cast<cell_t>(bytes);
 }
 
-static cell_t GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_DAILY_FILE_SINK_HANDLE_OR_ERROR(params[1]);
-
-    return static_cast<cell_t>(dailyFileSink->filename().length());
-}
-
 const sp_nativeinfo_t DailyFileSinkNatives[] =
 {
     {"DailyFileSink.DailyFileSink",             DailyFileSink},
     {"DailyFileSink.GetFilename",               GetFilename},
-    {"DailyFileSink.GetFilenameLength",         GetFilenameLength},
 
     {nullptr,                                   nullptr}
 };
