@@ -152,26 +152,26 @@ void TestLogStackTrace()
     delete logger;
     delete basicFileSink;
 
-    AssertStrMatch("LogStackTraceAmxTpl line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
-    AssertStrMatch("LogStackTraceAmxTpl line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrac");
-    AssertStrMatch("LogStackTraceAmxTpl line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceAmxTpl");
-    AssertStrMatch("LogStackTraceAmxTpl line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTraceAmxTpl line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
-    AssertStrMatch("LogStackTraceAmxTpl line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 3");
+    AssertStrMatch("LogStackTraceAmxTpl line 6 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
+    AssertStrMatch("LogStackTraceAmxTpl line 5 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrac");
+    AssertStrMatch("LogStackTraceAmxTpl line 4 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceAmxTpl");
+    AssertStrMatch("LogStackTraceAmxTpl line 3 match", testSink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
+    AssertStrMatch("LogStackTraceAmxTpl line 2 match", testSink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTraceAmxTpl line 1 match", testSink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 3");
 
-    AssertStrMatch("LogStackTraceEx line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
-    AssertStrMatch("LogStackTraceEx line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
-    AssertStrMatch("LogStackTraceEx line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceE");
-    AssertStrMatch("LogStackTraceEx line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTraceEx line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
-    AssertStrMatch("LogStackTraceEx line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 2");
+    AssertStrMatch("LogStackTraceEx line 6 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
+    AssertStrMatch("LogStackTraceEx line 5 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
+    AssertStrMatch("LogStackTraceEx line 4 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceE");
+    AssertStrMatch("LogStackTraceEx line 3 match", testSink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
+    AssertStrMatch("LogStackTraceEx line 2 match", testSink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTraceEx line 1 match", testSink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 2");
 
-    AssertStrMatch("LogStackTrace line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
-    AssertStrMatch("LogStackTrace line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
-    AssertStrMatch("LogStackTrace line 4 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTrace");
-    AssertStrMatch("LogStackTrace line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTrace line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
-    AssertStrMatch("LogStackTrace line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
+    AssertStrMatch("LogStackTrace line 6 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
+    AssertStrMatch("LogStackTrace line 5 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
+    AssertStrMatch("LogStackTrace line 4 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTrace");
+    AssertStrMatch("LogStackTrace line 3 match", testSink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
+    AssertStrMatch("LogStackTrace line 2 match", testSink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
+    AssertStrMatch("LogStackTrace line 1 match", testSink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
     delete testSink;
 }
 
@@ -202,7 +202,7 @@ void TestLogThrowError()
     RequestFrame(Frame_CloseSink, basicFileSink);
     RequestFrame(Frame_MarkEnd);
 
-    RequestFrame(Frame_AssertThrowErrorSinkMsgs, sink);
+    RequestFrame(Frame_AssertThrowErrorSinkMsgs, testSink);
     RequestFrame(Frame_AssertThrowErrorLogFile);
     RequestFrame(Frame_AssertThrowErrorSMFile); // And DeleteSMErrorFile
     RequestFrame(Frame_CloseSink, testSink);

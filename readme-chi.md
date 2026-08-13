@@ -394,7 +394,10 @@ Logger CreateMultiSinksLogger()
     sinks[1] = new ServerConsoleSink();
     sinks[2] = new ClientChatAllSink();
 
-    Logger logger = Logger.CreateLoggerWith("multi-sink-logger", sinks, 3);
+    Logger logger = new Logger("multi-sink-logger");
+    logger.AddSink(sinks[0]);
+    logger.AddSink(sinks[1]);
+    logger.AddSink(sinks[2]);
 
     delete sinks[0];
     delete sinks[1];
@@ -405,11 +408,11 @@ Logger CreateMultiSinksLogger()
 }
 ```
 
-- 执行 11 行前，Sinks 对象只有 Handles 系统引用，因此 Sinks 的引用数为 1；
+- 执行 12-14 行前，Sinks 对象只有 Handles 系统引用，因此 Sinks 的引用数为 1；
 
-- 执行 11 行后，logger 引用了 Sinks 对象，因此 Sinks 的引用数增加为 2；
+- 执行 12-14 行后，logger 引用了 Sinks 对象，因此 Sinks 的引用数增加为 2；
 
-- 执行 13-15 行后，Handles 系统移除引用 Sinks 对象，因此 Sinks 引用数减少为 1；
+- 执行 16-18 行后，Handles 系统移除引用 Sinks 对象，因此 Sinks 引用数减少为 1；
 
 - 关闭 logger handle 后，将自动移除对 Sinks 对象的引用，因此 Sinks 引用数减少为 0 并从内存中删除。
 

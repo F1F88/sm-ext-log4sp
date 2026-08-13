@@ -47,95 +47,6 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return handle;
 }
 
-static cell_t CreateLoggerWith(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    cell_t *sinks;
-    CTX_LOCAL_TO_PHYS_ADDR(params[2], &sinks);
-
-    using spdlog::sink_ptr;
-    int numSinks = params[3];
-    std::vector<sink_ptr> sinkVector(numSinks, nullptr);
-
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    for (int i = 0; i < numSinks; ++i)
-    {
-        auto sink = Log4sp::SinkHandler::Instance().ReadHandle(sinks[i], &security, &error);
-        if (!sink)
-        {
-            ctx->ReportError("Invalid Sink Handle %x (index: %d, error code: %d)", sinks[i], i, error);
-            return BAD_HANDLE;
-        }
-
-        sinkVector[i] = sink;
-    }
-
-    auto logger = std::make_shared<Log4sp::Logger>(name, sinkVector.begin(), sinkVector.end());
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
-static cell_t CreateLoggerWithEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    cell_t *sinks;
-    CTX_LOCAL_TO_PHYS_ADDR(params[2], &sinks);
-
-    using spdlog::sink_ptr;
-    int numSinks = params[3];
-    std::vector<sink_ptr> sinkVector(numSinks, nullptr);
-
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    for (int i = 0; i < numSinks; ++i)
-    {
-        auto sink = Log4sp::SinkHandler::Instance().ReadHandle(sinks[i], &security, &error);
-        if (!sink)
-        {
-            ctx->ReportError("Invalid Sink Handle %x (index: %d, error code: %d)", sinks[i], i, error);
-            return BAD_HANDLE;
-        }
-
-        sinkVector[i] = sink;
-    }
-
-    for (int i = 0; i < numSinks; ++i)
-    {
-        HANDLE_SYS_FREE_HANDLE(sinks[i], &security);
-    }
-
-    auto logger = std::make_shared<Log4sp::Logger>(name, sinkVector.begin(), sinkVector.end());
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
 static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
@@ -684,8 +595,6 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
 const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
-    {"Logger.CreateLoggerWith",                 CreateLoggerWith},
-    {"Logger.CreateLoggerWithEx",               CreateLoggerWithEx},
     {"Logger.Get",                              Get},
     {"Logger.ApplyAll",                         ApplyAll},
 

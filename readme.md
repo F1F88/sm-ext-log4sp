@@ -396,7 +396,10 @@ Logger CreateMultiSinksLogger()
     sinks[1] = new ServerConsoleSink();
     sinks[2] = new ClientChatAllSink();
 
-    Logger logger = Logger.CreateLoggerWith("multi-sink-logger", sinks, 3);
+    Logger logger = new Logger("multi-sink-logger");
+    logger.AddSink(sinks[0]);
+    logger.AddSink(sinks[1]);
+    logger.AddSink(sinks[2]);
 
     delete sinks[0];
     delete sinks[1];
@@ -407,11 +410,11 @@ Logger CreateMultiSinksLogger()
 }
 ```
 
-- Before line 11, the Sinks object is only referenced by the Handles system, so the number of Sinks references is 1;
+- Before line 12-14, the Sinks object is only referenced by the Handles system, so the number of Sinks references is 1;
 
-- After line 11, the logger references the Sinks object, so the number of Sinks references increases to 2;
+- After line 12-14, the logger references the Sinks object, so the number of Sinks references increases to 2;
 
-- After lines 13-15, the Handles system removes the reference to the Sinks object, so the number of Sinks references is reduced to 1;
+- After lines 16-18, the Handles system removes the reference to the Sinks object, so the number of Sinks references is reduced to 1;
 
 - After closing the logger handle, the logger object will automatically remove the reference to the Sinks object, so the Sinks reference count is reduced to 0 and deleted from memory.
 

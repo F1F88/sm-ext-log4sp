@@ -54,8 +54,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("NameToLogLevel");
 
     MarkNativeAsOptional("Logger.Logger");
-    MarkNativeAsOptional("Logger.CreateLoggerWith");
-    MarkNativeAsOptional("Logger.CreateLoggerWithEx");
     MarkNativeAsOptional("Logger.Get");
     MarkNativeAsOptional("Logger.ApplyAll");
     MarkNativeAsOptional("Logger.GetName");
