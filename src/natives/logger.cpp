@@ -644,26 +644,6 @@ static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     return 0;
 }
 
-static cell_t AddSinkEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[2], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid Sink Handle %x (error code: %d)", params[2], error);
-        return 0;
-    }
-
-    HANDLE_SYS_FREE_HANDLE(params[2], &security);
-
-    logger->AddSink(sink);
-    return 0;
-}
-
 static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -755,7 +735,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.GetFlushLevel",                    GetFlushLevel},
     {"Logger.FlushOn",                          FlushOn},
     {"Logger.AddSink",                          AddSink},
-    {"Logger.AddSinkEx",                        AddSinkEx},
     {"Logger.DropSink",                         DropSink},
     {"Logger.SetErrorHandler",                  SetErrorHandler},
 

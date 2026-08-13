@@ -101,7 +101,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.GetFlushLevel");
     MarkNativeAsOptional("Logger.FlushOn");
     MarkNativeAsOptional("Logger.AddSink");
-    MarkNativeAsOptional("Logger.AddSinkEx");
     MarkNativeAsOptional("Logger.DropSink");
     MarkNativeAsOptional("Logger.SetErrorHandler");
 

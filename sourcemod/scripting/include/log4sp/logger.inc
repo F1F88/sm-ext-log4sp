@@ -268,16 +268,6 @@ methodmap Logger < Handle
     public native void AddSink(Sink sink);
 
     /**
-     * Add a new sink to sinks.
-     *
-     * @note After creation, the sink handle is closed.
-     *
-     * @param sink      Sink handle.
-     * @error           Invalid Sink handle.
-     */
-    public native void AddSinkEx(Sink sink);
-
-    /**
      * Close the cloned sink handle and remove from logger.
      *
      * @param sink      Sink handle.
