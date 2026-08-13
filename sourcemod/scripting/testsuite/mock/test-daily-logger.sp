@@ -37,12 +37,16 @@ void TestDefaultCalculator()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "daily/daily_default_calculator.log");
 
-    Logger logger = DailyFileSink.CreateLogger("test-daily-calc", path);
+    DailyFileSink sink = new DailyFileSink(path);
+    Logger logger = new Logger("test-daily-calc");
+    logger.AddSink(sink);
+
     for (int i = 0; i < 10; ++i)
     {
         logger.InfoAmxTpl("Test message %d", i);
     }
     delete logger;
+    delete sink;
 
     FormatTime(path, sizeof(path), "daily/daily_default_calculator_%Y%m%d.log");
     BuildTestPath(path, sizeof(path), path);
@@ -57,12 +61,16 @@ void TestFormatCalculator()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "daily/daily_custom_calculator_%Y-%m-%d_%H-%M.log");
 
-    Logger logger = DailyFileSink.CreateLogger("test-daily-custom-calc", path, 1, 2, true, 0, DailyFileFormatCalculator);
+    DailyFileSink sink = new DailyFileSink(path, 1, 2, true, 0, DailyFileFormatCalculator);
+    Logger logger = new Logger("test-daily-custom-calc");
+    logger.AddSink(sink);
+
     for (int i = 0; i < 10; ++i)
     {
         logger.InfoAmxTpl("Test message %d", i);
     }
     delete logger;
+    delete sink;
 
     FormatTime(path, sizeof(path), "daily/daily_custom_calculator_%Y-%m-%d_%H-%M.log");
     BuildTestPath(path, sizeof(path), path);
@@ -112,8 +120,8 @@ void TestFileCallback()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "daily/file_callback.log");
 
-    Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .openPre=OnOpenPre, .closePost=OnClosePost);
-    delete logger;
+    DailyFileSink sink = new DailyFileSink(path, .openPre=OnOpenPre, .closePost=OnClosePost);
+    delete sink;
 }
 
 void OnOpenPre(const char[] filename)

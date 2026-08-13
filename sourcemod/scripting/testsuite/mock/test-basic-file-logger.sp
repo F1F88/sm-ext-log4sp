@@ -41,12 +41,15 @@ void TestFileLogger()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "basic-file/simple_file.log");
 
-    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
+    BasicFileSink sink = new BasicFileSink(path);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(sink);
     logger.SetPattern("%v");
 
     logger.InfoAmxTpl("Test message %d", 1);
     logger.InfoAmxTpl("Test message %d", 2);
     delete logger;
+    delete sink;
 
     AssertEq("File count lines", CountLines(path), 2);
     AssertFileMatch("File contents match", path, "Test message 1" ... P_EOL ... "Test message 2" ... P_EOL);
@@ -59,7 +62,9 @@ void TestFlushOn()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "basic-file/flush_on.log");
 
-    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
+    BasicFileSink sink = new BasicFileSink(path);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(sink);
     logger.SetPattern("%v");
     logger.SetLevel(LogLevel_Trace);
     logger.FlushOn(LogLevel_Info);
@@ -72,6 +77,7 @@ void TestFlushOn()
 
     logger.InfoAmxTpl("Test message %d", 2);
     delete logger;
+    delete sink;
 
     AssertEq("Flush by destructor, count lines", CountLines(path), 3);
     AssertFileMatch("Flush by destructor, contents match", path, "Test message 1" ... P_EOL ... "Should not be flushed" ... P_EOL ... "Test message 2" ... P_EOL);
@@ -109,10 +115,13 @@ void TestFileCallback()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "basic-file/file_callback.log");
 
-    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path, _, OnOpenPre, OnClosePost);
+    BasicFileSink sink = new BasicFileSink(path, _, OnOpenPre, OnClosePost);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(sink);
     logger.SetPattern("%v");
     logger.Info("Some message");
     delete logger;
+    delete sink;
 }
 
 void OnOpenPre(const char[] filename)

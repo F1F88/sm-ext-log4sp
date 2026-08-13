@@ -45,24 +45,4 @@ methodmap BasicFileSink < Sink
      * Truncate log files on demand.
      */
     public native void Truncate();
-
-    /**
-     * Create a logger handle that outputs to a file.
-     *
-     * @note Logger handles must be freed via delete or CloseHandle().
-     *
-     * @param name      The name of the new logger.
-     * @param file      The file path where the log messages will be written.
-     * @param truncate  If true, the created file will be truncated.
-     * @param openPre   Function to call before the sink open the file.
-     * @param closePost Function to call after the sink close the file.
-     * @return          A new Logger Handle.
-     * @error           Logger name already exists.
-     */
-    public static native Logger CreateLogger(
-        const char[] name,
-        const char[] file,
-        bool truncate=false,
-        SinkFileOpenPre onOpen=INVALID_FUNCTION,
-        SinkFileClosePost onClose=INVALID_FUNCTION);
 }

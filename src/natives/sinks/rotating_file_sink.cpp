@@ -116,56 +116,6 @@ static cell_t CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params
     return static_cast<cell_t>(bytes);
 }
 
-static cell_t CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    char *file;
-    CTX_LOCAL_TO_STRING(params[2], &file);
-
-    char absPath[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, absPath, sizeof(absPath), "%s", file);
-
-    auto maxFileSize  = static_cast<std::size_t>(params[3]);
-    auto maxFiles     = static_cast<std::size_t>(params[4]);
-    auto rotateOnOpen = static_cast<bool>(params[5]);
-    SourcePawn::IPluginFunction *openFunc  = ctx->GetFunctionById(params[6]);
-    SourcePawn::IPluginFunction *closeFunc = ctx->GetFunctionById(params[7]);
-
-    spdlog::file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
-    handlers.after_close = FILE_EVENT_FUNCTION(closeFunc);
-
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_st> sink;
-    try
-    {
-        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(absPath, maxFileSize, maxFiles, rotateOnOpen, handlers);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return BAD_HANDLE;
-    }
-
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = std::make_shared<Log4sp::Logger>(name, sink);
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
 const sp_nativeinfo_t RotatingFileSinkNatives[] =
 {
     {"RotatingFileSink.RotatingFileSink",       RotatingFileSink},
@@ -174,7 +124,6 @@ const sp_nativeinfo_t RotatingFileSinkNatives[] =
     {"RotatingFileSink.RotateNow",              RotateNow},
 
     {"RotatingFileSink.CalcFilename",           CalcFilename},
-    {"RotatingFileSink.CreateLogger",           CreateLogger},
 
     {nullptr,                                   nullptr}
 };

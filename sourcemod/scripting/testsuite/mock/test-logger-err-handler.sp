@@ -39,13 +39,16 @@ void TestDefaultErrorHandler()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "err-handler/default_handler.log");
 
-    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
+    BasicFileSink sink = new BasicFileSink(path);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(sink);
     logger.SetPattern("%v");
 
     logger.InfoEx("Test message %d", 1);
     logger.InfoEx("Test message %d %d", 2);
     logger.InfoEx("Test message %d", 3);
     delete logger;
+    delete sink;
 
     MarkErrorTestEnd("Test Default Error Handler");
 
@@ -72,7 +75,9 @@ void TestCustomErrorHandler()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "err-handler/custom_handler.log");
 
-    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
+    BasicFileSink sink = new BasicFileSink(path);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(sink);
     logger.SetPattern("%v");
     logger.FlushOn(LogLevel_Info);
     logger.SetErrorHandler(CustomErrorHandler);
@@ -85,6 +90,7 @@ void TestCustomErrorHandler()
     logger.InfoEx("Test message %d", 6);
     logger.InfoEx("Test message %d", 7);
     delete logger;
+    delete sink;
 
     AssertEq("Call custom error handler count", g_iCustomErrCnt, 3);
     AssertEq("Skip param format error log, count lines", CountLines(path), 4);

@@ -57,12 +57,16 @@ void TestRotateLogger()
     char path[PLATFORM_MAX_PATH];
     path = PrepareTestPath("rotate-file/rotating_log.log");
 
-    Logger logger = RotatingFileSink.CreateLogger("test-rotate-logger", path, maxSize, 0);
+    RotatingFileSink sink = new RotatingFileSink(path, maxSize, 0);
+    Logger logger = new Logger("test-rotate-logger");
+    logger.AddSink(sink);
+
     for (int i = 0; i < 10; ++i)
     {
         logger.InfoAmxTpl("Test message %d", i);
     }
     delete logger;
+    delete sink;
 
     AssertEq("Simple log, count lines", CountLines(path), 10);
 }
@@ -77,14 +81,21 @@ void TestAutoRotate()
     path = PrepareTestPath("rotate-file/rotating_auto_rotate.log");
 
     // make an initial logger to create the first output file
-    Logger logger = RotatingFileSink.CreateLogger("test-rotate-logger", path, maxSize, 2, true);
+    RotatingFileSink sink = new RotatingFileSink(path, maxSize, 2, true);
+    Logger logger = new Logger("test-rotate-logger");
+    logger.AddSink(sink);
+
     for (int i = 0; i < 10; ++i)
     {
         logger.InfoAmxTpl("Test message %d", i);
     }
     delete logger;
+    delete sink;
 
-    logger = RotatingFileSink.CreateLogger("test-rotate-logger", path, maxSize, 2, true);
+    sink = new RotatingFileSink(path, maxSize, 2, true);
+    logger = new Logger("test-rotate-logger");
+    logger.AddSink(sink);
+
     for (int i = 0; i < 10; ++i)
     {
         logger.InfoAmxTpl("Test message %d", i);
@@ -147,8 +158,8 @@ void TestFileCallback()
     char path[PLATFORM_MAX_PATH];
     path = PrepareTestPath("rotate-file/file_callback.log");
 
-    Logger logger = RotatingFileSink.CreateLogger("test-file-logger", path, maxSize, 1, .openPre=OnOpenPre, .closePost=OnClosePost);
-    delete logger;
+    RotatingFileSink sink = new RotatingFileSink(path, maxSize, 1, .openPre=OnOpenPre, .closePost=OnClosePost);
+    delete sink;
 }
 
 void OnOpenPre(const char[] filename)

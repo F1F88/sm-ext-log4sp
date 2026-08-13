@@ -79,18 +79,4 @@ methodmap RingBufferSink < Sink
      * @error           Invalid drain formatted function.
      */
     public native void DrainFormatted(DrainFormattedCallback callback, any data=0);
-
-    /**
-     * Create a logger handle that holds fixed amount of log messages in memory.
-     *
-     * @note Logger handles must be freed via delete or CloseHandle().
-     *
-     * @param name      The name of the new logger.
-     * @param amount    Maximum number of log messages.
-     * @return          A new Logger Handle.
-     * @error           Logger name already exists.
-     * @deprecated      This cannot be done using the RingbufferSink function.
-     */
-    #pragma deprecated This cannot be done using the RingbufferSink function.
-    public static native Logger CreateLogger(const char[] name, int amount);
 }

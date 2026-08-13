@@ -131,38 +131,11 @@ static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, con
     return 0;
 }
 
-static cell_t RingBufferSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    auto amount = static_cast<std::size_t>(params[2]);
-    auto sink = std::make_shared<Log4sp::Sinks::RingBufferSinkST>(amount);
-
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = std::make_shared<Log4sp::Logger>(name, sink);
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
 const sp_nativeinfo_t RingBufferSinkNatives[] =
 {
     {"RingBufferSink.RingBufferSink",               RingBufferSink},
     {"RingBufferSink.Drain",                        RingBufferSink_Drain},
     {"RingBufferSink.DrainFormatted",               RingBufferSink_DrainFormatted},
-    {"RingBufferSink.CreateLogger",                 RingBufferSink_CreateLogger},
 
     {nullptr,                                       nullptr}
 };

@@ -28,7 +28,9 @@ void TestCommands()
 {
     SetTestContext("Test Commands");
 
-    Logger logger = ServerConsoleSink.CreateLogger("test-commands");
+    ServerConsoleSink sink = new ServerConsoleSink();
+    Logger logger = new Logger("test-commands");
+    logger.AddSink(sink);
 
     char buffer[2048];
 
@@ -77,5 +79,6 @@ void TestCommands()
     ServerCommandEx(buffer, sizeof(buffer), "sm log4sp version");
     AssertStrMatch("Commands set_flush_lvl match", buffer, "SourceMod extension log4sp version information:\\s+ Version .*[0-9]+\\.[0-9]+\\.[0-9]+.*\\s+ Compiled on .* [0-9]+ [0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}\\s+ Built from \\s+ https://github.com/F1F88/sm-ext-log4sp/commit/.*");
 
+    delete sink;
     delete logger;
 }

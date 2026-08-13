@@ -141,74 +141,11 @@ static cell_t GetFilenameLength(SourcePawn::IPluginContext *ctx, const cell_t *p
     return static_cast<cell_t>(dailyFileSink->filename().length());
 }
 
-static cell_t CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    char *file;
-    CTX_LOCAL_TO_STRING(params[2], &file);
-
-    int hour      = params[3];
-    int minute    = params[4];
-    auto truncate = static_cast<bool>(params[5]);
-    auto maxFiles = static_cast<uint16_t>(params[6]);
-    auto calcFunc = ctx->GetFunctionById(params[7]);
-    auto openFunc = ctx->GetFunctionById(params[8]);
-    auto closeFunc= ctx->GetFunctionById(params[9]);
-
-    if (params[6] < 0 || params[6] > UINT16_MAX)
-    {
-        ctx->ReportError("Invalid maxFiles %d. (0-%d)", params[6], UINT16_MAX);
-        return BAD_HANDLE;
-    }
-
-    spdlog::sinks::log4sp_daily_filename_calculator calculator = DAILY_FILE_DEFAULT_CALCULATOR();
-    if (calcFunc)
-    {
-        calculator = DAILY_FILE_CUSTOM_CALCULATOR(calcFunc);
-    }
-
-    spdlog::file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
-    handlers.after_close = FILE_EVENT_FUNCTION(closeFunc);
-
-    std::shared_ptr<spdlog::sinks::daily_file_sink_st> sink;
-    try
-    {
-        sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(file, hour, minute, truncate, maxFiles, handlers, calculator);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return BAD_HANDLE;
-    }
-
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = std::make_shared<Log4sp::Logger>(name, sink);
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
 const sp_nativeinfo_t DailyFileSinkNatives[] =
 {
     {"DailyFileSink.DailyFileSink",             DailyFileSink},
     {"DailyFileSink.GetFilename",               GetFilename},
     {"DailyFileSink.GetFilenameLength",         GetFilenameLength},
-
-    {"DailyFileSink.CreateLogger",              CreateLogger},
 
     {nullptr,                                   nullptr}
 };

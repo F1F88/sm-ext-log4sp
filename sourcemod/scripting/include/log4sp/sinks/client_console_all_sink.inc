@@ -20,19 +20,6 @@ methodmap ClientConsoleAllSink < CallbackSink
     public ClientConsoleAllSink() {
         return view_as<ClientConsoleAllSink>(new CallbackSink(_, __CBSink_PrintToClientConsoleAll));
     }
-
-    /**
-     * Create a logger handle that outputs to all client console.
-     *
-     * @param name      The name of the new logger.
-     * @return          A new Logger Handle.
-     * @error           Logger name already exists.
-     */
-    public static Logger CreateLogger(const char[] name) {
-        Logger logger = new Logger(name);
-        logger.AddSinkEx(new ClientConsoleAllSink());
-        return logger;
-    }
 }
 
 static void __CBSink_PrintToClientConsoleAll(const char[] msg)

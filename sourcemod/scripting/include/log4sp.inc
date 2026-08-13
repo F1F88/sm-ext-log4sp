@@ -108,33 +108,27 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("BasicFileSink.BasicFileSink");
     MarkNativeAsOptional("BasicFileSink.GetFilename");
     MarkNativeAsOptional("BasicFileSink.Truncate");
-    MarkNativeAsOptional("BasicFileSink.CreateLogger");
 
     MarkNativeAsOptional("CallbackSink.CallbackSink");
     MarkNativeAsOptional("CallbackSink.SetLogCallback");
     MarkNativeAsOptional("CallbackSink.SetLogPostCallback");
     MarkNativeAsOptional("CallbackSink.SetFlushCallback");
-    MarkNativeAsOptional("CallbackSink.CreateLogger");
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
     MarkNativeAsOptional("DailyFileSink.GetFilename");
     MarkNativeAsOptional("DailyFileSink.GetFilenameLength");
-    MarkNativeAsOptional("DailyFileSink.CreateLogger");
 
     MarkNativeAsOptional("RingBufferSink.RingBufferSink");
     MarkNativeAsOptional("RingBufferSink.Drain");
     MarkNativeAsOptional("RingBufferSink.DrainFormatted");
-    MarkNativeAsOptional("RingBufferSink.CreateLogger");
 
     MarkNativeAsOptional("RotatingFileSink.RotatingFileSink");
     MarkNativeAsOptional("RotatingFileSink.GetFilename");
     MarkNativeAsOptional("RotatingFileSink.GetFilenameLength");
     MarkNativeAsOptional("RotatingFileSink.RotateNow");
     MarkNativeAsOptional("RotatingFileSink.CalcFilename");
-    MarkNativeAsOptional("RotatingFileSink.CreateLogger");
 
     MarkNativeAsOptional("ServerConsoleSink.ServerConsoleSink");
-    MarkNativeAsOptional("ServerConsoleSink.CreateLogger");
 
     MarkNativeAsOptional("Sink.GetLevel");
     MarkNativeAsOptional("Sink.SetLevel");

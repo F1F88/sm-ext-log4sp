@@ -75,34 +75,6 @@ methodmap DailyFileSink < Sink
      * @return              Length of the filename string.
      */
     public native int GetFilenameLength();
-
-    /**
-     * Create a logger handle that outputs to a file and rotates the file based on date.
-     *
-     * @note Logger handles must be freed via delete or CloseHandle().
-     *
-     * @param name          The name of the new logger.
-     * @param file          The file path where the log messages will be written.
-     * @param hour          The hour of the day when the log file should be rotated. (0-23)
-     * @param minute        The minute of the hour when the log file should be rotated. (0-59)
-     * @param truncate      If true, the created file will be truncated.
-     * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
-     * @param calculator    Callback function called when calculating the daily log file name.
-     * @param openPre       Function to call before the sink open the file.
-     * @param closePost     Function to call after the sink close the file.
-     * @return              A new Logger Handle.
-     * @error               Logger name already exists, or invalid rotation time, or maxFiles < 0, or maxFiles > 65535.
-     */
-    public static native Logger CreateLogger(
-        const char[] name,
-        const char[] file,
-        int hour=0,
-        int minute=0,
-        bool truncate=false,
-        int maxFiles=0,
-        DailyFileCalculator callback=INVALID_FUNCTION,
-        SinkFileOpenPre openPre=INVALID_FUNCTION,
-        SinkFileClosePost closePost=INVALID_FUNCTION);
 }
 
 
@@ -111,9 +83,6 @@ methodmap DailyFileSink < Sink
  * Usages:
  *    DailyFileSink sink = new DailyFileSink("file_%Y-%m-%d.log", hour, minute, truncate,
  *          maxFiles, DailyFileFormatCalculator);
- *
- *    Logger logger = DailyFileSink.CreateLogger("name", "file_%Y-%m-%d.log", hour, minute,
- *          truncate, maxFiles, DailyFileFormatCalculator);
  */
 stock void DailyFileFormatCalculator(char[] filename, int maxlen, int sec)
 {

@@ -104,54 +104,12 @@ static cell_t CallbackSink_SetFlushCallback(SourcePawn::IPluginContext *ctx, con
     return 0;
 }
 
-/**
- * public static native Logger CreateLogger(const char[] name, CustomLogCallback logCallback, CustomFlushCallback flushCallback = INVALID_FUNCTION);
- */
-static cell_t CallbackSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params)
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    SourcePawn::IPluginFunction *logFunction     = ctx->GetFunctionById(params[2]);
-    SourcePawn::IPluginFunction *logPostFunction = ctx->GetFunctionById(params[3]);
-    SourcePawn::IPluginFunction *flushFunction   = ctx->GetFunctionById(params[4]);
-
-    std::shared_ptr<Log4sp::Sinks::CallbackSink> sink;
-    try
-    {
-        sink = std::make_shared<Log4sp::Sinks::CallbackSink>(logFunction, logPostFunction, flushFunction);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return BAD_HANDLE;
-    }
-
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = std::make_shared<Log4sp::Logger>(name, sink);
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
 const sp_nativeinfo_t CallbackSinkNatives[] =
 {
     {"CallbackSink.CallbackSink",                   CallbackSink},
     {"CallbackSink.SetLogCallback",                 CallbackSink_SetLogCallback},
     {"CallbackSink.SetLogPostCallback",             CallbackSink_SetLogPostCallback},
     {"CallbackSink.SetFlushCallback",               CallbackSink_SetFlushCallback},
-    {"CallbackSink.CreateLogger",                   CallbackSink_CreateLogger},
 
     {nullptr,                                       nullptr}
 };

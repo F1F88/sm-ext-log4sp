@@ -38,7 +38,9 @@ void TestCommon()
 {
     SetTestContext("Test Common");
 
-    Logger logger = ServerConsoleSink.CreateLogger("test-common");
+    ServerConsoleSink sink = new ServerConsoleSink();
+    Logger logger = new Logger("test-common");
+    logger.AddSink(sink);
 
     char level[64];
     char levelShort[64];
@@ -65,5 +67,6 @@ void TestCommon()
     SourceLoc loc;
     AssertTrue("Empty source location", loc.IsEmpty());
 
+    delete sink;
     delete logger;
 }

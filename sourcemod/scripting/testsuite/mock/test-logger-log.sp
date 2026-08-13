@@ -140,14 +140,17 @@ void TestLogStackTrace()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "logger-log/log-stack-trace.log");
 
-    TestSink sink = new TestSink();
-    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
-    logger.AddSink(sink);
+    TestSink testSink = new TestSink();
+    BasicFileSink basicFileSink = new BasicFileSink(path);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(testSink);
+    logger.AddSink(basicFileSink);
 
     logger.LogStackTrace(LogLevel_Info, "test message 1");
     logger.LogStackTraceEx(LogLevel_Info, "test message %d", 2);
     logger.LogStackTraceAmxTpl(LogLevel_Info, "test message %d", 3);
     delete logger;
+    delete basicFileSink;
 
     AssertStrMatch("LogStackTraceAmxTpl line 6 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
     AssertStrMatch("LogStackTraceAmxTpl line 5 match", sink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrac");
@@ -169,7 +172,7 @@ void TestLogStackTrace()
     AssertStrMatch("LogStackTrace line 3 match", sink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
     AssertStrMatch("LogStackTrace line 2 match", sink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
     AssertStrMatch("LogStackTrace line 1 match", sink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
-    delete sink;
+    delete testSink;
 }
 
 
@@ -180,9 +183,11 @@ void TestLogThrowError()
     char path[PLATFORM_MAX_PATH];
     BuildTestPath(path, sizeof(path), "logger-log/throw-error.log");
 
-    TestSink sink = new TestSink();
-    Logger logger = BasicFileSink.CreateLogger(LOGGER_NAME, path);
-    logger.AddSink(sink);
+    TestSink testSink = new TestSink();
+    BasicFileSink basicFileSink = new BasicFileSink(path);
+    Logger logger = new Logger(LOGGER_NAME);
+    logger.AddSink(testSink);
+    logger.AddSink(basicFileSink);
     logger.FlushOn(LogLevel_Info);
 
     RequestFrame(Frame_MarkStart);
@@ -194,12 +199,13 @@ void TestLogThrowError()
     RequestFrame(Frame_ThorwErrorExInfo, logger);
     RequestFrame(Frame_ThorwErrorAmxTplInfo, logger);
     RequestFrame(Frame_CloseLogger, logger);
+    RequestFrame(Frame_CloseSink, basicFileSink);
     RequestFrame(Frame_MarkEnd);
 
     RequestFrame(Frame_AssertThrowErrorSinkMsgs, sink);
     RequestFrame(Frame_AssertThrowErrorLogFile);
     RequestFrame(Frame_AssertThrowErrorSMFile); // And DeleteSMErrorFile
-    RequestFrame(Frame_CloseSink, sink);
+    RequestFrame(Frame_CloseSink, testSink);
 }
 
 static void Frame_MarkStart()

@@ -75,28 +75,4 @@ methodmap RotatingFileSink < Sink
      * @return              Number of bytes written.
      */
     public static native int CalcFilename(char[] buffer, int maxlen, const char[] file, int index);
-
-    /**
-     * Create a logger handle that outputs to a file and rotates the file based on size.
-     *
-     * @note Logger handles must be freed via delete or CloseHandle().
-     *
-     * @param name          The name of the new logger.
-     * @param file          The file path where the log messages will be written.
-     * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
-     * @param maxFiles      The maximum number of rotated log files to keep.
-     * @param rotateOnOpen  If true, the log file will be rotated when opened.
-     * @param openPre       Function to call before the sink open the file.
-     * @param closePost     Function to call after the sink close the file.
-     * @return              A new Logger Handle.
-     * @error               Logger name already exists, or maxFileSize == 0, or maxFiles > 200000.
-     */
-    public static native Logger CreateLogger(
-        const char[] name,
-        const char[] file,
-        int maxFileSize,
-        int maxFiles,
-        bool rotateOnOpen=false,
-        SinkFileOpenPre openPre=INVALID_FUNCTION,
-        SinkFileClosePost closePost=INVALID_FUNCTION);
 }

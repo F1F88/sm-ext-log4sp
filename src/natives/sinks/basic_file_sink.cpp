@@ -94,61 +94,11 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
     return 0;
 }
 
-static cell_t BasicFileSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    char *file;
-    CTX_LOCAL_TO_STRING(params[2], &file);
-
-    char absPath[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, absPath, sizeof(absPath), "%s", file);
-
-    auto truncate = static_cast<bool>(params[3]);
-    SourcePawn::IPluginFunction *openFunc  = ctx->GetFunctionById(params[4]);
-    SourcePawn::IPluginFunction *closeFunc = ctx->GetFunctionById(params[5]);
-
-    spdlog::file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
-    handlers.after_close = FILE_EVENT_FUNCTION(closeFunc);
-
-    std::shared_ptr<spdlog::sinks::basic_file_sink_st> sink;
-    try
-    {
-        sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(absPath, truncate, handlers);
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return BAD_HANDLE;
-    }
-
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto logger = std::make_shared<Log4sp::Logger>(name, sink);
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
 const sp_nativeinfo_t BasicFileSinkNatives[] =
 {
     {"BasicFileSink.BasicFileSink",             BasicFileSink},
     {"BasicFileSink.GetFilename",               BasicFileSink_GetFilename},
     {"BasicFileSink.Truncate",                  BasicFileSink_Truncate},
-
-    {"BasicFileSink.CreateLogger",              BasicFileSink_CreateLogger},
 
     {nullptr,                                   nullptr}
 };

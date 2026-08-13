@@ -23,7 +23,9 @@ Action Command_Test(int args)
 
 void TestServerConsole()
 {
-    Logger logger = ServerConsoleSink.CreateLogger("test-server-console");
+    ServerConsoleSink sink = new ServerConsoleSink();
+    Logger logger = new Logger("test-server-console");
+    logger.AddSink(sink);
     logger.SetPattern("%+");
     logger.SetLevel(LogLevel_Trace);
 
@@ -35,4 +37,5 @@ void TestServerConsole()
     logger.Fatal("Test server console");
 
     delete logger;
+    delete sink;
 }
