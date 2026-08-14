@@ -33,7 +33,6 @@
 
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_handler.h"
-#include "log4sp/command/root_console_command_handler.h"
 
 
 /**
@@ -55,7 +54,6 @@ bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
     {
         Log4sp::LoggerHandler::Initialize();
         Log4sp::SinkHandler::Initialize();
-        Log4sp::RootConsoleCommandHandler::Initialize();
     }
     catch (const std::exception &ex)
     {
@@ -78,14 +76,11 @@ bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
 #endif
 
     sharesys->RegisterLibrary(myself, "log4sp");
-
-    rootconsole->ConsolePrint("****************** log4sp.ext initialize complete! ******************");
     return true;
 }
 
 void Log4spExtension::SDK_OnUnload()
 {
-    Log4sp::RootConsoleCommandHandler::Destroy();
     Log4sp::LoggerHandler::Destroy();
     Log4sp::SinkHandler::Destroy();
 }
