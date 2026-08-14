@@ -11,31 +11,6 @@
 
 
 /**
- * Callback for user defined error handler.
- *
- * @note By default, the handler log the error message using SourceMod API LogError().
- *
- * @note e.g.
- *      void LogToSM(const char[] msg) {
- *          LogError(msg);
- *      }
- *
- *
- * @param msg       Error message.
- * @param name      The name of the error origin.
- * @param file      The file name of the source code location.
- * @param line      The line number of the source code location.
- * @param func      The function name of the source code location.
- */
-typeset LoggerErrorHandler
-{
-    function void (const char[] msg);
-    function void (const char[] msg, const char[] name);
-    function void (const char[] msg, const char[] name, const char[] file, int line, const char[] func);
-};
-
-
-/**
  * Callback for apply a user defined function on all logger handles.
  *
  * @note e.g.
@@ -153,17 +128,15 @@ methodmap Logger < Handle
     public native void LogSrcAmxTpl(LogLevel lvl, const char[] fmt, any ...);
 
     /**
-     * Logs a message with the given source code location.
+     * Logs a message with the given source location.
      *
-     * @param file      The file name of the source code location.
-     * @param line      The line number of the source code location.
-     * @param func      The function name of the source code location.
+     * @param loc       Source location.
      * @param lvl       Log level enum.
      * @param msg       Log message.
      */
-    public native void LogLoc(const char[] file, int line, const char[] func, LogLevel lvl, const char[] msg);
-    public native void LogLocEx(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
-    public native void LogLocAmxTpl(const char[] file, int line, const char[] func, LogLevel lvl, const char[] fmt, any ...);
+    public native void LogLoc(const SourceLoc loc, LogLevel lvl, const char[] msg);
+    public native void LogLocEx(const SourceLoc loc, LogLevel lvl, const char[] fmt, any ...);
+    public native void LogLocAmxTpl(const SourceLoc loc, LogLevel lvl, const char[] fmt, any ...);
 
     /**
      * Logs a stack trace from the current function call.
@@ -254,8 +227,10 @@ methodmap Logger < Handle
     /**
      * Sets the handler function for logging errors.
      *
-     * @param handler   Callback function to call when an error occurs.
-     * @error           Invalid error handler function.
+     * @param plugin    Handle of the plugin that contains the function.
+     *                  If null, defaults to the calling plugin.
+     * @param func      Callback function to call when an error occurs.
+     * @error           Invalid or corrupt plugin handle, or invalid function.
      */
-    public native void SetErrorHandler(LoggerErrorHandler handler);
+    public native void SetErrorHandler(Handle plugin, ErrorHandler func);
 }

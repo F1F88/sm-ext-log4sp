@@ -208,7 +208,8 @@ void BenchAllLogFunc(int calls, int funcs, bool mock, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.LogLoc(__BINARY_PATH__, __LINE__, "BenchLogLoc", LogLevel_Info, "Hello logger: msg number 777");
+            SourceLoc loc = {__BINARY_PATH__, __LINE__, "BenchLogLoc"};
+            logger.LogLoc(loc, LogLevel_Info, "Hello logger: msg number 777");
         }
         g_hProfiler.Stop();
 

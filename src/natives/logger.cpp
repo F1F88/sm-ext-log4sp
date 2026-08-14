@@ -207,15 +207,19 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    char *file, *func, *msg;
-    CTX_LOCAL_TO_STRING(params[2], &file);
-    CTX_LOCAL_TO_STRING(params[4], &func);
-    CTX_LOCAL_TO_STRING(params[6], &msg);
+    Log4sp::CellSourceLoc *loc;
+    if (auto err = ctx->LocalToPhysAddr(params[2], reinterpret_cast<cell_t**>(&loc)))
+    {
+        ctx->ReportError("Invalid loc (error %d)", err);
+        return 0;
+    }
 
-    int line = params[3];
-    auto lvl = Log4sp::NumToLvl(params[5]);
+    auto lvl = Log4sp::NumToLvl(params[3]);
 
-    logger->Log(spdlog::source_loc(file, line, func), lvl, msg);
+    char *msg;
+    CTX_LOCAL_TO_STRING(params[4], &msg);
+
+    logger->Log(loc->ToSourceLoc(), lvl, msg);
     return 0;
 }
 
@@ -223,14 +227,16 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    char *file, *func;
-    CTX_LOCAL_TO_STRING(params[2], &file);
-    CTX_LOCAL_TO_STRING(params[4], &func);
+    Log4sp::CellSourceLoc *loc;
+    if (auto err = ctx->LocalToPhysAddr(params[2], reinterpret_cast<cell_t**>(&loc)))
+    {
+        ctx->ReportError("Invalid loc (error %d)", err);
+        return 0;
+    }
 
-    int line = params[3];
-    auto lvl = Log4sp::NumToLvl(params[5]);
+    auto lvl = Log4sp::NumToLvl(params[3]);
 
-    logger->Log(ctx, spdlog::source_loc(file, line, func), lvl, params, 6);
+    logger->Log(ctx, loc->ToSourceLoc(), lvl, params, 4);
     return 0;
 }
 
@@ -238,14 +244,16 @@ static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    char *file, *func;
-    CTX_LOCAL_TO_STRING(params[2], &file);
-    CTX_LOCAL_TO_STRING(params[4], &func);
+    Log4sp::CellSourceLoc *loc;
+    if (auto err = ctx->LocalToPhysAddr(params[2], reinterpret_cast<cell_t**>(&loc)))
+    {
+        ctx->ReportError("Invalid loc (error %d)", err);
+        return 0;
+    }
 
-    int line = params[3];
-    auto lvl = Log4sp::NumToLvl(params[5]);
+    auto lvl = Log4sp::NumToLvl(params[3]);
 
-    logger->LogAmxTpl(ctx, spdlog::source_loc(file, line, func), lvl, params, 6);
+    logger->LogAmxTpl(ctx, loc->ToSourceLoc(), lvl, params, 4);
     return 0;
 }
 
@@ -577,10 +585,26 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    auto func = ctx->GetFunctionById(params[2]);
+    SourceMod::IPlugin *plugin;
+    if (!params[2])
+    {
+        plugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        plugin = plsys->PluginFromHandle(params[2], &error);
+        if (!plugin)
+        {
+            ctx->ReportError("Invalid Plugin Handle %x (error %d)", params[2], error);
+            return 0;
+        }
+    }
+
+    SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionById(params[3]);
     if (!func)
     {
-        ctx->ReportError("Invalid function id: 0x%08x.", params[2]);
+        ctx->ReportError("Invalid function id %x.", params[3]);
         return 0;
     }
 

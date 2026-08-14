@@ -120,6 +120,48 @@ spdlog::filename_t UnbuildPath(const spdlog::filename_t &filename) noexcept
     return filename;
 }
 
+
+#pragma pack(push, 1)
+struct CellSourceLoc
+{
+    char filename[CharArraySize<256>::bytes];
+    cell_t line;
+    char funcname[CharArraySize<256>::bytes];
+
+    CellSourceLoc() = default;
+    CellSourceLoc(const spdlog::source_loc &loc) noexcept : line(loc.line)
+    {
+        if (loc.filename)
+            ke::SafeStrcpy(filename, sizeof(filename), loc.filename);
+        else
+            filename[0] = '\0';
+
+        if (loc.funcname)
+            ke::SafeStrcpy(funcname, sizeof(funcname), loc.funcname);
+        else
+            funcname[0] = '\0';
+    }
+
+    [[nodiscard]]
+    spdlog::source_loc ToSourceLoc() const noexcept
+    {
+        return spdlog::source_loc{filename, line, funcname};
+    }
+
+#if defined(DEBUG) || defined(_DEBUG)
+    void Debug() const noexcept
+    {
+        smutils->LogMessage(myself, "[DEBUG] cell_source_loc{funcname=%s,line=%d,filename=%s}", funcname, line, filename);
+    }
+#endif
+};
+#pragma pack(pop)
+
+static_assert(offsetof(CellSourceLoc, filename) == 0);
+static_assert(offsetof(CellSourceLoc, line) == 256);
+static_assert(offsetof(CellSourceLoc, funcname) == 256 + 4);
+
+
 [[noreturn]] inline
 void ThrowLog4spEx(std::string msg)
 {

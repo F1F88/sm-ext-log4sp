@@ -25,6 +25,76 @@
     }
 
 
+static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    char *logTime;
+    if (auto err = ctx->LocalToString(params[2], &logTime))
+    {
+        ctx->ReportError("Invalid log time (error %d)", err);
+        return 0;
+    }
+
+    Log4sp::CellSourceLoc *loc;
+    if (auto err = ctx->LocalToPhysAddr(params[3], reinterpret_cast<cell_t**>(&loc)))
+    {
+        ctx->ReportError("Invalid loc (error %d)", err);
+        return 0;
+    }
+
+    char *name;
+    if (auto err = ctx->LocalToString(params[4], &name))
+    {
+        ctx->ReportError("Invalid name (error %d)", err);
+        return 0;
+    }
+
+    auto lvl = Log4sp::NumToLvl(params[5]);
+
+    char *msg;
+    if (auto err = ctx->LocalToString(params[6], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
+
+    using std::chrono::duration_cast;
+    using std::chrono::system_clock;
+    using spdlog::details::os::now;
+    system_clock::time_point logTimePoint;
+    try
+    {
+        auto nanoseconds = std::chrono::nanoseconds(std::stoull(logTime));
+        logTimePoint = system_clock::time_point(duration_cast<system_clock::duration>(nanoseconds));
+    }
+    catch (const std::exception &)
+    {
+        logTimePoint = now();
+    }
+
+    try
+    {
+        using spdlog::details::log_msg;
+        sink->log(log_msg(logTimePoint, loc->ToSourceLoc(), name, lvl, msg));
+    }
+    catch (const std::exception &ex)
+    {
+        if (auto err = ctx->StringToLocalUTF8(params[7], params[8], ex.what(), nullptr))
+            ctx->ReportError("Failed to write error to buffer (error %d)", err);
+        return false;
+    }
+    return true;
+}
+
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_SINK_HANDLE_OR_ERROR(params[1]);
@@ -65,44 +135,6 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     return sink->should_log(lvl);
 }
 
-static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_SINK_HANDLE_OR_ERROR(params[1]);
-
-    char *name, *msg, *file, *func;
-    CTX_LOCAL_TO_STRING(params[2], &name);
-    CTX_LOCAL_TO_STRING(params[4], &msg);
-    CTX_LOCAL_TO_STRING_NULL(params[5], &file);
-    CTX_LOCAL_TO_STRING_NULL(params[7], &func);
-
-    auto lvl = Log4sp::NumToLvl(params[3]);
-    int line = params[6];
-
-    spdlog::source_loc loc(file, line, func);
-
-    using std::chrono::duration_cast;
-    using std::chrono::system_clock;
-    using spdlog::details::os::now;
-    std::chrono::system_clock::time_point logTime = now();
-    if (params[8] != -1)
-    {
-        // FIXME: Possible Year 2038 Problem
-        auto seconds = std::chrono::seconds(params[8]);
-        logTime = system_clock::time_point(duration_cast<system_clock::duration>(seconds));
-    }
-
-    try
-    {
-        using spdlog::details::log_msg;
-        sink->log(log_msg(logTime, loc, name, lvl, msg));
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-    }
-    return 0;
-}
-
 /**
  * public native void Flush();
  */
@@ -134,11 +166,11 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 const sp_nativeinfo_t SinkNatives[] =
 {
+    {"Sink.Log",                                Log},
     {"Sink.GetLevel",                           GetLevel},
     {"Sink.SetLevel",                           SetLevel},
     {"Sink.SetPattern",                         SetPattern},
     {"Sink.ShouldLog",                          ShouldLog},
-    {"Sink.Log",                                Log},
     {"Sink.Flush",                              Flush},
 
     {nullptr,                                   nullptr}

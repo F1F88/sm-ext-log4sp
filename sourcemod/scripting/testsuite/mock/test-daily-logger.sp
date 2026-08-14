@@ -105,8 +105,12 @@ void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)
     DailyFileSink sink = new DailyFileSink(path, 2, 30, true, maxDays);
     for (int i = 0; i < daysToRun; ++i)
     {
-        sink.Log("test-daily", LogLevel_Info, "Hello Message",
-            __BINARY_PATH__, __LINE__, __BINARY_NAME__, GetTime() + 24 * 3600 * i);
+        char logTime[21];
+        FormatEx(logTime, sizeof(logTime), "%d000000000", GetTime() + 24 * 3600 * i);
+
+        SourceLoc loc = {__BINARY_PATH__, __LINE__, __BINARY_NAME__};
+
+        sink.Log(logTime, loc, "test-daily", LogLevel_Info, "Hello Message");
     }
     delete sink;
 

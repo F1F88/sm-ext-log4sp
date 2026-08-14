@@ -74,6 +74,16 @@ enum struct SourceLoc
 
 
 /**
+ * Callback function for user defined error handler.
+ *
+ * @param origin    The origin name of the error.
+ * @param loc       The source location of the error.
+ * @param msg       The details message of the error.
+ */
+typedef ErrorHandler = function void (const char[] origin, const SourceLoc loc, const char[] msg);
+
+
+/**
  * Convert a log level enum to name.
  *
  * @param buffer    Buffer to store log level name.

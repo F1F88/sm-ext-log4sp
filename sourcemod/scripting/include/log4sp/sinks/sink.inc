@@ -28,6 +28,23 @@ typedef SinkFileClosePost = function void (const char[] filename);
 methodmap Sink < Handle
 {
     /**
+     * Logs a message.
+     *
+     * @param logTime   Log message timestamps (in nanoseconds).
+     *                  If invalid, defaults to the current time.
+     * @param loc       Source location.
+     * @param name      The name of the logger.
+     * @param lvl       Log level enum.
+     * @param msg       Pre formatted log message.
+     * @param error     Buffer to store error description.
+     * @param maxlen    Maximum length of the error.
+     * @return          True on success, false on error.
+     */
+    public native bool Log(const char[] logTime, const SourceLoc loc,
+                           const char[] name, LogLevel lvl, const char[] msg,
+                           char[] error="", int maxlen=0);
+
+    /**
      * Gets the sink log level.
      *
      * @return          The sink log level.
@@ -58,22 +75,6 @@ methodmap Sink < Handle
      * @return          True if logging is enabled for the given log level.
      */
     public native bool ShouldLog(LogLevel lvl);
-
-    /**
-     * Logs a message.
-     *
-     * @param name      The name of the logger.
-     * @param lvl       Log level enum.
-     * @param msg       Pre formatted log message.
-     * @param file      The file name of the source location.
-     * @param line      The line number of the source location.
-     * @param func      The function name of the source location.
-     * @param logTime   The log message time point in seconds.
-     *                  If -1, current time point is used as the time of the log message.
-     */
-    public native void Log(const char[] name, LogLevel lvl, const char[] msg,
-        const char[] file=NULL_STRING, int line=0, const char[] func=NULL_STRING,
-        int logTime=-1);
 
     /**
      * Manual flush sink contents.

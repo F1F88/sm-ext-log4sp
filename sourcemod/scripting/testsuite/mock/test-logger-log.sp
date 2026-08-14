@@ -109,23 +109,23 @@ void TestLogLoc()
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.LogLoc(locLinux.filename, locLinux.line, locLinux.funcname, LogLevel_Info, "test message 1");
+    logger.LogLoc(locLinux, LogLevel_Info, "test message 1");
     AssertStrMatch("Linux LogLoc line match", sink.DrainLastLineFast(), expectedLinux);
 
-    logger.LogLocEx(locLinux.filename, locLinux.line, locLinux.funcname, LogLevel_Info, "test message %d", 2);
+    logger.LogLocEx(locLinux, LogLevel_Info, "test message %d", 2);
     AssertStrMatch("Linux LogLocEx line match", sink.DrainLastLineFast(), expectedLinux);
 
-    logger.LogLocAmxTpl(locLinux.filename, locLinux.line, locLinux.funcname, LogLevel_Info, "test message %d", 3);
+    logger.LogLocAmxTpl(locLinux, LogLevel_Info, "test message %d", 3);
     AssertStrMatch("Linux LogLocAmxTpl line match", sink.DrainLastLineFast(), expectedLinux);
 
 
-    logger.LogLoc(locWin.filename, locWin.line, locWin.funcname, LogLevel_Info, "test message 1");
+    logger.LogLoc(locWin, LogLevel_Info, "test message 1");
     AssertStrMatch("Win LogLoc line match", sink.DrainLastLineFast(), expectedWin);
 
-    logger.LogLocEx(locWin.filename, locWin.line, locWin.funcname, LogLevel_Info, "test message %d", 2);
+    logger.LogLocEx(locWin, LogLevel_Info, "test message %d", 2);
     AssertStrMatch("Win LogLocEx line match", sink.DrainLastLineFast(), expectedWin);
 
-    logger.LogLocAmxTpl(locWin.filename, locWin.line, locWin.funcname, LogLevel_Info, "test message %d", 3);
+    logger.LogLocAmxTpl(locWin, LogLevel_Info, "test message %d", 3);
     AssertStrMatch("Win LogLocAmxTpl line match", sink.DrainLastLineFast(), expectedWin);
 
     logger.Close();

@@ -278,12 +278,27 @@ You can refer to the following code to override the default error handler of the
 ```sourcepawn
 void SetMyErrorHandler(Logger logger)
 {
-    logger.SetErrorHandler(MyErrorHandler);
+    logger.SetErrorHandler(null, MyErrorHandler);
 }
 
-void MyErrorHandler(const char[] msg, const char[] name, const char[] file, int line, const char[] func)
+void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
 {
-    LogError("[%s::%d] [%s] %s", file, line, name, msg);
+    // source takes the filename and appends the line number.
+    char source[PLATFORM_MAX_PATH];
+    if (!loc.IsEmpty())
+    {
+        int sepOffset = 0;
+        for (int i = 0; i < sizeof(SourceLoc::filename); ++i)
+        {
+            if (!loc.filename[i])
+                break;
+            if (loc.filename[i] == '\\' || loc.filename[i] == '/')
+                sepOffset = i + 1;
+        }
+        FormatEx(source, sizeof(source), "[%s::%d] ",
+                 loc.filename[sepOffset], loc.line);
+    }
+    LogError("[%s] %s%s", origin, source, msg);
 }
 ```
 

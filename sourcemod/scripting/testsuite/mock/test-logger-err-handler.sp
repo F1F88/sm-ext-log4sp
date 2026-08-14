@@ -80,7 +80,7 @@ void TestCustomErrorHandler()
     logger.AddSink(sink);
     logger.SetPattern("%v");
     logger.FlushOn(LogLevel_Info);
-    logger.SetErrorHandler(CustomErrorHandler);
+    logger.SetErrorHandler(null, CustomErrorHandler);
 
     logger.InfoEx("Test message %d", 1);
     logger.InfoEx("Test message %d", 2);
@@ -99,12 +99,12 @@ void TestCustomErrorHandler()
 
 
 
-void CustomErrorHandler(const char[] msg, const char[] name, const char[] file, int line, const char[] func)
+void CustomErrorHandler(const char[] origin, const SourceLoc loc, const char[] msg)
 {
     g_iCustomErrCnt++;
 
     AssertStrEq("OnCustomErrorHandler msg", msg, "String formatted incorrectly - parameter 4 (total 3)");
-    AssertStrEq("OnCustomErrorHandler name", name, LOGGER_NAME);
-    AssertStrMatch("OnCustomErrorHandler file match", file, ".*test-logger-err-handler.sp");
-    AssertStrEq("OnCustomErrorHandler func", func, "TestCustomErrorHandler");
+    AssertStrEq("OnCustomErrorHandler origin", origin, LOGGER_NAME);
+    AssertStrMatch("OnCustomErrorHandler file match", loc.filename, ".*test-logger-err-handler.sp");
+    AssertStrEq("OnCustomErrorHandler func", loc.funcname, "TestCustomErrorHandler");
 }
