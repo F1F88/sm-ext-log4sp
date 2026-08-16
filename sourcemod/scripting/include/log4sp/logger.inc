@@ -24,14 +24,6 @@ methodmap Logger < Handle
     public native Logger(const char[] name);
 
     /**
-     * Gets a logger handle by logger name.
-     *
-     * @param name      The name of the logger.
-     * @return          Logger handle or INVALID_HANDLE if the logger name does not exist.
-     */
-    public static native Logger Get(const char[] name);
-
-    /**
      * Gets the logger name.
      *
      * @param buffer    Buffer to store logger name.

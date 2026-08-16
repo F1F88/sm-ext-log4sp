@@ -47,14 +47,6 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return handle;
 }
 
-static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-
-    return Log4sp::LoggerHandler::Instance().FindHandle(name);
-}
-
 static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -592,8 +584,6 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
 const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
-    {"Logger.Get",                              Get},
-
     {"Logger.GetName",                          GetName},
     {"Logger.GetNameLength",                    GetNameLength},
     {"Logger.GetLevel",                         GetLevel},

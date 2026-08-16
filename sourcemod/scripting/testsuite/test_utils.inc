@@ -110,15 +110,6 @@ stock int StringMatch(const char[] str, const char[] expectedPattern)
         LogError("Exp: (%s)", expectedPattern);
         ThrowError("String match failure: (%d).", code);
     }
-
-    if (count <= 0)
-    {
-        Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME).WarnEx("Str: (%s)", str);
-        Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME).WarnEx("Exp: (%s)", expectedPattern);
-        Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME).WarnEx("StringMatch: No match found!");
-        return count;
-    }
-
     return count;
 }
 
