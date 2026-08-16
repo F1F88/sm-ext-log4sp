@@ -80,6 +80,35 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     return true;
 }
 
+static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    // HACK: CallbackSink
+    if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
+        callbackSink->TryRegisterHandle(params[1]);
+
+    try
+    {
+        sink->flush();
+    }
+    catch (const std::exception &ex)
+    {
+        if (auto err = ctx->StringToLocalUTF8(params[2], params[3], ex.what(), nullptr))
+            ctx->ReportError("Failed to write error to buffer (error %d)", err);
+        return false;
+    }
+    return true;
+}
+
 static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
@@ -152,45 +181,15 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     return sink->should_log(lvl);
 }
 
-/**
- * public native void Flush();
- */
-static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params)
-{
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
-        return 0;
-    }
-
-    // HACK: CallbackSink
-    if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
-        callbackSink->TryRegisterHandle(params[1]);
-
-    try
-    {
-        sink->flush();
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-    }
-    return 0;
-}
-
 
 const sp_nativeinfo_t SinkNatives[] =
 {
     {"Sink.Log",                                Log},
+    {"Sink.Flush",                              Flush},
     {"Sink.SetPattern",                         SetPattern},
     {"Sink.GetLevel",                           GetLevel},
     {"Sink.SetLevel",                           SetLevel},
     {"Sink.ShouldLog",                          ShouldLog},
-    {"Sink.Flush",                              Flush},
 
     {nullptr,                                   nullptr}
 };

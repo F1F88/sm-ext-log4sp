@@ -34,6 +34,15 @@ methodmap Sink < Handle
                            char[] error="", int maxlen=0);
 
     /**
+     * Manual flush sink contents.
+     *
+     * @param error     Buffer to store error description.
+     * @param maxlen    Maximum length of the error.
+     * @return          True on success, false on error.
+     */
+    public native bool Flush(char[] error="", int maxlen=0);
+
+    /**
      * Gets the sink log level.
      *
      * @return          The sink log level.
@@ -64,9 +73,4 @@ methodmap Sink < Handle
      * @return          True if logging is enabled for the given log level.
      */
     public native bool ShouldLog(LogLevel lvl);
-
-    /**
-     * Manual flush sink contents.
-     */
-    public native void Flush();
 }
