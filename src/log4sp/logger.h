@@ -71,9 +71,6 @@ public:
     void LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
     void LogStackTraceAmxTpl(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
 
-    void ThrowError(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
-    void ThrowErrorAmxTpl(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
-
     // return true if logging is enabled for the given level.
     [[nodiscard]]
     bool ShouldLog(LevelEnum msgLevel) const noexcept {

@@ -114,22 +114,6 @@ methodmap Logger < Handle
     public native void LogStackTraceEx(LogLevel lvl, const char[] fmt, any ...);
     public native void LogStackTraceAmxTpl(LogLevel lvl, const char[] fmt, any ...);
 
-    /**
-     * Aborts the current callback and throws an error.
-     * This function does not return in that no code is executed following it.
-     *
-     * @note This will call SourceMod native ThrowError() first and then log the message using the logger.
-     * @note A low log level does not skip the call of ThrowError()!
-     * @note A low log level will skip log the message using the logger!
-     *
-     * @param lvl       Log level enum.
-     * @param msg       Log message.
-     * @error           Always!
-     */
-    public native void ThrowError(LogLevel lvl, const char[] msg);
-    public native void ThrowErrorEx(LogLevel lvl, const char[] fmt, any ...);
-    public native void ThrowErrorAmxTpl(LogLevel lvl, const char[] fmt, any ...);
-
     public native void Trace(const char[] msg);
     public native void TraceEx(const char[] fmt, any ...);
     public native void TraceAmxTpl(const char[] fmt, any ...);

@@ -36,8 +36,6 @@ Action Command_Test(int args)
 
     TestLogStackTrace();
 
-    TestLogThrowError();
-
     PrintToServer("---- STOP TEST LOG ----");
     return Plugin_Handled;
 }
@@ -161,7 +159,7 @@ void TestLogStackTrace()
 
     AssertStrMatch("LogStackTraceEx line 6 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
     AssertStrMatch("LogStackTraceEx line 5 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
-    AssertStrMatch("LogStackTraceEx line 4 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceE");
+    AssertStrMatch("LogStackTraceEx line 4 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceEx");
     AssertStrMatch("LogStackTraceEx line 3 match", testSink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
     AssertStrMatch("LogStackTraceEx line 2 match", testSink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
     AssertStrMatch("LogStackTraceEx line 1 match", testSink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 2");
@@ -173,140 +171,4 @@ void TestLogStackTrace()
     AssertStrMatch("LogStackTrace line 2 match", testSink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
     AssertStrMatch("LogStackTrace line 1 match", testSink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
     delete testSink;
-}
-
-
-void TestLogThrowError()
-{
-    SetTestContext("Test Logger ThrowError");
-
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "logger-log/throw-error.log");
-
-    TestSink testSink = new TestSink();
-    BasicFileSink basicFileSink = new BasicFileSink(path);
-    Logger logger = new Logger(LOGGER_NAME);
-    logger.AddSink(testSink);
-    logger.AddSink(basicFileSink);
-    logger.FlushOn(LogLevel_Info);
-
-    RequestFrame(Frame_MarkStart);
-    RequestFrame(Frame_ThorwErrorDebug, logger);
-    RequestFrame(Frame_ThorwErrorExDebug, logger);
-    RequestFrame(Frame_ThorwErrorAmxTplDebug, logger);
-
-    RequestFrame(Frame_ThorwErrorInfo, logger);
-    RequestFrame(Frame_ThorwErrorExInfo, logger);
-    RequestFrame(Frame_ThorwErrorAmxTplInfo, logger);
-    RequestFrame(Frame_CloseLogger, logger);
-    RequestFrame(Frame_CloseSink, basicFileSink);
-    RequestFrame(Frame_MarkEnd);
-
-    RequestFrame(Frame_AssertThrowErrorSinkMsgs, testSink);
-    RequestFrame(Frame_AssertThrowErrorLogFile);
-    RequestFrame(Frame_AssertThrowErrorSMFile); // And DeleteSMErrorFile
-    RequestFrame(Frame_CloseSink, testSink);
-}
-
-static void Frame_MarkStart()
-{
-    MarkErrorTestStart("Test Log ThrowError");
-}
-
-static void Frame_MarkEnd()
-{
-    MarkErrorTestEnd("Test Log ThrowError");
-}
-
-void Frame_ThorwErrorDebug(Logger logger)
-{
-    logger.ThrowError(LogLevel_Debug, "test message 1");
-}
-
-void Frame_ThorwErrorExDebug(Logger logger)
-{
-    logger.ThrowErrorEx(LogLevel_Debug, "test message %d", 2);
-}
-
-void Frame_ThorwErrorAmxTplDebug(Logger logger)
-{
-    logger.ThrowErrorAmxTpl(LogLevel_Debug, "test message %d", 3);
-}
-
-void Frame_ThorwErrorInfo(Logger logger)
-{
-    logger.ThrowError(LogLevel_Info, "test message 1");
-}
-
-void Frame_ThorwErrorExInfo(Logger logger)
-{
-    logger.ThrowErrorEx(LogLevel_Info, "test message %d", 2);
-}
-
-void Frame_ThorwErrorAmxTplInfo(Logger logger)
-{
-    logger.ThrowErrorAmxTpl(LogLevel_Info, "test message %d", 3);
-}
-
-void Frame_CloseLogger(Logger logger)
-{
-    logger.Close();
-}
-
-void Frame_CloseSink(Sink sink)
-{
-    sink.Close();
-}
-
-static void Frame_AssertThrowErrorSinkMsgs(TestSink sink)
-{
-    AssertEq("ThrowError msgs", sink.GetLogCount(), 3 * 5);
-
-    ArrayList messages = sink.DrainMsgsFast();
-    sLogMessage logMsg;
-    for (int i = 0; i < 3; ++i)
-    {
-        messages.GetArray(i * 5, logMsg);
-        AssertStrMatch("ThrowError sink msg 1 match", logMsg.msg, "Exception reported: test message (1|2|3)");
-
-        messages.GetArray(i * 5 + 1, logMsg);
-        AssertStrEq("ThrowError sink msg 2", logMsg.msg, "Blaming: test-logger-log.smx");
-
-        messages.GetArray(i * 5 + 2, logMsg);
-        AssertStrEq("ThrowError sink msg 3", logMsg.msg, "Call stack trace:");
-
-        messages.GetArray(i * 5 + 3, logMsg);
-        AssertStrMatch("ThrowError sink msg 4 match", logMsg.msg, "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*");
-
-        messages.GetArray(i * 5 + 4, logMsg);
-        AssertStrMatch("ThrowError sink msg 5 match", logMsg.msg, "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)");
-    }
-    delete messages;
-}
-
-static void Frame_AssertThrowErrorLogFile()
-{
-#define THROW_ERROR_LOG_FILE_EXP   "(?:" ... P_PREFIX ... "Exception reported: test message (1|2|3)\
-(\n|\r\n)" ... P_PREFIX ... "Blaming: test-logger-log.smx\
-(\n|\r\n)" ... P_PREFIX ... "Call stack trace:\
-(\n|\r\n)" ... P_PREFIX ... "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*\
-(\n|\r\n)" ... P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)(\n|\r\n)){3}"
-
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "logger-log/throw-error.log");
-    AssertFileMatch("ThrowError log file match", path, THROW_ERROR_LOG_FILE_EXP);
-}
-
-static void Frame_AssertThrowErrorSMFile()
-{
-#define THROW_ERROR_SM_FILE_EXP   "(?:" ... P_SM_PREFIX ... "Exception reported: test message (1|2|3)\
-(\n|\r\n)" ... P_SM_PREFIX ... "Blaming: test-logger-log.smx\
-(\n|\r\n)" ... P_SM_PREFIX ... "Call stack trace:\
-(\n|\r\n)" ... P_SM_PREFIX ... "  \\[0\\] Logger.ThrowError(Ex|AmxTpl)*\
-(\n|\r\n)" ... P_SM_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::Frame_ThorwError(Ex|AmxTpl)*(Debug|Info)(\n|\r\n)){6}"
-
-    AssertFileMatch("ThrowError sm file match", GetErrorFilename(), THROW_ERROR_SM_FILE_EXP);
-
-    // 若检验通过，则删除本次测试生成的日志信息以保持 SM 错误日志的简洁
-    // DeleteFile(GetErrorFilename());
 }

@@ -263,49 +263,6 @@ static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t 
     return 0;
 }
 
-static cell_t ThrowError(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    char *msg;
-    CTX_LOCAL_TO_STRING(params[3], &msg);
-
-    ctx->ReportError(msg);
-
-    using spdlog::fmt_lib::format;
-    logger->Log(ctx, lvl, format("Exception reported: {}", msg));
-    logger->Log(ctx, lvl, format("Blaming: {}", Log4sp::PluginSysFindPluginByCtx(ctx)->GetFilename()));
-
-    std::vector<std::string> messages = Log4sp::SrcHelper::GetStackTrace(ctx);
-    for (auto &iter : messages)
-    {
-        logger->Log(ctx, lvl, iter);
-    }
-    return 0;
-}
-
-static cell_t ThrowErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    logger->ThrowError(ctx, lvl, params, 3);
-    return 0;
-}
-
-static cell_t ThrowErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    logger->ThrowErrorAmxTpl(ctx, lvl, params, 3);
-    return 0;
-}
-
 static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
@@ -602,10 +559,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.LogLocAmxTpl",                     LogLocAmxTpl},
     {"Logger.LogStackTrace",                    LogStackTrace},
     {"Logger.LogStackTraceEx",                  LogStackTraceEx},
-    {"Logger.LogStackTraceAmxTpl",              LogStackTraceAmxTpl},
-    {"Logger.ThrowError",                       ThrowError},
-    {"Logger.ThrowErrorEx",                     ThrowErrorEx},
-    {"Logger.ThrowErrorAmxTpl",                 ThrowErrorAmxTpl},
 
     {"Logger.Trace",                            Trace},
     {"Logger.TraceEx",                          TraceEx},
