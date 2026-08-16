@@ -55,33 +55,6 @@ static cell_t Get(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     return Log4sp::LoggerHandler::Instance().FindHandle(name);
 }
 
-static cell_t ApplyAll(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    auto func = ctx->GetFunctionById(params[1]);
-    if (!func)
-    {
-        ctx->ReportError("Invalid function id: 0x%08x.", params[1]);
-        return 0;
-    }
-
-    // void (Logger logger, any data)
-    FWDS_CREATE_EX(nullptr, ET_Ignore, 2, nullptr, Param_Cell, Param_Cell);
-    FWD_ADD_FUNCTION(func);
-
-    auto data = params[2];
-
-    Log4sp::LoggerHandler::Instance().ApplyAll(
-        [fwd, data](const SourceMod::Handle_t handle) {
-            FWD_PUSH_CELL(handle);
-            FWD_PUSH_CELL(data);
-            FWD_EXECUTE();
-        }
-    );
-
-    forwards->ReleaseForward(fwd);
-    return 0;
-}
-
 static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -620,7 +593,6 @@ const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
     {"Logger.Get",                              Get},
-    {"Logger.ApplyAll",                         ApplyAll},
 
     {"Logger.GetName",                          GetName},
     {"Logger.GetNameLength",                    GetNameLength},

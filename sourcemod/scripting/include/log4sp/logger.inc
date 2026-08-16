@@ -10,24 +10,6 @@
 #include <log4sp/sinks/sink>
 
 
-/**
- * Callback for apply a user defined function on all logger handles.
- *
- * @note e.g.
- *      void FlushAllLoggers(Logger logger) {
- *          logger.Flush();
- *      }
- *
- * @param logger    Logger handle.
- * @param data      Data value passed to Logger.ApplyAll().
- */
-typeset LoggerApplyAllCallback
-{
-    function void (Logger logger);
-    function void (Logger logger, any data);
-};
-
-
 methodmap Logger < Handle
 {
     /**
@@ -48,15 +30,6 @@ methodmap Logger < Handle
      * @return          Logger handle or INVALID_HANDLE if the logger name does not exist.
      */
     public static native Logger Get(const char[] name);
-
-    /**
-     * Apply a user defined function on all loggers.
-     *
-     * @param callback  A callback that apply a user defined function on all loggers.
-     * @param data      Extra data value to pass to the callback.
-     * @error           Invalid apply all callback.
-     */
-    public static native void ApplyAll(LoggerApplyAllCallback callback, any data=0);
 
     /**
      * Gets the logger name.
