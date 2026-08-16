@@ -41,7 +41,7 @@ void TestUpdateSinks()
         logger.AddSink(sink);
         logger.AddSink(sink2);
 
-        logger.InfoAmxTpl("Test message %d", i);
+        logger.InfoEx("Test message %d", i);
 
         logger.DropSink(sink);
         logger.DropSink(sink2);

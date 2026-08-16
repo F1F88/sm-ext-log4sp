@@ -44,7 +44,7 @@ void TestCustomCallbackLogger()
 
     for (int i = 0; i < TEST_LOG4SP_LEVEL_TOTAL; ++i)
     {
-        logger.LogAmxTpl(view_as<LogLevel>(i), "test message %d", i);
+        logger.LogEx(view_as<LogLevel>(i), "test message %d", i);
     }
 
     logger.Flush();

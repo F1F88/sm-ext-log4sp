@@ -37,25 +37,6 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
     }
 }
 
-// log with sourcemod format
-void Logger::LogAmxTpl(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept
-{
-    assert(ctx && params);
-
-    if (ShouldLog(lvl))
-    {
-        SrcHelper src(loc, ctx);
-        char msg[2048];
-        DetectExceptions eh(ctx);
-
-        smutils->FormatString(msg, sizeof(msg), ctx, params, param);
-        if (eh.HasException())
-            return;
-
-        SinkIt(LogMsg(loc, m_Name, lvl, msg), src);
-    }
-}
-
 // special log
 void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept
 {
@@ -89,32 +70,6 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
         for (auto &iter : messages)
         {
             SinkIt(LogMsg(m_Name, lvl, iter), src);
-        }
-    }
-}
-
-void Logger::LogStackTraceAmxTpl(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept
-{
-    assert(ctx && params);
-
-    if (ShouldLog(lvl))
-    {
-        SrcHelper source(ctx);
-        char msg[2048];
-        DetectExceptions eh(ctx);
-
-        smutils->FormatString(msg, sizeof(msg), ctx, params, param);
-        if (eh.HasException())
-            return;
-
-        using spdlog::fmt_lib::format;
-        SinkIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), source);
-        SinkIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), source);
-
-        std::vector<std::string> messages = SrcHelper::GetStackTrace(ctx);
-        for (auto &iter : messages)
-        {
-            SinkIt(LogMsg(m_Name, lvl, iter), source);
         }
     }
 }

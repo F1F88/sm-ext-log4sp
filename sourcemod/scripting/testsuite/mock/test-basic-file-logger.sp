@@ -46,8 +46,8 @@ void TestFileLogger()
     logger.AddSink(sink);
     logger.SetPattern("%v");
 
-    logger.InfoAmxTpl("Test message %d", 1);
-    logger.InfoAmxTpl("Test message %d", 2);
+    logger.InfoEx("Test message %d", 1);
+    logger.InfoEx("Test message %d", 2);
     delete logger;
     delete sink;
 
@@ -69,13 +69,13 @@ void TestFlushOn()
     logger.SetLevel(LogLevel_Trace);
     logger.FlushOn(LogLevel_Info);
 
-    logger.InfoAmxTpl("Test message %d", 1);
+    logger.InfoEx("Test message %d", 1);
     logger.Trace("Should not be flushed");
 
     AssertEq("Flush by info level, count lines", CountLines(path), 1);
     AssertFileMatch("Flush by info level, contents match", path, "Test message 1" ... P_EOL);
 
-    logger.InfoAmxTpl("Test message %d", 2);
+    logger.InfoEx("Test message %d", 2);
     delete logger;
     delete sink;
 
@@ -94,15 +94,15 @@ void TestTruncate()
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.InfoAmxTpl("Test message %f", 3.14);
-    logger.InfoAmxTpl("Test message %f", 2.71);
+    logger.InfoEx("Test message %f", 3.14);
+    logger.InfoEx("Test message %f", 2.71);
     logger.Flush();
     AssertEq("Truncate pre, count lines", CountLines(path), 2);
 
     sink.Truncate();
     AssertEq("Truncate post, count lines", CountLines(path), 0);
 
-    logger.InfoAmxTpl("Test message %f", 6.28);
+    logger.InfoEx("Test message %f", 6.28);
     delete logger;
     delete sink;
     AssertEq("Truncate final, count lines", CountLines(path), 1);

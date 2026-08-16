@@ -61,15 +61,8 @@ public:
     }
     void Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
 
-    // Log with sourcemod format
-    void LogAmxTpl(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept {
-        LogAmxTpl(ctx, SourceLoc{}, lvl, params, param);
-    }
-    void LogAmxTpl(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
-
     // special log
     void LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
-    void LogStackTraceAmxTpl(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
 
     // return true if logging is enabled for the given level.
     [[nodiscard]]

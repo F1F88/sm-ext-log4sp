@@ -63,7 +63,7 @@ void TestRotateLogger()
 
     for (int i = 0; i < 10; ++i)
     {
-        logger.InfoAmxTpl("Test message %d", i);
+        logger.InfoEx("Test message %d", i);
     }
     delete logger;
     delete sink;
@@ -87,7 +87,7 @@ void TestAutoRotate()
 
     for (int i = 0; i < 10; ++i)
     {
-        logger.InfoAmxTpl("Test message %d", i);
+        logger.InfoEx("Test message %d", i);
     }
     delete logger;
     delete sink;
@@ -98,7 +98,7 @@ void TestAutoRotate()
 
     for (int i = 0; i < 10; ++i)
     {
-        logger.InfoAmxTpl("Test message %d", i);
+        logger.InfoEx("Test message %d", i);
     }
     logger.Flush();
 
@@ -106,7 +106,7 @@ void TestAutoRotate()
 
     for (int i = 0; i < 1000; ++i)
     {
-        logger.InfoAmxTpl("Test message %d", i);
+        logger.InfoEx("Test message %d", i);
     }
     delete logger;
 

@@ -125,16 +125,6 @@ static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     return 0;
 }
 
-static cell_t LogAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    logger->LogAmxTpl(ctx, lvl, params, 3);
-    return 0;
-}
-
 static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -155,16 +145,6 @@ static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     auto lvl = Log4sp::NumToLvl(params[2]);
 
     logger->Log(ctx, Log4sp::SrcHelper::GetFromPluginCtx(ctx), lvl, params, 3);
-    return 0;
-}
-
-static cell_t LogSrcAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    logger->LogAmxTpl(ctx, Log4sp::SrcHelper::GetFromPluginCtx(ctx), lvl, params, 3);
     return 0;
 }
 
@@ -205,23 +185,6 @@ static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     return 0;
 }
 
-static cell_t LogLocAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    Log4sp::CellSourceLoc *loc;
-    if (auto err = ctx->LocalToPhysAddr(params[2], reinterpret_cast<cell_t**>(&loc)))
-    {
-        ctx->ReportError("Invalid loc (error %d)", err);
-        return 0;
-    }
-
-    auto lvl = Log4sp::NumToLvl(params[3]);
-
-    logger->LogAmxTpl(ctx, loc->ToSourceLoc(), lvl, params, 4);
-    return 0;
-}
-
 static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -253,16 +216,6 @@ static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *par
     return 0;
 }
 
-static cell_t LogStackTraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    logger->LogStackTraceAmxTpl(ctx, lvl, params, 3);
-    return 0;
-}
-
 static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
@@ -281,15 +234,6 @@ static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->Log(ctx, level_enum::trace, params, 2);
-    return 0;
-}
-
-static cell_t TraceAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    using spdlog::level::level_enum;
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    logger->LogAmxTpl(ctx, level_enum::trace, params, 2);
     return 0;
 }
 
@@ -314,15 +258,6 @@ static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     return 0;
 }
 
-static cell_t DebugAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    using spdlog::level::level_enum;
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    logger->LogAmxTpl(ctx, level_enum::debug, params, 2);
-    return 0;
-}
-
 static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
@@ -341,15 +276,6 @@ static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->Log(ctx, level_enum::info, params, 2);
-    return 0;
-}
-
-static cell_t InfoAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    using spdlog::level::level_enum;
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    logger->LogAmxTpl(ctx, level_enum::info, params, 2);
     return 0;
 }
 
@@ -374,15 +300,6 @@ static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return 0;
 }
 
-static cell_t WarnAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    using spdlog::level::level_enum;
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    logger->LogAmxTpl(ctx, level_enum::warn, params, 2);
-    return 0;
-}
-
 static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
@@ -404,15 +321,6 @@ static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     return 0;
 }
 
-static cell_t ErrorAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    using spdlog::level::level_enum;
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    logger->LogAmxTpl(ctx, level_enum::err, params, 2);
-    return 0;
-}
-
 static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
@@ -431,15 +339,6 @@ static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     logger->Log(ctx, level_enum::critical, params, 2);
-    return 0;
-}
-
-static cell_t FatalAmxTpl(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    using spdlog::level::level_enum;
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    logger->LogAmxTpl(ctx, level_enum::critical, params, 2);
     return 0;
 }
 
@@ -550,34 +449,25 @@ const sp_nativeinfo_t LoggerNatives[] =
 
     {"Logger.Log",                              Log},
     {"Logger.LogEx",                            LogEx},
-    {"Logger.LogAmxTpl",                        LogAmxTpl},
     {"Logger.LogSrc",                           LogSrc},
     {"Logger.LogSrcEx",                         LogSrcEx},
-    {"Logger.LogSrcAmxTpl",                     LogSrcAmxTpl},
     {"Logger.LogLoc",                           LogLoc},
     {"Logger.LogLocEx",                         LogLocEx},
-    {"Logger.LogLocAmxTpl",                     LogLocAmxTpl},
     {"Logger.LogStackTrace",                    LogStackTrace},
     {"Logger.LogStackTraceEx",                  LogStackTraceEx},
 
     {"Logger.Trace",                            Trace},
     {"Logger.TraceEx",                          TraceEx},
-    {"Logger.TraceAmxTpl",                      TraceAmxTpl},
     {"Logger.Debug",                            Debug},
     {"Logger.DebugEx",                          DebugEx},
-    {"Logger.DebugAmxTpl",                      DebugAmxTpl},
     {"Logger.Info",                             Info},
     {"Logger.InfoEx",                           InfoEx},
-    {"Logger.InfoAmxTpl",                       InfoAmxTpl},
     {"Logger.Warn",                             Warn},
     {"Logger.WarnEx",                           WarnEx},
-    {"Logger.WarnAmxTpl",                       WarnAmxTpl},
     {"Logger.Error",                            Error},
     {"Logger.ErrorEx",                          ErrorEx},
-    {"Logger.ErrorAmxTpl",                      ErrorAmxTpl},
     {"Logger.Fatal",                            Fatal},
     {"Logger.FatalEx",                          FatalEx},
-    {"Logger.FatalAmxTpl",                      FatalAmxTpl},
 
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},

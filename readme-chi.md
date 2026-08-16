@@ -105,27 +105,27 @@ public void OnPluginStart()
 
 ### 参数格式化
 
-以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogEx` / `LogAmxTpl` 则先将参数格式化，再输出格式化后的日志消息。
+以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogEx` 则先将参数格式化，再输出格式化后的日志消息。
 
 参数格式化在 **Logger** 层执行，且仅当日志消息级别 **≥** logger 日志级别时才会触发。
 
-|                                                              |  Log   |                            LogEx                             |                          LogAmxTpl                           |                       SM - LogMessage                        |
-| :----------------------------------------------------------- | :----: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| **运行效率**                                                 |  最快  |                             较快                             |                             较快                             |                             较慢                             |
-| **最多字符数**                                               | 无限制 |                            无限制                            |                             2048                             |                             1024                             |
-| **参数格式化**                                               |   ×    |                              √                               |                              √                               |                              √                               |
-| **实现**                                                     |   ×    |            [Log4sp Format](./src/log4sp/format.h)            | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
-| **用法**                                                     |   ×    | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
-| **格式错误**                                                 |   ×    |                      调用 Error Handler                      |                           抛出错误                           |                           抛出错误                           |
-| **填充 [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |   ×    |                        修复于 v1.5.0                         |                        修复于 v1.5.0                         | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
-| **浮点 [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** |   ×    |                        修复于 v1.10.0                        |                        修复于 v1.10.0                        | 新增于 [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |
-| **减号 [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |   ×    |                        修复于 v1.8.0                         |                        修复于 v1.8.0                         | 修复于 [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |
-| **对齐 [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |   ×    |                        修复于 v1.5.0                         |                        修复于 v1.5.0                         | 修复于 [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |
-| **通配符 [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |   ×    |                        新增于 v1.10.0                        |                        新增于 v1.10.0                        | 新增于 [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |
-| **通配符 [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** |   ×    |                        新增于 v1.11.0                        |                        新增于 v1.11.0                        | 新增于 [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |
-| **浮点数 [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** |   ×    |                        新增于 v1.11.0                        |                        新增于 v1.11.0                        | 新增于 [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |
-| **填充 [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** |   ×    |                        修复于 v1.8.0                         |                        修复于 v1.8.0                         | 修复于 [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |
-| **通配符 [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** |   ×    |                        新增于 v1.11.0                        |                        新增于 v1.11.0                        | 新增于 [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |
+|                                                              |  Log   |                            LogEx                             |                       SM - LogMessage                        |
+| :----------------------------------------------------------- | :----: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| **运行效率**                                                 |  最快  |                             较快                             |                             较慢                             |
+| **最多字符数**                                               | 无限制 |                            无限制                            |                             1024                             |
+| **参数格式化**                                               |   ×    |                              √                               |                              √                               |
+| **实现**                                                     |   ×    |            [Log4sp Format](./src/log4sp/format.h)            | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
+| **用法**                                                     |   ×    | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
+| **格式错误**                                                 |   ×    |                      调用 Error Handler                      |                           抛出错误                           |
+| **填充 [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |   ×    |                        修复于 v1.5.0                         | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
+| **浮点 [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** |   ×    |                        修复于 v1.10.0                        | 新增于 [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |
+| **减号 [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |   ×    |                        修复于 v1.8.0                         | 修复于 [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |
+| **对齐 [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |   ×    |                        修复于 v1.5.0                         | 修复于 [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |
+| **通配符 [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |   ×    |                        新增于 v1.10.0                        | 新增于 [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |
+| **通配符 [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** |   ×    |                        新增于 v1.11.0                        | 新增于 [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |
+| **浮点数 [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** |   ×    |                        新增于 v1.11.0                        | 新增于 [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |
+| **填充 [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** |   ×    |                        修复于 v1.8.0                         | 修复于 [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |
+| **通配符 [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** |   ×    |                        新增于 v1.11.0                        | 新增于 [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |
 
 ```sourcepawn
 #include <sourcemod>
@@ -299,10 +299,6 @@ void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
 }
 ```
 
-> [!tip]
->
-> `Logger.LogAmxTpl` 格式化参数错误将直接抛出错误信息。
-
 ### 全局记录器
 
 全局 logger 名为 "**`log4sp`**"，由拓展在加载时创建，其生命周期与拓展相同，且不会被任何插件释放。
@@ -449,10 +445,8 @@ flowchart LR
         LoggerShouldFlush{"Should Flush?"}
         LoggerLog("Log")
         LoggerLogEx("LogEx")
-        LoggerLogAmxTpl("LogAmxTpl")
         LoggerLogFormat["Raw"]
         LoggerLogExFormat["Log4sp params format"]
-        LoggerLogAmxTplFormat["SourceMod params format"]
   end
  subgraph Sinks["Sink List"]
         SinkShouldJunction["Junction"]
@@ -466,13 +460,11 @@ flowchart LR
     LoggerShouldLog -- Yes --- LoggerShouldJunction
     LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
     LoggerShouldLog -. No .-> Stop((("End")))
-    LoggerLogJunction --- LoggerLog & LoggerLogEx & LoggerLogAmxTpl
+    LoggerLogJunction --- LoggerLog & LoggerLogEx
     LoggerLog --- LoggerLogFormat
     LoggerLogFormat --- SinkShouldJunction
     LoggerLogEx --- LoggerLogExFormat
     LoggerLogExFormat --- SinkShouldJunction
-    LoggerLogAmxTpl --- LoggerLogAmxTplFormat
-    LoggerLogAmxTplFormat --- SinkShouldJunction
     LoggerShouldFlush -- Yes --- SinkFlushJunction
     SinkFlushJunction --> SinkFlush
     SinkFlush --> Stop
@@ -486,7 +478,6 @@ flowchart LR
     LoggerLogJunction@{ shape: junction}
     LoggerLogFormat@{ shape: das}
     LoggerLogExFormat@{ shape: das}
-    LoggerLogAmxTplFormat@{ shape: das}
     SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
     SinkFlushJunction@{ shape: junction}
@@ -494,10 +485,8 @@ flowchart LR
     style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
     style LoggerLogEx stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogAmxTpl stroke-width:4px,stroke-dasharray: 0
     style LoggerLogFormat stroke-width:1px,stroke-dasharray: 1
     style LoggerLogExFormat stroke-width:1px,stroke-dasharray: 1
-    style LoggerLogAmxTplFormat stroke-width:1px,stroke-dasharray: 1
     style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
     style SinkLog stroke-width:4px,stroke-dasharray: 0
     style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1
@@ -506,11 +495,11 @@ flowchart LR
     linkStyle 2 stroke:#00C853,fill:none
     linkStyle 3 stroke:#00C853,fill:none
     linkStyle 4 stroke:#D50000,fill:none
-    linkStyle 14 stroke:#00C853,fill:none
-    linkStyle 15 stroke:#00C853,fill:none
-    linkStyle 17 stroke:#D50000,fill:none
-    linkStyle 19 stroke:#00C853,fill:none
-    linkStyle 22 stroke:#D50000,fill:none
+    linkStyle 11 stroke:#00C853,fill:none
+    linkStyle 12 stroke:#00C853,fill:none
+    linkStyle 14 stroke:#D50000,fill:none
+    linkStyle 16 stroke:#00C853,fill:none
+    linkStyle 19 stroke:#D50000,fill:none
     L_Start_LoggerShouldLog_0@{ animation: fast }
 ```
 

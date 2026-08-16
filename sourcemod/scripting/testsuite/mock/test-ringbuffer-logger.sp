@@ -54,7 +54,7 @@ void TestDrain()
     {
         for (int j = 0; j < sinkSize + 1; ++j)
         {
-            logger.InfoAmxTpl("%d", j);
+            logger.InfoEx("%d", j);
         }
 
         DataPack data = new DataPack();
@@ -86,7 +86,7 @@ void TestDrainFormatted()
     {
         for (int j = 0; j < sinkSize + 1; ++j)
         {
-            logger.InfoAmxTpl("%d", j);
+            logger.InfoEx("%d", j);
         }
 
         sink.DrainFormatted(RBSink_DrainFormatted, 2);
@@ -161,7 +161,7 @@ void TestEmptySize()
 
     for (int i = 0; i < sinkSize + 1; ++i)
     {
-        logger.InfoAmxTpl("%d", i);
+        logger.InfoEx("%d", i);
     }
 
     sink.DrainFormatted(RBSink_DrainFormattedEmpty);

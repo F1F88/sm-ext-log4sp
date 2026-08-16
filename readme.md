@@ -106,27 +106,27 @@ File `game/addons/sourcemod/logs/simple-file.log`:
 
 ### Format
 
-Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) as an example, ordinary `Log` method only output the log message as is, while the `LogEx` and `LogAmxTpl` method will format the parameters first and then output the formatted log message.
+Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) as an example, ordinary `Log` method only output the log message as is, while the `LogEx` method will format the parameters first and then output the formatted log message.
 
 Parameters formatting is performed at **Logger** layer and is triggered only if log message level **>=** logger log level.
 
-|                                                              |    Log    |                            LogEx                             |                          LogAmxTpl                           |                       SM - LogMessage                        |
-| :----------------------------------------------------------- | :-------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| **Speed**                                                    | Very Fast |                             Fast                             |                             Fast                             |                             Slow                             |
-| **Max character**                                            | unlimited |                          unlimited                           |                             2048                             |                             1024                             |
-| **Param format**                                             |     ×     |                              √                               |                              √                               |                              √                               |
-| **Formatter**                                                |     ×     |            [Log4sp Format](./src/log4sp/format.h)            | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
-| **Usage**                                                    |     ×     | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
-| **Format error**                                             |     ×     |                  Handover to Error Handler                   |                         Throw error                          |                         Throw error                          |
-| **Pads [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |     ×     |                       Fixed in v1.5.0                        |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
-| **Float [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** |     ×     |                       Fixed in v1.10.0                       |                       Fixed in v1.10.0                       | Fixed in [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |
-| **Symbols [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |     ×     |                       Fixed in v1.8.0                        |                       Fixed in v1.8.0                        | Fixed in [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |
-| **Justify [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |     ×     |                       Fixed in v1.5.0                        |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |
-| **Specifiers [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |     ×     |                       Added in v1.10.0                       |                       Added in v1.10.0                       | Added in [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |
-| **Specifiers [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** |     ×     |                       Added in v1.11.0                       |                       Added in v1.11.0                       | Added in [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |
-| **Float [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** |     ×     |                       Added in v1.11.0                       |                       Added in v1.11.0                       | Added in [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |
-| **Pads [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** |     ×     |                       Fixed in v1.8.0                        |                       Fixed in v1.8.0                        | Fixed in [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |
-| **Specifiers [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** |     ×     |                       Added in v1.11.0                       |                       Added in v1.11.0                       | Added in [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |
+|                                                              |    Log    |                            LogEx                             |                       SM - LogMessage                        |
+| :----------------------------------------------------------- | :-------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| **Speed**                                                    | Very Fast |                             Fast                             |                             Slow                             |
+| **Max character**                                            | unlimited |                          unlimited                           |                             1024                             |
+| **Param format**                                             |     ×     |                              √                               |                              √                               |
+| **Formatter**                                                |     ×     |            [Log4sp Format](./src/log4sp/format.h)            | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
+| **Usage**                                                    |     ×     | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
+| **Format error**                                             |     ×     |                  Handover to Error Handler                   |                         Throw error                          |
+| **Pads [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |     ×     |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
+| **Float [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** |     ×     |                       Fixed in v1.10.0                       | Fixed in [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |
+| **Symbols [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |     ×     |                       Fixed in v1.8.0                        | Fixed in [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |
+| **Justify [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |     ×     |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |
+| **Specifiers [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |     ×     |                       Added in v1.10.0                       | Added in [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |
+| **Specifiers [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** |     ×     |                       Added in v1.11.0                       | Added in [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |
+| **Float [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** |     ×     |                       Added in v1.11.0                       | Added in [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |
+| **Pads [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** |     ×     |                       Fixed in v1.8.0                        | Fixed in [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |
+| **Specifiers [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** |     ×     |                       Added in v1.11.0                       | Added in [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |
 
 
 ```sourcepawn
@@ -302,10 +302,6 @@ void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
 }
 ```
 
-> [!tip]
->
-> Parameter formatting errors can be thrown directly or handed over to the Error Handler, depending on whether the formatting is handled by [Log4sp (LogEx)](#Format) or [SourceMod (LogAmxTpl)](#Format).
-
 ### Global Logger
 
 The global logger is named "**`log4sp`**" and is created by the extension when it is loaded. Its life cycle is the same as the extension and it will not be closed by any plugin.
@@ -449,10 +445,8 @@ flowchart LR
         LoggerShouldFlush{"Should Flush?"}
         LoggerLog("Log")
         LoggerLogEx("LogEx")
-        LoggerLogAmxTpl("LogAmxTpl")
         LoggerLogFormat["Raw"]
         LoggerLogExFormat["Log4sp params format"]
-        LoggerLogAmxTplFormat["SourceMod params format"]
   end
  subgraph Sinks["Sink List"]
         SinkShouldJunction["Junction"]
@@ -466,13 +460,11 @@ flowchart LR
     LoggerShouldLog -- Yes --- LoggerShouldJunction
     LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
     LoggerShouldLog -. No .-> Stop((("End")))
-    LoggerLogJunction --- LoggerLog & LoggerLogEx & LoggerLogAmxTpl
+    LoggerLogJunction --- LoggerLog & LoggerLogEx
     LoggerLog --- LoggerLogFormat
     LoggerLogFormat --- SinkShouldJunction
     LoggerLogEx --- LoggerLogExFormat
     LoggerLogExFormat --- SinkShouldJunction
-    LoggerLogAmxTpl --- LoggerLogAmxTplFormat
-    LoggerLogAmxTplFormat --- SinkShouldJunction
     LoggerShouldFlush -- Yes --- SinkFlushJunction
     SinkFlushJunction --> SinkFlush
     SinkFlush --> Stop
@@ -486,7 +478,6 @@ flowchart LR
     LoggerLogJunction@{ shape: junction}
     LoggerLogFormat@{ shape: das}
     LoggerLogExFormat@{ shape: das}
-    LoggerLogAmxTplFormat@{ shape: das}
     SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
     SinkFlushJunction@{ shape: junction}
@@ -494,10 +485,8 @@ flowchart LR
     style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
     style LoggerLogEx stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogAmxTpl stroke-width:4px,stroke-dasharray: 0
     style LoggerLogFormat stroke-width:1px,stroke-dasharray: 1
     style LoggerLogExFormat stroke-width:1px,stroke-dasharray: 1
-    style LoggerLogAmxTplFormat stroke-width:1px,stroke-dasharray: 1
     style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
     style SinkLog stroke-width:4px,stroke-dasharray: 0
     style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1
@@ -506,11 +495,11 @@ flowchart LR
     linkStyle 2 stroke:#00C853,fill:none
     linkStyle 3 stroke:#00C853,fill:none
     linkStyle 4 stroke:#D50000,fill:none
-    linkStyle 14 stroke:#00C853,fill:none
-    linkStyle 15 stroke:#00C853,fill:none
-    linkStyle 17 stroke:#D50000,fill:none
-    linkStyle 19 stroke:#00C853,fill:none
-    linkStyle 22 stroke:#D50000,fill:none
+    linkStyle 11 stroke:#00C853,fill:none
+    linkStyle 12 stroke:#00C853,fill:none
+    linkStyle 14 stroke:#D50000,fill:none
+    linkStyle 16 stroke:#00C853,fill:none
+    linkStyle 19 stroke:#D50000,fill:none
     L_Start_LoggerShouldLog_0@{ animation: fast }
 ```
 
