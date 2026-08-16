@@ -94,9 +94,8 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("BasicFileSink.Truncate");
 
     MarkNativeAsOptional("CallbackSink.CallbackSink");
-    MarkNativeAsOptional("CallbackSink.SetLogCallback");
-    MarkNativeAsOptional("CallbackSink.SetLogPostCallback");
-    MarkNativeAsOptional("CallbackSink.SetFlushCallback");
+    MarkNativeAsOptional("CallbackSink.SetData");
+    MarkNativeAsOptional("CallbackSink.GetData");
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
     MarkNativeAsOptional("DailyFileSink.GetFilename");

@@ -99,7 +99,7 @@ void BenchAll(int calls, int sinks, int funcs, bool fmts)
 
     if (sinks & CmdSinks_Callback)
     {
-        CallbackSink sink = new CallbackSink(CallBackSink_CB);
+        CallbackSink sink = new CallbackSink(null, CB_OnLog, null, CB_OnFlush, null, CB_OnClose);
         Logger logger = new Logger("callback");
         logger.AddSink(sink);
         sink.Close();
@@ -590,7 +590,17 @@ void BenchLogF(int calls, bool fmts, Logger logger)
 
 
 
-void CallBackSink_CB(const char[] name, LogLevel lvl, const char[] msg)
+bool CB_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, SourceLoc loc, const char[] name, LogLevel level, const char[] msg)
+{
+    return true;
+}
+
+bool CB_OnFlush(Sink sink, char[] error, int maxlen)
+{
+    return true;
+}
+
+void CB_OnClose(any data)
 {}
 
 

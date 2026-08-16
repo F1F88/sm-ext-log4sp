@@ -174,6 +174,10 @@ void Logger::AddSink(Handle_t handle)
 
     m_Sinks.push_back(sink);
     m_SinkHandles.push_back(cloned);
+
+    // HACK: CallbackSink
+    if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
+        callbackSink->TryRegisterHandle(cloned);
 }
 
 void Logger::DropSink(Handle_t handle)
@@ -191,6 +195,10 @@ void Logger::DropSink(Handle_t handle)
             format("Invalid Sink Handle {:x} (error {})",
                 static_cast<int>(handle), static_cast<int>(error)));
     }
+
+    // HACK: CallbackSink
+    if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
+        callbackSink->DropHandle(handle);
 
     // 以拓展身份关闭 Sink
     security.pOwner = myself->GetIdentity();

@@ -3,6 +3,7 @@
 
 #include "log4sp/common.h"
 #include "log4sp/adapter/sink_handler.h"
+#include "log4sp/sinks/callback_sink.h"
 
 
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -16,6 +17,10 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
         return 0;
     }
+
+    // HACK: CallbackSink
+    if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
+        callbackSink->TryRegisterHandle(params[1]);
 
     char *logTime;
     if (auto err = ctx->LocalToString(params[2], &logTime))
@@ -161,6 +166,10 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params)
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
         return 0;
     }
+
+    // HACK: CallbackSink
+    if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
+        callbackSink->TryRegisterHandle(params[1]);
 
     try
     {

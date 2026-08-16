@@ -1,46 +1,58 @@
 #if defined _log4sp_sinks_callback_sink_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_sinks_callback_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
 
-#include <log4sp/logger>
 #include <log4sp/sinks/sink>
 
 
 /**
  * Callback function called when Sink.Log() is called.
  *
+ * @param sink          CallbackSink Handle.
+ *                      This is cloned from an existing handle.
+ *                      It will automatically close after the callback function finishes.
+ * @param error         Error message buffer in case of log failure.
+ * @param maxlen        Maximum length of the error.
+ * @param logTime       Log message timestamps (in nanoseconds).
+ * @param loc           Source location.
  * @param name          The name of the logger.
  * @param lvl           Log level enum.
  * @param msg           Pre formatted log message.
- * @param file          The file name of the source code location.
- * @param line          The line number of the source code location.
- * @param func          The function name of the source code location.
- * @param logTime       Log message timestamps (in seconds).
+ * @return              True on success, false on error.
  */
-typeset CustomLogCallback
-{
-    function void (const char[] name, LogLevel lvl, const char[] msg);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
-}
-
-
-/**
- * Callback function called after Sink.Log() is called.
- *
- * @param msg           Log messages that have been formatted in a pre-set pattern.
- */
-typedef CustomLogPostCallback = function void (const char[] msg);
-
+typedef CallbackSinkLogFunction = function bool (
+    Sink sink,
+    char[] error,
+    int maxlen,
+    const char[] logTime,
+    const SourceLoc loc,
+    const char[] name,
+    LogLevel lvl,
+    const char[] msg
+);
 
 /**
  * Callback function called when Sink.Flush() is called.
+ *
+ * @param sink          CallbackSink Handle.
+ *                      This is cloned from an existing handle.
+ *                      It will automatically close after the callback function finishes.
+ * @param error         Error message buffer in case of flush failure.
+ * @param maxlen        Maximum length of the error.
+ * @return              True on success, false on error.
  */
-typedef CustomFlushCallback = function void ();
+typedef CallbackSinkFlushFunction = function bool (Sink sink, char[] error, int maxlen);
+
+/**
+ * Callback function called when the CallbackSink Handle is closed.
+ *
+ * @param data          Data value in CallbackSink.
+ */
+typedef CallbackSinkCloseFunction = function void (any data);
 
 
 /**
@@ -53,33 +65,34 @@ methodmap CallbackSink < Sink
      *
      * @note CallbackSink handles must be freed via delete or CloseHandle().
      *
-     * @param logCallback       Function to call when CallbackSink.Log() is called.
-     * @param logPostCallback   Function to call after CallbackSink.Log() is called.
-     * @param flushCallback     Function to call when CallbackSink.Flush() is called.
-     * @return                  A new CallbackSink Handle.
+     * @param logPlugin     Handle of the plugin that contains the log function.
+     *                      If null, defaults to the calling plugin.
+     * @param logFunc       Function to call when CallbackSink.Log() is called.
+     * @param flushPlugin   Handle of the plugin that contains the flush function.
+     *                      If null, defaults to the calling plugin.
+     * @param flushFunc     Function to call when CallbackSink.Flush() is called.
+     * @param closePlugin   Handle of the plugin that contains the close function.
+     *                      If null, defaults to the calling plugin.
+     * @param closeFunc     Function to call after CallbackSink Handle is closed.
+     * @param data          Sets a value in CallbackSink.
+     * @return              A new CallbackSink Handle.
      */
-    public native CallbackSink(CustomLogCallback logCallback=INVALID_FUNCTION,
-        CustomLogPostCallback logPostCallback=INVALID_FUNCTION,
-        CustomFlushCallback flushCallback=INVALID_FUNCTION);
+    public native CallbackSink(Handle logPlugin, CallbackSinkLogFunction logFunc,
+                               Handle flushPlugin, CallbackSinkFlushFunction flushFunc,
+                               Handle closePlugin, CallbackSinkCloseFunction closeFunc,
+                               any data=0);
 
     /**
-     * Set the callback sink log callback.
+     * Retrieves a value from CallbackSink.
      *
-     * @param logCallback       Callback function called when Sink.Log() is called.
+     * @return              Data value.
      */
-    public native void SetLogCallback(CustomLogCallback logCallback);
+    public native any GetData();
 
     /**
-     * Set the callback sink log post callback.
+     * Sets a value in CallbackSink.
      *
-     * @param logPostCallback   Callback function called after Sink.Log() is called.
+     * @param data          Data value.
      */
-    public native void SetLogPostCallback(CustomLogPostCallback logPostCallback);
-
-    /**
-     * Set the callback sink flush callback.
-     *
-     * @param flushCallback     Callback function called when Sink.Flush() is called.
-     */
-    public native void SetFlushCallback(CustomFlushCallback flushCallback);
+    public native void SetData(any data);
 }
