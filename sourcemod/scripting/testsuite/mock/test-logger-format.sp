@@ -122,7 +122,7 @@ void TestChar()
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.InfoEx("'%% %%- %%. %%0 %%7 %%07 %%F %%c %%d'");
+    logger.InfoF("'%% %%- %%. %%0 %%7 %%07 %%F %%c %%d'");
     AssertStrEq("Ex", sink.DrainLastMsgFast().msg, "'% %- %. %0 %7 %07 %F %c %d'");
 
     logger.Close();
@@ -140,25 +140,25 @@ void TestString()
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.InfoEx("'%s'", NULL_STRING);
+    logger.InfoF("'%s'", NULL_STRING);
     AssertStrEq("%s", sink.DrainLastMsgFast().msg, "''");
 
-    logger.InfoEx("'%s'", TEST_STRING_TEXT);
+    logger.InfoF("'%s'", TEST_STRING_TEXT);
     AssertStrEq("%s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "'");
 
-    logger.InfoEx("'%-s'", TEST_STRING_TEXT);
+    logger.InfoF("'%-s'", TEST_STRING_TEXT);
     AssertStrEq("%-s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "'");
 
-    logger.InfoEx("'%10s'", TEST_STRING_TEXT);
+    logger.InfoF("'%10s'", TEST_STRING_TEXT);
     AssertStrEq("%10s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "'");
 
-    logger.InfoEx("'%20s'", TEST_STRING_TEXT);
+    logger.InfoF("'%20s'", TEST_STRING_TEXT);
     AssertStrEq("%20s", sink.DrainLastMsgFast().msg, "'    " ... TEST_STRING_TEXT ... "'");
 
-    logger.InfoEx("'%-10s'", TEST_STRING_TEXT);
+    logger.InfoF("'%-10s'", TEST_STRING_TEXT);
     AssertStrEq("%-10s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "'");
 
-    logger.InfoEx("'%-20s'", TEST_STRING_TEXT);
+    logger.InfoF("'%-20s'", TEST_STRING_TEXT);
     AssertStrEq("%-20s", sink.DrainLastMsgFast().msg, "'" ... TEST_STRING_TEXT ... "    '");
 
     logger.Close();
@@ -176,460 +176,460 @@ void TestFloat()
     logger.AddSink(sink);
 
     // flag
-    logger.InfoEx("'%f'", 12345.968750);
+    logger.InfoF("'%f'", 12345.968750);
     AssertStrEq("%f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%f'", 0.0);
+    logger.InfoF("'%f'", 0.0);
     AssertStrEq("%f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%f'", -12345.968750);
+    logger.InfoF("'%f'", -12345.968750);
     AssertStrEq("%f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%-f'", 12345.968750);
+    logger.InfoF("'%-f'", 12345.968750);
     AssertStrEq("%-f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%-f'", 0.0);
+    logger.InfoF("'%-f'", 0.0);
     AssertStrEq("%-f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%-f'", -12345.968750);
+    logger.InfoF("'%-f'", -12345.968750);
     AssertStrEq("%-f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%0f'", 12345.968750);
+    logger.InfoF("'%0f'", 12345.968750);
     AssertStrEq("%0f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%0f'", 0.0);
+    logger.InfoF("'%0f'", 0.0);
     AssertStrEq("%0f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%0f'", -12345.968750);
+    logger.InfoF("'%0f'", -12345.968750);
     AssertStrEq("%0f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%-0f'", 12345.968750);
+    logger.InfoF("'%-0f'", 12345.968750);
     AssertStrEq("%-0f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%-0f'", 0.0);
+    logger.InfoF("'%-0f'", 0.0);
     AssertStrEq("%-0f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%-0f'", -12345.968750);
+    logger.InfoF("'%-0f'", -12345.968750);
     AssertStrEq("%-0f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%0-f'", 12345.968750);
+    logger.InfoF("'%0-f'", 12345.968750);
     AssertStrEq("%0-f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%0-f'", 0.0);
+    logger.InfoF("'%0-f'", 0.0);
     AssertStrEq("%0-f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%0-f'", -12345.968750);
+    logger.InfoF("'%0-f'", -12345.968750);
     AssertStrEq("%0-f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
     // width
-    logger.InfoEx("'%3f'", 12345.968750);
+    logger.InfoF("'%3f'", 12345.968750);
     AssertStrEq("%3f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%3f'", 0.0);
+    logger.InfoF("'%3f'", 0.0);
     AssertStrEq("%3f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%3f'", -12345.968750);
+    logger.InfoF("'%3f'", -12345.968750);
     AssertStrEq("%3f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%20f'", 12345.968750);
+    logger.InfoF("'%20f'", 12345.968750);
     AssertStrEq("%20f", sink.DrainLastMsgFast().msg, "'        12345.968750'");
-    logger.InfoEx("'%20f'", 0.0);
+    logger.InfoF("'%20f'", 0.0);
     AssertStrEq("%20f", sink.DrainLastMsgFast().msg, "'            0.000000'");
-    logger.InfoEx("'%20f'", -12345.968750);
+    logger.InfoF("'%20f'", -12345.968750);
     AssertStrEq("%20f", sink.DrainLastMsgFast().msg, "'       -12345.968750'");
 
     // flag & width
-    logger.InfoEx("'%-3f'", 12345.968750);
+    logger.InfoF("'%-3f'", 12345.968750);
     AssertStrEq("%-3f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%-3f'", 0.0);
+    logger.InfoF("'%-3f'", 0.0);
     AssertStrEq("%-3f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%-3f'", -12345.968750);
+    logger.InfoF("'%-3f'", -12345.968750);
     AssertStrEq("%-3f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%-20f'", 12345.968750);
+    logger.InfoF("'%-20f'", 12345.968750);
     AssertStrEq("%-20f", sink.DrainLastMsgFast().msg, "'12345.968750        '");
-    logger.InfoEx("'%-20f'", 0.0);
+    logger.InfoF("'%-20f'", 0.0);
     AssertStrEq("%-20f", sink.DrainLastMsgFast().msg, "'0.000000            '");
-    logger.InfoEx("'%-20f'", -12345.968750);
+    logger.InfoF("'%-20f'", -12345.968750);
     AssertStrEq("%-20f", sink.DrainLastMsgFast().msg, "'-12345.968750       '");
 
-    logger.InfoEx("'%03f'", 12345.968750);
+    logger.InfoF("'%03f'", 12345.968750);
     AssertStrEq("%03f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%03f'", 0.0);
+    logger.InfoF("'%03f'", 0.0);
     AssertStrEq("%03f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%03f'", -12345.968750);
+    logger.InfoF("'%03f'", -12345.968750);
     AssertStrEq("%03f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%020f'", 12345.968750);
+    logger.InfoF("'%020f'", 12345.968750);
     AssertStrEq("%020f", sink.DrainLastMsgFast().msg, "'0000000012345.968750'");
-    logger.InfoEx("'%020f'", 0.0);
+    logger.InfoF("'%020f'", 0.0);
     AssertStrEq("%020f", sink.DrainLastMsgFast().msg, "'0000000000000.000000'");
-    logger.InfoEx("'%020f'", -12345.968750);
+    logger.InfoF("'%020f'", -12345.968750);
     AssertStrEq("%020f", sink.DrainLastMsgFast().msg, "'-000000012345.968750'");
 
-    logger.InfoEx("'%-03f'", 12345.968750);
+    logger.InfoF("'%-03f'", 12345.968750);
     AssertStrEq("%-03f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%-03f'", 0.0);
+    logger.InfoF("'%-03f'", 0.0);
     AssertStrEq("%-03f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%-03f'", -12345.968750);
+    logger.InfoF("'%-03f'", -12345.968750);
     AssertStrEq("%-03f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%-020f'", 12345.968750);
+    logger.InfoF("'%-020f'", 12345.968750);
     AssertStrEq("%-020f", sink.DrainLastMsgFast().msg, "'12345.968750        '");
-    logger.InfoEx("'%-020f'", 0.0);
+    logger.InfoF("'%-020f'", 0.0);
     AssertStrEq("%-020f", sink.DrainLastMsgFast().msg, "'0.000000            '");
-    logger.InfoEx("'%-020f'", -12345.968750);
+    logger.InfoF("'%-020f'", -12345.968750);
     AssertStrEq("%-020f", sink.DrainLastMsgFast().msg, "'-12345.968750       '");
 
-    logger.InfoEx("'%0-3f'", 12345.968750);
+    logger.InfoF("'%0-3f'", 12345.968750);
     AssertStrEq("%0-3f", sink.DrainLastMsgFast().msg, "'12345.968750'");
-    logger.InfoEx("'%0-3f'", 0.0);
+    logger.InfoF("'%0-3f'", 0.0);
     AssertStrEq("%0-3f", sink.DrainLastMsgFast().msg, "'0.000000'");
-    logger.InfoEx("'%0-3f'", -12345.968750);
+    logger.InfoF("'%0-3f'", -12345.968750);
     AssertStrEq("%0-3f", sink.DrainLastMsgFast().msg, "'-12345.968750'");
 
-    logger.InfoEx("'%0-20f'", 12345.968750);
+    logger.InfoF("'%0-20f'", 12345.968750);
     AssertStrEq("%0-20f", sink.DrainLastMsgFast().msg, "'12345.968750        '");
-    logger.InfoEx("'%0-20f'", 0.0);
+    logger.InfoF("'%0-20f'", 0.0);
     AssertStrEq("%0-20f", sink.DrainLastMsgFast().msg, "'0.000000            '");
-    logger.InfoEx("'%0-20f'", -12345.968750);
+    logger.InfoF("'%0-20f'", -12345.968750);
     AssertStrEq("%0-20f", sink.DrainLastMsgFast().msg, "'-12345.968750       '");
 
     // prec
-    logger.InfoEx("'%.f'", 12345.968750);
+    logger.InfoF("'%.f'", 12345.968750);
     AssertStrEq("%.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%.f'", 0.0);
+    logger.InfoF("'%.f'", 0.0);
     AssertStrEq("%.f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%.f'", -12345.968750);
+    logger.InfoF("'%.f'", -12345.968750);
     AssertStrEq("%.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%.0f'", 12345.968750);
+    logger.InfoF("'%.0f'", 12345.968750);
     AssertStrEq("%.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%.0f'", 0.0);
+    logger.InfoF("'%.0f'", 0.0);
     AssertStrEq("%.0f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%.0f'", -12345.968750);
+    logger.InfoF("'%.0f'", -12345.968750);
     AssertStrEq("%.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%.2f'", 12345.968750);
+    logger.InfoF("'%.2f'", 12345.968750);
     AssertStrEq("%.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%.2f'", 0.0);
+    logger.InfoF("'%.2f'", 0.0);
     AssertStrEq("%.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%.2f'", -12345.968750);
+    logger.InfoF("'%.2f'", -12345.968750);
     AssertStrEq("%.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%.7f'", 12345.968750);
+    logger.InfoF("'%.7f'", 12345.968750);
     AssertStrEq("%.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%.7f'", 0.0);
+    logger.InfoF("'%.7f'", 0.0);
     AssertStrEq("%.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%.7f'", -12345.968750);
+    logger.InfoF("'%.7f'", -12345.968750);
     AssertStrEq("%.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
     // flag & prec
-    logger.InfoEx("'%-.f'", 12345.968750);
+    logger.InfoF("'%-.f'", 12345.968750);
     AssertStrEq("%-.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-.f'", 0.0);
+    logger.InfoF("'%-.f'", 0.0);
     AssertStrEq("%-.f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-.f'", -12345.968750);
+    logger.InfoF("'%-.f'", -12345.968750);
     AssertStrEq("%-.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-.0f'", 12345.968750);
+    logger.InfoF("'%-.0f'", 12345.968750);
     AssertStrEq("%-.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-.0f'", 0.0);
+    logger.InfoF("'%-.0f'", 0.0);
     AssertStrEq("%-.0f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-.0f'", -12345.968750);
+    logger.InfoF("'%-.0f'", -12345.968750);
     AssertStrEq("%-.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-.2f'", 12345.968750);
+    logger.InfoF("'%-.2f'", 12345.968750);
     AssertStrEq("%-.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%-.2f'", 0.0);
+    logger.InfoF("'%-.2f'", 0.0);
     AssertStrEq("%-.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%-.2f'", -12345.968750);
+    logger.InfoF("'%-.2f'", -12345.968750);
     AssertStrEq("%-.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%-.7f'", 12345.968750);
+    logger.InfoF("'%-.7f'", 12345.968750);
     AssertStrEq("%-.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%-.7f'", 0.0);
+    logger.InfoF("'%-.7f'", 0.0);
     AssertStrEq("%-.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%-.7f'", -12345.968750);
+    logger.InfoF("'%-.7f'", -12345.968750);
     AssertStrEq("%-.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
-    logger.InfoEx("'%0.f'", 12345.968750);
+    logger.InfoF("'%0.f'", 12345.968750);
     AssertStrEq("%0.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%0.f'", 0.0);
+    logger.InfoF("'%0.f'", 0.0);
     AssertStrEq("%0.f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0.f'", -12345.968750);
+    logger.InfoF("'%0.f'", -12345.968750);
     AssertStrEq("%0.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%0.0f'", 12345.968750);
+    logger.InfoF("'%0.0f'", 12345.968750);
     AssertStrEq("%0.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%0.0f'", 0.0);
+    logger.InfoF("'%0.0f'", 0.0);
     AssertStrEq("%0.0f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0.0f'", -12345.968750);
+    logger.InfoF("'%0.0f'", -12345.968750);
     AssertStrEq("%0.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%0.2f'", 12345.968750);
+    logger.InfoF("'%0.2f'", 12345.968750);
     AssertStrEq("%0.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%0.2f'", 0.0);
+    logger.InfoF("'%0.2f'", 0.0);
     AssertStrEq("%0.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%0.2f'", -12345.968750);
+    logger.InfoF("'%0.2f'", -12345.968750);
     AssertStrEq("%0.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%0.7f'", 12345.968750);
+    logger.InfoF("'%0.7f'", 12345.968750);
     AssertStrEq("%0.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%0.7f'", 0.0);
+    logger.InfoF("'%0.7f'", 0.0);
     AssertStrEq("%0.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%0.7f'", -12345.968750);
+    logger.InfoF("'%0.7f'", -12345.968750);
     AssertStrEq("%0.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
-    logger.InfoEx("'%0-.f'", 12345.968750);
+    logger.InfoF("'%0-.f'", 12345.968750);
     AssertStrEq("%0-.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%0-.f'", 0.0);
+    logger.InfoF("'%0-.f'", 0.0);
     AssertStrEq("%0-.f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0-.f'", -12345.968750);
+    logger.InfoF("'%0-.f'", -12345.968750);
     AssertStrEq("%0-.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%0-.0f'", 12345.968750);
+    logger.InfoF("'%0-.0f'", 12345.968750);
     AssertStrEq("%0-.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%0-.0f'", 0.0);
+    logger.InfoF("'%0-.0f'", 0.0);
     AssertStrEq("%0-.0f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0-.0f'", -12345.968750);
+    logger.InfoF("'%0-.0f'", -12345.968750);
     AssertStrEq("%0-.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%0-.2f'", 12345.968750);
+    logger.InfoF("'%0-.2f'", 12345.968750);
     AssertStrEq("%0-.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%0-.2f'", 0.0);
+    logger.InfoF("'%0-.2f'", 0.0);
     AssertStrEq("%0-.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%0-.2f'", -12345.968750);
+    logger.InfoF("'%0-.2f'", -12345.968750);
     AssertStrEq("%0-.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%0-.7f'", 12345.968750);
+    logger.InfoF("'%0-.7f'", 12345.968750);
     AssertStrEq("%0-.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%0-.7f'", 0.0);
+    logger.InfoF("'%0-.7f'", 0.0);
     AssertStrEq("%0-.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%0-.7f'", -12345.968750);
+    logger.InfoF("'%0-.7f'", -12345.968750);
     AssertStrEq("%0-.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
-    logger.InfoEx("'%-0.f'", 12345.968750);
+    logger.InfoF("'%-0.f'", 12345.968750);
     AssertStrEq("%-0.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-0.f'", 0.0);
+    logger.InfoF("'%-0.f'", 0.0);
     AssertStrEq("%-0.f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-0.f'", -12345.968750);
+    logger.InfoF("'%-0.f'", -12345.968750);
     AssertStrEq("%-0.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-0.0f'", 12345.968750);
+    logger.InfoF("'%-0.0f'", 12345.968750);
     AssertStrEq("%-0.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-0.0f'", 0.0);
+    logger.InfoF("'%-0.0f'", 0.0);
     AssertStrEq("%-0.0f", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-0.0f'", -12345.968750);
+    logger.InfoF("'%-0.0f'", -12345.968750);
     AssertStrEq("%-0.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-0.2f'", 12345.968750);
+    logger.InfoF("'%-0.2f'", 12345.968750);
     AssertStrEq("%-0.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%-0.2f'", 0.0);
+    logger.InfoF("'%-0.2f'", 0.0);
     AssertStrEq("%-0.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%-0.2f'", -12345.968750);
+    logger.InfoF("'%-0.2f'", -12345.968750);
     AssertStrEq("%-0.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%-0.7f'", 12345.968750);
+    logger.InfoF("'%-0.7f'", 12345.968750);
     AssertStrEq("%-0.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%-0.7f'", 0.0);
+    logger.InfoF("'%-0.7f'", 0.0);
     AssertStrEq("%-0.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%-0.7f'", -12345.968750);
+    logger.InfoF("'%-0.7f'", -12345.968750);
     AssertStrEq("%-0.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
     // flag & width & prec
-    logger.InfoEx("'%-3.f'", 12345.968750);
+    logger.InfoF("'%-3.f'", 12345.968750);
     AssertStrEq("%-3.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-3.f'", 0.0);
+    logger.InfoF("'%-3.f'", 0.0);
     AssertStrEq("%-3.f", sink.DrainLastMsgFast().msg, "'0  '");
-    logger.InfoEx("'%-3.f'", -12345.968750);
+    logger.InfoF("'%-3.f'", -12345.968750);
     AssertStrEq("%-3.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-3.0f'", 12345.968750);
+    logger.InfoF("'%-3.0f'", 12345.968750);
     AssertStrEq("%-3.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-3.0f'", 0.0);
+    logger.InfoF("'%-3.0f'", 0.0);
     AssertStrEq("%-3.0f", sink.DrainLastMsgFast().msg, "'0  '");
-    logger.InfoEx("'%-3.0f'", -12345.968750);
+    logger.InfoF("'%-3.0f'", -12345.968750);
     AssertStrEq("%-3.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-3.2f'", 12345.968750);
+    logger.InfoF("'%-3.2f'", 12345.968750);
     AssertStrEq("%-3.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%-3.2f'", 0.0);
+    logger.InfoF("'%-3.2f'", 0.0);
     AssertStrEq("%-3.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%-3.2f'", -12345.968750);
+    logger.InfoF("'%-3.2f'", -12345.968750);
     AssertStrEq("%-3.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%-3.7f'", 12345.968750);
+    logger.InfoF("'%-3.7f'", 12345.968750);
     AssertStrEq("%-3.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%-3.7f'", 0.0);
+    logger.InfoF("'%-3.7f'", 0.0);
     AssertStrEq("%-3.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%-3.7f'", -12345.968750);
+    logger.InfoF("'%-3.7f'", -12345.968750);
     AssertStrEq("%-3.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
-    logger.InfoEx("'%-03.f'", 12345.968750);
+    logger.InfoF("'%-03.f'", 12345.968750);
     AssertStrEq("%-03.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-03.f'", 0.0);
+    logger.InfoF("'%-03.f'", 0.0);
     AssertStrEq("%-03.f", sink.DrainLastMsgFast().msg, "'0  '");
-    logger.InfoEx("'%-03.f'", -12345.968750);
+    logger.InfoF("'%-03.f'", -12345.968750);
     AssertStrEq("%-03.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-03.0f'", 12345.968750);
+    logger.InfoF("'%-03.0f'", 12345.968750);
     AssertStrEq("%-03.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%-03.0f'", 0.0);
+    logger.InfoF("'%-03.0f'", 0.0);
     AssertStrEq("%-03.0f", sink.DrainLastMsgFast().msg, "'0  '");
-    logger.InfoEx("'%-03.0f'", -12345.968750);
+    logger.InfoF("'%-03.0f'", -12345.968750);
     AssertStrEq("%-03.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%-03.2f'", 12345.968750);
+    logger.InfoF("'%-03.2f'", 12345.968750);
     AssertStrEq("%-03.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%-03.2f'", 0.0);
+    logger.InfoF("'%-03.2f'", 0.0);
     AssertStrEq("%-03.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%-03.2f'", -12345.968750);
+    logger.InfoF("'%-03.2f'", -12345.968750);
     AssertStrEq("%-03.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%-03.7f'", 12345.968750);
+    logger.InfoF("'%-03.7f'", 12345.968750);
     AssertStrEq("%-03.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%-03.7f'", 0.0);
+    logger.InfoF("'%-03.7f'", 0.0);
     AssertStrEq("%-03.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%-03.7f'", -12345.968750);
+    logger.InfoF("'%-03.7f'", -12345.968750);
     AssertStrEq("%-03.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
-    logger.InfoEx("'%0-3.f'", 12345.968750);
+    logger.InfoF("'%0-3.f'", 12345.968750);
     AssertStrEq("%0-3.f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%0-3.f'", 0.0);
+    logger.InfoF("'%0-3.f'", 0.0);
     AssertStrEq("%0-3.f", sink.DrainLastMsgFast().msg, "'0  '");
-    logger.InfoEx("'%0-3.f'", -12345.968750);
+    logger.InfoF("'%0-3.f'", -12345.968750);
     AssertStrEq("%0-3.f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%0-3.0f'", 12345.968750);
+    logger.InfoF("'%0-3.0f'", 12345.968750);
     AssertStrEq("%0-3.0f", sink.DrainLastMsgFast().msg, "'12345'");
-    logger.InfoEx("'%0-3.0f'", 0.0);
+    logger.InfoF("'%0-3.0f'", 0.0);
     AssertStrEq("%0-3.0f", sink.DrainLastMsgFast().msg, "'0  '");
-    logger.InfoEx("'%0-3.0f'", -12345.968750);
+    logger.InfoF("'%0-3.0f'", -12345.968750);
     AssertStrEq("%0-3.0f", sink.DrainLastMsgFast().msg, "'-12345'");
 
-    logger.InfoEx("'%0-3.2f'", 12345.968750);
+    logger.InfoF("'%0-3.2f'", 12345.968750);
     AssertStrEq("%0-3.2f", sink.DrainLastMsgFast().msg, "'12345.96'");
-    logger.InfoEx("'%0-3.2f'", 0.0);
+    logger.InfoF("'%0-3.2f'", 0.0);
     AssertStrEq("%0-3.2f", sink.DrainLastMsgFast().msg, "'0.00'");
-    logger.InfoEx("'%0-3.2f'", -12345.968750);
+    logger.InfoF("'%0-3.2f'", -12345.968750);
     AssertStrEq("%0-3.2f", sink.DrainLastMsgFast().msg, "'-12345.96'");
 
-    logger.InfoEx("'%0-3.7f'", 12345.968750);
+    logger.InfoF("'%0-3.7f'", 12345.968750);
     AssertStrEq("%0-3.7f", sink.DrainLastMsgFast().msg, "'12345.9687500'");
-    logger.InfoEx("'%0-3.7f'", 0.0);
+    logger.InfoF("'%0-3.7f'", 0.0);
     AssertStrEq("%0-3.7f", sink.DrainLastMsgFast().msg, "'0.0000000'");
-    logger.InfoEx("'%0-3.7f'", -12345.968750);
+    logger.InfoF("'%0-3.7f'", -12345.968750);
     AssertStrEq("%0-3.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500'");
 
-    logger.InfoEx("'%-20.f'", 12345.968750);
+    logger.InfoF("'%-20.f'", 12345.968750);
     AssertStrEq("%-20.f", sink.DrainLastMsgFast().msg, "'12345               '");
-    logger.InfoEx("'%-20.f'", 0.0);
+    logger.InfoF("'%-20.f'", 0.0);
     AssertStrEq("%-20.f", sink.DrainLastMsgFast().msg, "'0                   '");
-    logger.InfoEx("'%-20.f'", -12345.968750);
+    logger.InfoF("'%-20.f'", -12345.968750);
     AssertStrEq("%-20.f", sink.DrainLastMsgFast().msg, "'-12345              '");
 
-    logger.InfoEx("'%-20.0f'", 12345.968750);
+    logger.InfoF("'%-20.0f'", 12345.968750);
     AssertStrEq("%-20.0f", sink.DrainLastMsgFast().msg, "'12345               '");
-    logger.InfoEx("'%-20.0f'", 0.0);
+    logger.InfoF("'%-20.0f'", 0.0);
     AssertStrEq("%-20.0f", sink.DrainLastMsgFast().msg, "'0                   '");
-    logger.InfoEx("'%-20.0f'", -12345.968750);
+    logger.InfoF("'%-20.0f'", -12345.968750);
     AssertStrEq("%-20.0f", sink.DrainLastMsgFast().msg, "'-12345              '");
 
-    logger.InfoEx("'%-20.2f'", 12345.968750);
+    logger.InfoF("'%-20.2f'", 12345.968750);
     AssertStrEq("%-20.2f", sink.DrainLastMsgFast().msg, "'12345.96            '");
-    logger.InfoEx("'%-20.2f'", 0.0);
+    logger.InfoF("'%-20.2f'", 0.0);
     AssertStrEq("%-20.2f", sink.DrainLastMsgFast().msg, "'0.00                '");
-    logger.InfoEx("'%-20.2f'", -12345.968750);
+    logger.InfoF("'%-20.2f'", -12345.968750);
     AssertStrEq("%-20.2f", sink.DrainLastMsgFast().msg, "'-12345.96           '");
 
-    logger.InfoEx("'%-20.7f'", 12345.968750);
+    logger.InfoF("'%-20.7f'", 12345.968750);
     AssertStrEq("%-20.7f", sink.DrainLastMsgFast().msg, "'12345.9687500       '");
-    logger.InfoEx("'%-20.7f'", 0.0);
+    logger.InfoF("'%-20.7f'", 0.0);
     AssertStrEq("%-20.7f", sink.DrainLastMsgFast().msg, "'0.0000000           '");
-    logger.InfoEx("'%-20.7f'", -12345.968750);
+    logger.InfoF("'%-20.7f'", -12345.968750);
     AssertStrEq("%-20.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500      '");
 
-    logger.InfoEx("'%020.f'", 12345.968750);
+    logger.InfoF("'%020.f'", 12345.968750);
     AssertStrEq("%020.f", sink.DrainLastMsgFast().msg, "'00000000000000012345'");
-    logger.InfoEx("'%020.f'", 0.0);
+    logger.InfoF("'%020.f'", 0.0);
     AssertStrEq("%020.f", sink.DrainLastMsgFast().msg, "'00000000000000000000'");
-    logger.InfoEx("'%020.f'", -12345.968750);
+    logger.InfoF("'%020.f'", -12345.968750);
     AssertStrEq("%020.f", sink.DrainLastMsgFast().msg, "'-0000000000000012345'");
 
-    logger.InfoEx("'%020.0f'", 12345.968750);
+    logger.InfoF("'%020.0f'", 12345.968750);
     AssertStrEq("%020.0f", sink.DrainLastMsgFast().msg, "'00000000000000012345'");
-    logger.InfoEx("'%020.0f'", 0.0);
+    logger.InfoF("'%020.0f'", 0.0);
     AssertStrEq("%020.0f", sink.DrainLastMsgFast().msg, "'00000000000000000000'");
-    logger.InfoEx("'%020.0f'", -12345.968750);
+    logger.InfoF("'%020.0f'", -12345.968750);
     AssertStrEq("%020.0f", sink.DrainLastMsgFast().msg, "'-0000000000000012345'");
 
-    logger.InfoEx("'%020.2f'", 12345.968750);
+    logger.InfoF("'%020.2f'", 12345.968750);
     AssertStrEq("%020.2f", sink.DrainLastMsgFast().msg, "'00000000000012345.96'");
-    logger.InfoEx("'%020.2f'", 0.0);
+    logger.InfoF("'%020.2f'", 0.0);
     AssertStrEq("%020.2f", sink.DrainLastMsgFast().msg, "'00000000000000000.00'");
-    logger.InfoEx("'%020.2f'", -12345.968750);
+    logger.InfoF("'%020.2f'", -12345.968750);
     AssertStrEq("%020.2f", sink.DrainLastMsgFast().msg, "'-0000000000012345.96'");
 
-    logger.InfoEx("'%020.7f'", 12345.968750);
+    logger.InfoF("'%020.7f'", 12345.968750);
     AssertStrEq("%020.7f", sink.DrainLastMsgFast().msg, "'000000012345.9687500'");
-    logger.InfoEx("'%020.7f'", 0.0);
+    logger.InfoF("'%020.7f'", 0.0);
     AssertStrEq("%020.7f", sink.DrainLastMsgFast().msg, "'000000000000.0000000'");
-    logger.InfoEx("'%020.7f'", -12345.968750);
+    logger.InfoF("'%020.7f'", -12345.968750);
     AssertStrEq("%020.7f", sink.DrainLastMsgFast().msg, "'-00000012345.9687500'");
 
-    logger.InfoEx("'%0-20.f'", 12345.968750);
+    logger.InfoF("'%0-20.f'", 12345.968750);
     AssertStrEq("%0-20.f", sink.DrainLastMsgFast().msg, "'12345               '");
-    logger.InfoEx("'%0-20.f'", 0.0);
+    logger.InfoF("'%0-20.f'", 0.0);
     AssertStrEq("%0-20.f", sink.DrainLastMsgFast().msg, "'0                   '");
-    logger.InfoEx("'%0-20.f'", -12345.968750);
+    logger.InfoF("'%0-20.f'", -12345.968750);
     AssertStrEq("%0-20.f", sink.DrainLastMsgFast().msg, "'-12345              '");
 
-    logger.InfoEx("'%0-20.0f'", 12345.968750);
+    logger.InfoF("'%0-20.0f'", 12345.968750);
     AssertStrEq("%0-20.0f", sink.DrainLastMsgFast().msg, "'12345               '");
-    logger.InfoEx("'%0-20.0f'", 0.0);
+    logger.InfoF("'%0-20.0f'", 0.0);
     AssertStrEq("%0-20.0f", sink.DrainLastMsgFast().msg, "'0                   '");
-    logger.InfoEx("'%0-20.0f'", -12345.968750);
+    logger.InfoF("'%0-20.0f'", -12345.968750);
     AssertStrEq("%0-20.0f", sink.DrainLastMsgFast().msg, "'-12345              '");
 
-    logger.InfoEx("'%0-20.2f'", 12345.968750);
+    logger.InfoF("'%0-20.2f'", 12345.968750);
     AssertStrEq("%0-20.2f", sink.DrainLastMsgFast().msg, "'12345.96            '");
-    logger.InfoEx("'%0-20.2f'", 0.0);
+    logger.InfoF("'%0-20.2f'", 0.0);
     AssertStrEq("%0-20.2f", sink.DrainLastMsgFast().msg, "'0.00                '");
-    logger.InfoEx("'%0-20.2f'", -12345.968750);
+    logger.InfoF("'%0-20.2f'", -12345.968750);
     AssertStrEq("%0-20.2f", sink.DrainLastMsgFast().msg, "'-12345.96           '");
 
-    logger.InfoEx("'%0-20.7f'", 12345.968750);
+    logger.InfoF("'%0-20.7f'", 12345.968750);
     AssertStrEq("%0-20.7f", sink.DrainLastMsgFast().msg, "'12345.9687500       '");
-    logger.InfoEx("'%0-20.7f'", 0.0);
+    logger.InfoF("'%0-20.7f'", 0.0);
     AssertStrEq("%0-20.7f", sink.DrainLastMsgFast().msg, "'0.0000000           '");
-    logger.InfoEx("'%0-20.7f'", -12345.968750);
+    logger.InfoF("'%0-20.7f'", -12345.968750);
     AssertStrEq("%0-20.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500      '");
 
-    logger.InfoEx("'%-020.f'", 12345.968750);
+    logger.InfoF("'%-020.f'", 12345.968750);
     AssertStrEq("%-020.f", sink.DrainLastMsgFast().msg, "'12345               '");
-    logger.InfoEx("'%-020.f'", 0.0);
+    logger.InfoF("'%-020.f'", 0.0);
     AssertStrEq("%-020.f", sink.DrainLastMsgFast().msg, "'0                   '");
-    logger.InfoEx("'%-020.f'", -12345.968750);
+    logger.InfoF("'%-020.f'", -12345.968750);
     AssertStrEq("%-020.f", sink.DrainLastMsgFast().msg, "'-12345              '");
 
-    logger.InfoEx("'%-020.0f'", 12345.968750);
+    logger.InfoF("'%-020.0f'", 12345.968750);
     AssertStrEq("%-020.0f", sink.DrainLastMsgFast().msg, "'12345               '");
-    logger.InfoEx("'%-020.0f'", 0.0);
+    logger.InfoF("'%-020.0f'", 0.0);
     AssertStrEq("%-020.0f", sink.DrainLastMsgFast().msg, "'0                   '");
-    logger.InfoEx("'%-020.0f'", -12345.968750);
+    logger.InfoF("'%-020.0f'", -12345.968750);
     AssertStrEq("%-020.0f", sink.DrainLastMsgFast().msg, "'-12345              '");
 
-    logger.InfoEx("'%-020.2f'", 12345.968750);
+    logger.InfoF("'%-020.2f'", 12345.968750);
     AssertStrEq("%-020.2f", sink.DrainLastMsgFast().msg, "'12345.96            '");
-    logger.InfoEx("'%-020.2f'", 0.0);
+    logger.InfoF("'%-020.2f'", 0.0);
     AssertStrEq("%-020.2f", sink.DrainLastMsgFast().msg, "'0.00                '");
-    logger.InfoEx("'%-020.2f'", -12345.968750);
+    logger.InfoF("'%-020.2f'", -12345.968750);
     AssertStrEq("%-020.2f", sink.DrainLastMsgFast().msg, "'-12345.96           '");
 
-    logger.InfoEx("'%-020.7f'", 12345.968750);
+    logger.InfoF("'%-020.7f'", 12345.968750);
     AssertStrEq("%-020.7f", sink.DrainLastMsgFast().msg, "'12345.9687500       '");
-    logger.InfoEx("'%-020.7f'", 0.0);
+    logger.InfoF("'%-020.7f'", 0.0);
     AssertStrEq("%-020.7f", sink.DrainLastMsgFast().msg, "'0.0000000           '");
-    logger.InfoEx("'%-020.7f'", -12345.968750);
+    logger.InfoF("'%-020.7f'", -12345.968750);
     AssertStrEq("%-020.7f", sink.DrainLastMsgFast().msg, "'-12345.9687500      '");
 
     // Special
-    logger.InfoEx("'%f'", 0.0 / 0.0);
+    logger.InfoF("'%f'", 0.0 / 0.0);
     AssertStrEq("'%f' - NaN", sink.DrainLastMsgFast().msg, "'NaN'");
 
-    logger.InfoEx("'%f'", 1.0 / 0.0);
+    logger.InfoF("'%f'", 1.0 / 0.0);
     AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'Inf'");
 
-    logger.InfoEx("'%f'", -1.0 / 0.0);
+    logger.InfoF("'%f'", -1.0 / 0.0);
     AssertStrEq("'%f' - Inf", sink.DrainLastMsgFast().msg, "'-Inf'");
 
     logger.Close();
@@ -648,111 +648,111 @@ void TestBinary()
     logger.AddSink(sink);
 
     // flag
-    logger.InfoEx("'%b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%b", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%0b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%0b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%0b", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%0b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%0b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%0b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%0b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%0b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%-b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%-b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%-b", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%-b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%-b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%-b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%-b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%-b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%0-b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%0-b", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0-b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%0-b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%0-b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%0-b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%0-b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%0-b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%-0b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%-0b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%-0b", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-0b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%-0b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%-0b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%-0b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%-0b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%-0b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
     // width
-    logger.InfoEx("'%5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%5b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%5b", sink.DrainLastMsgFast().msg, "'    0'");
-    logger.InfoEx("'%5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%5b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%5b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%5b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%5b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%35b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%35b", sink.DrainLastMsgFast().msg, "'                                  0'");
-    logger.InfoEx("'%35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%35b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%35b", sink.DrainLastMsgFast().msg, "'    " ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%35b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%35b", sink.DrainLastMsgFast().msg, "'    " ... TEST_BINARY_VALUE3 ... "'");
 
     // flag & width
-    logger.InfoEx("'%05b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%05b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%05b", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%05b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%05b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%05b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%05b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%05b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%05b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%035b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%035b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%035b", sink.DrainLastMsgFast().msg, "'0000" ... TEST_BINARY_VALUE1 ... "'");
-    logger.InfoEx("'%035b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%035b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%035b", sink.DrainLastMsgFast().msg, "'0000" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%035b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%035b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%035b", sink.DrainLastMsgFast().msg, "'0000" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%-5b", sink.DrainLastMsgFast().msg, "'0    '");
-    logger.InfoEx("'%-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%-5b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%-5b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%-35b", sink.DrainLastMsgFast().msg, "'0                                  '");
-    logger.InfoEx("'%-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%-35b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "    '");
-    logger.InfoEx("'%-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%-35b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "    '");
 
-    logger.InfoEx("'%-05b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%-05b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%-05b", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%-05b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%-05b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%-05b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%-05b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%-05b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%-05b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%-035b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%-035b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%-035b", sink.DrainLastMsgFast().msg, "'00000000000000000000000000000000000'");
-    logger.InfoEx("'%-035b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%-035b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%-035b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "0000'");
-    logger.InfoEx("'%-035b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%-035b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%-035b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "0000'");
 
-    logger.InfoEx("'%0-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%0-5b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%0-5b", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%0-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%0-5b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%0-5b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "'");
-    logger.InfoEx("'%0-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%0-5b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%0-5b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
+    logger.InfoF("'%0-35b'", StringToInt(TEST_BINARY_VALUE1, 2));
     AssertStrEq("%0-35b", sink.DrainLastMsgFast().msg, "'00000000000000000000000000000000000'");
-    logger.InfoEx("'%0-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
+    logger.InfoF("'%0-35b'", StringToInt(TEST_BINARY_VALUE2, 2));
     AssertStrEq("%0-35b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE2 ... "0000'");
-    logger.InfoEx("'%0-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
+    logger.InfoF("'%0-35b'", StringToInt(TEST_BINARY_VALUE3, 2));
     AssertStrEq("%0-35b", sink.DrainLastMsgFast().msg, "'" ... TEST_BINARY_VALUE3 ... "0000'");
 
     logger.Close();
@@ -771,111 +771,111 @@ void TestUInt()
     logger.AddSink(sink);
 
     // flag
-    logger.InfoEx("'%u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE1 ... "'");
-    logger.InfoEx("'%u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%0u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%0u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%0u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE1 ... "'");
-    logger.InfoEx("'%0u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%0u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%0u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%0u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%0u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%0u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%-u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%-u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE1 ... "'");
-    logger.InfoEx("'%-u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%-u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%-u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%-u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%-u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%-u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%0-u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%0-u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE1 ... "'");
-    logger.InfoEx("'%0-u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%0-u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%0-u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%0-u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%0-u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%0-u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-0u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%-0u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%-0u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE1 ... "'");
-    logger.InfoEx("'%-0u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%-0u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%-0u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%-0u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%-0u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%-0u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
     // width
-    logger.InfoEx("'%5u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%5u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%5u", sink.DrainLastMsgFast().msg, "'    0'");
-    logger.InfoEx("'%5u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%5u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%5u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%5u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%5u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%5u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%15u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%15u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%15u", sink.DrainLastMsgFast().msg, "'              0'");
-    logger.InfoEx("'%15u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%15u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%15u", sink.DrainLastMsgFast().msg, "'     " ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%15u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%15u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%15u", sink.DrainLastMsgFast().msg, "'     " ... TEST_UINT_VALUE3 ... "'");
 
     // flag & width
-    logger.InfoEx("'%05u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%05u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%05u", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%05u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%05u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%05u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%05u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%05u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%05u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%015u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%015u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%015u", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%015u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%015u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%015u", sink.DrainLastMsgFast().msg, "'00000" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%015u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%015u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%015u", sink.DrainLastMsgFast().msg, "'00000" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-5u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%-5u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%-5u", sink.DrainLastMsgFast().msg, "'0    '");
-    logger.InfoEx("'%-5u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%-5u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%-5u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%-5u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%-5u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%-5u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-15u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%-15u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%-15u", sink.DrainLastMsgFast().msg, "'0              '");
-    logger.InfoEx("'%-15u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%-15u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%-15u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "     '");
-    logger.InfoEx("'%-15u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%-15u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%-15u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "     '");
 
-    logger.InfoEx("'%-05u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%-05u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%-05u", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%-05u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%-05u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%-05u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%-05u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%-05u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%-05u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-015u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%-015u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%-015u", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%-015u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%-015u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%-015u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "00000'");
-    logger.InfoEx("'%-015u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%-015u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%-015u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "00000'");
 
-    logger.InfoEx("'%0-5u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%0-5u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%0-5u", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%0-5u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%0-5u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%0-5u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "'");
-    logger.InfoEx("'%0-5u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%0-5u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%0-5u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-15u'", StringToInt(TEST_UINT_VALUE1));
+    logger.InfoF("'%0-15u'", StringToInt(TEST_UINT_VALUE1));
     AssertStrEq("%0-15u", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%0-15u'", StringToInt(TEST_UINT_VALUE2));
+    logger.InfoF("'%0-15u'", StringToInt(TEST_UINT_VALUE2));
     AssertStrEq("%0-15u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE2 ... "00000'");
-    logger.InfoEx("'%0-15u'", StringToInt(TEST_UINT_VALUE3));
+    logger.InfoF("'%0-15u'", StringToInt(TEST_UINT_VALUE3));
     AssertStrEq("%0-15u", sink.DrainLastMsgFast().msg, "'" ... TEST_UINT_VALUE3 ... "00000'");
 
     logger.Close();
@@ -894,111 +894,111 @@ void TestInt()
     logger.AddSink(sink);
 
     // flag
-    logger.InfoEx("'%d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE1 ... "'");
-    logger.InfoEx("'%d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%0d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%0d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%0d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE1 ... "'");
-    logger.InfoEx("'%0d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%0d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%0d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%0d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%0d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%0d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%-d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%-d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE1 ... "'");
-    logger.InfoEx("'%-d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%-d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%-d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%-d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%-d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%-d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%0-d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%0-d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE1 ... "'");
-    logger.InfoEx("'%0-d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%0-d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%0-d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%0-d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%0-d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%0-d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-0d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%-0d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%-0d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE1 ... "'");
-    logger.InfoEx("'%-0d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%-0d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%-0d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%-0d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%-0d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%-0d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
     // width
-    logger.InfoEx("'%5d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%5d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%5d", sink.DrainLastMsgFast().msg, "'    0'");
-    logger.InfoEx("'%5d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%5d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%5d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%5d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%5d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%5d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%15d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%15d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%15d", sink.DrainLastMsgFast().msg, "'              0'");
-    logger.InfoEx("'%15d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%15d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%15d", sink.DrainLastMsgFast().msg, "'     " ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%15d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%15d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%15d", sink.DrainLastMsgFast().msg, "'    " ... TEST_INT_VALUE3 ... "'");
 
     // flag & width
-    logger.InfoEx("'%05d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%05d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%05d", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%05d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%05d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%05d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%05d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%05d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%05d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%015d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%015d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%015d", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%015d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%015d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%015d", sink.DrainLastMsgFast().msg, "'00000" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%015d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%015d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%015d", sink.DrainLastMsgFast().msg, "'-00002147483648'");
 
-    logger.InfoEx("'%-5d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%-5d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%-5d", sink.DrainLastMsgFast().msg, "'0    '");
-    logger.InfoEx("'%-5d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%-5d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%-5d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%-5d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%-5d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%-5d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-15d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%-15d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%-15d", sink.DrainLastMsgFast().msg, "'0              '");
-    logger.InfoEx("'%-15d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%-15d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%-15d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "     '");
-    logger.InfoEx("'%-15d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%-15d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%-15d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "    '");
 
-    logger.InfoEx("'%-05d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%-05d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%-05d", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%-05d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%-05d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%-05d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%-05d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%-05d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%-05d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%-015d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%-015d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%-015d", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%-015d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%-015d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%-015d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "00000'");
-    logger.InfoEx("'%-015d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%-015d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%-015d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "0000'");
 
-    logger.InfoEx("'%0-5d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%0-5d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%0-5d", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%0-5d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%0-5d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%0-5d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "'");
-    logger.InfoEx("'%0-5d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%0-5d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%0-5d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-15d'", StringToInt(TEST_INT_VALUE1));
+    logger.InfoF("'%0-15d'", StringToInt(TEST_INT_VALUE1));
     AssertStrEq("%0-15d", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%0-15d'", StringToInt(TEST_INT_VALUE2));
+    logger.InfoF("'%0-15d'", StringToInt(TEST_INT_VALUE2));
     AssertStrEq("%0-15d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE2 ... "00000'");
-    logger.InfoEx("'%0-15d'", StringToInt(TEST_INT_VALUE3));
+    logger.InfoF("'%0-15d'", StringToInt(TEST_INT_VALUE3));
     AssertStrEq("%0-15d", sink.DrainLastMsgFast().msg, "'" ... TEST_INT_VALUE3 ... "0000'");
 
     logger.Close();
@@ -1023,111 +1023,111 @@ void TestHexUpper()
     logger.AddSink(sink);
 
     // flag
-    logger.InfoEx("'%X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%X", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%0X", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%0X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%0X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%-X", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%-X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%-X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%0-X", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%0-X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%0-X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%0-X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%-0X", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%-0X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%-0X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%-0X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
     // width
-    logger.InfoEx("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%5X", sink.DrainLastMsgFast().msg, "'    0'");
-    logger.InfoEx("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%5X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%5X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%15X", sink.DrainLastMsgFast().msg, "'              0'");
-    logger.InfoEx("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%15X", sink.DrainLastMsgFast().msg, "'          " ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%15X", sink.DrainLastMsgFast().msg, "'       " ... TEST_HEX_UPPER_VALUE3 ... "'");
 
     // flag & width
-    logger.InfoEx("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%05X", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%05X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%05X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%015X", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%015X", sink.DrainLastMsgFast().msg, "'0000000000" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%015X", sink.DrainLastMsgFast().msg, "'0000000" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%-5X", sink.DrainLastMsgFast().msg, "'0    '");
-    logger.InfoEx("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%-5X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%-5X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%-15X", sink.DrainLastMsgFast().msg, "'0              '");
-    logger.InfoEx("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%-15X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "          '");
-    logger.InfoEx("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%-15X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "       '");
 
-    logger.InfoEx("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%-05X", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%-05X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%-05X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%-05X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%-015X", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%-015X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "0000000000'");
-    logger.InfoEx("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%-015X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%-015X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "0000000'");
 
-    logger.InfoEx("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%0-5X", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%0-5X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "'");
-    logger.InfoEx("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%0-5X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%0-5X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
+    logger.InfoF("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE1, 16));
     AssertStrEq("%0-15X", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
+    logger.InfoF("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE2, 16));
     AssertStrEq("%0-15X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE2 ... "0000000000'");
-    logger.InfoEx("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
+    logger.InfoF("'%0-15X'", StringToInt(TEST_HEX_UPPER_VALUE3, 16));
     AssertStrEq("%0-15X", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_UPPER_VALUE3 ... "0000000'");
 
     logger.Close();
@@ -1145,111 +1145,111 @@ void TestHexLower()
     logger.AddSink(sink);
 
     // flag
-    logger.InfoEx("'%x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%x", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%0x", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%0x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%0x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%-x", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%-x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%-x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%0-x", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%0-x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%0-x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%0-x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%-0x", sink.DrainLastMsgFast().msg, "'0'");
-    logger.InfoEx("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%-0x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%-0x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%-0x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
     // width
-    logger.InfoEx("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%5x", sink.DrainLastMsgFast().msg, "'    0'");
-    logger.InfoEx("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%5x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%5x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%15x", sink.DrainLastMsgFast().msg, "'              0'");
-    logger.InfoEx("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%15x", sink.DrainLastMsgFast().msg, "'          " ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%15x", sink.DrainLastMsgFast().msg, "'       " ... TEST_HEX_LOWER_VALUE3 ... "'");
 
     // flag & width
-    logger.InfoEx("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%05x", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%05x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%05x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%015x", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%015x", sink.DrainLastMsgFast().msg, "'0000000000" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%015x", sink.DrainLastMsgFast().msg, "'0000000" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%-5x", sink.DrainLastMsgFast().msg, "'0    '");
-    logger.InfoEx("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%-5x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%-5x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%-15x", sink.DrainLastMsgFast().msg, "'0              '");
-    logger.InfoEx("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%-15x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "          '");
-    logger.InfoEx("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%-15x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "       '");
 
-    logger.InfoEx("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%-05x", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%-05x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%-05x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%-05x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%-015x", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%-015x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "0000000000'");
-    logger.InfoEx("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%-015x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%-015x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "0000000'");
 
-    logger.InfoEx("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%0-5x", sink.DrainLastMsgFast().msg, "'00000'");
-    logger.InfoEx("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%0-5x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "'");
-    logger.InfoEx("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%0-5x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%0-5x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "'");
 
-    logger.InfoEx("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
+    logger.InfoF("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE1, 16));
     AssertStrEq("%0-15x", sink.DrainLastMsgFast().msg, "'000000000000000'");
-    logger.InfoEx("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
+    logger.InfoF("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE2, 16));
     AssertStrEq("%0-15x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE2 ... "0000000000'");
-    logger.InfoEx("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
+    logger.InfoF("'%0-15x'", StringToInt(TEST_HEX_LOWER_VALUE3, 16));
     AssertStrEq("%0-15x", sink.DrainLastMsgFast().msg, "'" ... TEST_HEX_LOWER_VALUE3 ... "0000000'");
 
     logger.Close();
@@ -1269,16 +1269,16 @@ void TestTranslates()
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY, LANG_SERVER);
+    logger.InfoF("'%T'", TEST_TRANSLATES_KEY, LANG_SERVER);
     AssertStrEq("%T", sink.DrainLastMsgFast().msg, "'" ... TEST_TRANSLATES_VALUE ... "'");
 
-    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY1, LANG_SERVER, TEST_TRANSLATES_DATA1);
+    logger.InfoF("'%T'", TEST_TRANSLATES_KEY1, LANG_SERVER, TEST_TRANSLATES_DATA1);
     AssertStrEq("%T", sink.DrainLastMsgFast().msg, "'" ... TEST_TRANSLATES_VALUE1 ... "'");
 
-    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY2, LANG_SERVER, StringToInt(TEST_TRANSLATES_DATA2));
+    logger.InfoF("'%T'", TEST_TRANSLATES_KEY2, LANG_SERVER, StringToInt(TEST_TRANSLATES_DATA2));
     AssertStrEq("%T", sink.DrainLastMsgFast().msg, "'" ... TEST_TRANSLATES_VALUE2 ... "'");
 
-    logger.InfoEx("'%T'", TEST_TRANSLATES_KEY3, LANG_SERVER, TEST_TRANSLATES_DATA3_1, TEST_TRANSLATES_DATA3_2);
+    logger.InfoF("'%T'", TEST_TRANSLATES_KEY3, LANG_SERVER, TEST_TRANSLATES_DATA3_1, TEST_TRANSLATES_DATA3_2);
     AssertStrEq("%T", sink.DrainLastMsgFast().msg, "'" ... TEST_TRANSLATES_VALUE3 ... "'");
 
     logger.Close();
@@ -1297,10 +1297,10 @@ void TestSpecial()
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.InfoEx("'%N'", 0);
+    logger.InfoF("'%N'", 0);
     AssertStrEq("%N", sink.DrainLastMsgFast().msg, "'Console'");
 
-    logger.InfoEx("'%L'", 0);
+    logger.InfoF("'%L'", 0);
     AssertStrEq("%L", sink.DrainLastMsgFast().msg, "'Console<0><Console><Console>'");
 
     logger.Close();
@@ -2084,7 +2084,7 @@ void TestHex64()
 stock void AssertFmt64Eq(const char[] fmt, const int64 value, const char[] expected)
 {
     char buffer[512];
-    FormatEx(buffer, sizeof(buffer), fmt, value);
+    FormatF(buffer, sizeof(buffer), fmt, value);
     AssertStrEq(fmt, buffer, expected);
 }
 #endif

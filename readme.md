@@ -106,11 +106,11 @@ File `game/addons/sourcemod/logs/simple-file.log`:
 
 ### Format
 
-Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) as an example, ordinary `Log` method only output the log message as is, while the `LogEx` method will format the parameters first and then output the formatted log message.
+Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) as an example, ordinary `Log` method only output the log message as is, while the `LogF` method will format the parameters first and then output the formatted log message.
 
 Parameters formatting is performed at **Logger** layer and is triggered only if log message level **>=** logger log level.
 
-|                                                              |    Log    |                            LogEx                             |                       SM - LogMessage                        |
+|                                                              |    Log    |                             LogF                             |                       SM - LogMessage                        |
 | :----------------------------------------------------------- | :-------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 | **Speed**                                                    | Very Fast |                             Fast                             |                             Slow                             |
 | **Max character**                                            | unlimited |                          unlimited                           |                             1024                             |
@@ -144,9 +144,9 @@ public void OnPluginStart()
     Logger logger = new Logger("my-logger");
     logger.AddSink(sink);
 
-    logger.InfoEx("d: %d, u: %u, b: %b", 1, 2, 3);
-    logger.WarnEx("f: %f, x: %x, X: %X", 4.0, 5, 6);
-    logger.ErrorEx("s: %s, c: %c, T: %T", "Some String", '!', "Yes", LANG_SERVER);
+    logger.InfoF("d: %d, u: %u, b: %b", 1, 2, 3);
+    logger.WarnF("f: %f, x: %x, X: %X", 4.0, 5, 6);
+    logger.ErrorF("s: %s, c: %c, T: %T", "Some String", '!', "Yes", LANG_SERVER);
 
     sink.Close();
     logger.Close();
@@ -265,7 +265,7 @@ Normally, Log4sp natives will throw an error and interrupt code execution when t
 
 However, in the following situations, errors will not be thrown directly, but instead the error handler will be called:
 
-1. Error when Logger.LogEx formats parameters;
+1. Error when Logger.LogF formats parameters;
 
 2. Error when Logger traverses Sinks to log;
 
@@ -444,9 +444,9 @@ flowchart LR
         LoggerLogJunction["Junction"]
         LoggerShouldFlush{"Should Flush?"}
         LoggerLog("Log")
-        LoggerLogEx("LogEx")
+        LoggerLogF("LogF")
         LoggerLogFormat["Raw"]
-        LoggerLogExFormat["Log4sp params format"]
+        LoggerLogFFormat["Log4sp params format"]
   end
  subgraph Sinks["Sink List"]
         SinkShouldJunction["Junction"]
@@ -460,11 +460,11 @@ flowchart LR
     LoggerShouldLog -- Yes --- LoggerShouldJunction
     LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
     LoggerShouldLog -. No .-> Stop((("End")))
-    LoggerLogJunction --- LoggerLog & LoggerLogEx
+    LoggerLogJunction --- LoggerLog & LoggerLogF
     LoggerLog --- LoggerLogFormat
     LoggerLogFormat --- SinkShouldJunction
-    LoggerLogEx --- LoggerLogExFormat
-    LoggerLogExFormat --- SinkShouldJunction
+    LoggerLogF --- LoggerLogFFormat
+    LoggerLogFFormat --- SinkShouldJunction
     LoggerShouldFlush -- Yes --- SinkFlushJunction
     SinkFlushJunction --> SinkFlush
     SinkFlush --> Stop
@@ -477,16 +477,16 @@ flowchart LR
     LoggerShouldJunction@{ shape: junction}
     LoggerLogJunction@{ shape: junction}
     LoggerLogFormat@{ shape: das}
-    LoggerLogExFormat@{ shape: das}
+    LoggerLogFFormat@{ shape: das}
     SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
     SinkFlushJunction@{ shape: junction}
     style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
     style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogEx stroke-width:4px,stroke-dasharray: 0
+    style LoggerLogF stroke-width:4px,stroke-dasharray: 0
     style LoggerLogFormat stroke-width:1px,stroke-dasharray: 1
-    style LoggerLogExFormat stroke-width:1px,stroke-dasharray: 1
+    style LoggerLogFFormat stroke-width:1px,stroke-dasharray: 1
     style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
     style SinkLog stroke-width:4px,stroke-dasharray: 0
     style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1

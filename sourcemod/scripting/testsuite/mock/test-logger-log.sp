@@ -52,7 +52,7 @@ void TestLog()
     logger.Log(LogLevel_Info, "test message 1");
     AssertStrMatch("Log line match", sink.DrainLastLineFast(), P_PREFIX ... "test message 1");
 
-    logger.LogEx(LogLevel_Info, "test message %d", 2);
+    logger.LogF(LogLevel_Info, "test message %d", 2);
     AssertStrMatch("LogEx line match", sink.DrainLastLineFast(), P_PREFIX ... "test message 2");
 
     logger.Close();
@@ -71,7 +71,7 @@ void TestLogSrc()
     logger.LogSrc(LogLevel_Info, "test message 1");
     AssertStrMatch("LogSrc line match", sink.DrainLastLineFast(), P_PREFIX ... "\\[test-logger-log.sp:[0-9]+\\] test message 1");
 
-    logger.LogSrcEx(LogLevel_Info, "test message %d", 2);
+    logger.LogSrcF(LogLevel_Info, "test message %d", 2);
     AssertStrMatch("LogSrcEx line match", sink.DrainLastLineFast(), P_PREFIX ... "\\[test-logger-log.sp:[0-9]+\\] test message 2");
 
     logger.Close();
@@ -92,10 +92,10 @@ void TestLogLoc()
     strcopy(locWin.funcname, sizeof(SourceLoc::funcname), "Function2");
 
     char expectedLinux[2048];
-    FormatEx(expectedLinux, sizeof(expectedLinux), P_PREFIX ... "\\[Linux-testFile.log:123\\] test message (1|2|3)");
+    FormatF(expectedLinux, sizeof(expectedLinux), P_PREFIX ... "\\[Linux-testFile.log:123\\] test message (1|2|3)");
 
     char expectedWin[2048];
-    FormatEx(expectedWin, sizeof(expectedWin), P_PREFIX ... "\\[Win-testFile.log:456\\] test message (1|2|3)");
+    FormatF(expectedWin, sizeof(expectedWin), P_PREFIX ... "\\[Win-testFile.log:456\\] test message (1|2|3)");
 
     TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
@@ -104,14 +104,14 @@ void TestLogLoc()
     logger.LogLoc(locLinux, LogLevel_Info, "test message 1");
     AssertStrMatch("Linux LogLoc line match", sink.DrainLastLineFast(), expectedLinux);
 
-    logger.LogLocEx(locLinux, LogLevel_Info, "test message %d", 2);
+    logger.LogLocF(locLinux, LogLevel_Info, "test message %d", 2);
     AssertStrMatch("Linux LogLocEx line match", sink.DrainLastLineFast(), expectedLinux);
 
 
     logger.LogLoc(locWin, LogLevel_Info, "test message 1");
     AssertStrMatch("Win LogLoc line match", sink.DrainLastLineFast(), expectedWin);
 
-    logger.LogLocEx(locWin, LogLevel_Info, "test message %d", 2);
+    logger.LogLocF(locWin, LogLevel_Info, "test message %d", 2);
     AssertStrMatch("Win LogLocEx line match", sink.DrainLastLineFast(), expectedWin);
 
     logger.Close();
@@ -133,7 +133,7 @@ void TestLogStackTrace()
     logger.AddSink(basicFileSink);
 
     logger.LogStackTrace(LogLevel_Info, "test message 1");
-    logger.LogStackTraceEx(LogLevel_Info, "test message %d", 2);
+    logger.LogStackTraceF(LogLevel_Info, "test message %d", 2);
     delete logger;
     delete basicFileSink;
 

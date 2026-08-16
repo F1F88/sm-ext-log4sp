@@ -115,7 +115,7 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     return 0;
 }
 
-static cell_t LogEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t LogF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
@@ -138,7 +138,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return 0;
 }
 
-static cell_t LogSrcEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t LogSrcF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
@@ -168,7 +168,7 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return 0;
 }
 
-static cell_t LogLocEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t LogLocF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
@@ -206,7 +206,7 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
     return 0;
 }
 
-static cell_t LogStackTraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t LogStackTraceF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
@@ -228,7 +228,7 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     return 0;
 }
 
-static cell_t TraceEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t TraceF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -249,7 +249,7 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     return 0;
 }
 
-static cell_t DebugEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t DebugF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -270,7 +270,7 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     return 0;
 }
 
-static cell_t InfoEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t InfoF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -291,7 +291,7 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     return 0;
 }
 
-static cell_t WarnEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t WarnF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -312,7 +312,7 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     return 0;
 }
 
-static cell_t ErrorEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t ErrorF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -333,7 +333,7 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     return 0;
 }
 
-static cell_t FatalEx(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t FatalF(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     using spdlog::level::level_enum;
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -448,26 +448,26 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.ShouldLog",                        ShouldLog},
 
     {"Logger.Log",                              Log},
-    {"Logger.LogEx",                            LogEx},
+    {"Logger.LogF",                             LogF},
     {"Logger.LogSrc",                           LogSrc},
-    {"Logger.LogSrcEx",                         LogSrcEx},
+    {"Logger.LogSrcF",                          LogSrcF},
     {"Logger.LogLoc",                           LogLoc},
-    {"Logger.LogLocEx",                         LogLocEx},
+    {"Logger.LogLocF",                          LogLocF},
     {"Logger.LogStackTrace",                    LogStackTrace},
-    {"Logger.LogStackTraceEx",                  LogStackTraceEx},
+    {"Logger.LogStackTraceF",                   LogStackTraceF},
 
     {"Logger.Trace",                            Trace},
-    {"Logger.TraceEx",                          TraceEx},
+    {"Logger.TraceF",                           TraceF},
     {"Logger.Debug",                            Debug},
-    {"Logger.DebugEx",                          DebugEx},
+    {"Logger.DebugF",                           DebugF},
     {"Logger.Info",                             Info},
-    {"Logger.InfoEx",                           InfoEx},
+    {"Logger.InfoF",                            InfoF},
     {"Logger.Warn",                             Warn},
-    {"Logger.WarnEx",                           WarnEx},
+    {"Logger.WarnF",                            WarnF},
     {"Logger.Error",                            Error},
-    {"Logger.ErrorEx",                          ErrorEx},
+    {"Logger.ErrorF",                           ErrorF},
     {"Logger.Fatal",                            Fatal},
-    {"Logger.FatalEx",                          FatalEx},
+    {"Logger.FatalF",                           FatalF},
 
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},

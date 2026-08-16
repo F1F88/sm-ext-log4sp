@@ -22,7 +22,7 @@ enum
     CmdFuncs_Log            = (1 << 0),
     CmdFuncs_LogSrc         = (1 << 1),
     CmdFuncs_LogLoc         = (1 << 2),
-    CmdFuncs_LogEx          = (1 << 3),
+    CmdFuncs_LogF           = (1 << 3),
     CmdFuncs_All            = (~0)
 };
 
@@ -63,13 +63,13 @@ Action Command_Bench(int client, int args)
     //       Log            1
     //       LogSrc         2
     //       LogLoc         4
-    //       LogEx          8
+    //       LogF           8
     //    fmts: Boolean - Default false
     //       true           all
     //       false          mock
     int calls = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
     int sinks = (args >= 2) ? GetCmdArgInt(2) : CmdSinks_All;
-    int funcs = (args >= 3) ? GetCmdArgInt(3) : CmdFuncs_LogEx;
+    int funcs = (args >= 3) ? GetCmdArgInt(3) : CmdFuncs_LogF;
     bool fmts = (args >= 4) ? (!!GetCmdArgInt(4)) : false;
 
     BenchAll(calls, sinks, funcs, fmts);
@@ -216,12 +216,12 @@ void BenchAllLogFunc(int calls, int funcs, bool mock, Logger logger)
         BenchDB.Instance().Insert(name, "LogLoc", NULL_STRING, calls, g_hProfiler.Time);
     }
 
-    if (funcs & CmdFuncs_LogEx)
-        BenchLogEx(calls, mock, logger);
+    if (funcs & CmdFuncs_LogF)
+        BenchLogF(calls, mock, logger);
 }
 
 
-void BenchLogEx(int calls, bool fmts, Logger logger)
+void BenchLogF(int calls, bool fmts, Logger logger)
 {
     char name[sizeof(BenchData::name)];
     logger.GetName(name, sizeof(name));
@@ -232,10 +232,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx("Hello logger: msg number %d", value);
+            logger.InfoF("Hello logger: msg number %d", value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", "mock", calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", "mock", calls, g_hProfiler.Time);
     }
 
     if (!fmts)
@@ -248,10 +248,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%032b";
@@ -259,10 +259,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Integer
@@ -272,10 +272,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%010d";
@@ -283,10 +283,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Unsigned Integer
@@ -296,10 +296,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%010u";
@@ -307,10 +307,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Float
@@ -320,10 +320,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%6.3f";
@@ -331,10 +331,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Special
@@ -344,10 +344,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%N";
@@ -355,10 +355,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%E";
@@ -366,10 +366,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // String
@@ -379,10 +379,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%30s";
@@ -390,10 +390,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Translation
@@ -404,10 +404,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%T";
@@ -415,10 +415,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value, LANG_SERVER);
+            logger.InfoF(fmt, value, LANG_SERVER);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Hex
@@ -428,10 +428,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx("%X", value);
+            logger.InfoF("%X", value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%08X";
@@ -439,10 +439,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%x";
@@ -450,10 +450,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%08x";
@@ -461,10 +461,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
 #if defined SM_INT64_SUPPORTED
@@ -475,10 +475,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%032lb";
@@ -486,10 +486,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Integer 64
@@ -499,10 +499,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%010ld";
@@ -510,10 +510,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Unsigned Integer 64
@@ -523,10 +523,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%010lu";
@@ -534,10 +534,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 
     // Hex 64
@@ -547,10 +547,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%08lX";
@@ -558,10 +558,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%lx";
@@ -569,10 +569,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
     {
         char fmt[] = "%08lx";
@@ -580,10 +580,10 @@ void BenchLogEx(int calls, bool fmts, Logger logger)
         g_hProfiler.Start();
         for (int i = 0; i < calls; ++i)
         {
-            logger.InfoEx(fmt, value);
+            logger.InfoF(fmt, value);
         }
         g_hProfiler.Stop();
-        BenchDB.Instance().Insert(name, "InfoEx", fmt, calls, g_hProfiler.Time);
+        BenchDB.Instance().Insert(name, "InfoF", fmt, calls, g_hProfiler.Time);
     }
 #endif      // SM_INT64_SUPPORTED
 }

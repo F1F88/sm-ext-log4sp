@@ -4,6 +4,8 @@
 #include <sourcemod>
 #include <log4sp>
 
+#include <testing>
+
 #include "../test_utils"
 
 
@@ -43,7 +45,7 @@ void TestDefaultCalculator()
 
     for (int i = 0; i < 10; ++i)
     {
-        logger.InfoEx("Test message %d", i);
+        logger.InfoF("Test message %d", i);
     }
     delete logger;
     delete sink;
@@ -67,7 +69,7 @@ void TestFormatCalculator()
 
     for (int i = 0; i < 10; ++i)
     {
-        logger.InfoEx("Test message %d", i);
+        logger.InfoF("Test message %d", i);
     }
     delete logger;
     delete sink;

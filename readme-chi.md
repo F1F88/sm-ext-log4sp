@@ -105,11 +105,11 @@ public void OnPluginStart()
 
 ### 参数格式化
 
-以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogEx` 则先将参数格式化，再输出格式化后的日志消息。
+以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogF` 则先将参数格式化，再输出格式化后的日志消息。
 
 参数格式化在 **Logger** 层执行，且仅当日志消息级别 **≥** logger 日志级别时才会触发。
 
-|                                                              |  Log   |                            LogEx                             |                       SM - LogMessage                        |
+|                                                              |  Log   |                             LogF                             |                       SM - LogMessage                        |
 | :----------------------------------------------------------- | :----: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 | **运行效率**                                                 |  最快  |                             较快                             |                             较慢                             |
 | **最多字符数**                                               | 无限制 |                            无限制                            |                             1024                             |
@@ -142,9 +142,9 @@ public void OnPluginStart()
     Logger logger = new Logger("my-logger");
     logger.AddSink(sink);
 
-    logger.InfoEx("d: %d, u: %u, b: %b", 1, 2, 3);
-    logger.WarnEx("f: %f, x: %x, X: %X", 4.0, 5, 6);
-    logger.ErrorEx("s: %s, c: %c, T: %T", "Some String", '!', "Yes", LANG_SERVER);
+    logger.InfoF("d: %d, u: %u, b: %b", 1, 2, 3);
+    logger.WarnF("f: %f, x: %x, X: %X", 4.0, 5, 6);
+    logger.ErrorF("s: %s, c: %c, T: %T", "Some String", '!', "Yes", LANG_SERVER);
 
     sink.Close();
     logger.Close();
@@ -264,7 +264,7 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
 
 但以下情况不会直接抛出错误，而是交由错误处理器处理，从而避免中断 SourcePawn 代码的执行：
 
-1. Logger.LogEx 格式化参数时的错误
+1. Logger.LogF 格式化参数时的错误
 2. Logger 遍历 Sinks 记录日志时的错误
 3. Logger 遍历 Sinks 刷写日志时的错误
 
@@ -444,9 +444,9 @@ flowchart LR
         LoggerLogJunction["Junction"]
         LoggerShouldFlush{"Should Flush?"}
         LoggerLog("Log")
-        LoggerLogEx("LogEx")
+        LoggerLogF("LogF")
         LoggerLogFormat["Raw"]
-        LoggerLogExFormat["Log4sp params format"]
+        LoggerLogFFormat["Log4sp params format"]
   end
  subgraph Sinks["Sink List"]
         SinkShouldJunction["Junction"]
@@ -460,11 +460,11 @@ flowchart LR
     LoggerShouldLog -- Yes --- LoggerShouldJunction
     LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
     LoggerShouldLog -. No .-> Stop((("End")))
-    LoggerLogJunction --- LoggerLog & LoggerLogEx
+    LoggerLogJunction --- LoggerLog & LoggerLogF
     LoggerLog --- LoggerLogFormat
     LoggerLogFormat --- SinkShouldJunction
-    LoggerLogEx --- LoggerLogExFormat
-    LoggerLogExFormat --- SinkShouldJunction
+    LoggerLogF --- LoggerLogFFormat
+    LoggerLogFFormat --- SinkShouldJunction
     LoggerShouldFlush -- Yes --- SinkFlushJunction
     SinkFlushJunction --> SinkFlush
     SinkFlush --> Stop
@@ -477,16 +477,16 @@ flowchart LR
     LoggerShouldJunction@{ shape: junction}
     LoggerLogJunction@{ shape: junction}
     LoggerLogFormat@{ shape: das}
-    LoggerLogExFormat@{ shape: das}
+    LoggerLogFFormat@{ shape: das}
     SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
     SinkFlushJunction@{ shape: junction}
     style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
     style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogEx stroke-width:4px,stroke-dasharray: 0
+    style LoggerLogF stroke-width:4px,stroke-dasharray: 0
     style LoggerLogFormat stroke-width:1px,stroke-dasharray: 1
-    style LoggerLogExFormat stroke-width:1px,stroke-dasharray: 1
+    style LoggerLogFFormat stroke-width:1px,stroke-dasharray: 1
     style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
     style SinkLog stroke-width:4px,stroke-dasharray: 0
     style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1

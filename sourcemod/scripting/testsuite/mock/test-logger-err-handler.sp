@@ -44,9 +44,9 @@ void TestDefaultErrorHandler()
     logger.AddSink(sink);
     logger.SetPattern("%v");
 
-    logger.InfoEx("Test message %d", 1);
-    logger.InfoEx("Test message %d %d", 2);
-    logger.InfoEx("Test message %d", 3);
+    logger.InfoF("Test message %d", 1);
+    logger.InfoF("Test message %d %d", 2);
+    logger.InfoF("Test message %d", 3);
     delete logger;
     delete sink;
 
@@ -82,13 +82,13 @@ void TestCustomErrorHandler()
     logger.FlushOn(LogLevel_Info);
     logger.SetErrorHandler(null, CustomErrorHandler);
 
-    logger.InfoEx("Test message %d", 1);
-    logger.InfoEx("Test message %d", 2);
-    logger.InfoEx("Test message %d %d", 3);
-    logger.InfoEx("Test message %d %d", 4);
-    logger.InfoEx("Test message %d %d", 5);
-    logger.InfoEx("Test message %d", 6);
-    logger.InfoEx("Test message %d", 7);
+    logger.InfoF("Test message %d", 1);
+    logger.InfoF("Test message %d", 2);
+    logger.InfoF("Test message %d %d", 3);
+    logger.InfoF("Test message %d %d", 4);
+    logger.InfoF("Test message %d %d", 5);
+    logger.InfoF("Test message %d", 6);
+    logger.InfoF("Test message %d", 7);
     delete logger;
     delete sink;
 
