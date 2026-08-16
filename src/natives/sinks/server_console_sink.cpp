@@ -7,10 +7,10 @@
 
 static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    std::shared_ptr<spdlog::sinks::stdout_sink_st> sink;
+    spdlog::sinks::stdout_sink_st *sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        sink = new spdlog::sinks::stdout_sink_st();
     }
     catch (const std::exception &ex)
     {
@@ -18,7 +18,7 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);

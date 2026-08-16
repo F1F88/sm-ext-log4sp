@@ -7,32 +7,6 @@
 #include "log4sp/adapter/sink_handler.h"
 
 
-/**
- * 封装读取 daily file sink handle 代码
- * 这会创建 1 个变量: dailyFileSink
- *      读取成功时: 继续执行后续代码
- *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
- */
-#define READ_DAILY_FILE_SINK_HANDLE_OR_ERROR(handle)                                                \
-    std::shared_ptr<spdlog::sinks::daily_file_sink_st> dailyFileSink;                               \
-    {                                                                                               \
-        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
-        SourceMod::HandleError error;                                                               \
-        auto sink = Log4sp::SinkHandler::Instance().ReadHandle(handle, &security, &error);          \
-        if (!sink)                                                                                  \
-        {                                                                                           \
-            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
-            return 0;                                                                               \
-        }                                                                                           \
-        dailyFileSink = std::dynamic_pointer_cast<spdlog::sinks::daily_file_sink_st>(sink);         \
-        if (!dailyFileSink)                                                                         \
-        {                                                                                           \
-            ctx->ReportError("Invalid DailyFileSink Handle %x.", handle);                           \
-            return 0;                                                                               \
-        }                                                                                           \
-    } while(0);
-
-
 #define DAILY_FILE_DEFAULT_CALCULATOR()                                                             \
     [](const spdlog::filename_t &filename, const tm &now_tm)                                        \
     {                                                                                               \
@@ -102,10 +76,10 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
     handlers.after_close = FILE_EVENT_FUNCTION(closeFunc);
 
-    std::shared_ptr<spdlog::sinks::daily_file_sink_st> sink;
+    spdlog::sinks::daily_file_sink_st *sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::daily_file_sink_st>(file, hour, minute, truncate, maxFiles, handlers, calculator);
+        sink = new spdlog::sinks::daily_file_sink_st(file, hour, minute, truncate, maxFiles, handlers, std::move(calculator));
     }
     catch (const std::exception &ex)
     {
@@ -113,7 +87,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
@@ -127,7 +101,22 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
 static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    READ_DAILY_FILE_SINK_HANDLE_OR_ERROR(params[1]);
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    auto dailyFileSink = dynamic_cast<spdlog::sinks::daily_file_sink_st*>(sink);
+    if (!dailyFileSink)
+    {
+        ctx->ReportError("Invalid DailyFileSink Handle %x.", params[1]);
+        return 0;
+    }
 
     std::size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], dailyFileSink->filename().c_str(), &bytes);

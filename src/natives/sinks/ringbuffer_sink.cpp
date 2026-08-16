@@ -4,40 +4,14 @@
 #include "log4sp/sinks/ringbuffer_sink.h"
 
 
-/**
- * 封装读取 ringbuffer sink handle 代码
- * 这会创建 4 个变量: security, error, sink, ringBufferSink
- *      读取成功时: 继续执行后续代码
- *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
- */
-#define READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(handle)                                               \
-    std::shared_ptr<Log4sp::Sinks::RingBufferSinkST> ringBufferSink;                                \
-    {                                                                                               \
-        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
-        SourceMod::HandleError error;                                                               \
-        auto sink = Log4sp::SinkHandler::Instance().ReadHandle(handle, &security, &error);          \
-        if (!sink)                                                                                  \
-        {                                                                                           \
-            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
-            return 0;                                                                               \
-        }                                                                                           \
-        ringBufferSink = std::dynamic_pointer_cast<Log4sp::Sinks::RingBufferSinkST>(sink);          \
-        if (!ringBufferSink)                                                                        \
-        {                                                                                           \
-            ctx->ReportError("Invalid RingBufferSink Handle %x.", handle);                          \
-            return 0;                                                                               \
-        }                                                                                           \
-    } while(0);
-
-
 static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     auto amount = static_cast<std::size_t>(params[1]);
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto sink = std::make_shared<Log4sp::Sinks::RingBufferSinkST>(amount);
+    auto sink = new Log4sp::Sinks::RingBufferSinkST(amount);
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
@@ -49,7 +23,22 @@ static cell_t RingBufferSink(SourcePawn::IPluginContext *ctx, const cell_t *para
 
 static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(params[1]);
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    auto ringBufferSink = dynamic_cast<Log4sp::Sinks::RingBufferSinkST*>(sink);
+    if (!ringBufferSink)
+    {
+        ctx->ReportError("Invalid RingBufferSink Handle %x.", params[1]);
+        return 0;
+    }
 
     auto func = ctx->GetFunctionById(params[2]);
     if (!func)
@@ -103,7 +92,22 @@ static cell_t RingBufferSink_Drain(SourcePawn::IPluginContext *ctx, const cell_t
 
 static cell_t RingBufferSink_DrainFormatted(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    READ_RING_BUFFER_SINK_HANDLE_OR_ERROR(params[1]);
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    auto ringBufferSink = dynamic_cast<Log4sp::Sinks::RingBufferSinkST*>(sink);
+    if (!ringBufferSink)
+    {
+        ctx->ReportError("Invalid RingBufferSink Handle %x.", params[1]);
+        return 0;
+    }
 
     auto func = ctx->GetFunctionById(params[2]);
     if (!func)

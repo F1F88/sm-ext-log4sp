@@ -6,7 +6,7 @@
 
 
 #define READ_TEST_SINK_HANDLE_OR_ERROR(handle)                                                      \
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                             \
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());                             \
     SourceMod::HandleError error;                                                                   \
     auto sink = Log4sp::SinkHandler::Instance().ReadHandle(handle, &security, &error);              \
     if (!sink)                                                                                      \
@@ -27,7 +27,7 @@ static cell_t TestSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 {
     auto sink = std::make_shared<Log4sp::Sinks::TestSinkST>();
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);

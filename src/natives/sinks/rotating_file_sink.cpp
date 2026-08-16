@@ -5,32 +5,6 @@
 #include "log4sp/adapter/sink_handler.h"
 
 
-/**
- * 封装读取 rotating file sink handle 代码
- * 这会创建 1 个变量: rotatingFileSink
- *      读取成功时: 继续执行后续代码
- *      读取失败时: 抛出错误并结束执行, 返回 0 (与 BAD_HANDLE 相同)
- */
-#define READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(handle)                                             \
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_st> rotatingFileSink;                         \
-    {                                                                                               \
-        SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());                         \
-        SourceMod::HandleError error;                                                               \
-        auto sink = Log4sp::SinkHandler::Instance().ReadHandle(handle, &security, &error);          \
-        if (!sink)                                                                                  \
-        {                                                                                           \
-            ctx->ReportError("Invalid Sink Handle %x (error code: %d)", handle, error);             \
-            return 0;                                                                               \
-        }                                                                                           \
-        rotatingFileSink = std::dynamic_pointer_cast<spdlog::sinks::rotating_file_sink_st>(sink);   \
-        if (!rotatingFileSink)                                                                      \
-        {                                                                                           \
-            ctx->ReportError("Invalid RotatingFileSink Handle %x.", handle);                        \
-            return 0;                                                                               \
-        }                                                                                           \
-    }
-
-
 static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
@@ -49,10 +23,10 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
     handlers.after_close = FILE_EVENT_FUNCTION(closeFunc);
 
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_st> sink;
+    spdlog::sinks::rotating_file_sink_st *sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(absPath, maxFileSize, maxFiles, rotateOnOpen, handlers);
+        sink = new spdlog::sinks::rotating_file_sink_st(absPath, maxFileSize, maxFiles, rotateOnOpen, handlers);
     }
     catch (const std::exception &ex)
     {
@@ -60,7 +34,7 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
         return BAD_HANDLE;
     }
 
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
@@ -74,7 +48,22 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
 
 static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
+    if (!rotatingFileSink)
+    {
+        ctx->ReportError("Invalid RotatingFileSink Handle %x.", params[1]);
+        return 0;
+    }
 
     std::size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], rotatingFileSink->filename().c_str(), &bytes);
@@ -83,7 +72,22 @@ static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
 static cell_t RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    READ_ROTATING_FILE_SINK_HANDLE_OR_ERROR(params[1]);
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
+    if (!rotatingFileSink)
+    {
+        ctx->ReportError("Invalid RotatingFileSink Handle %x.", params[1]);
+        return 0;
+    }
 
     try
     {
