@@ -18,10 +18,10 @@ methodmap Logger < Handle
      * @note Logger handles must be freed via delete or CloseHandle().
      *
      * @param name      The name of the new logger.
+     *                  If NULL_STRING, defaults to the plugin filename.
      * @return          A new logger handle.
-     * @error           Logger name already exists.
      */
-    public native Logger(const char[] name);
+    public native Logger(const char[] name=NULL_STRING);
 
     /**
      * Gets the logger name.

@@ -37,7 +37,7 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto logger = std::make_shared<Log4sp::Logger>(name);
+    auto logger = std::make_shared<Log4sp::Logger>(name ? name : Log4sp::PluginSysFindPluginByCtx(ctx)->GetFilename());
     auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
     if (!handle)
     {
