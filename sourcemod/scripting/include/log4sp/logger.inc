@@ -145,7 +145,7 @@ methodmap Logger < Handle
      *
      * @param lvl       Log level enum.
      */
-    public native void FlushOn(LogLevel lvl);
+    public native void SetFlushLevel(LogLevel lvl);
 
     /**
      * Add a new sink to sinks.

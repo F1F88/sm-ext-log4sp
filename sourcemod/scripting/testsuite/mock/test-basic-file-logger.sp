@@ -23,7 +23,7 @@ Action Command_Test(int args)
 
     TestFileLogger();
 
-    TestFlushOn();
+    TestSetFlushLevel();
 
     TestTruncate();
 
@@ -55,7 +55,7 @@ void TestFileLogger()
     AssertFileMatch("File contents match", path, "Test message 1" ... P_EOL ... "Test message 2" ... P_EOL);
 }
 
-void TestFlushOn()
+void TestSetFlushLevel()
 {
     SetTestContext("Test Simple File Auto Flush Level");
 
@@ -67,7 +67,7 @@ void TestFlushOn()
     logger.AddSink(sink);
     logger.SetPattern("%v");
     logger.SetLevel(LogLevel_Trace);
-    logger.FlushOn(LogLevel_Info);
+    logger.SetFlushLevel(LogLevel_Info);
 
     logger.InfoF("Test message %d", 1);
     logger.Trace("Should not be flushed");

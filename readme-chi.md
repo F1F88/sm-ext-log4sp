@@ -229,7 +229,7 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
 2. 自动刷写
 
     ```sourcepawn
-    logger.FlushOn(LogLevel_Warn); // 当日志消息级别 ≥ "Warn" 时，立即刷写缓冲区
+    logger.SetFlushLevel(LogLevel_Warn); // 当日志消息级别 ≥ "Warn" 时，立即刷写缓冲区
     ```
 
     > [!TIP]

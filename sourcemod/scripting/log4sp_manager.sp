@@ -514,7 +514,7 @@ void MenuHandler_SetFlushLvl(Menu menu, MenuAction action, int param1, int param
             menu.GetItem(param2, level, sizeof(level));
 
             PrintToChat(param1, "[SM] Logger '%s' will set flush level to '%s'.", name, level);
-            logger.FlushOn(NameToLogLevel(level));
+            logger.SetFlushLevel(NameToLogLevel(level));
         }
         case MenuAction_End:
         {
@@ -551,7 +551,7 @@ void ApplyAllLogger_SetLevel(Logger logger, LogLevel level)
 
 void ApplyAllLogger_SetFlushLevel(Logger logger, LogLevel level)
 {
-    logger.FlushOn(level);
+    logger.SetFlushLevel(level);
 }
 
 stock bool IsValidClient(int client)

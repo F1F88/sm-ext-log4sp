@@ -229,7 +229,7 @@ You can override this with:
 2. Flush levels
 
     ```sourcepawn
-    logger.FlushOn(LogLevel_Warn);  // Flush contents immediately when log message level ≥ "Warn"
+    logger.SetFlushLevel(LogLevel_Warn);  // Flush contents immediately when log message level ≥ "Warn"
     ```
 
     > [!tip]

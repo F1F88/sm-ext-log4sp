@@ -79,7 +79,7 @@ void TestCustomErrorHandler()
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
     logger.SetPattern("%v");
-    logger.FlushOn(LogLevel_Info);
+    logger.SetFlushLevel(LogLevel_Info);
     logger.SetErrorHandler(null, CustomErrorHandler);
 
     logger.InfoF("Test message %d", 1);
