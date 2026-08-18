@@ -58,8 +58,12 @@ methodmap RotatingFileSink < Sink
 
     /**
      * Rotate log files on demand.
+     *
+     * @param error         Error message buffer in case of rotate failure.
+     * @param maxlen        Maximum length of the error.
+     * @return              True on success, false on error.
      */
-    public native void RotateNow();
+    public native bool RotateNow(char[] error="", int maxlen=0);
 
     /**
      * Calc filename according to index and file extension if exists.

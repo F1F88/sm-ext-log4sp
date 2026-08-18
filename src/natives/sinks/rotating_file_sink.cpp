@@ -131,25 +131,27 @@ static cell_t RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     if (!sink)
     {
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
-        return 0;
+        return false;
     }
 
     auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
     if (!rotatingFileSink)
     {
         ctx->ReportError("Invalid RotatingFileSink Handle %x.", params[1]);
-        return 0;
+        return false;
     }
 
     try
     {
         rotatingFileSink->rotate_now();
+        return true;
     }
     catch (const std::exception &ex)
     {
-        ctx->ReportError(ex.what());
+        if (auto err = ctx->StringToLocalUTF8(params[2], params[3], ex.what(), nullptr))
+            ctx->ReportError("Failed to write error to buffer (error %d)", err);
+        return false;
     }
-    return 0;
 }
 
 static cell_t CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
