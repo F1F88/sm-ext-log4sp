@@ -101,7 +101,19 @@ typedef ErrorHandler = function void (const char[] origin, const SourceLoc loc, 
  * @param lvl       Log level enum.
  * @return          Number of bytes written.
  */
-native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
+stock int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl)
+{
+    switch(lvl)
+    {
+        case LogLevel_Trace : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_TRACE);
+        case LogLevel_Debug : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_DEBUG);
+        case LogLevel_Info  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_INFO);
+        case LogLevel_Warn  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_WARN);
+        case LogLevel_Error : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_ERROR);
+        case LogLevel_Fatal : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_FATAL);
+        default             : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_OFF);
+    }
+}
 
 /**
  * Convert a log level enum to short name.
@@ -111,7 +123,19 @@ native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
  * @param lvl       Log level enum.
  * @return          Number of bytes written.
  */
-native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
+stock int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl)
+{
+    switch(lvl)
+    {
+        case LogLevel_Trace : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_TRACE);
+        case LogLevel_Debug : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_DEBUG);
+        case LogLevel_Info  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_INFO);
+        case LogLevel_Warn  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_WARN);
+        case LogLevel_Error : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_ERROR);
+        case LogLevel_Fatal : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_FATAL);
+        default             : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_OFF);
+    }
+}
 
 /**
  * Convert a log level name to log level enum.
@@ -119,7 +143,19 @@ native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
  * @param name      Log level name.
  * @return          Log level enum or LogLevel_Off when the log level name does not exist.
  */
-native LogLevel NameToLogLevel(const char[] name);
+stock LogLevel NameToLogLevel(const char[] name)
+{
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_TRACE)) return LogLevel_Trace;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_DEBUG)) return LogLevel_Debug;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_INFO))  return LogLevel_Info;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_WARN))  return LogLevel_Warn;
+    if (StrEqual(name, "warning"))               return LogLevel_Warn;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_ERROR)) return LogLevel_Error;
+    if (StrEqual(name, "err"))                   return LogLevel_Error;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_FATAL)) return LogLevel_Fatal;
+    if (StrEqual(name, "critical"))              return LogLevel_Fatal;
+    return LogLevel_Off;
+}
 
 /**
  * Convert a log level name to log level enum.

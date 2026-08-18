@@ -49,9 +49,6 @@ public Extension __ext_log4sp =
 #if !defined REQUIRE_EXTENSIONS
 public void __ext_log4sp_SetNTVOptional()
 {
-    MarkNativeAsOptional("LogLevelToName");
-    MarkNativeAsOptional("LogLevelToShortName");
-    MarkNativeAsOptional("NameToLogLevel");
     MarkNativeAsOptional("GetLog4spVersion");
 
     MarkNativeAsOptional("Logger.Logger");
