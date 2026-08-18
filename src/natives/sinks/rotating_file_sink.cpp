@@ -238,6 +238,13 @@ static cell_t SetMaxFiles(SourcePawn::IPluginContext *ctx, const cell_t *params)
     }
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!sink && !!dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
+}
+
 static cell_t CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
@@ -260,6 +267,7 @@ const sp_nativeinfo_t RotatingFileSinkNatives[] =
     {"RotatingFileSink.SetMaxSize",             SetMaxSize},
     {"RotatingFileSink.GetMaxFiles",            GetMaxFiles},
     {"RotatingFileSink.SetMaxFiles",            SetMaxFiles},
+    {"RotatingFileSink.IsValid",                IsValid},
 
     {"RotatingFileSink.CalcFilename",           CalcFilename},
 

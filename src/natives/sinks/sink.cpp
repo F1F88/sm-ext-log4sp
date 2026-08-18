@@ -202,6 +202,12 @@ static cell_t Equals(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return sink1 == sink2;
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    return !!Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+}
+
 
 const sp_nativeinfo_t SinkNatives[] =
 {
@@ -212,6 +218,7 @@ const sp_nativeinfo_t SinkNatives[] =
     {"Sink.SetLevel",                           SetLevel},
     {"Sink.ShouldLog",                          ShouldLog},
     {"Sink.Equals",                             Equals},
+    {"Sink.IsValid",                            IsValid},
 
     {nullptr,                                   nullptr}
 };

@@ -30,9 +30,17 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
     return handle;
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!sink && !!dynamic_cast<spdlog::sinks::stdout_sink_st*>(sink);
+}
+
 const sp_nativeinfo_t ServerConsoleSinkNatives[] =
 {
     {"ServerConsoleSink.ServerConsoleSink",         ServerConsoleSink},
+    {"ServerConsoleSink.IsValid",                   IsValid},
 
     {nullptr,                                       nullptr}
 };

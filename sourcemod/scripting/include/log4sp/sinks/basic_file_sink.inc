@@ -53,4 +53,11 @@ methodmap BasicFileSink < Sink
      * @return              True on success, false on error.
      */
     public native bool Truncate(char[] error="", int maxlen=0);
+
+    /**
+     * Returns whether or not a basic file sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
 }

@@ -221,10 +221,18 @@ static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
     return static_cast<cell_t>(bytes);
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!sink && !!dynamic_cast<Log4sp::Sinks::DailyFileSink*>(sink);
+}
+
 const sp_nativeinfo_t DailyFileSinkNatives[] =
 {
     {"DailyFileSink.DailyFileSink",             DailyFileSink},
     {"DailyFileSink.GetFilename",               GetFilename},
+    {"DailyFileSink.IsValid",                   IsValid},
 
     {nullptr,                                   nullptr}
 };

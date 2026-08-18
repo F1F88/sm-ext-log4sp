@@ -355,6 +355,13 @@ static cell_t GetSize(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     return static_cast<cell_t>(ringBufferSink->GetSize());
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!sink && !!dynamic_cast<Log4sp::Sinks::RingBufferSink*>(sink);
+}
+
 const sp_nativeinfo_t RingBufferSinkNatives[] =
 {
     {"RingBufferSink.RingBufferSink",               RingBufferSink},
@@ -362,6 +369,7 @@ const sp_nativeinfo_t RingBufferSinkNatives[] =
     {"RingBufferSink.DrainOldest",                  DrainOldest},
     {"RingBufferSink.GetMaxSize",                   GetMaxSize},
     {"RingBufferSink.GetSize",                      GetSize},
+    {"RingBufferSink.IsValid",                      IsValid},
 
     {nullptr,                                       nullptr}
 };

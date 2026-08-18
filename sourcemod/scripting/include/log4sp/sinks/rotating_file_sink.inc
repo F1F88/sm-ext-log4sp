@@ -100,6 +100,13 @@ methodmap RotatingFileSink < Sink
     public native bool SetMaxFiles(const int maxFiles, char[] error="", int maxlen=0);
 
     /**
+     * Returns whether or not a rotating file sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
+
+    /**
      * Calc filename according to index and file extension if exists.
      * e.g. calcFilename("logs/mylog.txt, 3) => "logs/mylog.3.txt".
      *

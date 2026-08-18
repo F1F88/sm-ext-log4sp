@@ -153,11 +153,19 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
     }
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!sink && !!dynamic_cast<spdlog::sinks::basic_file_sink_st*>(sink);
+}
+
 const sp_nativeinfo_t BasicFileSinkNatives[] =
 {
     {"BasicFileSink.BasicFileSink",             BasicFileSink},
     {"BasicFileSink.GetFilename",               BasicFileSink_GetFilename},
     {"BasicFileSink.Truncate",                  BasicFileSink_Truncate},
+    {"BasicFileSink.IsValid",                   IsValid},
 
     {nullptr,                                   nullptr}
 };

@@ -471,6 +471,13 @@ static cell_t Equals(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return logger == other;
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto logger = Log4sp::LoggerHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!logger;
+}
+
 const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
@@ -512,6 +519,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.DropSink",                         DropSink},
     {"Logger.SetErrorHandler",                  SetErrorHandler},
     {"Logger.Equals",                           Equals},
+    {"Logger.IsValid",                          IsValid},
 
     {nullptr,                                   nullptr}
 };

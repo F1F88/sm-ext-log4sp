@@ -18,9 +18,28 @@ methodmap ClientChatAllSink < CallbackSink
      * @return          A new ClientChatAllSink Handle.
      */
     public ClientChatAllSink() {
+        StringMap data = new StringMap();
+        data.SetString("m_szClassname", "ClientChatAllSink");
         return view_as<ClientChatAllSink>(new CallbackSink(null, __ClientChatAllSink_OnLog,
                                                            null, INVALID_FUNCTION,
-                                                           null, __ClientChatAllSink_OnClose));
+                                                           null, __ClientChatAllSink_OnClose,
+                                                           data));
+    }
+
+    /**
+     * Returns whether or not a client chat all sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public bool IsValid() {
+        CallbackSink sink = view_as<CallbackSink>(this);
+        if (!sink.IsValid())
+            return false;
+
+        StringMap data = sink.GetData();
+        char classname[32];
+        data.GetString("m_szClassname", classname, sizeof(classname));
+        return StrEqual(classname, "ClientChatAllSink");
     }
 }
 

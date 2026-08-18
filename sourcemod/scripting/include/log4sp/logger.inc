@@ -198,4 +198,11 @@ methodmap Logger < Handle
      * @return          True if the loggers are equal.
      */
     public native bool Equals(Logger logger);
+
+    /**
+     * Returns whether or not a logger handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
 }

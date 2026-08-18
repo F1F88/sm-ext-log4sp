@@ -18,10 +18,28 @@ methodmap ClientConsoleAllSink < CallbackSink
      * @return          A new ClientConsoleAllSink Handle.
      */
     public ClientConsoleAllSink() {
+        StringMap data = new StringMap();
+        data.SetString("m_szClassname", "ClientConsoleAllSink");
         return view_as<ClientConsoleAllSink>(new CallbackSink(null, __ClientConsoleAllSink_OnLog,
                                                               null, INVALID_FUNCTION,
-                                                              null, __ClientConsoleAllSink_OnClose));
+                                                              null, __ClientConsoleAllSink_OnClose,
+                                                              data));
     }
+
+    /**
+     * Returns whether or not a client console all sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public bool IsValid() {
+        CallbackSink sink = view_as<CallbackSink>(this);
+        if (!sink.IsValid())
+            return false;
+
+        StringMap data = sink.GetData();
+        char classname[32];
+        data.GetString("m_szClassname", classname, sizeof(classname));
+        return StrEqual(classname, "ClientConsoleAllSink");
 }
 
 

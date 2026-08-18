@@ -81,4 +81,11 @@ methodmap DailyFileSink < Sink
      * @return              Number of bytes written.
      */
     public native int GetFilename(char[] buffer, int maxlen);
+
+    /**
+     * Returns whether or not a daily file sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
 }

@@ -82,4 +82,12 @@ methodmap RingBufferSink < Sink
      * @return          The actual number of log messages stored.
      */
     public native int GetSize();
+
+    /**
+     * Returns whether or not a ring buffer sink handle is valid.
+     * Validates the base Sink properties and the ring buffer specific internal handles.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
 }

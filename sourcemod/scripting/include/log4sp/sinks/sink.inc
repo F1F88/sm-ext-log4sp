@@ -81,4 +81,11 @@ methodmap Sink < Handle
      * @return          True if the sinks are equal.
      */
     public native bool Equals(Sink sink);
+
+    /**
+     * Returns whether or not a sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
 }

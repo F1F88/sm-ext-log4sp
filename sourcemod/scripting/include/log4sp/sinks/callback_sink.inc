@@ -95,4 +95,11 @@ methodmap CallbackSink < Sink
      * @param data          Data value.
      */
     public native void SetData(any data);
+
+    /**
+     * Returns whether or not a callback sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
 }

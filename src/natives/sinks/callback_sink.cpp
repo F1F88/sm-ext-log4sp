@@ -239,11 +239,19 @@ static cell_t GetData(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     return callbackSink->GetData();
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!sink && !!dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink);
+}
+
 const sp_nativeinfo_t CallbackSinkNatives[] =
 {
     {"CallbackSink.CallbackSink",                   CallbackSink},
     {"CallbackSink.SetData",                        SetData},
     {"CallbackSink.GetData",                        GetData},
+    {"CallbackSink.IsValid",                        IsValid},
 
     {nullptr,                                       nullptr}
 };

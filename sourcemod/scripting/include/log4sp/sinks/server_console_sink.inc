@@ -1,5 +1,5 @@
 #if defined _log4sp_sinks_server_console_sink_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_sinks_server_console_sink_included
 
@@ -24,4 +24,11 @@ methodmap ServerConsoleSink < Sink
      * @return          A new ServerConsoleSink Handle.
      */
     public native ServerConsoleSink();
+
+    /**
+     * Returns whether or not a server console sink handle is valid.
+     *
+     * @return          True if valid, false otherwise.
+     */
+    public native bool IsValid();
 }

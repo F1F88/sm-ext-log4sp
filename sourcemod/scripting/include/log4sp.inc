@@ -87,23 +87,28 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.DropSink");
     MarkNativeAsOptional("Logger.SetErrorHandler");
     MarkNativeAsOptional("Logger.Equals");
+    MarkNativeAsOptional("Logger.IsValid");
 
     MarkNativeAsOptional("BasicFileSink.BasicFileSink");
     MarkNativeAsOptional("BasicFileSink.GetFilename");
     MarkNativeAsOptional("BasicFileSink.Truncate");
+    MarkNativeAsOptional("BasicFileSink.IsValid");
 
     MarkNativeAsOptional("CallbackSink.CallbackSink");
     MarkNativeAsOptional("CallbackSink.SetData");
     MarkNativeAsOptional("CallbackSink.GetData");
+    MarkNativeAsOptional("CallbackSink.IsValid");
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
     MarkNativeAsOptional("DailyFileSink.GetFilename");
+    MarkNativeAsOptional("DailyFileSink.IsValid");
 
     MarkNativeAsOptional("RingBufferSink.RingBufferSink");
     MarkNativeAsOptional("RingBufferSink.DrainLatest");
     MarkNativeAsOptional("RingBufferSink.DrainOldest");
     MarkNativeAsOptional("RingBufferSink.GetMaxSize");
     MarkNativeAsOptional("RingBufferSink.GetSize");
+    MarkNativeAsOptional("RingBufferSink.IsValid");
 
     MarkNativeAsOptional("RotatingFileSink.RotatingFileSink");
     MarkNativeAsOptional("RotatingFileSink.GetFilename");
@@ -112,9 +117,11 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("RotatingFileSink.SetMaxSize");
     MarkNativeAsOptional("RotatingFileSink.GetMaxFiles");
     MarkNativeAsOptional("RotatingFileSink.SetMaxFiles");
+    MarkNativeAsOptional("RotatingFileSink.IsValid");
     MarkNativeAsOptional("RotatingFileSink.CalcFilename");
 
     MarkNativeAsOptional("ServerConsoleSink.ServerConsoleSink");
+    MarkNativeAsOptional("ServerConsoleSink.IsValid");
 
     MarkNativeAsOptional("Sink.Log");
     MarkNativeAsOptional("Sink.Flush");
@@ -123,5 +130,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.ShouldLog");
     MarkNativeAsOptional("Sink.Equals");
+    MarkNativeAsOptional("Sink.IsValid");
 }
 #endif
