@@ -367,6 +367,39 @@ static cell_t SetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *param
     return 0;
 }
 
+static cell_t GetSinks(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    cell_t *sinks;
+    if (auto err = ctx->LocalToPhysAddr(params[2], &sinks))
+    {
+        ctx->ReportError("Invalid sinks (error %d)", err);
+        return 0;
+    }
+
+    cell_t size = params[3];
+
+    // 克隆体所有权归于 native caller
+    SourceMod::IdentityToken_t *owner = ctx->GetIdentity();
+
+    try
+    {
+        return static_cast<cell_t>(logger->GetSinksHandleClone(sinks, size, owner));
+    }
+    catch (const std::exception &ex)
+    {
+        ctx->ReportError(ex.what());
+        return 0;
+    }
+}
+
+static cell_t GetSinksLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+    return static_cast<cell_t>(logger->GetSinksLength());
+}
+
 static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -472,6 +505,8 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},
     {"Logger.SetFlushLevel",                    SetFlushLevel},
+    {"Logger.GetSinks",                         GetSinks},
+    {"Logger.GetSinksLength",                   GetSinksLength},
     {"Logger.AddSink",                          AddSink},
     {"Logger.DropSink",                         DropSink},
     {"Logger.SetErrorHandler",                  SetErrorHandler},

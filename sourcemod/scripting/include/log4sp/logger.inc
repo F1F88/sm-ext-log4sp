@@ -148,6 +148,24 @@ methodmap Logger < Handle
     public native void SetFlushLevel(LogLevel lvl);
 
     /**
+     * Gets the sinks clone of logger.
+     *
+     * @note Sinks clone handles must be freed via delete or CloseHandle() or Sink.Close().
+     *
+     * @param sinks     Buffer to store sinks clone.
+     * @param maxlen    Maximum length of the buffer.
+     * @return          Number of sinks clone written.
+     */
+    public native int GetSinks(Sink[] sinks, int maxlen);
+
+    /**
+     * Gets the length of the logger sinks.
+     *
+     * @return          Length of the logger sinks array.
+     */
+    public native int GetSinksLength();
+
+    /**
      * Add a new sink to sinks.
      *
      * @param sink      Sink handle.

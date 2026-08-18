@@ -83,6 +83,8 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.Flush");
     MarkNativeAsOptional("Logger.GetFlushLevel");
     MarkNativeAsOptional("Logger.SetFlushLevel");
+    MarkNativeAsOptional("Logger.GetSinks");
+    MarkNativeAsOptional("Logger.GetSinksLength");
     MarkNativeAsOptional("Logger.AddSink");
     MarkNativeAsOptional("Logger.DropSink");
     MarkNativeAsOptional("Logger.SetErrorHandler");
