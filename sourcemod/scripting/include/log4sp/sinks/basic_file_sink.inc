@@ -47,6 +47,10 @@ methodmap BasicFileSink < Sink
 
     /**
      * Truncate log files on demand.
+     *
+     * @param error         Error message buffer in case of truncate failure.
+     * @param maxlen        Maximum length of the error.
+     * @return              True on success, false on error.
      */
-    public native void Truncate();
+    public native bool Truncate(char[] error="", int maxlen=0);
 }

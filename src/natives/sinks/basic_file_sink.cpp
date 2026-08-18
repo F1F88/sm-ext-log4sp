@@ -143,12 +143,14 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
     try
     {
         basicFileSink->truncate();
+        return true;
     }
     catch (const std::exception &ex)
     {
-        ctx->ReportError(ex.what());
+        if (auto err = ctx->StringToLocalUTF8(params[2], params[3], ex.what(), nullptr))
+            ctx->ReportError("Failed to write error to buffer (error %d)", err);
+        return false;
     }
-    return 0;
 }
 
 const sp_nativeinfo_t BasicFileSinkNatives[] =
