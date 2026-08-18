@@ -190,4 +190,12 @@ methodmap Logger < Handle
      * @error           Invalid or corrupt plugin handle, or invalid function.
      */
     public native void SetErrorHandler(Handle plugin, ErrorHandler func);
+
+    /**
+     * Compares this Logger with the specified logger for equality.
+     *
+     * @param logger    Logger to which this logger is to be compared.
+     * @return          True if the loggers are equal.
+     */
+    public native bool Equals(Logger logger);
 }

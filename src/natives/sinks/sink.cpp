@@ -181,6 +181,27 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     return sink->should_log(lvl);
 }
 
+static cell_t Equals(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink1 = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink1)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    auto sink2 = Log4sp::SinkHandler::Instance().ReadHandle(params[2], &security, nullptr);
+    if (!sink2)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[2], error);
+        return 0;
+    }
+    return sink1 == sink2;
+}
+
 
 const sp_nativeinfo_t SinkNatives[] =
 {
@@ -190,6 +211,7 @@ const sp_nativeinfo_t SinkNatives[] =
     {"Sink.GetLevel",                           GetLevel},
     {"Sink.SetLevel",                           SetLevel},
     {"Sink.ShouldLog",                          ShouldLog},
+    {"Sink.Equals",                             Equals},
 
     {nullptr,                                   nullptr}
 };

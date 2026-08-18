@@ -86,6 +86,7 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.AddSink");
     MarkNativeAsOptional("Logger.DropSink");
     MarkNativeAsOptional("Logger.SetErrorHandler");
+    MarkNativeAsOptional("Logger.Equals");
 
     MarkNativeAsOptional("BasicFileSink.BasicFileSink");
     MarkNativeAsOptional("BasicFileSink.GetFilename");
@@ -121,5 +122,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.SetLevel");
     MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.ShouldLog");
+    MarkNativeAsOptional("Sink.Equals");
 }
 #endif

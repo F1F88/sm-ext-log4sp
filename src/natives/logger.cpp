@@ -456,6 +456,21 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
     return 0;
 }
 
+static cell_t Equals(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+    auto other = Log4sp::LoggerHandler::Instance().ReadHandle(params[2], &security, &error);
+    if (!other)
+    {
+        ctx->ReportError("Invalid Logger Handle %x (error %d)", params[2], error);
+        return 0;
+    }
+    return logger == other;
+}
+
 const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
@@ -496,6 +511,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.AddSink",                          AddSink},
     {"Logger.DropSink",                         DropSink},
     {"Logger.SetErrorHandler",                  SetErrorHandler},
+    {"Logger.Equals",                           Equals},
 
     {nullptr,                                   nullptr}
 };

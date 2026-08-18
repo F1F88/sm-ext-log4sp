@@ -73,4 +73,12 @@ methodmap Sink < Handle
      * @return          True if logging is enabled for the given log level.
      */
     public native bool ShouldLog(LogLevel lvl);
+
+    /**
+     * Compares this Sink with the specified sink for equality.
+     *
+     * @param sink      Sink to which this sink is to be compared.
+     * @return          True if the sinks are equal.
+     */
+    public native bool Equals(Sink sink);
 }
