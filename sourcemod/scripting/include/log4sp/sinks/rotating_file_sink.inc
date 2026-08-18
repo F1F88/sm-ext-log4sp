@@ -66,6 +66,40 @@ methodmap RotatingFileSink < Sink
     public native bool RotateNow(char[] error="", int maxlen=0);
 
     /**
+     * Gets the maximum size of the log file in bytes before it gets rotated.
+     *
+     * @return              The maximum size of the log file.
+     */
+    public native int GetMaxSize();
+
+    /**
+     * Sets the maximum size of the log file in bytes before it gets rotated.
+     *
+     * @param maxSize       The maximum size of the log file.
+     * @param error         Error message buffer in case of sets failure.
+     * @param maxlen        Maximum length of the error.
+     * @return              True on success, false on error.
+     */
+    public native bool SetMaxSize(const int maxSize, char[] error="", int maxlen=0);
+
+    /**
+     * Gets the maximum number of rotated log files to keep.
+     *
+     * @return              The maximum number of rotated log files.
+     */
+    public native int GetMaxFiles();
+
+    /**
+     * Sets the maximum number of rotated log files to keep.
+     *
+     * @param maxFiles      The maximum number of rotated log files.
+     * @param error         Error message buffer in case of sets failure.
+     * @param maxlen        Maximum length of the error.
+     * @return              True on success, false on error.
+     */
+    public native bool SetMaxFiles(const int maxFiles, char[] error="", int maxlen=0);
+
+    /**
      * Calc filename according to index and file extension if exists.
      * e.g. calcFilename("logs/mylog.txt, 3) => "logs/mylog.3.txt".
      *
@@ -76,4 +110,13 @@ methodmap RotatingFileSink < Sink
      * @return              Number of bytes written.
      */
     public static native int CalcFilename(char[] buffer, int maxlen, const char[] file, int index);
+
+    /**
+     * Returns the maximum number of rotating log files allowed.
+     *
+     * @return              Maximum allowed file count (200000).
+     */
+    public static int MaxFiles() {
+        return 200000;
+    }
 }

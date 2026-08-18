@@ -109,6 +109,10 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("RotatingFileSink.RotatingFileSink");
     MarkNativeAsOptional("RotatingFileSink.GetFilename");
     MarkNativeAsOptional("RotatingFileSink.RotateNow");
+    MarkNativeAsOptional("RotatingFileSink.GetMaxSize");
+    MarkNativeAsOptional("RotatingFileSink.SetMaxSize");
+    MarkNativeAsOptional("RotatingFileSink.GetMaxFiles");
+    MarkNativeAsOptional("RotatingFileSink.SetMaxFiles");
     MarkNativeAsOptional("RotatingFileSink.CalcFilename");
 
     MarkNativeAsOptional("ServerConsoleSink.ServerConsoleSink");

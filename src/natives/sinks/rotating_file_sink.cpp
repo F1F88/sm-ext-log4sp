@@ -154,6 +154,90 @@ static cell_t RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     }
 }
 
+static cell_t GetMaxSize(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+
+    auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
+    if (!rotatingFileSink)
+    {
+        ctx->ReportError("Invalid RotatingFileSink Handle %x.", params[1]);
+        return 0;
+    }
+
+    return static_cast<cell_t>(rotatingFileSink->get_max_size());
+}
+
+static cell_t SetMaxSize(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+
+    auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
+    if (!rotatingFileSink)
+    {
+        ctx->ReportError("Invalid RotatingFileSink Handle %x.", params[1]);
+        return false;
+    }
+
+    auto maxSize = static_cast<std::size_t>(params[2]);
+
+    try
+    {
+        rotatingFileSink->set_max_size(maxSize);
+        return true;
+    }
+    catch (const std::exception &ex)
+    {
+        if (auto err = ctx->StringToLocalUTF8(params[3], params[4], ex.what(), nullptr))
+            ctx->ReportError("Failed to write error to buffer (error %d)", err);
+        return false;
+    }
+}
+
+static cell_t GetMaxFiles(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+
+    auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
+    if (!rotatingFileSink)
+    {
+        ctx->ReportError("Invalid RotatingFileSink Handle %x.", params[1]);
+        return 0;
+    }
+
+    return static_cast<cell_t>(rotatingFileSink->get_max_files());
+}
+
+static cell_t SetMaxFiles(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+
+    auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
+    if (!rotatingFileSink)
+    {
+        ctx->ReportError("Invalid RotatingFileSink Handle %x.", params[1]);
+        return false;
+    }
+
+    auto maxFiles = static_cast<std::size_t>(params[2]);
+
+    try
+    {
+        rotatingFileSink->set_max_files(maxFiles);
+        return true;
+    }
+    catch (const std::exception &ex)
+    {
+        if (auto err = ctx->StringToLocalUTF8(params[3], params[4], ex.what(), nullptr))
+            ctx->ReportError("Failed to write error to buffer (error %d)", err);
+        return false;
+    }
+}
+
 static cell_t CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
@@ -172,6 +256,10 @@ const sp_nativeinfo_t RotatingFileSinkNatives[] =
     {"RotatingFileSink.RotatingFileSink",       RotatingFileSink},
     {"RotatingFileSink.GetFilename",            GetFilename},
     {"RotatingFileSink.RotateNow",              RotateNow},
+    {"RotatingFileSink.GetMaxSize",             GetMaxSize},
+    {"RotatingFileSink.SetMaxSize",             SetMaxSize},
+    {"RotatingFileSink.GetMaxFiles",            GetMaxFiles},
+    {"RotatingFileSink.SetMaxFiles",            SetMaxFiles},
 
     {"RotatingFileSink.CalcFilename",           CalcFilename},
 
