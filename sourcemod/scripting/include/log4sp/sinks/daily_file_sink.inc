@@ -1,12 +1,11 @@
 #if defined _log4sp_sinks_daily_file_sink_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_sinks_daily_file_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
 
-#include <log4sp/logger>
 #include <log4sp/sinks/sink>
 
 
@@ -15,11 +14,19 @@
  *
  * @param filename  Daily log file name.
  * @param maxlen    Maximum length of the filename.
- * @param sec       Timestamp in seconds.
+ * @param timestamp Timestamp in seconds.
  */
-typeset DailyFileCalculator
-{
-    function void (char[] filename, int maxlen, int sec);
+typedef DailyFileCalculator = function void (char[] filename, int maxlen, const char[] timestamp);
+
+
+/**
+ * Generator of daily log file names with strftime format.
+ */
+public void DailyFileFormatCalculator(char[] filename, int maxlen, const char[] timestamp) {
+    // FormatTime buffer cannot be the same as the format
+    char buffer[256];
+    strcopy(buffer, sizeof(buffer), filename);
+    FormatTime(filename, maxlen, buffer, StringToInt(timestamp)); // FIXME: Possible Year 2038 Problem
 }
 
 
@@ -40,23 +47,25 @@ methodmap DailyFileSink < Sink
      *       rotation and deletion is only applied while the program is running.
      * @note DailyFileSink handles must be freed via delete or CloseHandle().
      *
-     * @param file          The file path where the log messages will be written.
+     * @param baseFilename  The file path where the log messages will be written.
      * @param hour          The hour of the day when the log file should be rotated. (0-23)
      * @param minute        The minute of the hour when the log file should be rotated. (0-59)
      * @param truncate      If true, the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
-     * @param calculator    Callback function called when calculating the daily log file name.
+     * @param calcPlugin    Handle of the plugin that contains the calculator function.
+     *                      If null, defaults to the calling plugin.
+     * @param calcFunc      Function to call when calculating the daily log file name.
      * @param openPre       Function to call before the sink open the file.
      * @param closePost     Function to call after the sink close the file.
      * @return              A new DailyFileSink Handle.
      * @error               Invalid rotation time in ctor, or maxFiles < 0, or maxFiles > 65535.
      */
-    public native DailyFileSink(const char[] file,
+    public native DailyFileSink(const char[] baseFilename,
                                 int hour=0,
                                 int minute=0,
                                 bool truncate=false,
                                 int maxFiles=0,
-                                DailyFileCalculator calculator=INVALID_FUNCTION,
+                                Handle calcPlugin=null,  DailyFileCalculator calcFunc=INVALID_FUNCTION,
                                 SinkFileOpenPre openPre=INVALID_FUNCTION,
                                 SinkFileClosePost closePost=INVALID_FUNCTION);
 
@@ -68,19 +77,4 @@ methodmap DailyFileSink < Sink
      * @return              Number of bytes written.
      */
     public native int GetFilename(char[] buffer, int maxlen);
-}
-
-
-/**
- * Generator of daily log file names with strftime format.
- * Usages:
- *    DailyFileSink sink = new DailyFileSink("file_%Y-%m-%d.log", hour, minute, truncate,
- *          maxFiles, DailyFileFormatCalculator);
- */
-stock void DailyFileFormatCalculator(char[] filename, int maxlen, int sec)
-{
-    // FormatTime buffer cannot be the same as the format
-    char buffer[PLATFORM_MAX_PATH];
-    strcopy(buffer, sizeof(buffer), filename);
-    FormatTime(filename, maxlen, buffer, sec);
 }

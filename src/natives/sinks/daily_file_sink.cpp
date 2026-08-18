@@ -1,50 +1,7 @@
-#include <cassert>
-
-#include "spdlog/sinks/daily_file_sink.h"
 
 #include "log4sp/common.h"
-#include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_handler.h"
-
-
-#define DAILY_FILE_DEFAULT_CALCULATOR()                                                             \
-    [](const spdlog::filename_t &filename, const tm &now_tm)                                        \
-    {                                                                                               \
-        spdlog::filename_t basename, ext;                                                           \
-        std::tie(basename, ext) = spdlog::details::file_helper::split_by_extension(filename);       \
-        auto relPath = spdlog::fmt_lib::format(                                                     \
-            SPDLOG_FMT_STRING(                                                                      \
-                SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),                                      \
-                    basename, now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday, ext);       \
-                                                                                                    \
-        char absPath[PLATFORM_MAX_PATH];                                                            \
-        smutils->BuildPath(Path_Game, absPath, sizeof(absPath), "%s", relPath.c_str());             \
-        return spdlog::filename_t(absPath);                                                         \
-    }
-
-
-#define DAILY_FILE_CUSTOM_CALCULATOR(func)                                                          \
-    [func](const spdlog::filename_t &filename, const tm &now_tm)                                    \
-    {                                                                                               \
-        char relPath[PLATFORM_MAX_PATH];                                                            \
-        ke::SafeStrcpy(relPath, sizeof(relPath), filename.data());                                  \
-                                                                                                    \
-        tm tmp = now_tm;                                                                            \
-        auto timestamp = static_cast<cell_t>(mktime(&tmp)); /* FIXME: Possible Year 2038 Problem */ \
-                                                                                                    \
-        /* void (char[] filename, int maxlen, int sec); */                                          \
-        FWDS_CREATE_EX(nullptr, ET_Ignore, 3, nullptr, Param_String, Param_Cell, Param_Cell);       \
-        FWD_ADD_FUNCTION(func);                                                                     \
-        FWD_PUSH_STRING_EX(relPath, sizeof(relPath), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); \
-        FWD_PUSH_CELL(sizeof(relPath));                                                             \
-        FWD_PUSH_CELL(timestamp);                                                                   \
-        FWD_EXECUTE();                                                                              \
-        forwards->ReleaseForward(fwd);                                                              \
-                                                                                                    \
-        char absPath[PLATFORM_MAX_PATH];                                                            \
-        smutils->BuildPath(Path_Game, absPath, sizeof(absPath), "%s", relPath);                     \
-        return spdlog::filename_t(absPath);                                                         \
-    }
+#include "log4sp/sinks/daily_file_sink.h"
 
 
 static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -56,7 +13,6 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     int minute    = params[3];
     auto truncate = static_cast<bool>(params[4]);
     auto maxFiles = static_cast<uint16_t>(params[5]);
-    auto calcFunc = ctx->GetFunctionById(params[6]);
     auto openFunc = ctx->GetFunctionById(params[7]);
     auto closeFunc= ctx->GetFunctionById(params[8]);
 
@@ -66,20 +22,103 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         return BAD_HANDLE;
     }
 
-    spdlog::sinks::log4sp_daily_filename_calculator calculator = DAILY_FILE_DEFAULT_CALCULATOR();
+    SourceMod::IPlugin *calcPlugin;
+    if (!params[6])
+    {
+        calcPlugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        calcPlugin = plsys->PluginFromHandle(params[6], &error);
+        if (!calcPlugin)
+        {
+            ctx->ReportError("Invalid calc Plugin Handle %x (error %d)", params[6], error);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourcePawn::IPluginFunction *calcFunc = nullptr;
+    if (!ctx->IsNullFunctionId(params[7]))
+    {
+        calcFunc = calcPlugin->GetBaseContext()->GetFunctionById(params[7]);
+        if (!calcFunc)
+        {
+            ctx->ReportError("Invalid calc function id %x.", params[7]);
+            return BAD_HANDLE;
+        }
+    }
+
+    Log4sp::Sinks::DailyFileSink::Calculator calculator = nullptr;
     if (calcFunc)
     {
-        calculator = DAILY_FILE_CUSTOM_CALCULATOR(calcFunc);
+        calculator = [calcFunc](const spdlog::filename_t &filename, const tm &nowTime)
+        {
+            std::array<char, sizeof(Log4sp::CellSourceLoc::filename)> relPath;
+            ke::SafeStrcpy(relPath.data(), sizeof(relPath), filename.data());
+
+            tm tmp = nowTime;
+            auto timestamp = std::to_string(mktime(&tmp));
+
+            /* void (char[] filename, int maxlen, const char[] sec); */
+            auto fwd = forwards->CreateForwardEx(nullptr,
+                        SourceMod::ExecType::ET_Ignore,
+                        3,
+                        nullptr,
+                        SourceMod::ParamType::Param_String,
+                        SourceMod::ParamType::Param_Cell,
+                        SourceMod::ParamType::Param_String);
+            using spdlog::throw_spdlog_ex;
+            using spdlog::fmt_lib::format;
+
+            if (!fwd)
+                throw_spdlog_ex("Failed to create custom calculator forward.");
+
+            if (!fwd->AddFunction(calcFunc))
+            {
+                forwards->ReleaseForward(fwd);
+                throw_spdlog_ex("Failed to add calculator function.");
+            }
+
+            if (auto err = fwd->PushStringEx(relPath.data(), sizeof(relPath), SM_PARAM_STRING_COPY | SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK))
+            {
+                forwards->ReleaseForward(fwd);
+                throw_spdlog_ex(format("Failed to push filename into calculator forward (error {})", err));
+            }
+
+            if (auto err = fwd->PushCell(sizeof(relPath)))
+            {
+                forwards->ReleaseForward(fwd);
+                throw_spdlog_ex(format("Failed to push maxlen into calculator forward (error {})", err));
+            }
+
+            if (auto err = fwd->PushString(timestamp.c_str()))
+            {
+                forwards->ReleaseForward(fwd);
+                throw_spdlog_ex(format("Failed to push timestamp into calculator forward (error {})", err));
+            }
+
+            if (auto err = fwd->Execute())
+            {
+                forwards->ReleaseForward(fwd);
+                throw_spdlog_ex(format("Failed to execute file event forward (error {})", err));
+            }
+            forwards->ReleaseForward(fwd);
+
+            std::array<char, PLATFORM_MAX_PATH> absPath;
+            smutils->BuildPath(Path_Game, absPath.data(), sizeof(absPath), "%s", relPath.data());
+            return spdlog::filename_t(absPath.data());
+        };
     }
 
     spdlog::file_event_handlers handlers;
     handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
     handlers.after_close = FILE_EVENT_FUNCTION(closeFunc);
 
-    spdlog::sinks::daily_file_sink_st *sink;
+    Log4sp::Sinks::DailyFileSink *sink;
     try
     {
-        sink = new spdlog::sinks::daily_file_sink_st(file, hour, minute, truncate, maxFiles, handlers, std::move(calculator));
+        sink = new Log4sp::Sinks::DailyFileSink(file, hour, minute, truncate, maxFiles, handlers, std::move(calculator));
     }
     catch (const std::exception &ex)
     {
@@ -93,7 +132,8 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("Failed to creates a DailyFileSink Handle (error code: %d)", error);
+        delete sink;
+        ctx->ReportError("Failed to creates a DailyFileSink Handle (error %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -111,15 +151,21 @@ static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
-    auto dailyFileSink = dynamic_cast<spdlog::sinks::daily_file_sink_st*>(sink);
+    auto dailyFileSink = dynamic_cast<Log4sp::Sinks::DailyFileSink*>(sink);
     if (!dailyFileSink)
     {
         ctx->ReportError("Invalid DailyFileSink Handle %x.", params[1]);
         return 0;
     }
 
+    auto filename = Log4sp::UnbuildPath<SourceMod::PathType::Path_Game>(dailyFileSink->Filename());
+
     std::size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], dailyFileSink->filename().c_str(), &bytes);
+    if (auto err = ctx->StringToLocalUTF8(params[2], params[3], filename.c_str(), &bytes))
+    {
+        ctx->ReportError("Failed to write filename to buffer (error %d)", err);
+        return 0;
+    }
     return static_cast<cell_t>(bytes);
 }
 
