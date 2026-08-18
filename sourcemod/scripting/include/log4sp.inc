@@ -101,8 +101,10 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("DailyFileSink.GetFilename");
 
     MarkNativeAsOptional("RingBufferSink.RingBufferSink");
-    MarkNativeAsOptional("RingBufferSink.Drain");
-    MarkNativeAsOptional("RingBufferSink.DrainFormatted");
+    MarkNativeAsOptional("RingBufferSink.DrainLatest");
+    MarkNativeAsOptional("RingBufferSink.DrainOldest");
+    MarkNativeAsOptional("RingBufferSink.GetMaxSize");
+    MarkNativeAsOptional("RingBufferSink.GetSize");
 
     MarkNativeAsOptional("RotatingFileSink.RotatingFileSink");
     MarkNativeAsOptional("RotatingFileSink.GetFilename");

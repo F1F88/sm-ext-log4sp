@@ -1,45 +1,28 @@
 #if defined _log4sp_sinks_ringbuffer_sink_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_sinks_ringbuffer_sink_included
 
 #pragma newdecls required
 #pragma semicolon 1
 
-#include <log4sp/logger>
 #include <log4sp/sinks/sink>
 
 
 /**
- * Callback function called on DrainCallback.Drain().
+ * Callback function called on RingBufferSink.DrainLatest() or RingBufferSink.DrainOldest().
  *
+ * @param logTime       Log message timestamps (in nanoseconds).
+ * @param loc           Source location.
  * @param name          The name of the logger.
  * @param lvl           Log level enum.
  * @param msg           Pre formatted log message.
- * @param file          The file name of the source code location.
- * @param line          The line number of the source code location.
- * @param func          The function name of the source code location.
- * @param logTime       The log message time point in seconds.
+ * @param data          Data value passed to callback.
  */
-typeset DrainCallback
+typeset DrainFunction
 {
-    function void (const char[] name, LogLevel lvl, const char[] msg);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data);
-}
-
-
-/**
- * Callback function called on DrainCallback.DrainFormatted().
- *
- * @param msg           Log messages that have been formatted in a pre-set pattern.
- * @param data          Data value passed to Logger.ApplyAll().
- */
-typeset DrainFormattedCallback
-{
-    function void (const char[] msg);
-    function void (const char[] msg, any data);
+    function void (const char[] logTime, const SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
+    function void (const char[] logTime, const SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
 }
 
 
@@ -57,26 +40,46 @@ methodmap RingBufferSink < Sink
      *
      * @note RingBufferSink handles must be freed via delete or CloseHandle().
      *
-     * @param amount    Maximum number of log messages.
+     * @param maxSize   Maximum number of log messages.
      * @return          A new RingBufferSink Handle.
      */
-    public native RingBufferSink(int amount);
+    public native RingBufferSink(int maxSize);
 
     /**
-     * Apply a user defined function on all buffered log messages.
+     * Apply a user defined function on the latest buffered log messages.
      *
-     * @param callback  Function to call.
+     * @param plugin    Handle of the plugin that contains the function.
+     *                  If null, defaults to the calling plugin.
+     * @param func      Function to call.
      * @param data      Extra data value to pass to the callback.
-     * @error           Invalid drain function.
+     * @return          True if can be drain log message, false otherwise.
+     * @error           Invalid or corrupt plugin handle, or invalid function.
      */
-    public native void Drain(DrainCallback callback, any data=0);
+    public native bool DrainLatest(Handle plugin, DrainFunction func, any data=0);
 
     /**
-     * Apply a user defined function on all buffered log messages.
+     * Apply a user defined function on the oldest buffered log messages.
      *
-     * @param callback  Function to call.
+     * @param plugin    Handle of the plugin that contains the function.
+     *                  If null, defaults to the calling plugin.
+     * @param func      Function to call.
      * @param data      Extra data value to pass to the callback.
-     * @error           Invalid drain formatted function.
+     * @return          True if can be drain log message, false otherwise.
+     * @error           Invalid or corrupt plugin handle, or invalid function.
      */
-    public native void DrainFormatted(DrainFormattedCallback callback, any data=0);
+    public native bool DrainOldest(Handle plugin, DrainFunction func, any data=0);
+
+    /**
+     * Get the maximum number of log messages that can be stored in the buffer.
+     *
+     * @return          Maximum number of log messages.
+     */
+    public native int GetMaxSize();
+
+    /**
+     * Get the actual number of stored log messages.
+     *
+     * @return          The actual number of log messages stored.
+     */
+    public native int GetSize();
 }
