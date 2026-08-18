@@ -13,8 +13,6 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     int minute    = params[3];
     auto truncate = static_cast<bool>(params[4]);
     auto maxFiles = static_cast<uint16_t>(params[5]);
-    auto openFunc = ctx->GetFunctionById(params[7]);
-    auto closeFunc= ctx->GetFunctionById(params[8]);
 
     if (params[5] < 0 || params[5] > UINT16_MAX)
     {
@@ -109,6 +107,60 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
             smutils->BuildPath(Path_Game, absPath.data(), sizeof(absPath), "%s", relPath.data());
             return spdlog::filename_t(absPath.data());
         };
+    }
+
+    SourceMod::IPlugin *openPlugin;
+    if (!params[8])
+    {
+        openPlugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        openPlugin = plsys->PluginFromHandle(params[8], &error);
+        if (!openPlugin)
+        {
+            ctx->ReportError("Invalid open Plugin Handle %x (error %d)", params[8], error);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourcePawn::IPluginFunction *openFunc = nullptr;
+    if (!ctx->IsNullFunctionId(params[9]))
+    {
+        openFunc = openPlugin->GetBaseContext()->GetFunctionById(params[9]);
+        if (!openFunc)
+        {
+            ctx->ReportError("Invalid open function id %x.", params[9]);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourceMod::IPlugin *closePlugin;
+    if (!params[10])
+    {
+        closePlugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        closePlugin = plsys->PluginFromHandle(params[10], &error);
+        if (!closePlugin)
+        {
+            ctx->ReportError("Invalid close Plugin Handle %x (error %d)", params[10], error);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourcePawn::IPluginFunction *closeFunc = nullptr;
+    if (!ctx->IsNullFunctionId(params[11]))
+    {
+        closeFunc = closePlugin->GetBaseContext()->GetFunctionById(params[11]);
+        if (!closeFunc)
+        {
+            ctx->ReportError("Invalid close function id %x.", params[11]);
+            return BAD_HANDLE;
+        }
     }
 
     spdlog::file_event_handlers handlers;

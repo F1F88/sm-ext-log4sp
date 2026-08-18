@@ -1,5 +1,5 @@
 #if defined _log4sp_sinks_basic_file_sink_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_sinks_basic_file_sink_included
 
@@ -21,16 +21,20 @@ methodmap BasicFileSink < Sink
      *
      * @note BasicFileSink handles must be freed via delete or CloseHandle().
      *
-     * @param file      The file path where the log messages will be written.
-     * @param truncate  If true, the created file will be truncated.
-     * @param openPre   Function to call before the sink open the file.
-     * @param closePost Function to call after the sink close the file.
-     * @return          A new BasicFileSink Handle.
+     * @param filename      The file path where the log messages will be written.
+     * @param truncate      If true, the created file will be truncated.
+     * @param openPlugin    Handle of the plugin that contains the file open function.
+     *                      If null, defaults to the calling plugin.
+     * @param openFunc      Function to call before the sink open the file.
+     * @param closePlugin   Handle of the plugin that contains the file close function.
+     *                      If null, defaults to the calling plugin.
+     * @param closeFunc     Function to call after the sink close the file.
+     * @return              A new BasicFileSink Handle.
      */
-    public native BasicFileSink(const char[] file,
+    public native BasicFileSink(const char[] filename,
                                 bool truncate=false,
-                                SinkFileOpenPre openPre=INVALID_FUNCTION,
-                                SinkFileClosePost closePost=INVALID_FUNCTION);
+                                Handle openPlugin=null,  FileOpenFunction openFunc=INVALID_FUNCTION,
+                                Handle closePlugin=null, FileCloseFunction closeFunc=INVALID_FUNCTION);
 
     /**
      * Get the current filename being used by the file sink.

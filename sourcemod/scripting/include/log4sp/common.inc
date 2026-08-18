@@ -74,6 +74,16 @@ enum struct SourceLoc
 
 
 /**
+ * Called before opening the file.
+ */
+typedef FileOpenFunction = function void (const char[] filename);
+
+/**
+ * Called after closing the file.
+ */
+typedef FileCloseFunction = function void (const char[] filename);
+
+/**
  * Callback function for user defined error handler.
  *
  * @param origin    The origin name of the error.

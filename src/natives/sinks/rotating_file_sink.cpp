@@ -16,8 +16,60 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     auto maxFileSize  = static_cast<std::size_t>(params[2]);
     auto maxFiles     = static_cast<std::size_t>(params[3]);
     auto rotateOnOpen = static_cast<bool>(params[4]);
-    SourcePawn::IPluginFunction *openFunc  = ctx->GetFunctionById(params[5]);
-    SourcePawn::IPluginFunction *closeFunc = ctx->GetFunctionById(params[6]);
+
+    SourceMod::IPlugin *openPlugin;
+    if (!params[5])
+    {
+        openPlugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        openPlugin = plsys->PluginFromHandle(params[5], &error);
+        if (!openPlugin)
+        {
+            ctx->ReportError("Invalid open Plugin Handle %x (error %d)", params[5], error);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourcePawn::IPluginFunction *openFunc = nullptr;
+    if (!ctx->IsNullFunctionId(params[6]))
+    {
+        openFunc = openPlugin->GetBaseContext()->GetFunctionById(params[6]);
+        if (!openFunc)
+        {
+            ctx->ReportError("Invalid open function id %x.", params[6]);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourceMod::IPlugin *closePlugin;
+    if (!params[7])
+    {
+        closePlugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        closePlugin = plsys->PluginFromHandle(params[7], &error);
+        if (!closePlugin)
+        {
+            ctx->ReportError("Invalid close Plugin Handle %x (error %d)", params[7], error);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourcePawn::IPluginFunction *closeFunc = nullptr;
+    if (!ctx->IsNullFunctionId(params[8]))
+    {
+        closeFunc = closePlugin->GetBaseContext()->GetFunctionById(params[8]);
+        if (!closeFunc)
+        {
+            ctx->ReportError("Invalid close function id %x.", params[8]);
+            return BAD_HANDLE;
+        }
+    }
 
     spdlog::file_event_handlers handlers;
     handlers.before_open = FILE_EVENT_FUNCTION(openFunc);

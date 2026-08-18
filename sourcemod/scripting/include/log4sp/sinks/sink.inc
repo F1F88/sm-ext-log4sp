@@ -10,17 +10,6 @@
 
 
 /**
- * Called before the sink open the file.
- */
-typedef SinkFileOpenPre = function void (const char[] filename);
-
-/**
- * Called after the sink close the file.
- */
-typedef SinkFileClosePost = function void (const char[] filename);
-
-
-/**
  * The Sink is the core component of the logging library responsible for the
  * actual output of log messages. Each Sink corresponds to a single log output
  * target, such as a file or the console.

@@ -1,5 +1,5 @@
 #if defined _log4sp_sinks_rotating_file_sink_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_sinks_rotating_file_sink_included
 
@@ -27,21 +27,25 @@ methodmap RotatingFileSink < Sink
      *
      * @note RotatingFileSink handles must be freed via delete or CloseHandle().
      *
-     * @param file          The file path where the log messages will be written.
-     * @param maxFileSize   The maximum size of the log file in bytes before it gets rotated.
+     * @param baseFilename  The file path where the log messages will be written.
+     * @param maxSize       The maximum size of the log file in bytes before it gets rotated.
      * @param maxFiles      The maximum number of rotated log files to keep.
      * @param rotateOnOpen  If true, the log file will be rotated when opened.
-     * @param openPre       Function to call before the sink open the file.
-     * @param closePost     Function to call after the sink close the file.
+     * @param openPlugin    Handle of the plugin that contains the file open function.
+     *                      If null, defaults to the calling plugin.
+     * @param openFunc      Function to call before the sink open the file.
+     * @param closePlugin   Handle of the plugin that contains the file close function.
+     *                      If null, defaults to the calling plugin.
+     * @param closeFunc     Function to call after the sink close the file.
      * @return              A new RotatingFileSink Handle.
-     * @error               Param maxFileSize <= 0, Param maxFiles > 200000.
+     * @error               Param maxFile <= 0, Param maxFiles > 200000.
      */
-    public native RotatingFileSink(const char[] file,
-                                   const int maxFileSize,
+    public native RotatingFileSink(const char[] baseFilename,
+                                   const int maxSize,
                                    const int maxFiles,
                                    bool rotateOnOpen=false,
-                                   SinkFileOpenPre openPre=INVALID_FUNCTION,
-                                   SinkFileClosePost closePost=INVALID_FUNCTION);
+                                   Handle openPlugin=null,  FileOpenFunction openFunc=INVALID_FUNCTION,
+                                   Handle closePlugin=null, FileCloseFunction closeFunc=INVALID_FUNCTION);
 
     /**
      * Get the current filename being used by the file sink.

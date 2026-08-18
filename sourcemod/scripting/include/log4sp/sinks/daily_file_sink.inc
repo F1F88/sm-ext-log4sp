@@ -55,8 +55,12 @@ methodmap DailyFileSink < Sink
      * @param calcPlugin    Handle of the plugin that contains the calculator function.
      *                      If null, defaults to the calling plugin.
      * @param calcFunc      Function to call when calculating the daily log file name.
-     * @param openPre       Function to call before the sink open the file.
-     * @param closePost     Function to call after the sink close the file.
+     * @param openPlugin    Handle of the plugin that contains the file open function.
+     *                      If null, defaults to the calling plugin.
+     * @param openFunc      Function to call before the sink open the file.
+     * @param closePlugin   Handle of the plugin that contains the file close function.
+     *                      If null, defaults to the calling plugin.
+     * @param closeFunc     Function to call after the sink close the file.
      * @return              A new DailyFileSink Handle.
      * @error               Invalid rotation time in ctor, or maxFiles < 0, or maxFiles > 65535.
      */
@@ -66,8 +70,8 @@ methodmap DailyFileSink < Sink
                                 bool truncate=false,
                                 int maxFiles=0,
                                 Handle calcPlugin=null,  DailyFileCalculator calcFunc=INVALID_FUNCTION,
-                                SinkFileOpenPre openPre=INVALID_FUNCTION,
-                                SinkFileClosePost closePost=INVALID_FUNCTION);
+                                Handle openPlugin=null,  FileOpenFunction openFunc=INVALID_FUNCTION,
+                                Handle closePlugin=null, FileCloseFunction closeFunc=INVALID_FUNCTION);
 
     /**
      * Get the current filename being used by the file sink.

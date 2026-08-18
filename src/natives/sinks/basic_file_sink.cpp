@@ -14,8 +14,60 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     smutils->BuildPath(Path_Game, absPath.data(), sizeof(absPath), "%s", file);
 
     auto truncate = static_cast<bool>(params[2]);
-    SourcePawn::IPluginFunction *openFunc  = ctx->GetFunctionById(params[3]);
-    SourcePawn::IPluginFunction *closeFunc = ctx->GetFunctionById(params[4]);
+
+    SourceMod::IPlugin *openPlugin;
+    if (!params[3])
+    {
+        openPlugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        openPlugin = plsys->PluginFromHandle(params[3], &error);
+        if (!openPlugin)
+        {
+            ctx->ReportError("Invalid open Plugin Handle %x (error %d)", params[3], error);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourcePawn::IPluginFunction *openFunc = nullptr;
+    if (!ctx->IsNullFunctionId(params[4]))
+    {
+        openFunc = openPlugin->GetBaseContext()->GetFunctionById(params[4]);
+        if (!openFunc)
+        {
+            ctx->ReportError("Invalid open function id %x.", params[4]);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourceMod::IPlugin *closePlugin;
+    if (!params[5])
+    {
+        closePlugin = Log4sp::PluginSysFindPluginByCtx(ctx);
+    }
+    else
+    {
+        SourceMod::HandleError error;
+        closePlugin = plsys->PluginFromHandle(params[5], &error);
+        if (!closePlugin)
+        {
+            ctx->ReportError("Invalid close Plugin Handle %x (error %d)", params[5], error);
+            return BAD_HANDLE;
+        }
+    }
+
+    SourcePawn::IPluginFunction *closeFunc = nullptr;
+    if (!ctx->IsNullFunctionId(params[6]))
+    {
+        closeFunc = closePlugin->GetBaseContext()->GetFunctionById(params[6]);
+        if (!closeFunc)
+        {
+            ctx->ReportError("Invalid close function id %x.", params[6]);
+            return BAD_HANDLE;
+        }
+    }
 
     spdlog::file_event_handlers handlers;
     handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
@@ -38,7 +90,8 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("Failed to creates a BasicFileSink Handle (error code: %d)", error);
+        delete sink;
+        ctx->ReportError("Failed to creates a BasicFileSink Handle (error %d)", error);
         return BAD_HANDLE;
     }
     return handle;
