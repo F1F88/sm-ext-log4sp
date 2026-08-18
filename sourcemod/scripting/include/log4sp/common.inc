@@ -120,3 +120,14 @@ native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
  * @return          Log level enum or LogLevel_Off when the log level name does not exist.
  */
 native LogLevel NameToLogLevel(const char[] name);
+
+/**
+ * Convert a log level name to log level enum.
+ *
+ * @param buildTime Build time.
+ * @param maxlen1   Maximum length of the build time.
+ * @param buildTags Build tags.
+ * @param maxlen2   Maximum length of the tags.
+ * @return          numeric representation.
+ */
+native int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags="", int maxlen2=0);
