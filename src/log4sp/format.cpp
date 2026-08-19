@@ -1,4 +1,4 @@
-#include <cassert>
+#include <array>
 #include <type_traits>
 #include <limits>
 
@@ -33,7 +33,9 @@ std::string FormatToString(SourcePawn::IPluginContext *ctx, const cell_t *params
     assert(ctx && params);
 
     char *format;
-    CTX_LOCAL_TO_STRING(params[param], &format);
+    if (auto err = ctx->LocalToString(params[param], &format))
+        ThrowError("Invalid format (error {})", err);
+
     unsigned int lparam = param + 1;
     return spdlog::fmt_lib::to_string(FormatToBuffer(ctx, format, params, &lparam));
 }
@@ -117,12 +119,24 @@ try_serverlang:
 }
 
 inline static
+void AddPads(spdlog::memory_buf_t &out, char pad, std::size_t pads) noexcept
+{
+    if (pads == 0)
+        return;
+
+    const auto size = out.size();
+    out.resize(size + pads);
+    std::memset(out.data() + size, pad, pads);
+}
+
+inline static
 void AddString(spdlog::memory_buf_t &out, const char *string, unsigned int width, int prec, int flags) noexcept
 {
+    constexpr std::array<char, 7> nlstr{'(', 'n', 'u', 'l', 'l', ')', '\0'};
     if (string == nullptr)
     {
-        AddString(out, "(null)", width, prec, flags);
-        return;
+        string = nlstr.data();
+        prec = -1;
     }
 
     unsigned int size = static_cast<unsigned int>(std::strlen(string));
@@ -137,11 +151,7 @@ void AddString(spdlog::memory_buf_t &out, const char *string, unsigned int width
     // right justify if required
     if (!(flags & LADJUST))
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back(' ');
-        }
+        AddPads(out, ' ', pads);
     }
 
     out.append(string, string + size);
@@ -149,24 +159,20 @@ void AddString(spdlog::memory_buf_t &out, const char *string, unsigned int width
     // left justify if required
     if (flags & LADJUST)
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back(' ');
-        }
+        AddPads(out, ' ', pads);
     }
 }
 
 inline static
 void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int prec, int flags) noexcept
 {
-    int digits;                 // non-fraction part digits
-    double tmp;                 // temporary
-    int val;                    // temporary
-    bool sign = false;          // false: positive, true: negative
-    unsigned int fieldlength;   // for padding
-    int significant_digits = 0; // number of significant digits written
-    constexpr const int MAX_SIGNIFICANT_DIGITS = 16;
+    int digits;                             // non-fraction part digits
+    double tmp;                             // temporary
+    int val;                                // temporary
+    bool sign = false;                      // false: positive, true: negative
+    unsigned int fieldlength;               // for padding
+    unsigned int significant_digits = 0;    // number of significant digits written
+    constexpr unsigned int MAX_SIGNIFICANT_DIGITS = 16;
 
     if (ke::IsNaN(static_cast<float>(fval)))
     {
@@ -205,6 +211,7 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
 
     // compute the field length
     fieldlength = digits + prec + ((prec > 0) ? 1 : 0) + (sign ? 1 : 0);
+    const unsigned int pads = (width <= fieldlength) ? (0u) : (width - fieldlength);
 
     // minus sign BEFORE left padding if padding with zeros
     if (sign && (flags & ZEROPAD))
@@ -215,10 +222,7 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
     // right justify if required
     if (!(flags & LADJUST))
     {
-        while (fieldlength < width--)
-        {
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 
     // minus sign AFTER left padding if padding with spaces
@@ -277,11 +281,8 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
     // left justify if required
     if (flags & LADJUST)
     {
-        while (fieldlength < width--)
-        {
-            // right-padding only with spaces, ZEROPAD is ignored
-            out.push_back(' ');
-        }
+        // right-padding only with spaces, ZEROPAD is ignored
+        AddPads(out, ' ', pads);
     }
 }
 
@@ -291,82 +292,70 @@ void AddBinary(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) 
 {
     static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
 
-    constexpr const int MAX_TEXT = sizeof(T) * CHAR_BIT;
-    char text[MAX_TEXT];
-    int iter = MAX_TEXT - 1;
+    constexpr unsigned int MAX_TEXT = sizeof(T) * CHAR_BIT;
+
+    std::array<char, MAX_TEXT> text;
+    unsigned int iter = MAX_TEXT - 1;
 
     do
     {
         text[iter--] = (val & 1) ? '1' : '0';
     } while (val >>= 1);
 
-    const char *begin   = text + iter + 1;
-    unsigned int digits = MAX_TEXT - iter - 1;
-    unsigned int pads   = (width <= digits) ? (0u) : (width - digits);
+    const char *begin = text.data() + iter + 1;
+    const char *end   = text.data() + MAX_TEXT;
+    const auto digits = MAX_TEXT - iter - 1;
+    const auto pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST))
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 
-    out.append(begin, text + MAX_TEXT);
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST)
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 }
 
 template <typename T>
-inline static void AddUInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
+inline static
+void AddUInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
 {
     static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
     static_assert(std::numeric_limits<std::uint32_t>::digits10 == 9);
     static_assert(std::numeric_limits<std::uint64_t>::digits10 == 19);
 
     constexpr unsigned int MAX_TEXT = std::numeric_limits<T>::digits10 + 1;
-    char text[MAX_TEXT];
-    unsigned int digits = 0;
+    std::array<char, MAX_TEXT> text;
+    unsigned int iter = MAX_TEXT - 1;
 
-    do {
-        text[digits++] = '0' + val % 10;
+    do
+    {
+        text[iter--] = ('0' + val % 10);
     } while (val /= 10);
 
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
+    const char *begin = text.data() + iter + 1;
+    const char *end   = text.data() + MAX_TEXT;
+    const auto digits = MAX_TEXT - iter - 1;
+    const auto pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST))
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 
-    while (digits)
-    {
-        out.push_back(text[--digits]);
-    }
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST)
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 }
 
@@ -379,20 +368,21 @@ void AddInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noe
     static_assert(std::numeric_limits<std::int64_t>::digits10 == 18);
 
     constexpr unsigned int MAX_TEXT = std::numeric_limits<int64_t>::digits10 + 2;
-    char text[MAX_TEXT];
-    unsigned int digits = 0;
+    std::array<char, MAX_TEXT> text;
+    unsigned int iter = MAX_TEXT - 1;
 
     const bool negative = val < 0;
     std::make_unsigned_t<T> unsignedVal = negative ? std::abs(val) : val;
 
-    do {
-        text[digits++] = '0' + unsignedVal % 10;
+    do
+    {
+        text[iter--] = ('0' + unsignedVal % 10);
     } while (unsignedVal /= 10);
 
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
-    if (pads > 0 && negative) {
-        pads--;
-    }
+    const char *begin = text.data() + iter + 1;
+    const char *end   = text.data() + MAX_TEXT;
+    const auto digits = MAX_TEXT - iter - 1;
+    const auto pads   = (width <= digits) ? (0u) : (width - digits - (negative ? 1 : 0));
 
     // minus sign BEFORE left padding if padding with zeros
     if (negative && (flags & ZEROPAD))
@@ -403,11 +393,7 @@ void AddInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noe
     // right justify if required
     if (!(flags & LADJUST))
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 
     // minus sign AFTER left padding if padding with spaces
@@ -416,19 +402,12 @@ void AddInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noe
         out.push_back('-');
     }
 
-    while (digits)
-    {
-        out.push_back(text[--digits]);
-    }
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST)
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 }
 
@@ -438,43 +417,36 @@ void AddHex(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noe
 {
     static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
 
-    constexpr const char *hexUpper = "0123456789ABCDEF";
-    constexpr const char *hexLower = "0123456789abcdef";
-    const char *hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexLower;
+    constexpr std::array<char, 16> hexUpper = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    constexpr std::array<char, 16> hexLower = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    const std::array<char,16> &hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexLower;
 
     constexpr unsigned int MAX_TEXT = sizeof(T) * 16 / CHAR_BIT;
-    char text[MAX_TEXT];
-    unsigned int digits = 0;
+    std::array<char, MAX_TEXT> text;
+    unsigned int iter = MAX_TEXT - 1;
 
-    do {
-        text[digits++] = hexAdjust[val & 0xF];
+    do
+    {
+        text[iter--] = hexAdjust[val & 0xF];
     } while(val >>= 4);
 
-    unsigned int pads = (width <= digits) ? (0u) : (width - digits);
+    const char *begin = text.data() + iter + 1;
+    const char *end   = text.data() + MAX_TEXT;
+    const auto digits = MAX_TEXT - iter - 1;
+    const auto pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
     if (!(flags & LADJUST))
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 
-    while (digits)
-    {
-        out.push_back(text[--digits]);
-    }
+    out.append(begin, end);
 
     // left justify if required
     if (flags & LADJUST)
     {
-        while (pads)
-        {
-            pads--;
-            out.push_back((flags & ZEROPAD) ? '0' : ' ');
-        }
+        AddPads(out, (flags & ZEROPAD) ? '0' : ' ', pads);
     }
 }
 
@@ -608,7 +580,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 char *c;
-                CTX_LOCAL_TO_STRING(params[arg], &c);
+                if (auto err = ctx->LocalToString(params[arg], &c))
+                    ThrowError("Invalid character (arg {}) (error {})", arg, err);
 
                 out.push_back(*c);
                 ++arg;
@@ -618,7 +591,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid boolean (arg {}) (error {})", arg, err);
 
                 AddBinary(out, static_cast<std::uint32_t>(*value), width, flags);
                 ++arg;
@@ -629,7 +603,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid integer (arg {}) (error {})", arg, err);
 
                 AddInt(out, static_cast<int>(*value), width, flags);
                 ++arg;
@@ -639,7 +614,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid unsigned integer (arg {}) (error {})", arg, err);
 
                 AddUInt(out, static_cast<std::uint32_t>(*value), width, flags);
                 ++arg;
@@ -649,7 +625,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid float (arg {}) (error {})", arg, err);
 
                 AddFloat(out, sp_ctof(*value), width, prec, flags);
                 ++arg;
@@ -659,7 +636,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid client index (arg {}) (error {})", arg, err);
 
                 if (*value)
                 {
@@ -669,7 +647,7 @@ reswitch:
                     if (!DescribePlayer(*value, &name, &auth, &userid))
                         ThrowError("Client index {} is invalid (arg {})", *value, arg);
 
-                    AddString(out, format("{}<{}><{}><>", name, userid, auth).c_str(), width, prec, flags);
+                    AddString(out, format("{}<{}><{}><>", name, userid, auth).data(), width, prec, flags);
                 }
                 else
                 {
@@ -682,7 +660,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid client index (arg {}) (error {})", arg, err);
 
                 if (*value)
                 {
@@ -703,7 +682,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid entity index (arg {}) (error {})", arg, err);
 
                 CBaseEntity *entity = gamehelpers->ReferenceToEntity(*value);
                 if (!entity)
@@ -719,7 +699,8 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 char *str;
-                CTX_LOCAL_TO_STRING(params[arg], &str);
+                if (auto err = ctx->LocalToString(params[arg], &str))
+                    ThrowError("Invalid string (arg {}) (error {})", arg, err);
 
                 AddString(out, str, width, prec, flags);
                 ++arg;
@@ -730,10 +711,12 @@ reswitch:
                 CHECK_ARGS(1);
                 char *key;
                 cell_t *target;
-                CTX_LOCAL_TO_STRING(params[arg++], &key);
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg++], &target);
+                if (auto err = ctx->LocalToString(params[arg++], &key))
+                    ThrowError("Invalid phrase (arg {}) (error {})", arg, err);
+                if (auto err = ctx->LocalToPhysAddr(params[arg++], &target))
+                    ThrowError("Invalid language (arg {}) (error {})", arg, err);
 
-                spdlog::memory_buf_t phrase = Translate(ctx, key, *target, params, &arg);
+                memory_buf_t phrase = Translate(ctx, key, *target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
@@ -741,10 +724,11 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 char *key;
-                CTX_LOCAL_TO_STRING(params[arg++], &key);
+                if (auto err = ctx->LocalToString(params[arg++], &key))
+                    ThrowError("Invalid phrase (arg {}) (error {})", arg, err);
                 auto target = static_cast<cell_t>(translator->GetGlobalTarget());
 
-                spdlog::memory_buf_t phrase = Translate(ctx, key, target, params, &arg);
+                memory_buf_t phrase = Translate(ctx, key, target, params, &arg);
                 out.append(phrase.begin(), phrase.end());
                 break;
             }
@@ -752,9 +736,10 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid Hex (arg {}) (error {})", arg, err);
 
-                AddHex(out, static_cast<unsigned int>(*value), width, flags | UPPERDIGITS);
+                AddHex(out, static_cast<std::uint32_t>(*value), width, flags | UPPERDIGITS);
                 ++arg;
                 break;
             }
@@ -762,9 +747,10 @@ reswitch:
             {
                 CHECK_ARGS(0);
                 cell_t *value;
-                CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                    ThrowError("Invalid hex (arg {}) (error {})", arg, err);
 
-                AddHex(out, static_cast<unsigned int>(*value), width, flags);
+                AddHex(out, static_cast<std::uint32_t>(*value), width, flags);
                 ++arg;
                 break;
             }
@@ -778,7 +764,8 @@ reswitch:
                 case 'b':
                     {
                         cell_t *value;
-                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                        if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                            ThrowError("Invalid boolean64 (arg {}) (error {})", arg, err);
 
                         AddBinary(out, *reinterpret_cast<std::uint64_t*>(value), width, flags);
                         ++arg;
@@ -788,7 +775,8 @@ reswitch:
                 case 'i':
                     {
                         cell_t *value;
-                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                        if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                            ThrowError("Invalid integer64 (arg {}) (error {})", arg, err);
 
                         AddInt(out, *reinterpret_cast<std::int64_t*>(value), width, flags);
                         ++arg;
@@ -797,7 +785,8 @@ reswitch:
                 case 'u':
                     {
                         cell_t *value;
-                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                        if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                            ThrowError("Invalid unsigned integer64 (arg {}) (error {})", arg, err);
 
                         AddUInt(out, *reinterpret_cast<std::uint64_t*>(value), width, flags);
                         ++arg;
@@ -806,7 +795,8 @@ reswitch:
                 case 'X':
                     {
                         cell_t *value;
-                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                        if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                            ThrowError("Invalid Hex64 (arg {}) (error {})", arg, err);
 
                         AddHex(out, *reinterpret_cast<std::uint64_t*>(value), width, flags | UPPERDIGITS);
                         ++arg;
@@ -815,7 +805,8 @@ reswitch:
                 case 'x':
                     {
                         cell_t *value;
-                        CTX_LOCAL_TO_PHYS_ADDR(params[arg], &value);
+                        if (auto err = ctx->LocalToPhysAddr(params[arg], &value))
+                            ThrowError("Invalid hex64 (arg {}) (error {})", arg, err);
 
                         AddHex(out, *reinterpret_cast<std::uint64_t*>(value), width, flags);
                         ++arg;

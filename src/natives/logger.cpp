@@ -1,6 +1,5 @@
 #include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
-#include "log4sp/adapter/sink_handler.h"
 
 /**
  * 封装读取 logger handle 代码
@@ -25,7 +24,11 @@
 static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
+    if (auto err = ctx->LocalToStringNULL(params[1], &name))
+    {
+        ctx->ReportError("Invalid name (error %d)", err);
+        return BAD_HANDLE;
+    }
 
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
@@ -46,7 +49,11 @@ static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     std::size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], logger->Name().c_str(), &bytes);
+    if (auto err = ctx->StringToLocalUTF8(params[2], params[3], logger->Name().c_str(), &bytes))
+    {
+        ctx->ReportError("Failed to write name to buffer (error %d)", err);
+        return 0;
+    }
     return static_cast<cell_t>(bytes);
 }
 
@@ -79,7 +86,11 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *pattern;
-    CTX_LOCAL_TO_STRING(params[2], &pattern);
+    if (auto err = ctx->LocalToString(params[2], &pattern))
+    {
+        ctx->ReportError("Invalid pattern (error %d)", err);
+        return 0;
+    }
 
     auto type = Log4sp::NumToPatternTimeType(params[3]);
 
@@ -103,7 +114,11 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     auto lvl = Log4sp::NumToLvl(params[2]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[3], &msg);
+    if (auto err = ctx->LocalToString(params[3], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(ctx, lvl, msg);
     return 0;
@@ -126,7 +141,11 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     auto lvl = Log4sp::NumToLvl(params[2]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[3], &msg);
+    if (auto err = ctx->LocalToString(params[3], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     auto loc = Log4sp::SourceLocFrom(ctx);
 
@@ -140,7 +159,7 @@ static cell_t LogSrcF(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 
     auto lvl = Log4sp::NumToLvl(params[2]);
 
-    logger->Log(ctx, lvl, params, 3);
+    logger->Log(ctx, Log4sp::SourceLocFrom(ctx), lvl, params, 3);
     return 0;
 }
 
@@ -158,7 +177,11 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     auto lvl = Log4sp::NumToLvl(params[3]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[4], &msg);
+    if (auto err = ctx->LocalToString(params[4], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(loc->ToSourceLoc(), lvl, msg);
     return 0;
@@ -188,7 +211,11 @@ static cell_t LogStackTrace(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto lvl = Log4sp::NumToLvl(params[2]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[3], &msg);
+    if (auto err = ctx->LocalToString(params[3], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->LogStackTrace(ctx, lvl, msg);
     return 0;
@@ -210,7 +237,11 @@ static cell_t Trace(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[2], &msg);
+    if (auto err = ctx->LocalToString(params[2], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(ctx, level_enum::trace, msg);
     return 0;
@@ -231,7 +262,11 @@ static cell_t Debug(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[2], &msg);
+    if (auto err = ctx->LocalToString(params[2], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(ctx, level_enum::debug, msg);
     return 0;
@@ -252,7 +287,11 @@ static cell_t Info(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[2], &msg);
+    if (auto err = ctx->LocalToString(params[2], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(ctx, level_enum::info, msg);
     return 0;
@@ -273,7 +312,11 @@ static cell_t Warn(SourcePawn::IPluginContext *ctx, const cell_t *params) noexce
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[2], &msg);
+    if (auto err = ctx->LocalToString(params[2], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(ctx, level_enum::warn, msg);
     return 0;
@@ -294,7 +337,11 @@ static cell_t Error(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[2], &msg);
+    if (auto err = ctx->LocalToString(params[2], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(ctx, level_enum::err, msg);
     return 0;
@@ -315,7 +362,11 @@ static cell_t Fatal(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
     char *msg;
-    CTX_LOCAL_TO_STRING(params[2], &msg);
+    if (auto err = ctx->LocalToString(params[2], &msg))
+    {
+        ctx->ReportError("Invalid msg (error %d)", err);
+        return 0;
+    }
 
     logger->Log(ctx, level_enum::critical, msg);
     return 0;

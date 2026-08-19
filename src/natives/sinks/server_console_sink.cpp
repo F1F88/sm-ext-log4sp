@@ -1,7 +1,5 @@
 #include "spdlog/sinks/stdout_sinks.h"
 
-#include "log4sp/logger.h"
-#include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_handler.h"
 
 
@@ -24,7 +22,8 @@ static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *p
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("Failed to creates a ServerConsoleSink Handle (error code: %d)", error);
+        delete sink;
+        ctx->ReportError("Failed to creates a ServerConsoleSink Handle (error %d)", error);
         return BAD_HANDLE;
     }
     return handle;

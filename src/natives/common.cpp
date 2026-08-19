@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <iterator>
-
 #include "log4sp/common.h"
 
 
@@ -37,6 +34,5 @@ static cell_t GetLog4spVersion(SourcePawn::IPluginContext *ctx, const cell_t *pa
 const sp_nativeinfo_t CommonNatives[] =
 {
     {"GetLog4spVersion",            GetLog4spVersion},
-
     {nullptr,                       nullptr}
 };

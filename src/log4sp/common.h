@@ -164,19 +164,6 @@ static_assert(offsetof(CellSourceLoc, line) == 256);
 static_assert(offsetof(CellSourceLoc, funcname) == 256 + 4);
 
 
-[[noreturn]] inline
-void ThrowLog4spEx(std::string msg)
-{
-    spdlog::throw_spdlog_ex(std::move(msg));
-}
-
-[[noreturn]] inline
-void ThrowLog4spEx(const std::string &msg, int last_errno)
-{
-    spdlog::throw_spdlog_ex(msg, last_errno);
-}
-
-
 [[nodiscard]] inline
 spdlog::source_loc SourceLocFrom(SourcePawn::IPluginContext *ctx) noexcept
 {
@@ -266,60 +253,6 @@ SourceMod::IPlugin* PluginSysFindPluginByCtx(SourcePawn::IPluginContext *ctx) no
 
 }   // namespace Log4sp
 
-#ifndef DEBUG
-    #define CTX_LOCAL_TO_PHYS_ADDR(local_addr, phys_addr)   ctx->LocalToPhysAddr(local_addr, phys_addr);
-    #define CTX_LOCAL_TO_STRING(local_addr, addr)           ctx->LocalToString(local_addr, addr);
-    #define CTX_LOCAL_TO_STRING_NULL(local_addr, addr)      ctx->LocalToStringNULL(local_addr, addr);
-    #define CTX_STRING_TO_LOCAL(local_addr, bytes, source)  ctx->StringToLocal(local_addr, bytes, source);
-    #define CTX_STRING_TO_LOCAL_UTF8(local_addr, maxbytes, source, wrtnbytes) \
-        ctx->StringToLocalUTF8(local_addr, maxbytes, source, wrtnbytes);
-#else
-    #define CTX_LOCAL_TO_PHYS_ADDR(local_addr, phys_addr)   assert(!ctx->LocalToPhysAddr(local_addr, phys_addr));
-    #define CTX_LOCAL_TO_STRING(local_addr, addr)           assert(!ctx->LocalToString(local_addr, addr));
-    #define CTX_LOCAL_TO_STRING_NULL(local_addr, addr)      assert(!ctx->LocalToStringNULL(local_addr, addr));
-    #define CTX_STRING_TO_LOCAL(local_addr, bytes, source)  assert(!ctx->StringToLocal(local_addr, bytes, source));
-    #define CTX_STRING_TO_LOCAL_UTF8(local_addr, maxbytes, source, wrtnbytes) \
-        assert(!ctx->StringToLocalUTF8(local_addr, maxbytes, source, wrtnbytes));
-#endif
-
-#ifndef DEBUG
-    #define FWDS_CREATE_EX(name, et, num_params, types, ...) \
-        auto fwd = forwards->CreateForwardEx(name, et, num_params, types, ##__VA_ARGS__);
-#else
-    #define FWDS_CREATE_EX(name, et, num_params, types, ...) \
-        auto fwd = forwards->CreateForwardEx(name, et, num_params, types, ##__VA_ARGS__); \
-        assert(fwd);
-#endif
-
-#ifndef DEBUG
-    #define FWD_ADD_FUNCTION(func)                          fwd->AddFunction(func);
-    #define FWD_EXECUTE(...)                                fwd->Execute(##__VA_ARGS__);
-    #define FWD_PUSH_ARRAY(inarray, cells, ...)             fwd->PushArray(inarray, cells, ##__VA_ARGS__);
-    #define FWD_PUSH_CELL(cell)                             fwd->PushCell(cell);
-    #define FWD_PUSH_CELL_BY_REF(cell, ...)                 fwd->PushCellByRef(cell, ##__VA_ARGS__);
-    #define FWD_PUSH_FLOAT(cell)                            fwd->PushFloat(cell);
-    #define FWD_PUSH_FLOAT_BY_REF(cell, ...)                fwd->PushFloatByRef(cell, ##__VA_ARGS__);
-    #define FWD_PUSH_STRING(str)                            fwd->PushString(str);
-    #define FWD_PUSH_STRING_EX(buffer, length, sz_flags, cp_flags) \
-        fwd->PushStringEx(buffer, length, sz_flags, cp_flags);
-#else
-    #define FWD_ADD_FUNCTION(func)                          assert(fwd->AddFunction(func));
-    #define FWD_EXECUTE(...)                                assert(!fwd->Execute(##__VA_ARGS__));
-    #define FWD_PUSH_ARRAY(inarray, cells, ...)             assert(!fwd->PushArray(inarray, cells, ##__VA_ARGS__));
-    #define FWD_PUSH_CELL(cell)                             assert(!fwd->PushCell(cell));
-    #define FWD_PUSH_CELL_BY_REF(cell, ...)                 assert(!fwd->PushCellByRef(cell, ##__VA_ARGS__));
-    #define FWD_PUSH_FLOAT(cell)                            assert(!fwd->PushFloat(cell));
-    #define FWD_PUSH_FLOAT_BY_REF(cell, ...)                assert(!fwd->PushFloatByRef(cell, ##__VA_ARGS__));
-    #define FWD_PUSH_STRING(str)                            assert(!fwd->PushString(str));
-    #define FWD_PUSH_STRING_EX(buffer, length, sz_flags, cp_flags) \
-        assert(!fwd->PushStringEx(buffer, length, sz_flags, cp_flags));
-#endif
-
-#ifndef DEBUG
-    #define HANDLE_SYS_FREE_HANDLE(handle, security)        handlesys->FreeHandle(handle, security);
-#else
-    #define HANDLE_SYS_FREE_HANDLE(handle, security)        assert(!handlesys->FreeHandle(handle, security));
-#endif
 
 #define FILE_EVENT_FUNCTION(func)                                                                   \
     [func](const spdlog::filename_t &filename)                                                      \
@@ -327,10 +260,27 @@ SourceMod::IPlugin* PluginSysFindPluginByCtx(SourcePawn::IPluginContext *ctx) no
         if (func)                                                                                   \
         {                                                                                           \
             auto path = Log4sp::UnbuildPath<SourceMod::PathType::Path_Game>(filename);              \
-            FWDS_CREATE_EX(nullptr, ET_Ignore, 1, nullptr, Param_String);                           \
-            FWD_ADD_FUNCTION(func);                                                                 \
-            FWD_PUSH_STRING(path.c_str());                                                          \
-            FWD_EXECUTE();                                                                          \
+            auto fwd  = forwards->CreateForwardEx(nullptr, SourceMod::ExecType::ET_Ignore, 1, nullptr, SourceMod::ParamType::Param_String);\
+            if (!fwd)                                                                               \
+                spdlog::throw_spdlog_ex("Failed to create file event forward.");                    \
+                                                                                                    \
+            if (!fwd->AddFunction(func))                                                            \
+            {                                                                                       \
+                forwards->ReleaseForward(fwd);                                                      \
+                spdlog::throw_spdlog_ex("Failed to add file event function.");                      \
+            }                                                                                       \
+                                                                                                    \
+            if (auto err = fwd->PushString(path.c_str()))                                           \
+            {                                                                                       \
+                forwards->ReleaseForward(fwd);                                                      \
+                spdlog::throw_spdlog_ex(spdlog::fmt_lib::format("Failed to push filename into file event forward (error {})", err));\
+            }                                                                                       \
+                                                                                                    \
+            if (auto err = fwd->Execute())                                                          \
+            {                                                                                       \
+                forwards->ReleaseForward(fwd);                                                      \
+                spdlog::throw_spdlog_ex(spdlog::fmt_lib::format("Failed to execute file event forward (error {})", err));\
+            }                                                                                       \
             forwards->ReleaseForward(fwd);                                                          \
         }                                                                                           \
     }

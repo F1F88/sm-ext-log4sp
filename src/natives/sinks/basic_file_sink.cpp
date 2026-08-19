@@ -1,14 +1,17 @@
 #include "spdlog/sinks/basic_file_sink.h"
 
 #include "log4sp/common.h"
-#include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_handler.h"
 
 
 static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    CTX_LOCAL_TO_STRING(params[1], &file);
+    if (auto err = ctx->LocalToString(params[1], &file))
+    {
+        ctx->ReportError("Invalid file (error %d)", err);
+        return BAD_HANDLE;
+    }
 
     std::array<char, PLATFORM_MAX_PATH> absPath;
     smutils->BuildPath(Path_Game, absPath.data(), sizeof(absPath), "%s", file);
@@ -97,7 +100,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     return handle;
 }
 
-static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
@@ -119,11 +122,15 @@ static cell_t BasicFileSink_GetFilename(SourcePawn::IPluginContext *ctx, const c
     auto filename = Log4sp::UnbuildPath<SourceMod::PathType::Path_Game>(basicFileSink->filename());
 
     std::size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], basicFileSink->filename().c_str(), &bytes);
+    if (auto err = ctx->StringToLocalUTF8(params[2], params[3], filename.c_str(), &bytes))
+    {
+        ctx->ReportError("Failed to write filename to buffer (error %d)", err);
+        return 0;
+    }
     return static_cast<cell_t>(bytes);
 }
 
-static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t Truncate(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
@@ -132,14 +139,14 @@ static cell_t BasicFileSink_Truncate(SourcePawn::IPluginContext *ctx, const cell
     if (!sink)
     {
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
-        return 0;
+        return false;
     }
 
     auto basicFileSink = dynamic_cast<spdlog::sinks::basic_file_sink_st*>(sink);
     if (!basicFileSink)
     {
         ctx->ReportError("Invalid BasicFileSink Handle %x.", params[1]);
-        return 0;
+        return false;
     }
 
     try
@@ -165,8 +172,8 @@ static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 const sp_nativeinfo_t BasicFileSinkNatives[] =
 {
     {"BasicFileSink.BasicFileSink",             BasicFileSink},
-    {"BasicFileSink.GetFilename",               BasicFileSink_GetFilename},
-    {"BasicFileSink.Truncate",                  BasicFileSink_Truncate},
+    {"BasicFileSink.GetFilename",               GetFilename},
+    {"BasicFileSink.Truncate",                  Truncate},
     {"BasicFileSink.IsValid",                   IsValid},
 
     {nullptr,                                   nullptr}

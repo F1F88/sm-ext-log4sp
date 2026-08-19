@@ -1,17 +1,20 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 
 #include "log4sp/common.h"
-#include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_handler.h"
 
 
 static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    CTX_LOCAL_TO_STRING(params[1], &file);
+    if (auto err = ctx->LocalToString(params[1], &file))
+    {
+        ctx->ReportError("Invalid file (error %d)", err);
+        return BAD_HANDLE;
+    }
 
-    char absPath[PLATFORM_MAX_PATH];
-    smutils->BuildPath(Path_Game, absPath, sizeof(absPath), "%s", file);
+    std::array<char, PLATFORM_MAX_PATH> absPath;
+    smutils->BuildPath(Path_Game, absPath.data(), sizeof(absPath), "%s", file);
 
     auto maxFileSize  = static_cast<std::size_t>(params[2]);
     auto maxFiles     = static_cast<std::size_t>(params[3]);
@@ -78,7 +81,7 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     spdlog::sinks::rotating_file_sink_st *sink;
     try
     {
-        sink = new spdlog::sinks::rotating_file_sink_st(absPath, maxFileSize, maxFiles, rotateOnOpen, handlers);
+        sink = new spdlog::sinks::rotating_file_sink_st(absPath.data(), maxFileSize, maxFiles, rotateOnOpen, handlers);
     }
     catch (const std::exception &ex)
     {
@@ -92,7 +95,8 @@ static cell_t RotatingFileSink(SourcePawn::IPluginContext *ctx, const cell_t *pa
     auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("Failed to creates a RotatingFileSink Handle (error code: %d)", error);
+        delete sink;
+        ctx->ReportError("Failed to creates a RotatingFileSink Handle (error %d)", error);
         return BAD_HANDLE;
     }
     return handle;
@@ -120,7 +124,11 @@ static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
     auto filename = Log4sp::UnbuildPath<SourceMod::PathType::Path_Game>(rotatingFileSink->filename());
 
     std::size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], rotatingFileSink->filename().c_str(), &bytes);
+    if (auto err = ctx->StringToLocalUTF8(params[2], params[3], filename.c_str(), &bytes))
+    {
+        ctx->ReportError("Failed to write filename to buffer (error %d)", err);
+        return 0;
+    }
     return static_cast<cell_t>(bytes);
 }
 
@@ -250,13 +258,22 @@ static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 static cell_t CalcFilename(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    CTX_LOCAL_TO_STRING(params[3], &file);
+    if (auto err = ctx->LocalToString(params[3], &file))
+    {
+        ctx->ReportError("Invalid file (error %d)", err);
+        return 0;
+    }
+
     auto index = static_cast<std::size_t>(params[4]);
 
     auto filename = spdlog::sinks::rotating_file_sink_st::calc_filename(file, index);
 
     std::size_t bytes = 0;
-    CTX_STRING_TO_LOCAL_UTF8(params[1], params[2], filename.c_str(), &bytes);
+    if (auto err = ctx->StringToLocalUTF8(params[1], params[2], filename.c_str(), &bytes))
+    {
+        ctx->ReportError("Failed to write filename to buffer (error %d)", err);
+        return 0;
+    }
     return static_cast<cell_t>(bytes);
 }
 

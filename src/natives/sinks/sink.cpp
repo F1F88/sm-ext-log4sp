@@ -122,12 +122,15 @@ static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) 
     }
 
     char *pattern;
-    CTX_LOCAL_TO_STRING(params[2], &pattern);
+    if (auto err = ctx->LocalToString(params[2], &pattern))
+    {
+        ctx->ReportError("Invalid pattern (error %d)", err);
+        return 0;
+    }
 
     auto type = Log4sp::NumToPatternTimeType(params[3]);
 
-    using spdlog::pattern_formatter;
-    sink->set_formatter(std::make_unique<pattern_formatter>(pattern, type));
+    sink->set_formatter(spdlog::details::make_unique<spdlog::pattern_formatter>(pattern, type));
     return 0;
 }
 

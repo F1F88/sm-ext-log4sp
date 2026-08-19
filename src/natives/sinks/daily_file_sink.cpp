@@ -7,7 +7,11 @@
 static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     char *file;
-    CTX_LOCAL_TO_STRING(params[1], &file);
+    if (auto err = ctx->LocalToString(params[1], &file))
+    {
+        ctx->ReportError("Invalid file (error %d)", err);
+        return BAD_HANDLE;
+    }
 
     int hour      = params[2];
     int minute    = params[3];
