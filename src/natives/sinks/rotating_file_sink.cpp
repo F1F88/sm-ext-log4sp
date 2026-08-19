@@ -117,6 +117,8 @@ static cell_t GetFilename(SourcePawn::IPluginContext *ctx, const cell_t *params)
         return 0;
     }
 
+    auto filename = Log4sp::UnbuildPath<SourceMod::PathType::Path_Game>(rotatingFileSink->filename());
+
     std::size_t bytes = 0;
     CTX_STRING_TO_LOCAL_UTF8(params[2], params[3], rotatingFileSink->filename().c_str(), &bytes);
     return static_cast<cell_t>(bytes);
