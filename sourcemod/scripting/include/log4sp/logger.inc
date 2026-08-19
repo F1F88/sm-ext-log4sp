@@ -148,6 +148,14 @@ methodmap Logger < Handle
     public native void SetFlushLevel(LogLevel lvl);
 
     /**
+     * Gets whether trigger automatic flush for the given log level.
+     *
+     * @param flushLvl  Log level enum.
+     * @return          True if trigger automatic flush for the given log level.
+     */
+    public native bool ShouldFlush(LogLevel flushLvl);
+
+    /**
      * Gets the sinks clone of logger.
      *
      * @note Sinks clone handles must be freed via delete or CloseHandle() or Sink.Close().

@@ -355,6 +355,15 @@ static cell_t SetFlushLevel(SourcePawn::IPluginContext *ctx, const cell_t *param
     return 0;
 }
 
+static cell_t ShouldFlush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    auto lvl = Log4sp::NumToLvl(params[2]);
+
+    return logger->ShouldFlush(lvl);
+}
+
 static cell_t GetSinks(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -513,11 +522,15 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},
     {"Logger.SetFlushLevel",                    SetFlushLevel},
+    {"Logger.ShouldFlush",                      ShouldFlush},
+
     {"Logger.GetSinks",                         GetSinks},
     {"Logger.GetSinksLength",                   GetSinksLength},
     {"Logger.AddSink",                          AddSink},
     {"Logger.DropSink",                         DropSink},
+
     {"Logger.SetErrorHandler",                  SetErrorHandler},
+
     {"Logger.Equals",                           Equals},
     {"Logger.IsValid",                          IsValid},
 
