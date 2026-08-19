@@ -6,6 +6,57 @@
 #pragma newdecls required
 #pragma semicolon 1
 
+#if !defined LOG4SP_ES_CONST
+    #if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR <= 11
+        #define LOG4SP_ES_CONST
+    #else
+        #define LOG4SP_ES_CONST const
+    #endif
+#endif
+
+#if !defined SM_INT64_SUPPORTED
+    /**
+     * Not entirely accurate, but more accurate than SOURCEMOD_V_***.
+     * Intrinsic float was introduced in pr-2405 (7295)
+     * int64 was introduced in pr-2414 (7302)
+     *
+     * @note Macro "__sourcepawn_intrinsic_float" is defined in `float.inc`.
+     *       It requires either "#include <sourcemod>" or "#include <float>"
+     *       to be placed above "#include <log4sp/common>" for it to work.
+     *
+     * @note The purpose is to select the internal implementation of Long.
+     *       It require "#include <log4sp/common>" to be placed above
+     *       "#include <log4sp/details/long>" for it to work.
+     */
+    #if defined __sourcepawn_intrinsic_float
+        #define SM_INT64_SUPPORTED
+    #endif
+#endif
+
+#if defined LOG4SP_HEADER_ONLY
+    #if !defined DEBUG && !defined _DEBUG
+        #if !defined LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
+            #define  LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
+        #endif
+    #endif
+
+    /**
+     * Set the maximum length of error messages.
+     * Error messages exceeding this length will be truncated.
+     */
+    #if !defined LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH
+        #define  LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH 256
+    #endif
+
+    /**
+     * Set the maximum length of log messages.
+     * Log messages exceeding this length will be truncated.
+     */
+    #if !defined LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH
+        #define  LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH 1024
+    #endif
+#endif
+
 #define LOG4SP_LEVEL_TRACE              0
 #define LOG4SP_LEVEL_DEBUG              1
 #define LOG4SP_LEVEL_INFO               2
@@ -58,16 +109,15 @@ enum PatternTimeType
 };
 
 /**
- * Source code location.
+ * Source location.
  */
 enum struct SourceLoc
 {
-    char filename[PLATFORM_MAX_PATH];   // file name/path.
+    char filename[256];                 // file name/path.
     int line;                           // line number.
-    char funcname[PLATFORM_MAX_PATH];   // function name.
+    char funcname[256];                 // function name.
 
-    bool IsEmpty()
-    {
+    bool IsEmpty() {
         return !this.filename[0] || this.line <= 0 || !this.funcname[0];
     }
 }
@@ -90,7 +140,7 @@ typedef FileCloseFunction = function void (const char[] filename);
  * @param loc       The source location of the error.
  * @param msg       The details message of the error.
  */
-typedef ErrorHandler = function void (const char[] origin, const SourceLoc loc, const char[] msg);
+typedef ErrorHandler = function void (const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg);
 
 
 /**
@@ -166,4 +216,27 @@ stock LogLevel NameToLogLevel(const char[] name)
  * @param maxlen2   Maximum length of the tags.
  * @return          numeric representation.
  */
+#if !defined LOG4SP_HEADER_ONLY
 native int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags="", int maxlen2=0);
+#else
+stock  int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags="", int maxlen2=0)
+{
+    const int MAJOR = 2, MINOR = 0, PATCH = 0;
+    const int VERSION = (MAJOR << 16) | (MINOR << 8) | PATCH;
+    static const char BUILD_TIME[] = __DATE__ ... " " ... __TIME__;
+
+    strcopy(buildTime, maxlen1, BUILD_TIME);
+
+    FormatEx(buildTags, maxlen2,
+             "header-only,%s,max-err=%u,max-msg=%u",
+#if defined NDEBUG || (!defined DEBUG && !defined _DEBUG)
+             "release",
+#else
+             "debug",
+#endif
+             LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH,
+             LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH
+    );
+    return VERSION;
+}
+#endif

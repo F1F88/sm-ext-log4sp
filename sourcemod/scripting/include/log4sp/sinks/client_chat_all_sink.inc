@@ -6,7 +6,6 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#include <log4sp/logger>
 #include <log4sp/sinks/callback_sink>
 
 
@@ -44,7 +43,7 @@ methodmap ClientChatAllSink < CallbackSink
 }
 
 
-public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, const SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     int len = strlen(logTime);
     char seconds[21], millisecond[4];

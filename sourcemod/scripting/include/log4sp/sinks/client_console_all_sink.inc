@@ -6,7 +6,6 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#include <log4sp/logger>
 #include <log4sp/sinks/callback_sink>
 
 
@@ -40,10 +39,11 @@ methodmap ClientConsoleAllSink < CallbackSink
         char classname[32];
         data.GetString("m_szClassname", classname, sizeof(classname));
         return StrEqual(classname, "ClientConsoleAllSink");
+    }
 }
 
 
-public bool __ClientConsoleAllSink_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, const SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __ClientConsoleAllSink_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     int len = strlen(logTime);
     char seconds[21], millisecond[4];
@@ -93,3 +93,4 @@ public void __ClientConsoleAllSink_OnClose(CallbackSink sink)
     // It will be destroyed soon, so ignore resetting it to null.
     // sink.SetData(null);
 }
+

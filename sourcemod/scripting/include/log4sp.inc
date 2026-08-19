@@ -1,5 +1,5 @@
 #if defined _log4sp_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_included
 
@@ -31,14 +31,14 @@
  */
 public Extension __ext_log4sp =
 {
-    name = "Log4sp",
+    name = "log4sp",
     file = "log4sp.ext",
-#if defined AUTOLOAD_EXTENSIONS
+#if defined AUTOLOAD_EXTENSIONS && !defined LOG4SP_HEADER_ONLY
     autoload = 1,
 #else
     autoload = 0,
 #endif
-#if defined REQUIRE_EXTENSIONS
+#if defined REQUIRE_EXTENSIONS && !defined LOG4SP_HEADER_ONLY
     required = 1,
 #else
     required = 0,
@@ -46,7 +46,7 @@ public Extension __ext_log4sp =
 };
 
 
-#if !defined REQUIRE_EXTENSIONS
+#if !defined REQUIRE_EXTENSIONS || defined LOG4SP_HEADER_ONLY
 public void __ext_log4sp_SetNTVOptional()
 {
     MarkNativeAsOptional("GetLog4spVersion");
