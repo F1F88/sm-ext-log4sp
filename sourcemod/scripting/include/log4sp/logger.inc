@@ -1,5 +1,5 @@
 #if defined _log4sp_logger_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_logger_included
 
@@ -56,55 +56,6 @@ methodmap Logger < Handle
     public native Logger(const char[] name=NULL_STRING);
 
     /**
-     * Gets the logger name.
-     *
-     * @param buffer    Buffer to store logger name.
-     * @param maxlen    Maximum length of the buffer.
-     * @return          Number of bytes written.
-     */
-    public native int GetName(char[] buffer, int maxlen);
-
-    /**
-     * Gets the length of the logger name.
-     *
-     * @return          Length of the logger name string.
-     */
-    public native int GetNameLength();
-
-    /**
-     * Gets the logger log level.
-     *
-     * @return          The logger log level.
-     */
-    public native LogLevel GetLevel();
-
-    /**
-     * Sets the logger log level.
-     *
-     * @param lvl       Log level enum.
-     */
-    public native void SetLevel(LogLevel lvl);
-
-    /**
-     * Sets formatting pattern for the sinks in the logger.
-     *
-     * @note each sink will get a new instance of a formatter object, replacing the old one.
-     * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
-     *
-     * @param pattern   Formatting pattern.
-     * @param type      Pattern time type.
-     */
-    public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
-
-    /**
-     * Gets whether logging is enabled for the given log level.
-     *
-     * @param lvl       Log level enum.
-     * @return          True if logging is enabled for the given log level.
-     */
-    public native bool ShouldLog(LogLevel lvl);
-
-    /**
      * Logs a message.
      *
      * @param lvl       Log level enum.
@@ -159,6 +110,55 @@ methodmap Logger < Handle
 
     public native void Fatal(const char[] msg);
     public native void FatalF(const char[] fmt, any ...);
+
+    /**
+     * Gets the logger name.
+     *
+     * @param buffer    Buffer to store logger name.
+     * @param maxlen    Maximum length of the buffer.
+     * @return          Number of bytes written.
+     */
+    public native int GetName(char[] buffer, int maxlen);
+
+    /**
+     * Gets the length of the logger name.
+     *
+     * @return          Length of the logger name string.
+     */
+    public native int GetNameLength();
+
+    /**
+     * Gets the logger log level.
+     *
+     * @return          The logger log level.
+     */
+    public native LogLevel GetLevel();
+
+    /**
+     * Sets the logger log level.
+     *
+     * @param lvl       Log level enum.
+     */
+    public native void SetLevel(LogLevel lvl);
+
+    /**
+     * Gets whether logging is enabled for the given log level.
+     *
+     * @param lvl       Log level enum.
+     * @return          True if logging is enabled for the given log level.
+     */
+    public native bool ShouldLog(LogLevel lvl);
+
+    /**
+     * Sets formatting pattern for the sinks in the logger.
+     *
+     * @note each sink will get a new instance of a formatter object, replacing the old one.
+     * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
+     *
+     * @param pattern   Formatting pattern.
+     * @param type      Pattern time type.
+     */
+    public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
 
     /**
      * Manual flush the contents for the sinks in the logger.

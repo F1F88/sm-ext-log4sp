@@ -44,69 +44,6 @@ static cell_t Logger(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return handle;
 }
 
-static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    std::size_t bytes = 0;
-    if (auto err = ctx->StringToLocalUTF8(params[2], params[3], logger->Name().c_str(), &bytes))
-    {
-        ctx->ReportError("Failed to write name to buffer (error %d)", err);
-        return 0;
-    }
-    return static_cast<cell_t>(bytes);
-}
-
-static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    return static_cast<cell_t>(logger->Name().length());
-}
-
-static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    return logger->GetLevel();
-}
-
-static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    logger->SetLevel(lvl);
-    return 0;
-}
-
-static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    char *pattern;
-    if (auto err = ctx->LocalToString(params[2], &pattern))
-    {
-        ctx->ReportError("Invalid pattern (error %d)", err);
-        return 0;
-    }
-
-    auto type = Log4sp::NumToPatternTimeType(params[3]);
-
-    logger->SetPattern(pattern, type);
-    return 0;
-}
-
-static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-
-    auto lvl = Log4sp::NumToLvl(params[2]);
-
-    return logger->ShouldLog(lvl);
-}
-
 static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -381,6 +318,69 @@ static cell_t FatalF(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
     return 0;
 }
 
+static cell_t GetName(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    std::size_t bytes = 0;
+    if (auto err = ctx->StringToLocalUTF8(params[2], params[3], logger->Name().c_str(), &bytes))
+    {
+        ctx->ReportError("Failed to write name to buffer (error %d)", err);
+        return 0;
+    }
+    return static_cast<cell_t>(bytes);
+}
+
+static cell_t GetNameLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    return static_cast<cell_t>(logger->Name().length());
+}
+
+static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    return logger->GetLevel();
+}
+
+static cell_t SetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    auto lvl = Log4sp::NumToLvl(params[2]);
+
+    logger->SetLevel(lvl);
+    return 0;
+}
+
+static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    auto lvl = Log4sp::NumToLvl(params[2]);
+
+    return logger->ShouldLog(lvl);
+}
+
+static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    char *pattern;
+    if (auto err = ctx->LocalToString(params[2], &pattern))
+    {
+        ctx->ReportError("Invalid pattern (error %d)", err);
+        return 0;
+    }
+
+    auto type = Log4sp::NumToPatternTimeType(params[3]);
+
+    logger->SetPattern(pattern, type);
+    return 0;
+}
+
 static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -541,13 +541,6 @@ static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
 const sp_nativeinfo_t LoggerNatives[] =
 {
     {"Logger.Logger",                           Logger},
-    {"Logger.GetName",                          GetName},
-    {"Logger.GetNameLength",                    GetNameLength},
-    {"Logger.GetLevel",                         GetLevel},
-    {"Logger.SetLevel",                         SetLevel},
-    {"Logger.SetPattern",                       SetPattern},
-    {"Logger.ShouldLog",                        ShouldLog},
-
     {"Logger.Log",                              Log},
     {"Logger.LogF",                             LogF},
     {"Logger.LogSrc",                           LogSrc},
@@ -556,7 +549,6 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.LogLocF",                          LogLocF},
     {"Logger.LogStackTrace",                    LogStackTrace},
     {"Logger.LogStackTraceF",                   LogStackTraceF},
-
     {"Logger.Trace",                            Trace},
     {"Logger.TraceF",                           TraceF},
     {"Logger.Debug",                            Debug},
@@ -569,19 +561,21 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.ErrorF",                           ErrorF},
     {"Logger.Fatal",                            Fatal},
     {"Logger.FatalF",                           FatalF},
-
+    {"Logger.GetName",                          GetName},
+    {"Logger.GetNameLength",                    GetNameLength},
+    {"Logger.GetLevel",                         GetLevel},
+    {"Logger.SetLevel",                         SetLevel},
+    {"Logger.ShouldLog",                        ShouldLog},
+    {"Logger.SetPattern",                       SetPattern},
     {"Logger.Flush",                            Flush},
     {"Logger.GetFlushLevel",                    GetFlushLevel},
     {"Logger.SetFlushLevel",                    SetFlushLevel},
     {"Logger.ShouldFlush",                      ShouldFlush},
-
     {"Logger.GetSinks",                         GetSinks},
     {"Logger.GetSinksLength",                   GetSinksLength},
     {"Logger.AddSink",                          AddSink},
     {"Logger.DropSink",                         DropSink},
-
     {"Logger.SetErrorHandler",                  SetErrorHandler},
-
     {"Logger.Equals",                           Equals},
     {"Logger.IsValid",                          IsValid},
 

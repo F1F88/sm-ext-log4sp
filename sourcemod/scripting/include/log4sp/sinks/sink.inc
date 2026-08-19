@@ -1,5 +1,5 @@
 #if defined _log4sp_sinks_sink_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_sinks_sink_included
 
@@ -85,6 +85,14 @@ methodmap Sink < Handle
     public native void SetLevel(LogLevel lvl);
 
     /**
+     * Gets whether logging is enabled for the given log level.
+     *
+     * @param lvl       Log level enum.
+     * @return          True if logging is enabled for the given log level.
+     */
+    public native bool ShouldLog(LogLevel lvl);
+
+    /**
      * Change log pattern.
      *
      * @note pattern flags: https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
@@ -93,14 +101,6 @@ methodmap Sink < Handle
      * @param type      Pattern time.
      */
     public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
-
-    /**
-     * Gets whether logging is enabled for the given log level.
-     *
-     * @param lvl       Log level enum.
-     * @return          True if logging is enabled for the given log level.
-     */
-    public native bool ShouldLog(LogLevel lvl);
 
     /**
      * Compares this Sink with the specified sink for equality.

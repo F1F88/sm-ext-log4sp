@@ -1,5 +1,5 @@
 #if defined _log4sp_common_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_common_included
 
@@ -80,8 +80,6 @@
 #define LOG4SP_LEVEL_SHORT_NAME_ERROR   "E"
 #define LOG4SP_LEVEL_SHORT_NAME_FATAL   "F"
 #define LOG4SP_LEVEL_SHORT_NAME_OFF     "O"
-
-#define LOG4SP_GLOBAL_LOGGER_NAME       "log4sp"
 
 
 /**

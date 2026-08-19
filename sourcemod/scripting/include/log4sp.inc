@@ -52,12 +52,6 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("GetLog4spVersion");
 
     MarkNativeAsOptional("Logger.Logger");
-    MarkNativeAsOptional("Logger.GetName");
-    MarkNativeAsOptional("Logger.GetNameLength");
-    MarkNativeAsOptional("Logger.GetLevel");
-    MarkNativeAsOptional("Logger.SetLevel");
-    MarkNativeAsOptional("Logger.SetPattern");
-    MarkNativeAsOptional("Logger.ShouldLog");
     MarkNativeAsOptional("Logger.Log");
     MarkNativeAsOptional("Logger.LogF");
     MarkNativeAsOptional("Logger.LogSrc");
@@ -78,6 +72,12 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.ErrorF");
     MarkNativeAsOptional("Logger.Fatal");
     MarkNativeAsOptional("Logger.FatalF");
+    MarkNativeAsOptional("Logger.GetName");
+    MarkNativeAsOptional("Logger.GetNameLength");
+    MarkNativeAsOptional("Logger.GetLevel");
+    MarkNativeAsOptional("Logger.SetLevel");
+    MarkNativeAsOptional("Logger.ShouldLog");
+    MarkNativeAsOptional("Logger.SetPattern");
     MarkNativeAsOptional("Logger.Flush");
     MarkNativeAsOptional("Logger.GetFlushLevel");
     MarkNativeAsOptional("Logger.SetFlushLevel");
@@ -128,8 +128,8 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Sink.Flush");
     MarkNativeAsOptional("Sink.GetLevel");
     MarkNativeAsOptional("Sink.SetLevel");
-    MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.ShouldLog");
+    MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.Equals");
     MarkNativeAsOptional("Sink.IsValid");
 }

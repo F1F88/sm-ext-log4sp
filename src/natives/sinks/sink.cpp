@@ -109,31 +109,6 @@ static cell_t Flush(SourcePawn::IPluginContext *ctx, const cell_t *params) noexc
     return true;
 }
 
-static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
-    if (!sink)
-    {
-        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
-        return 0;
-    }
-
-    char *pattern;
-    if (auto err = ctx->LocalToString(params[2], &pattern))
-    {
-        ctx->ReportError("Invalid pattern (error %d)", err);
-        return 0;
-    }
-
-    auto type = Log4sp::NumToPatternTimeType(params[3]);
-
-    sink->set_formatter(spdlog::details::make_unique<spdlog::pattern_formatter>(pattern, type));
-    return 0;
-}
-
 static cell_t GetLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
@@ -184,6 +159,31 @@ static cell_t ShouldLog(SourcePawn::IPluginContext *ctx, const cell_t *params) n
     return sink->should_log(lvl);
 }
 
+static cell_t SetPattern(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
+
+    char *pattern;
+    if (auto err = ctx->LocalToString(params[2], &pattern))
+    {
+        ctx->ReportError("Invalid pattern (error %d)", err);
+        return 0;
+    }
+
+    auto type = Log4sp::NumToPatternTimeType(params[3]);
+
+    sink->set_formatter(spdlog::details::make_unique<spdlog::pattern_formatter>(pattern, type));
+    return 0;
+}
+
 static cell_t Equals(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
@@ -216,10 +216,10 @@ const sp_nativeinfo_t SinkNatives[] =
 {
     {"Sink.Log",                                Log},
     {"Sink.Flush",                              Flush},
-    {"Sink.SetPattern",                         SetPattern},
     {"Sink.GetLevel",                           GetLevel},
     {"Sink.SetLevel",                           SetLevel},
     {"Sink.ShouldLog",                          ShouldLog},
+    {"Sink.SetPattern",                         SetPattern},
     {"Sink.Equals",                             Equals},
     {"Sink.IsValid",                            IsValid},
 
