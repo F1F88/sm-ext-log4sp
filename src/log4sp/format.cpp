@@ -295,16 +295,15 @@ void AddBinary(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) 
     constexpr unsigned int MAX_TEXT = sizeof(T) * CHAR_BIT;
 
     std::array<char, MAX_TEXT> text;
-    unsigned int iter = MAX_TEXT - 1;
-
+    unsigned int iter = MAX_TEXT;
     do
     {
-        text[iter--] = (val & 1) ? '1' : '0';
+        text[--iter] = (val & 1) ? '1' : '0';
     } while (val >>= 1);
 
-    const char *begin = text.data() + iter + 1;
+    const char *begin = text.data() + iter;
     const char *end   = text.data() + MAX_TEXT;
-    const auto digits = MAX_TEXT - iter - 1;
+    const auto digits = MAX_TEXT - iter;
     const auto pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
@@ -332,16 +331,16 @@ void AddUInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) no
 
     constexpr unsigned int MAX_TEXT = std::numeric_limits<T>::digits10 + 1;
     std::array<char, MAX_TEXT> text;
-    unsigned int iter = MAX_TEXT - 1;
+    unsigned int iter = MAX_TEXT;
 
     do
     {
-        text[iter--] = ('0' + val % 10);
+        text[--iter] = ('0' + val % 10);
     } while (val /= 10);
 
-    const char *begin = text.data() + iter + 1;
+    const char *begin = text.data() + iter;
     const char *end   = text.data() + MAX_TEXT;
-    const auto digits = MAX_TEXT - iter - 1;
+    const auto digits = MAX_TEXT - iter;
     const auto pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
@@ -363,26 +362,28 @@ template <typename T>
 inline static
 void AddInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
 {
-    static_assert(std::is_integral_v<T>, "T must be an integral type");
+    static_assert(std::is_signed_v<T> && std::is_integral_v<T>, "T must be a signed integral type");
     static_assert(std::numeric_limits<std::int32_t>::digits10 == 9);
     static_assert(std::numeric_limits<std::int64_t>::digits10 == 18);
 
     constexpr unsigned int MAX_TEXT = std::numeric_limits<int64_t>::digits10 + 2;
     std::array<char, MAX_TEXT> text;
-    unsigned int iter = MAX_TEXT - 1;
+    unsigned int iter = MAX_TEXT;
 
     const bool negative = val < 0;
-    std::make_unsigned_t<T> unsignedVal = negative ? std::abs(val) : val;
+    using uint_t = std::make_unsigned_t<T>;
+    uint_t unsignedVal = negative ? uint_t(0) - static_cast<uint_t>(val) : static_cast<uint_t>(val);
 
     do
     {
-        text[iter--] = ('0' + unsignedVal % 10);
+        text[--iter] = ('0' + unsignedVal % 10);
     } while (unsignedVal /= 10);
 
-    const char *begin = text.data() + iter + 1;
+    const char *begin = text.data() + iter;
     const char *end   = text.data() + MAX_TEXT;
-    const auto digits = MAX_TEXT - iter - 1;
-    const auto pads   = (width <= digits) ? (0u) : (width - digits - (negative ? 1 : 0));
+    const auto digits = MAX_TEXT - iter;
+    const auto length = digits + (negative ? 1u : 0u);
+    const auto pads   = (width <= length) ? (0u) : (width - length);
 
     // minus sign BEFORE left padding if padding with zeros
     if (negative && (flags & ZEROPAD))
@@ -421,18 +422,18 @@ void AddHex(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noe
     constexpr std::array<char, 16> hexLower = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     const std::array<char,16> &hexAdjust = (flags & UPPERDIGITS) ? hexUpper : hexLower;
 
-    constexpr unsigned int MAX_TEXT = sizeof(T) * 16 / CHAR_BIT;
+    constexpr unsigned int MAX_TEXT = sizeof(T) * CHAR_BIT / 4;
     std::array<char, MAX_TEXT> text;
-    unsigned int iter = MAX_TEXT - 1;
+    unsigned int iter = MAX_TEXT;
 
     do
     {
-        text[iter--] = hexAdjust[val & 0xF];
+        text[--iter] = hexAdjust[val & 0xF];
     } while(val >>= 4);
 
-    const char *begin = text.data() + iter + 1;
+    const char *begin = text.data() + iter;
     const char *end   = text.data() + MAX_TEXT;
-    const auto digits = MAX_TEXT - iter - 1;
+    const auto digits = MAX_TEXT - iter;
     const auto pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
