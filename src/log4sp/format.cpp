@@ -293,15 +293,15 @@ void AddBinary(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) 
 
     constexpr const int MAX_TEXT = sizeof(T) * CHAR_BIT;
     char text[MAX_TEXT];
-    int iter = MAX_TEXT - 1;
+    int iter = MAX_TEXT;
 
     do
     {
-        text[iter--] = (val & 1) ? '1' : '0';
+        text[--iter] = (val & 1) ? '1' : '0';
     } while (val >>= 1);
 
-    const char *begin   = text + iter + 1;
-    unsigned int digits = MAX_TEXT - iter - 1;
+    const char *begin   = text + iter;
+    unsigned int digits = MAX_TEXT - iter;
     unsigned int pads   = (width <= digits) ? (0u) : (width - digits);
 
     // right justify if required
@@ -328,7 +328,8 @@ void AddBinary(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) 
 }
 
 template <typename T>
-inline static void AddUInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
+inline static
+void AddUInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
 {
     static_assert(std::is_unsigned_v<T> && std::is_integral_v<T>, "T must be an unsigned integral type");
     static_assert(std::numeric_limits<std::uint32_t>::digits10 == 9);
@@ -338,7 +339,8 @@ inline static void AddUInt(spdlog::memory_buf_t &out, T val, unsigned int width,
     char text[MAX_TEXT];
     unsigned int digits = 0;
 
-    do {
+    do
+    {
         text[digits++] = '0' + val % 10;
     } while (val /= 10);
 
@@ -374,7 +376,7 @@ template <typename T>
 inline static
 void AddInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noexcept
 {
-    static_assert(std::is_integral_v<T>, "T must be an integral type");
+    static_assert(std::is_signed_v<T> && std::is_integral_v<T>, "T must be a signed integral type");
     static_assert(std::numeric_limits<std::int32_t>::digits10 == 9);
     static_assert(std::numeric_limits<std::int64_t>::digits10 == 18);
 
@@ -383,9 +385,11 @@ void AddInt(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noe
     unsigned int digits = 0;
 
     const bool negative = val < 0;
-    std::make_unsigned_t<T> unsignedVal = negative ? std::abs(val) : val;
+    using uint_t = std::make_unsigned_t<T>;
+    uint_t unsignedVal = negative ? uint_t(0) - static_cast<uint_t>(val) : static_cast<uint_t>(val);
 
-    do {
+    do
+    {
         text[digits++] = '0' + unsignedVal % 10;
     } while (unsignedVal /= 10);
 
@@ -446,7 +450,8 @@ void AddHex(spdlog::memory_buf_t &out, T val, unsigned int width, int flags) noe
     char text[MAX_TEXT];
     unsigned int digits = 0;
 
-    do {
+    do
+    {
         text[digits++] = hexAdjust[val & 0xF];
     } while(val >>= 4);
 
