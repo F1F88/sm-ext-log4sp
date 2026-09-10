@@ -1,6 +1,18 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#if defined DEBUG
+    #undef  DEBUG
+#endif
+
+#if defined _DEBUG
+    #undef  _DEBUG
+#endif
+
+#if !defined NDEBUG
+    #define  NDEBUG
+#endif
+
 #include <sourcemod>
 #include <profiler>
 
@@ -52,8 +64,8 @@ Action CMD_Bench(int client, int args)
     //       false          silent
     int calls = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
     int funcs = (args >= 2) ? GetCmdArgInt(2) : CmdFuncs_All;
-    bool fmts = (args >= 3) ? (!!GetCmdArgInt(3)) : false;
-    bool echo = (args >= 4) ? (!!GetCmdArgInt(4)) : false;
+    bool fmts = (args >= 3) ? view_as<bool>(!!GetCmdArgInt(3)) : false;
+    bool echo = (args >= 4) ? view_as<bool>(!!GetCmdArgInt(4)) : false;
 
     int val = FindConVar("sv_logecho").IntValue;
     FindConVar("sv_logecho").SetInt(echo ? 1 : 0); // 如果为 1, 运行时长会大幅增加

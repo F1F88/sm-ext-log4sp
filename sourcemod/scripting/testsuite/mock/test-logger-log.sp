@@ -1,32 +1,59 @@
 #pragma semicolon 1
 #pragma newdecls required
+#pragma dynamic 32768           // Fix: "Not enough space on the heap"
 
-/**
- * Fix: "Not enough space on the heap"
- * 似乎是由于 TestSink.DrainLastLineFast 的调用堆栈过深
- */
-#pragma dynamic 131072
+#if !defined DEBUG
+    #define  DEBUG
+#endif
 
+#if !defined _DEBUG
+    #define  _DEBUG
+#endif
+
+#if defined NDEBUG
+    #undef  NDEBUG
+#endif
+
+#include <regex>
 #include <sourcemod>
 #include <log4sp>
 
+#include "../assert"
 #include "../test_sink"
 #include "../test_utils"
 
 
-#define LOGGER_NAME             "test-log"
+native void TestLoggerLogStackTrace(Logger logger);
+native void TestLoggerLogStackTrace1(Logger logger);
+native void TestLoggerLogStackTrace2(Logger logger);
+native void TestLoggerLogStackTrace3(Logger logger);
 
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+    CreateNative("TestLoggerLogStackTrace",  Native_TestLoggerLogStackTrace);
+    CreateNative("TestLoggerLogStackTrace1", Native_TestLoggerLogStackTrace1);
+    CreateNative("TestLoggerLogStackTrace2", Native_TestLoggerLogStackTrace2);
+    CreateNative("TestLoggerLogStackTrace3", Native_TestLoggerLogStackTrace3);
+    return APLRes_Success;
+}
 
 public void OnPluginStart()
 {
-    RegServerCmd("sm_log4sp_test_log", Command_Test);
+    Test();
+    RegServerCmd("sm_log4sp_test_logger_log", Command_Test);
 }
 
 Action Command_Test(int args)
 {
-    PrintToServer("---- START TEST LOG ----");
+    Test();
+    return Plugin_Handled;
+}
 
-    PrepareTestPath("logger-log/");
+
+void Test()
+{
+    PrintToServer("----------- Started testing Logger-Log -----------");
 
     TestLog();
 
@@ -36,119 +63,228 @@ Action Command_Test(int args)
 
     TestLogStackTrace();
 
-    PrintToServer("---- STOP TEST LOG ----");
-    return Plugin_Handled;
+    PrintToServer("-------------- Test Logger-Log ended -------------");
 }
-
 
 void TestLog()
 {
-    SetTestContext("Test Logger Log");
+    SetTestContext("Logger.Log");
+
+    char LOGGER_NAME[] = "Test-Log";
 
     TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
     logger.Log(LogLevel_Info, "test message 1");
-    AssertStrMatch("Log line match", sink.DrainLastLineFast(), P_PREFIX ... "test message 1");
+    logger.Log(LogLevel_Info, "test message 2");
+    logger.Log(LogLevel_Info, "test message 3");
+    logger.LogF(LogLevel_Info, "test message %d", 4);
+    logger.LogF(LogLevel_Info, "test message %d", 5);
+    logger.LogF(LogLevel_Info, "test message %d", 6);
 
-    logger.LogF(LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("LogEx line match", sink.DrainLastLineFast(), P_PREFIX ... "test message 2");
+    AssertStrEq("LogF msg", sink.DrainLatest().msg, "test message 6");
+    AssertStrEq("LogF name", sink.DrainLatest().name, LOGGER_NAME);
+    AssertEq("LogF lvl", sink.DrainLatest().lvl, LogLevel_Info);
 
-    logger.Close();
-    sink.Close();
+    AssertEq("Log line", sink.DrainLatest().loc.line, 0);
+    AssertStrEq("Log funcname", sink.DrainLatest().loc.funcname, "");
+    AssertStrEq("Log filename", sink.DrainLatest().loc.filename, "");
+
+    SinkCleanupAndDelete(sink);
+    LoggerCleanupAndDelete(logger);
 }
-
 
 void TestLogSrc()
 {
-    SetTestContext("Test Logger LogSrc");
+    SetTestContext("Logger.LogSrc");
+
+    char LOGGER_NAME[] = "Test-LogSrc";
 
     TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.LogSrc(LogLevel_Info, "test message 1");
-    AssertStrMatch("LogSrc line match", sink.DrainLastLineFast(), P_PREFIX ... "\\[test-logger-log.sp:[0-9]+\\] test message 1");
+    logger.LogSrc(LogLevel_Warn, "test message 1");
+    logger.LogSrc(LogLevel_Warn, "test message 2");
+    logger.LogSrc(LogLevel_Warn, "test message 3");
+    logger.LogSrcF(LogLevel_Warn, "test message %d", 4);
+    logger.LogSrcF(LogLevel_Warn, "test message %d", 5);
+    logger.LogSrcF(LogLevel_Warn, "test message %d", 6);
 
-    logger.LogSrcF(LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("LogSrcEx line match", sink.DrainLastLineFast(), P_PREFIX ... "\\[test-logger-log.sp:[0-9]+\\] test message 2");
+    AssertStrEq("LogSrcF msg", sink.DrainLatest().msg, "test message 6");
+    AssertStrEq("LogSrcF name", sink.DrainLatest().name, LOGGER_NAME);
+    AssertEq("LogSrcF lvl", sink.DrainLatest().lvl, LogLevel_Warn);
 
-    logger.Close();
-    sink.Close();
+    AssertEq("LogSrc line", sink.DrainLatest().loc.line, __LINE__ - 9);
+    AssertStrEq("LogSrc funcname", sink.DrainLatest().loc.funcname, "TestLogSrc");
+    AssertStrEndsWith("LogSrc filename endwith", sink.DrainLatest().loc.filename, "test-logger-log.sp");
+
+    LoggerCleanupAndDelete(logger);
+    SinkCleanupAndDelete(sink);
 }
-
 
 void TestLogLoc()
 {
-    SourceLoc locLinux;
-    strcopy(locLinux.filename, sizeof(SourceLoc::filename), "/home/sm-ext-log4sp/Linux-testFile.log");
-    locLinux.line = 123;
-    strcopy(locLinux.funcname, sizeof(SourceLoc::funcname), "Function1");
+    SetTestContext("Logger.LogLoc");
 
-    SourceLoc locWin;
-    strcopy(locWin.filename, sizeof(SourceLoc::filename), "C:\\user\\sm-ext-log4sp\\Win-testFile.log");
-    locWin.line = 456;
-    strcopy(locWin.funcname, sizeof(SourceLoc::funcname), "Function2");
+    char LOGGER_NAME[] = "Test-LogSrc";
 
-    char expectedLinux[2048];
-    FormatF(expectedLinux, sizeof(expectedLinux), P_PREFIX ... "\\[Linux-testFile.log:123\\] test message (1|2|3)");
+    const int LINUX_LINE  = 123;
+    char[] LINUX_FILENAME = "/home/sm-ext-log4sp/Linux-testFile.log";
+    char[] LINUX_FUNCNAME = "Function1";
 
-    char expectedWin[2048];
-    FormatF(expectedWin, sizeof(expectedWin), P_PREFIX ... "\\[Win-testFile.log:456\\] test message (1|2|3)");
+    const int WIN_LINE  = 456;
+    char[] WIN_FILENAME = "C:\\user\\sm-ext-log4sp\\Win-testFile.log";
+    char[] WIN_FUNCNAME = "Function2";
+
+    SourceLoc linuxLoc;
+    linuxLoc.line = LINUX_LINE;
+    strcopy(linuxLoc.filename, sizeof(SourceLoc::filename), LINUX_FILENAME);
+    strcopy(linuxLoc.funcname, sizeof(SourceLoc::funcname), LINUX_FUNCNAME);
+
+    SourceLoc winLoc;
+    winLoc.line = WIN_LINE;
+    strcopy(winLoc.filename, sizeof(SourceLoc::filename), WIN_FILENAME);
+    strcopy(winLoc.funcname, sizeof(SourceLoc::funcname), WIN_FUNCNAME);
 
     TestSink sink = new TestSink();
     Logger logger = new Logger(LOGGER_NAME);
     logger.AddSink(sink);
 
-    logger.LogLoc(locLinux, LogLevel_Info, "test message 1");
-    AssertStrMatch("Linux LogLoc line match", sink.DrainLastLineFast(), expectedLinux);
+    logger.LogLoc(linuxLoc, LogLevel_Error, "test message 1");
+    logger.LogLoc(linuxLoc, LogLevel_Error, "test message 2");
+    logger.LogLoc(linuxLoc, LogLevel_Error, "test message 3");
+    logger.LogLocF(linuxLoc, LogLevel_Error, "test message %d", 4);
+    logger.LogLocF(linuxLoc, LogLevel_Error, "test message %d", 5);
+    logger.LogLocF(linuxLoc, LogLevel_Error, "test message %d", 6);
+    logger.LogLoc(winLoc, LogLevel_Warn, "test message 1");
+    logger.LogLoc(winLoc, LogLevel_Warn, "test message 2");
+    logger.LogLoc(winLoc, LogLevel_Warn, "test message 3");
+    logger.LogLocF(winLoc, LogLevel_Error, "test message %d", 4);
+    logger.LogLocF(winLoc, LogLevel_Error, "test message %d", 5);
+    logger.LogLocF(winLoc, LogLevel_Error, "test message %d", 6);
 
-    logger.LogLocF(locLinux, LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("Linux LogLocEx line match", sink.DrainLastLineFast(), expectedLinux);
+    AssertStrEq("LogLocF win msg", sink.DrainLatest().msg, "test message 6");
+    AssertStrEq("LogLocF win name", sink.DrainLatest().name, LOGGER_NAME);
+    AssertEq("LogLocF win lvl", sink.DrainLatest().lvl, LogLevel_Error);
 
+    AssertEq("LogLocF win line", sink.DrainLatest().loc.line, WIN_LINE);
+    AssertStrEq("LogLocF win funcname", sink.DrainLatest().loc.funcname, WIN_FUNCNAME);
+    AssertStrEq("LogLocF win filename", sink.DrainLatest().loc.filename, WIN_FILENAME);
 
-    logger.LogLoc(locWin, LogLevel_Info, "test message 1");
-    AssertStrMatch("Win LogLoc line match", sink.DrainLastLineFast(), expectedWin);
+    AssertStrEq("LogLoc linux msg", sink.DrainLatest().msg, "test message 6");
+    AssertStrEq("LogLoc linux name", sink.DrainLatest().name, LOGGER_NAME);
+    AssertEq("LogLoc linux lvl", sink.DrainLatest().lvl, LogLevel_Error);
 
-    logger.LogLocF(locWin, LogLevel_Info, "test message %d", 2);
-    AssertStrMatch("Win LogLocEx line match", sink.DrainLastLineFast(), expectedWin);
+    AssertEq("LogLoc linux line", sink.DrainLatest().loc.line, LINUX_LINE);
+    AssertStrEq("LogLoc linux funcname", sink.DrainLatest().loc.funcname, LINUX_FUNCNAME);
+    AssertStrEq("LogLoc linux filename", sink.DrainLatest().loc.filename, LINUX_FILENAME);
 
-    logger.Close();
-    sink.Close();
+    SinkCleanupAndDelete(sink);
+    LoggerCleanupAndDelete(logger);
 }
-
 
 void TestLogStackTrace()
 {
-    SetTestContext("Test Logger LogStackTrace");
+    SetTestContext("Logger.LogStackTrace");
 
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "logger-log/log-stack-trace.log");
+    TestSink sink = new TestSink();
+    Logger logger = new Logger();
+    logger.AddSink(sink);
 
-    TestSink testSink = new TestSink();
-    BasicFileSink basicFileSink = new BasicFileSink(path);
-    Logger logger = new Logger(LOGGER_NAME);
-    logger.AddSink(testSink);
-    logger.AddSink(basicFileSink);
+    TestLoggerLogStackTrace(logger);
 
+    AssertStrEq(   "LogStackTrace  head  1", sink.DrainOldest().msg, "Stack trace requested: test message 1");
+    AssertStrMatch("LogStackTrace  head  2", sink.DrainOldest().msg, "Called from: .*test-logger-log.smx");
+    AssertStrEq(   "LogStackTrace  head  3", sink.DrainOldest().msg, "Call stack trace:");
+    AssertStrMatch("LogStackTrace  line  0", sink.DrainOldest().msg, "  \\[[0-9]+\\] Logger.LogStackTrace");
+    AssertStrMatch("LogStackTrace  line  1", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::__Func1");
+    AssertStrMatch("LogStackTrace  line  2", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::__Func2");
+    AssertStrMatch("LogStackTrace  line  3", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::__Func3");
+    AssertStrMatch("LogStackTrace  line  4", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace1");
+    AssertStrMatch("LogStackTrace  line  6", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace1");
+    AssertStrMatch("LogStackTrace  line  7", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace2");
+    AssertStrMatch("LogStackTrace  line  9", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace2");
+    AssertStrMatch("LogStackTrace  line 10", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace3");
+    AssertStrMatch("LogStackTrace  line 12", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace3");
+    AssertStrMatch("LogStackTrace  line 13", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace");
+    AssertStrMatch("LogStackTrace  line 15", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace");
+    AssertStrMatch("LogStackTrace  line 16", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
+    AssertStrMatch("LogStackTrace  line 17", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Test");
+    AssertStrMatch("LogStackTraceF line 18", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::[OnPluginStart|Command_Test]");
+
+    // autoreload.smx 可能进入堆栈
+    char msg[sizeof(LogEvent::msg)];
+    msg = sink.DrainOldest().msg;
+    while (strncmp(msg, "Stack trace requested: test message 2", 37))
+    {
+        msg = sink.DrainOldest().msg;
+    }
+
+    AssertStrEq(   "LogStackTraceF head  1",                    msg, "Stack trace requested: test message 2");
+    AssertStrMatch("LogStackTraceF head  2", sink.DrainOldest().msg, "Called from: .*test-logger-log.smx");
+    AssertStrEq(   "LogStackTraceF head  3", sink.DrainOldest().msg, "Call stack trace:");
+    AssertStrMatch("LogStackTraceF line  0", sink.DrainOldest().msg, "  \\[[0-9]+\\] Logger.LogStackTraceF");
+    AssertStrMatch("LogStackTraceF line  1", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::__Func1");
+    AssertStrMatch("LogStackTraceF line  2", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::__Func2");
+    AssertStrMatch("LogStackTraceF line  3", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::__Func3");
+    AssertStrMatch("LogStackTraceF line  4", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace1");
+    AssertStrMatch("LogStackTraceF line  6", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace1");
+    AssertStrMatch("LogStackTraceF line  7", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace2");
+    AssertStrMatch("LogStackTraceF line  9", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace2");
+    AssertStrMatch("LogStackTraceF line 10", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace3");
+    AssertStrMatch("LogStackTraceF line 12", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace3");
+    AssertStrMatch("LogStackTraceF line 13", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Native_TestLoggerLogStackTrace");
+    AssertStrMatch("LogStackTraceF line 15", sink.DrainOldest().msg, "  \\[[0-9]+\\] TestLoggerLogStackTrace");
+    AssertStrMatch("LogStackTraceF line 16", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
+    AssertStrMatch("LogStackTraceF line 17", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Test");
+    AssertStrMatch("LogStackTraceF line 18", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::[OnPluginStart|Command_Test]");
+
+    LoggerCleanupAndDelete(logger);
+    SinkCleanupAndDelete(sink);
+}
+
+public any Native_TestLoggerLogStackTrace(Handle plugin, int numParams)
+{
+    Logger logger = GetNativeCell(1);
+    TestLoggerLogStackTrace3(logger);
+    return 0;
+}
+
+public any Native_TestLoggerLogStackTrace3(Handle plugin, int numParams)
+{
+    Logger logger = GetNativeCell(1);
+    TestLoggerLogStackTrace2(logger);
+    return 0;
+}
+
+public any Native_TestLoggerLogStackTrace2(Handle plugin, int numParams)
+{
+    Logger logger = GetNativeCell(1);
+    TestLoggerLogStackTrace1(logger);
+    return 0;
+}
+
+public any Native_TestLoggerLogStackTrace1(Handle plugin, int numParams)
+{
+    Logger logger = GetNativeCell(1);
+    __Func3(logger);
+    return 0;
+}
+
+static void __Func3(Logger logger)
+{
+    __Func2(logger);
+}
+
+static void __Func2(Logger logger)
+{
+    __Func1(logger);
+}
+
+static void __Func1(Logger logger)
+{
     logger.LogStackTrace(LogLevel_Info, "test message 1");
     logger.LogStackTraceF(LogLevel_Info, "test message %d", 2);
-    delete logger;
-    delete basicFileSink;
-
-    AssertStrMatch("LogStackTraceEx line 6 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
-    AssertStrMatch("LogStackTraceEx line 5 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
-    AssertStrMatch("LogStackTraceEx line 4 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTraceEx");
-    AssertStrMatch("LogStackTraceEx line 3 match", testSink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTraceEx line 2 match", testSink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
-    AssertStrMatch("LogStackTraceEx line 1 match", testSink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 2");
-
-    AssertStrMatch("LogStackTrace line 6 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[2\\] Line [0-9]+, .*test-logger-log.sp::Command_Test");
-    AssertStrMatch("LogStackTrace line 5 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[1\\] Line [0-9]+, .*test-logger-log.sp::TestLogStackTrace");
-    AssertStrMatch("LogStackTrace line 4 match", testSink.DrainLastLineFast(), P_PREFIX ... "  \\[0\\] Logger.LogStackTrace");
-    AssertStrMatch("LogStackTrace line 3 match", testSink.DrainLastLineFast(), P_PREFIX ... "Call stack trace:");
-    AssertStrMatch("LogStackTrace line 2 match", testSink.DrainLastLineFast(), P_PREFIX ... "Called from: test-logger-log.smx");
-    AssertStrMatch("LogStackTrace line 1 match", testSink.DrainLastLineFast(), P_PREFIX ... "Stack trace requested: test message 1");
-    delete testSink;
 }

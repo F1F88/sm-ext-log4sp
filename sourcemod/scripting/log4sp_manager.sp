@@ -14,6 +14,7 @@ public Plugin myinfo =
 
 
 #include <sourcemod>
+#include <log4sp>
 
 #include "log4sp-manager/command.sp"
 #include "log4sp-manager/menu.sp"

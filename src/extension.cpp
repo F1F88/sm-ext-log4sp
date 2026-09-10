@@ -71,10 +71,6 @@ bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, RotatingFileSinkNatives);
     sharesys->AddNatives(myself, ServerConsoleSinkNatives);
 
-#ifdef DEBUG
-    sharesys->AddNatives(myself, TestSinkNatives);
-#endif
-
     sharesys->RegisterLibrary(myself, "log4sp");
     return true;
 }

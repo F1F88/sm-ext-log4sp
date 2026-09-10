@@ -1,6 +1,18 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#if defined DEBUG
+    #undef  DEBUG
+#endif
+
+#if defined _DEBUG
+    #undef  _DEBUG
+#endif
+
+#if !defined NDEBUG
+    #define  NDEBUG
+#endif
+
 #include <sourcemod>
 #include <profiler>
 #include <log4sp>
@@ -23,6 +35,8 @@ enum
     CmdFuncs_LogSrc         = (1 << 1),
     CmdFuncs_LogLoc         = (1 << 2),
     CmdFuncs_LogF           = (1 << 3),
+    CmdFuncs_LogSrcF        = (1 << 4),
+    CmdFuncs_LogLocF        = (1 << 5),
     CmdFuncs_All            = (~0)
 };
 
@@ -64,13 +78,15 @@ Action Command_Bench(int client, int args)
     //       LogSrc         2
     //       LogLoc         4
     //       LogF           8
+    //       LogSrcF        16
+    //       LogLocF        32
     //    fmts: Boolean - Default false
     //       true           all
     //       false          mock
     int calls = (args >= 1) ? GetCmdArgInt(1) : 1_000_000;
     int sinks = (args >= 2) ? GetCmdArgInt(2) : CmdSinks_All;
     int funcs = (args >= 3) ? GetCmdArgInt(3) : CmdFuncs_LogF;
-    bool fmts = (args >= 4) ? (!!GetCmdArgInt(4)) : false;
+    bool fmts = (args >= 4) ? view_as<bool>(!!GetCmdArgInt(4)) : false;
 
     BenchAll(calls, sinks, funcs, fmts);
 
@@ -218,6 +234,10 @@ void BenchAllLogFunc(int calls, int funcs, bool mock, Logger logger)
 
     if (funcs & CmdFuncs_LogF)
         BenchLogF(calls, mock, logger);
+
+    // LogSrcF
+
+    // LogLocF
 }
 
 
@@ -590,7 +610,7 @@ void BenchLogF(int calls, bool fmts, Logger logger)
 
 
 
-bool CB_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, SourceLoc loc, const char[] name, LogLevel level, const char[] msg)
+bool CB_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel level, const char[] msg)
 {
     return true;
 }
@@ -894,9 +914,20 @@ methodmap BenchDB
         BenchData data;
         datas.GetArray(0, data);
 
+        char buildTags[128];
+        int version = GetLog4spVersion(.buildTags=buildTags, .maxlen2=sizeof(buildTags));
+        Format(buildTags, sizeof(buildTags), "(%s)", buildTags);
+
+        PrintToServer("*****************************************************************************");
+        PrintToServer("* Bench log4sp v%u.%u.%u  %-52s *",
+            (version >> 16) & 0xFF, (version >> 8) & 0xFF, version & 0xFF,
+            buildTags,
+            "*");
+        PrintToServer("*****************************************************************************");
+
         for (int i = 0; i < datas.Length; ++i) {
             datas.GetArray(i, data);
-            PrintToServer("[benchmark] %-15s Runs: %-3d  Calls: %-9d  Elapsed: %-8.3f %9d/sec",
+            PrintToServer("%-15s  Runs: %-3d  Calls: %-9d  Elapsed: %-8.3f %9d/sec",
                 data.name, data.num, data.calls, data.delta, RoundToFloor(data.calls / data.delta));
         }
         delete datas;

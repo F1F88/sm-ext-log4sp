@@ -1,110 +1,188 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#if !defined DEBUG
+    #define  DEBUG
+#endif
+
+#if !defined _DEBUG
+    #define  _DEBUG
+#endif
+
+#if defined NDEBUG
+    #undef  NDEBUG
+#endif
+
+#include <regex>
 #include <sourcemod>
 #include <log4sp>
 
+#include "../assert"
+#include "../test_sink"
 #include "../test_utils"
-
-
-#define LOGGER_NAME                 "test-err-handler"
 
 
 public void OnPluginStart()
 {
+    Test();
     RegServerCmd("sm_log4sp_test_logger_err_handler", Command_Test);
 }
 
 Action Command_Test(int args)
 {
-    PrintToServer("---- START TEST LOGGER ERR HANDLER ----");
+    Test();
+    return Plugin_Handled;
+}
 
-    PrepareTestPath("err-handler/");
+
+void Test()
+{
+    PrintToServer("------ Started testing Logger-Error-Handler ------");
+
+    PrepareTestPath("test-err-handler/");
 
     TestDefaultErrorHandler();
 
     TestCustomErrorHandler();
 
-    PrintToServer("---- STOP TEST LOGGER ERR HANDLER ----");
-    return Plugin_Handled;
+    PrintToServer("--------- Test Logger-Error-Handler ended --------");
 }
-
 
 void TestDefaultErrorHandler()
 {
-    SetTestContext("Test Default Error Handler");
+    SetTestContext("ErrorHandler Default");
 
-    MarkErrorTestStart("Test Default Error Handler");
-
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "err-handler/default_handler.log");
-
-    BasicFileSink sink = new BasicFileSink(path);
-    Logger logger = new Logger(LOGGER_NAME);
+    TestSink sink = new TestSink();
+    Logger logger = new Logger();
     logger.AddSink(sink);
-    logger.SetPattern("%v");
 
     logger.InfoF("Test message %d", 1);
-    logger.InfoF("Test message %d %d", 2);
+
+    __TryBackupSMErrorFile();
+    sink.SetLogError("Encountered an error!");
+
+    logger.InfoF("Test message %d", 2);
+
+    sink.ClearLogError();
+    char errorMessages[2048];
+    __ReadSMErrorFile(errorMessages, sizeof(errorMessages));
+    __TryRestoreSMErrorFile();
+
     logger.InfoF("Test message %d", 3);
-    delete logger;
-    delete sink;
+    LoggerCleanupAndDelete(logger);
 
-    MarkErrorTestEnd("Test Default Error Handler");
+    int logCount = sink.GetLogCount();
+    char messages[2][sizeof(LogEvent::msg)];
+    strcopy(messages[0], sizeof(LogEvent::msg), sink.DrainOldest().msg);
+    strcopy(messages[1], sizeof(LogEvent::msg), sink.DrainOldest().msg);
+    SinkCleanupAndDelete(sink);
 
-    AssertEq("Skip param format error log, count lines", CountLines(path), 2);
-    AssertFileMatch("Skip param format error log, contents match", path, "Test message 1" ... P_EOL ... "Test message 3" ... P_EOL);
+    char expectedMessages[][] = {"Test message 1", "Test message 3"};
+    char expectedErrorMessagesPattern[] = "L .*: \\[LOG4SP|.*test-logger-err-handler.smx\\] \\[.*test-logger-err-handler.sp::[0-9]+\\] \\[.*test-logger-err-handler\\.smx\\] Encountered an error![^\\S ]";
 
-    // AssertEq("Default error handler log to SM file, count lines", CountLines(GetErrorFilename()), 3);
-    char[] pattern = "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}: \\[.*\\] \\[test-logger-err-handler.sp::[0-9]+\\] \\[test-err-handler\\] String formatted incorrectly - parameter 4 \\(total 3\\)(\n|\r\n)";
-    AssertFileMatch("Default error handler log to SM file, contents match", GetErrorFilename(), pattern);
-
-    // 若检验通过，则删除本次测试生成的日志信息以保持 SM 错误日志的简洁
-    // DeleteFile(GetErrorFilename());
+    AssertEq("[Skip log error]", logCount, 2);
+    AssertStrArrayEq("[Skip log error]", messages, expectedMessages, sizeof(expectedMessages));
+    AssertStrMatch("[SM error file]", errorMessages, expectedErrorMessagesPattern);
 }
 
-
-int g_iCustomErrCnt = 0;
-
+int __iCustomErrCnt = 0;
 void TestCustomErrorHandler()
 {
-    SetTestContext("Test Custom Error Handler");
+    SetTestContext("ErrorHandler Custom");
 
-    g_iCustomErrCnt = 0;
+    __iCustomErrCnt = 0;
 
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "err-handler/custom_handler.log");
-
-    BasicFileSink sink = new BasicFileSink(path);
-    Logger logger = new Logger(LOGGER_NAME);
+    TestSink sink = new TestSink();
+    Logger logger = new Logger("MyLogger");
     logger.AddSink(sink);
-    logger.SetPattern("%v");
+
     logger.SetFlushLevel(LogLevel_Info);
-    logger.SetErrorHandler(null, CustomErrorHandler);
+    logger.SetErrorHandler(null, CB_ErrorHandler);
 
     logger.InfoF("Test message %d", 1);
     logger.InfoF("Test message %d", 2);
-    logger.InfoF("Test message %d %d", 3);
-    logger.InfoF("Test message %d %d", 4);
-    logger.InfoF("Test message %d %d", 5);
+
+    sink.SetLogError("Encountered an error!");
+    logger.InfoF("Test message %d", 3);
+    logger.InfoF("Test message %d", 4);
+    logger.InfoF("Test message %d", 5);
+    sink.ClearLogError();
+
     logger.InfoF("Test message %d", 6);
     logger.InfoF("Test message %d", 7);
-    delete logger;
-    delete sink;
 
-    AssertEq("Call custom error handler count", g_iCustomErrCnt, 3);
-    AssertEq("Skip param format error log, count lines", CountLines(path), 4);
-    AssertFileMatch("Skip param format error log, contents match", path, "Test message 1" ... P_EOL ... "Test message 2" ... P_EOL ... "Test message 6" ... P_EOL ... "Test message 7" ... P_EOL);
+    int logCount = sink.GetLogCount();
+    char messages[4][sizeof(LogEvent::msg)];
+    strcopy(messages[3], sizeof(LogEvent::msg), sink.DrainLatest().msg);
+    strcopy(messages[2], sizeof(LogEvent::msg), sink.DrainLatest().msg);
+    strcopy(messages[1], sizeof(LogEvent::msg), sink.DrainLatest().msg);
+    strcopy(messages[0], sizeof(LogEvent::msg), sink.DrainLatest().msg);
+
+    LoggerCleanupAndDelete(logger);
+    SinkCleanupAndDelete(sink);
+
+    char expectedMessages[][] = {"Test message 1", "Test message 2", "Test message 6", "Test message 7"};
+
+    AssertEq("[custom callback called]", __iCustomErrCnt, 3);
+    AssertEq("[Skip log error]", logCount, 4);
+    AssertStrArrayEq("[Skip log error]", messages, expectedMessages, sizeof(expectedMessages));
 }
 
 
-
-void CustomErrorHandler(const char[] origin, const SourceLoc loc, const char[] msg)
+public void CB_ErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
 {
-    g_iCustomErrCnt++;
+    __iCustomErrCnt++;
 
-    AssertStrEq("OnCustomErrorHandler msg", msg, "String formatted incorrectly - parameter 4 (total 3)");
-    AssertStrEq("OnCustomErrorHandler origin", origin, LOGGER_NAME);
-    AssertStrMatch("OnCustomErrorHandler file match", loc.filename, ".*test-logger-err-handler.sp");
-    AssertStrEq("OnCustomErrorHandler func", loc.funcname, "TestCustomErrorHandler");
+    AssertStrEq("[custom callback origin]", origin, "MyLogger");
+    AssertStrEndsWith("[custom callback file  ]", loc.filename, "test-logger-err-handler.sp");
+    AssertStrEq("[custom callback func  ]", loc.funcname, "TestCustomErrorHandler");
+    AssertStrEq("[custom callback msg   ]", msg, "Encountered an error!");
+}
+
+static void __TryBackupSMErrorFile()
+{
+    char errorFile[PLATFORM_MAX_PATH];
+    FormatTime(errorFile, sizeof(errorFile), "addons/sourcemod/logs/errors_%Y%m%d.log");
+    if (!FileExists(errorFile))
+        return;
+
+    char backFile[PLATFORM_MAX_PATH];
+    BuildTestPath(backFile, sizeof(backFile), "sm-error-bk.log");
+
+    if (!RenameFile(backFile, errorFile))
+        ThrowError("Failed to back up file \"%s\" to file \"%s\".", errorFile, backFile);
+    else
+        PrintToServer("Back up file \"%s\" to file \"%s\".", errorFile, backFile);
+}
+
+static int __ReadSMErrorFile(char[] buffer, int maxlen)
+{
+    char errorFile[PLATFORM_MAX_PATH];
+    FormatTime(errorFile, sizeof(errorFile), "addons/sourcemod/logs/errors_%Y%m%d.log");
+
+    File file = OpenFile(errorFile, "rb");
+    int bytes = file.ReadString(buffer, maxlen);
+    delete file;
+    return bytes;
+}
+
+static void __TryRestoreSMErrorFile()
+{
+    char backFile[PLATFORM_MAX_PATH];
+    BuildTestPath(backFile, sizeof(backFile), "sm-error-bk.log");
+
+    // 1 - 没有备份: 删除测试痕迹
+    // 2 - 已有备份: 删除测试痕迹并恢复
+    char errorFile[PLATFORM_MAX_PATH];
+    FormatTime(errorFile, sizeof(errorFile), "addons/sourcemod/logs/errors_%Y%m%d.log");
+    if (FileExists(errorFile) && !DeleteFile(errorFile))
+        ThrowError("Failed to delete file \"%s\".", errorFile);
+
+    if (!FileExists(backFile))
+        return;
+
+    if (!RenameFile(errorFile, backFile))
+        ThrowError("Failed to restore file \"%s\" to file \"%s\".", backFile, errorFile);
+    else
+        PrintToServer("Restore file \"%s\" to file \"%s\".", errorFile, backFile);
 }

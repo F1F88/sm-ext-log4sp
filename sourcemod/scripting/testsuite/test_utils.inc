@@ -3,268 +3,163 @@
 #endif
 #define _log4sp_test_utils_included
 
-#define TEST_LOG4SP_LEVEL_TOTAL  view_as<int>(LogLevel_Total)
-// Pattern
-#define P_FOLDER_SEPS           "(/|\\)"
-#define P_EOL                   "(\n|\r\n)"
-#define P_SM_DATE               "L [0-9]{2}/[0-9]{2}/[0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}"
-#define P_SM_PREFIX             P_SM_DATE ... ": \\[SM\\] "
-#define P_DATE                  "\\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}\\]"
-#define P_PREFIX                P_DATE ... " \\[test-.*\\] \\[(trace|debug|info|warn|error|fatal|off)\\] "
+#include <log4sp/details/os>
 
-#include <files>
-#include <regex>
-#include <testing>
 
+stock int BuildTestPath(char[] buffer, int maxlen, const char[] filename)
+{
+    return BuildPath(Path_SM, buffer, maxlen, "logs/test_log4sp/%s", filename);
+}
 
 stock char[] PrepareTestPath(const char[] fmt, any ...)
 {
-    char file[PLATFORM_MAX_PATH];
-    VFormat(file, sizeof(file), fmt, 2);
-
-    BuildTestPath(file, sizeof(file), file);
-    __CleanTestDir(file);
-
-    return file;
-}
-
-stock int BuildTestPath(char[] buffer, int maxlen, const char[] file)
-{
-    return BuildPath(Path_SM, buffer, maxlen, "logs/test_log4sp/%s", file);
-}
-
-stock int CountLines(const char[] path)
-{
-    File file = OpenFile(path, "r");
-    if (!file)
-        ThrowError("Failed open file: (%s).", path);
-
-    char buffer[2048];
-    int counter = 0;
-    while (!file.EndOfFile() && file.ReadLine(buffer, sizeof(buffer)))
-    {
-        counter++;
-        // PrintToServer("[%d] %s", counter, buffer);
-    }
-
-    delete file;
-    return counter;
-}
-
-stock bool StrEndWith(const char[] full, const char[] ending, bool caseSensitive = true)
-{
-    int fullLen = strlen(full);
-    int endingLen = strlen(ending);
-    return fullLen > endingLen && StrEqual(full[fullLen - endingLen], ending, caseSensitive);
-}
-
-stock int CountFiles(const char[] folder, any ...)
-{
-    char buffer[PLATFORM_MAX_PATH];
-    VFormat(buffer, sizeof(buffer), folder, 2);
-
-    int sep = FindCharInString(buffer, '\\', true);
-    if (sep == -1)
-        sep = FindCharInString(buffer, '/', true);
-    if (sep == -1)
-        sep = 0;
-
-    buffer[sep] = '\0';
-
-    if (!DirExists(buffer))
-        ThrowError("Invalid path: (%s).", buffer);
-    return __CountFiles(buffer);
-}
-
-stock void AssertFileMatch(const char[] text, const char[] path, const char[] expectedPattern)
-{
-    AssertTrue(text, StringMatch(GetFileContents(path), expectedPattern) > 0);
-}
-
-stock void AssertStrMatch(const char[] text, const char[] str, const char[] expectedPattern)
-{
-    AssertTrue(text, StringMatch(str, expectedPattern) > 0);
-}
-
-stock int StringMatch(const char[] str, const char[] expectedPattern)
-{
-    char err[128];
-    Regex regex = new Regex(expectedPattern, _, err, sizeof(err));
-    if (!regex)
-    {
-        LogError("Str: (%s)", str);
-        LogError("Exp: (%s)", expectedPattern);
-        ThrowError("Invalid regex handle: (%s).", err);
-    }
-
-    RegexError code = REGEX_ERROR_NONE;
-    int count = regex.MatchAll(str, code);
-    delete regex;
-
-    if (code != REGEX_ERROR_NONE)
-    {
-        LogError("Str: (%s)", str);
-        LogError("Exp: (%s)", expectedPattern);
-        ThrowError("String match failure: (%d).", code);
-    }
-    return count;
-}
-
-stock char[] GetErrorFilename()
-{
     char filename[PLATFORM_MAX_PATH];
-    FormatTime(filename, sizeof(filename), "addons/sourcemod/logs/errors_%Y%m%d.log");
+    VFormat(filename, sizeof(filename), fmt, 2);
+
+    BuildTestPath(filename, sizeof(filename), filename);
+
+    char directory[PLATFORM_MAX_PATH];
+    SplitPathByFile(directory, sizeof(directory), "", 0, filename);
+
+    char error[256];
+    if (!__RemoveDirs(directory, error, sizeof(error)))
+        ThrowError("%s", error);
+
+    if (!MakeDirs(directory))
+        ThrowError("Failed to make directory \"%s\".", directory);
     return filename;
 }
 
-stock void BackupSMErrorFile()
+stock void GetSMErrorFilename(char[] buffer, int maxlen)
 {
-    if (!FileExists(GetErrorFilename()))
-        return;
-
-    char prefix[PLATFORM_MAX_PATH];
-    FormatTime(prefix, sizeof(prefix), "addons/sourcemod/logs/errors_%Y%m%d");
-
-    char newpath[PLATFORM_MAX_PATH];
-    FormatEx(newpath, sizeof(newpath), "%s-backup.1.log", prefix);
-
-    // 查找未被占用的文件名
-    for (int i = 2; FileExists(newpath); ++i)
-        FormatEx(newpath, sizeof(newpath), "%s-backup.%d.log", prefix, i);
-
-    RenameFile(newpath, GetErrorFilename());
+    FormatTime(buffer, maxlen, "addons/sourcemod/logs/errors_%Y%m%d.log");
 }
 
-stock void MarkErrorTestStart(const char[] fmt, any ...)
+stock int FetchSourceModVersionFromCommand(int &major=0, int &minor=0, int &patch=0, int &build=0)
 {
-    char buffer[2048];
-    VFormat(buffer, sizeof(buffer), fmt, 2);
+    // https://github.com/alliedmodders/sourcemod/blob/master/core/logic/RootConsoleMenu.cpp#L235
+    //  SourceMod Version Information:
+    //     SourceMod Version: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+
+    char buffer[1024];  // FIXME: Results may exceed the capacity.
+    ServerCommandEx(buffer, sizeof(buffer), "%s", "sm version");
 
-    // BackupSMErrorFile(); // 保留原先的错误信息以便排查
-
-    FindConVar("sv_logecho").SetBool(false); // HACK: 暂时关闭控制台回显日志消息
-    LogError("--------------------- Start - %s ---------------------", buffer);
+    // Using regular expressions might be better.
+    int offset = 55;
+    offset += StringToIntEx(buffer[offset], major) + 1;
+    offset += StringToIntEx(buffer[offset], minor) + 1;
+    offset += StringToIntEx(buffer[offset], patch) + 1;
+    StringToIntEx(buffer[offset], build);
+    return (major << 24) | (minor << 16) | (patch << 8) | build;
 }
 
-stock void MarkErrorTestEnd(const char[] fmt, any ...)
+stock int FetchHandleCountFromCommand(const char[] handleOwner=NULL_STRING, const char[] dumpFilename=NULL_STRING)
 {
-    char buffer[2048];
-    VFormat(buffer, sizeof(buffer), fmt, 2);
+    // https://github.com/alliedmodders/sourcemod/blob/e87291362bc8445b187bb2a574ad702e8f1a0696/core/logic/HandleSys.cpp#L1246
+    char owner[21];
+    if (!handleOwner[0] || IsNullString(handleOwner))
+        GetPluginFilename(null, owner, sizeof(owner));
+    else
+        strcopy(owner, sizeof(owner), handleOwner);
+    Format(owner, sizeof(owner), "%-20.20s", owner);
+    // PrintToServer("handleOwner: \"%s\" owner: \"%s\".", handleOwner, owner);
 
-    LogError("---------------------- End - %s ----------------------", buffer);
-    FindConVar("sv_logecho").SetBool(true); // HACK: 重新启用控制台回显日志消息
-}
+    char filename[PLATFORM_MAX_PATH];
+    if (!dumpFilename[0] || IsNullString(dumpFilename))
+    {
+        char date[256];
+        FormatTime(date, sizeof(date), "%Y%m%d_%H%M%S");
+        BuildPath(Path_SM, filename, sizeof(filename), "logs/dump_%s.log", date);
+    }
+    else
+    {
+        strcopy(filename, sizeof(filename), dumpFilename);
+    }
+    // PrintToServer("Dump File: \"%s\" Exists: %s.", filename, FileExists(filename) ? "true" : "false");
 
-stock char[] GetFileContents(const char[] path)
-{
-    File file = OpenFile(path, "rt");
+    ServerCommand("sm_dump_handles %s", filename);
+    ServerExecute();
+
+    File file = OpenFile(filename, "r");
     if (!file)
-        ThrowError("Failed open file '%s'.", path);
+        ThrowError("Failed open file \"%s\".", filename);
 
-    char buffer[2048 * 2];
-    file.ReadString(buffer, sizeof(buffer));
+    int result = 0;
+    char line[128];
+    while (file.ReadLine(line, sizeof(line))) {
+        if (strncmp(line, "0x", 2) != 0)
+            continue;
+
+        // line[strlen(line) - 1] = '\0';
+        // PrintToServer("owner: %s %s line: %s.",
+        //               owner,
+        //               strncmp(line[11], owner, sizeof(owner) - 1) != 0 ? "!=" : "==",
+        //               line[11]);
+
+        if (strncmp(line[11], owner, sizeof(owner) - 1) != 0)
+            continue;
+
+        ++result;
+    }
     delete file;
-    return buffer;
+    return result;
 }
 
 
 
-// 内部封装
-static void __CleanTestDir(const char[] path)
+
+static bool __RemoveDirs(const char[] directoryPath, char[] error="", int maxlen=0)
 {
-    char buffer[PLATFORM_MAX_PATH];
-    strcopy(buffer, sizeof(buffer), path);
+    if (!directoryPath[0] || !DirExists(directoryPath))
+        return true;
 
-    int sep = FindCharInString(buffer, '\\', true);
-    if (sep == -1)
-        sep = FindCharInString(buffer, '/', true);
-    if (sep == -1)
-        sep = 0;
-
-    buffer[sep] = '\0';
-
-    __CleanDir(buffer);
-}
-
-static void __CleanDir(const char[] path)
-{
-    DirectoryListing dir = OpenDirectory(path);
-    if (dir)
+    DirectoryListing directory = OpenDirectory(directoryPath);
+    if (!directory)
     {
-        char filename[PLATFORM_MAX_PATH];
-        FileType type;
+        FormatEx(error, maxlen, "Failed to open directory \"%s\".", directoryPath);
+        return false;
+    }
 
-        while (dir.GetNext(filename, sizeof(filename), type))
+    char filename[PLATFORM_MAX_PATH];
+    FileType type;
+    while (directory.GetNext(filename, sizeof(filename), type))
+    {
+        if (StrEqual(filename, ".") || StrEqual(filename, ".."))
+            continue;
+
+        char path[PLATFORM_MAX_PATH];
+        FormatEx(path, sizeof(path), "%s/%s", directoryPath, filename);
+
+        switch (type)
         {
-            if (StrEqual(filename, ".") || StrEqual(filename, ".."))
-                continue;
-
-            char fullpath[PLATFORM_MAX_PATH];
-            FormatEx(fullpath, sizeof(fullpath), "%s/%s", path, filename);
-            // PrintToServer("__CleanDir: | path %s | file %s |", path, filename);
-            // PrintToServer("__CleanDir: | type %d | full %s |", type, fullpath);
-
-            switch (type)
+            case FileType_Directory:
             {
-                case FileType_Directory:
+                if (!__RemoveDirs(path, error, maxlen))
+                    return false;
+            }
+            case FileType_File:
+            {
+                if (!DeleteFile(path))
                 {
-                    __CleanDir(fullpath);
+                    FormatEx(error, maxlen, "Failed to delete file \"%s\".", path);
+                    return false;
                 }
-                case FileType_File:
+            }
+            default:
+            {
+                if (!DeleteFile(path))
                 {
-                    if (!DeleteFile(fullpath))
-                        ThrowError("Unable to delete: (%s).", fullpath);
-                }
-                default:
-                {
-                    LogError("Ignore unknown file type: (%d) (%s).", type, fullpath);
+                    FormatEx(error, maxlen, "Failed to delete \"%s\".", path);
+                    return false;
                 }
             }
         }
-        delete dir;
-
-        if (!RemoveDir(path))
-            ThrowError("Unable to delete: (%s).", path);
     }
-}
+    delete directory;
 
-static int __CountFiles(const char[] path)
-{
-    DirectoryListing dir = OpenDirectory(path);
-    if (dir)
+    if (!RemoveDir(directoryPath))
     {
-        char filename[PLATFORM_MAX_PATH];
-        char fullpath[PLATFORM_MAX_PATH];
-        FileType type;
-        int counter = 0;
-
-        while (dir.GetNext(filename, sizeof(filename), type))
-        {
-            if (StrEqual(filename, ".") || StrEqual(filename, ".."))
-                continue;
-
-            FormatEx(fullpath, sizeof(fullpath), "%s/%s", path, filename);
-            // PrintToServer("__CountFiles: | path %s | file %s |", path, filename);
-            // PrintToServer("__CountFiles: | type %d | full %s |", type, fullpath);
-
-            switch (type)
-            {
-                case FileType_Directory:
-                {
-                    counter += __CountFiles(fullpath);
-                }
-                case FileType_File:
-                {
-                    counter++;
-                }
-                default:
-                {
-                    ThrowError("Unknown file type: (%d) (%s).", type, fullpath);
-                }
-            }
-        }
-        delete dir;
-        return counter;
+        FormatEx(error, maxlen, "Failed to delete directory \"%s\".", directoryPath);
+        return false;
     }
-    return 0;
+    return true;
 }

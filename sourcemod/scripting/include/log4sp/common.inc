@@ -216,7 +216,7 @@ native int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags
 #else
 stock  int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags="", int maxlen2=0)
 {
-    const int MAJOR = 2, MINOR = 0, PATCH = 0;
+    const int MAJOR = 1, MINOR = 11, PATCH = 0;
     const int VERSION = (MAJOR << 16) | (MINOR << 8) | PATCH;
     static const char BUILD_TIME[] = __DATE__ ... " " ... __TIME__;
 

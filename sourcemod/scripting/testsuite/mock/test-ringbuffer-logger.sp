@@ -14,9 +14,7 @@
 #endif
 
 #include <sourcemod>
-
-#include <log4sp/logger>
-#include <log4sp/sinks/ringbuffer_sink>
+#include <log4sp>
 
 #include "../assert"
 #include "../test_utils"

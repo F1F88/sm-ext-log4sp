@@ -1,84 +1,221 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#if !defined DEBUG
+    #define  DEBUG
+#endif
+
+#if !defined _DEBUG
+    #define  _DEBUG
+#endif
+
+#if defined NDEBUG
+    #undef  NDEBUG
+#endif
+
+#include <regex>
 #include <sourcemod>
 #include <log4sp>
 
+#undef  REQUIRE_PLUGIN
+#include <log4sp/registry>
+#define REQUIRE_PLUGIN
+
+#include "../assert"
 #include "../test_sink"
 #include "../test_utils"
 
+#if !defined LOGGER_NAME
+    #define  LOGGER_NAME "test-commands"
+#endif
 
-public void OnPluginStart()
+
+public void OnAllPluginsLoaded()
 {
+    RequestFrame(Test);
     RegServerCmd("sm_log4sp_test_commands", Command_Test);
 }
 
 Action Command_Test(int args)
 {
-    PrintToServer("---- START COMMANDS ----");
-
-    RequestFrame(TestCommands);
-
-    PrintToServer("---- STOP COMMANDS ----");
+    RequestFrame(Test);
     return Plugin_Handled;
 }
 
 
-void TestCommands()
+void Test()
 {
-    SetTestContext("Test Commands");
+    PrintToServer("------------ Started testing Commands ------------");
 
-    ServerConsoleSink sink = new ServerConsoleSink();
-    Logger logger = new Logger("test-commands");
+    SetTestContext("Commands");
+
+    AssertTrue("[log4sp manager library]", Registry.LibraryExists());
+
+    Logger logger = new Logger(LOGGER_NAME);
+    Registry.Instance().RegisterLogger(logger);
+
+    TestSink sink = new TestSink();
     logger.AddSink(sink);
 
-    char buffer[2048];
+    SinkCleanupAndDelete(sink);
+    LoggerCleanupAndDelete(logger);
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp list");
-    AssertStrMatch("Commands list match", buffer, "\\[SM\\] List of all logger names: \\[.*log4sp.*\\]\\.(\n|\r\n)");
+    TestCommandLog();
+    TestCommandShouldLog();
+    TestCommandGetLvl();
+    TestCommandSetLvl();
+    TestCommandSetPattern();
+    TestCommandFlush();
+    TestCommandShouldFlush();
+    TestCommandGetFlushLvl();
+    TestCommandSetFlushLvl();
+    TestCommandApplyAll();
+    TestCommandList();
+    TestCommandVersion();
+    Registry.Instance().Drop(LOGGER_NAME);
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp apply_all list");
-    AssertStrMatch("Commands apply_all match", buffer, "\\[SM\\] Command function name \"list\" not exists\\.(\n|\r\n)");
+    PrintToServer("--------------- Test Commands ended --------------");
+}
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp apply_all get_lvl");
-    AssertStrMatch("Commands apply_all match", buffer, "[\\[SM\\] Logger '.*' log level is '(trace|debug|info|warn|error|fatal|off)'\\.(\n|\r\n)]+");
+void TestCommandLog()
+{
+    TestSink sink = GetTestSinkFromTestLogger();
+    Registry.Instance().Get(LOGGER_NAME);
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp get_lvl test-commands");
-    AssertStrMatch("Commands get_lvl match", buffer, "\\[SM\\] Logger 'test-commands' log level is 'info'\\.(\n|\r\n)");
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp log "...LOGGER_NAME..." trace \"Hello Log4sp 1.\"");
+    AssertStrMatch("[log]", buffer, "Logger \""...LOGGER_NAME..."\" log a \"trace\" level message \"Hello Log4sp 1\\.\"\\.[^\\S ]");
+    AssertEq("[log]", sink.GetLogCount(), 0);
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_lvl test-commands trace");
-    AssertStrMatch("Commands set_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set log level to 'trace'(\n|\r\n)");
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp log "...LOGGER_NAME..." 2 \"Hello Log4sp 2.\"");
+    AssertStrMatch("[log]", buffer, "Logger \""...LOGGER_NAME..."\" log a \"info\" level message \"Hello Log4sp 2\\.\"\\.[^\\S ]");
+    AssertEq("[log]", sink.GetLogCount(), 1);
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_lvl test-commands 1");
-    AssertStrMatch("Commands set_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set log level to 'debug'(\n|\r\n)");
+    SinkCleanupAndDelete(sink);
+}
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_pattern test-commands %%v");
-    AssertStrMatch("Commands set_pattern match", buffer, "\\[SM\\] Logger 'test-commands' will set log pattern to '%v'(\n|\r\n)");
+void TestCommandShouldLog()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_log "...LOGGER_NAME..." debug");
+    AssertStrMatch("[should_log]", buffer, "Logger \""...LOGGER_NAME..."\" are not enabled logging for \"debug\" level\\.[^\\S ]");
+    AssertFalse("[should_log]", Registry.Instance().Get(LOGGER_NAME).ShouldLog(LogLevel_Debug));
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp should_log test-commands trace");
-    AssertStrMatch("Commands should_log match", buffer, "\\[SM\\] Logger 'test-commands' has disabled 'trace' log level\\.(\n|\r\n)");
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_log "...LOGGER_NAME..." 3");
+    AssertStrMatch("[should_log]", buffer, "Logger \""...LOGGER_NAME..."\" are enabled logging for \"warn\" level\\.[^\\S ]");
+    AssertTrue("[should_log]", Registry.Instance().Get(LOGGER_NAME).ShouldLog(LogLevel_Warn));
+}
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp should_log test-commands debug");
-    AssertStrMatch("Commands should_log match", buffer, "\\[SM\\] Logger 'test-commands' has enabled 'debug' log level\\.(\n|\r\n)");
+void TestCommandGetLvl()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp get_lvl " ... LOGGER_NAME);
+    AssertStrMatch("[get_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" log level is \"info\"\\.[^\\S ]");
+    AssertEq("[get_lvl]", Registry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Info);
+}
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp log test-commands debug \"Hello Log4sp.\"");
-    AssertStrMatch("Commands log match", buffer, "\\[SM\\] Logger 'test-commands' will log a message 'Hello Log4sp\\.' with log level 'debug'\\.(\n|\r\n)");
+void TestCommandSetLvl()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_lvl "...LOGGER_NAME..." info");
+    AssertStrMatch("[set_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set log level to \"info\"\\. \\(original: \"info\"\\)[^\\S ]");
+    AssertEq("[set_lvl]", Registry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Info);
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp flush test-commands");
-    AssertStrMatch("Commands flush match", buffer, "\\[SM\\] Logger 'test-commands' will flush its contents\\.(\n|\r\n)");
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_lvl "...LOGGER_NAME..." 4");
+    AssertStrMatch("[set_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set log level to \"error\"\\. \\(original: \"info\"\\)[^\\S ]");
+    AssertEq("[set_lvl]", Registry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Error);
+}
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp get_flush_lvl test-commands");
-    AssertStrMatch("Commands get_flush_lvl match", buffer, "\\[SM\\] Logger 'test-commands' flush level is 'off'\\.(\n|\r\n)");
+void TestCommandSetPattern()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_pattern "...LOGGER_NAME..." %%v");
+    AssertStrMatch("[set_pattern]", buffer, "Logger \""...LOGGER_NAME..."\" set pattern to \"%v\"\\.[^\\S ]");
+}
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_flush_lvl test-commands trace");
-    AssertStrMatch("Commands set_flush_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set flush level to 'trace'(\n|\r\n)");
+void TestCommandFlush()
+{
+    TestSink sink = GetTestSinkFromTestLogger();
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp set_flush_lvl test-commands 1");
-    AssertStrMatch("Commands set_flush_lvl match", buffer, "\\[SM\\] Logger 'test-commands' will set flush level to 'debug'(\n|\r\n)");
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp flush " ... LOGGER_NAME);
+    AssertStrMatch("[flush]", buffer, "Logger \""...LOGGER_NAME..."\" flush its contents\\.[^\\S ]");
+    AssertEq("[flush]", sink.GetFlushCount(), 1);
 
-    ServerCommandEx(buffer, sizeof(buffer), "sm log4sp version");
-    AssertStrMatch("Commands set_flush_lvl match", buffer, "SourceMod extension log4sp version information:\\s+ Version .*[0-9]+\\.[0-9]+\\.[0-9]+.*\\s+ Compiled on .* [0-9]+ [0-9]{4} - [0-9]{2}:[0-9]{2}:[0-9]{2}\\s+ Built from \\s+ https://github.com/F1F88/sm-ext-log4sp/commit/.*");
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp flush " ... LOGGER_NAME);
+    AssertStrMatch("[flush]", buffer, "Logger \""...LOGGER_NAME..."\" flush its contents\\.[^\\S ]");
+    AssertEq("[flush]", sink.GetFlushCount(), 2);
 
-    delete sink;
-    delete logger;
+    SinkCleanupAndDelete(sink);
+}
+
+void TestCommandShouldFlush()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_flush "...LOGGER_NAME..." warn");
+    AssertStrMatch("[should_flush]", buffer, "Logger \""...LOGGER_NAME..."\" are not trigger automatic flush for \"warn\" level\\.[^\\S ]");
+    AssertFalse("[should_flush]", Registry.Instance().Get(LOGGER_NAME).ShouldFlush(LogLevel_Warn));
+
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_flush "...LOGGER_NAME..." 5");
+    AssertStrMatch("[should_flush]", buffer, "Logger \""...LOGGER_NAME..."\" are not trigger automatic flush for \"fatal\" level\\.[^\\S ]");
+    AssertFalse("[should_flush]", Registry.Instance().Get(LOGGER_NAME).ShouldFlush(LogLevel_Fatal));
+}
+
+void TestCommandGetFlushLvl()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp get_flush_lvl " ... LOGGER_NAME);
+    AssertStrMatch("[get_flush_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" flush level is \"off\"\\.[^\\S ]");
+    AssertEq("[get_flush_lvl]", Registry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Off);
+}
+
+void TestCommandSetFlushLvl()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_flush_lvl "...LOGGER_NAME..." error");
+    AssertStrMatch("[set_flush_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set flush level to \"error\"\\. \\(original: \"off\"\\)[^\\S ]");
+    AssertEq("[set_flush_lvl]", Registry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Error);
+
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_flush_lvl "...LOGGER_NAME..." 6");
+    AssertStrMatch("[set_flush_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set flush level to \"off\"\\. \\(original: \"error\"\\)[^\\S ]");
+    AssertEq("[set_flush_lvl]", Registry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Off);
+}
+
+void TestCommandApplyAll()
+{
+    TestSink sink = GetTestSinkFromTestLogger();
+
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp apply_all log");
+    AssertStrMatch("[apply_all log]", buffer, "\\[SM\\] Usage: sm_log4sp apply_all log <level> \\[message\\][^\\S ]");
+    AssertEq("[apply_all log]", sink.GetLogCount(), 1);
+
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp apply_all log fatal message");
+    AssertStrMatch("[apply_all log]", buffer, "[\\[SM\\] Logger \".*\" log a \"fatal\" level message \".*\".[^\\S ]]+");
+    AssertEq("[apply_all log]", sink.GetLogCount(), 2);
+
+    SinkCleanupAndDelete(sink);
+}
+
+void TestCommandList()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp list");
+    AssertStrMatch("[list]", buffer, "List of all logger names: \\[.*\\]*\\.[^\\S ]");
+}
+
+void TestCommandVersion()
+{
+    char buffer[1024];
+    ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp version");
+    AssertStrMatch("[version]", buffer, " Log4sp version information:[^\\S]    Version: 2\\.[0-9]+\\.[0-9]+[^\\S]    Build time:.*[^\\S]    Build tags: .*[^\\S]    Manager version: 2\\.[0-9]+\\.[0-9]+[^\\S]    Manager build time:.*[^\\S]");
+}
+
+
+
+static TestSink GetTestSinkFromTestLogger()
+{
+    Sink sink[1];
+    Registry.Instance().Get(LOGGER_NAME).GetSinks(sink, sizeof(sink));
+    return view_as<TestSink>(sink[0]);
 }
