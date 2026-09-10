@@ -134,7 +134,7 @@ methodmap DailyFileSink < Sink
             ThrowError("Invalid maxFiles %u. [0-%u]", maxFiles, UINT16_MAX);
 
         PrivateForward calcFwd;
-        if (calcFunc && calcFunc != INVALID_FUNCTION) {
+        if (calcFunc != INVALID_FUNCTION) {
             // void (char[] filename, int maxlen, const char[] timestamp)
             calcFwd = new PrivateForward(ET_Ignore, Param_String, Param_Cell, Param_String);
             calcFwd.AddFunction(calcPlugin, calcFunc);

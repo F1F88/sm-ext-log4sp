@@ -66,8 +66,7 @@ stock Long Int64ToLong(const int value[2])
  *                      32-bits of a 64-bit integer.
  * @return              Long conversion of int64 value.
  */
-#pragma deprecated TODO: Function name to be determined.
-stock Long Int64tToLong(const int64 value)
+stock Long I64ToLong(const int64 value)
 {
     Long result;
     result.__digits = value;
@@ -540,8 +539,7 @@ enum struct Long
         return buffer;
     }
 
-    #pragma deprecated TODO: Function name to be determined.
-    int64 ToInt64t() {
+    int64 ToI64() {
         return this.__digits;
     }
 

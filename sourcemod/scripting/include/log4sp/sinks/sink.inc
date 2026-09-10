@@ -305,13 +305,13 @@ methodmap Sink < Handle
 
     public bool IsValid() {
 #if !defined LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
-        return !!this
+        return view_as<bool>(this)
          && this.__Contains("m_cRef")        && this.__Contains("m_szOwner")
          && this.__Contains("m_szClassname") && this.__Contains("m_eLvl")
          && this.__Contains("m_hLogFwd")     && this.__Contains("m_hFlushFwd")
          && this.__Contains("m_hCloseFwd");
 #else
-        return !!this;
+        return view_as<bool>(this);
 #endif      // LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
     }
 
@@ -372,7 +372,7 @@ methodmap Sink < Handle
         GetPluginFilename(null, owner, sizeof(owner));
 
         PrivateForward logFwd;
-        if (logFunc && logFunc != INVALID_FUNCTION) {
+        if (logFunc != INVALID_FUNCTION) {
             // bool (Sink sink, char[] error, int maxlen, const char[] logTime,
             //       LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
             logFwd = new PrivateForward(ET_Single,   Param_Cell,   Param_String, Param_Cell, Param_String,
@@ -381,14 +381,14 @@ methodmap Sink < Handle
         }
 
         PrivateForward flushFwd;
-        if (flushFunc && flushFunc != INVALID_FUNCTION) {
+        if (flushFunc != INVALID_FUNCTION) {
             // bool (Sink sink, char[] error, int maxlen);
             flushFwd = new PrivateForward(ET_Single, Param_Cell, Param_String, Param_Cell);
             flushFwd.AddFunction(flushPlugin, flushFunc);
         }
 
         PrivateForward closeFwd;
-        if (closeFunc && closeFunc != INVALID_FUNCTION) {
+        if (closeFunc != INVALID_FUNCTION) {
             // void (Sink sink);
             closeFwd = new PrivateForward(ET_Ignore, Param_Cell);
             closeFwd.AddFunction(closePlugin, closeFunc);

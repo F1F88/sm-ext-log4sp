@@ -31,13 +31,13 @@ methodmap FileHelper < Handle
         GetPluginFilename(null, owner, sizeof(owner));
 
         PrivateForward fileOpenFwd = null;
-        if (fileOpenFunc && fileOpenFunc != INVALID_FUNCTION) {
+        if (fileOpenFunc != INVALID_FUNCTION) {
             // void (const char[] filename);
             fileOpenFwd = new PrivateForward(ET_Ignore, Param_String);
             fileOpenFwd.AddFunction(fileOpenPlugin, fileOpenFunc);
         }
         PrivateForward fileCloseFwd = null;
-        if (fileCloseFunc && fileCloseFunc != INVALID_FUNCTION) {
+        if (fileCloseFunc != INVALID_FUNCTION) {
             // void (const char[] filename);
             fileCloseFwd = new PrivateForward(ET_Ignore, Param_String);
             fileCloseFwd.AddFunction(fileClosePlugin, fileCloseFunc);
@@ -320,13 +320,13 @@ methodmap FileHelper < Handle
 
     public bool IsValid() {
 #if !defined LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
-        return this
+        return view_as<bool>(this)
          && this.__Contains("m_cRef")       && this.__Contains("m_szOwner")
          && this.__Contains("m_hFile")      && this.__Contains("m_szFileOwner")
          && this.__Contains("m_szFilename") && this.__Contains("m_hFileOpenFwd")
          && this.__Contains("m_hFileCloseFwd");
 #else
-        return !!this;
+        return view_as<bool>(this);
 #endif      // LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
     }
 

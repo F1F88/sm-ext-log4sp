@@ -290,7 +290,11 @@ methodmap Logger < Handle
         if (this.ShouldLog(lvl)) {
             SourceLoc loc;
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 4);
+#endif
             this.__LogIt(loc, lvl, msg);
         }
     }
@@ -308,7 +312,11 @@ methodmap Logger < Handle
 
         if (this.ShouldLog(lvl)) {
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 4);
+#endif
             this.__LogIt(this.__GetSourceLoc(1), lvl, msg);
         }
     }
@@ -327,7 +335,11 @@ methodmap Logger < Handle
 
         if (this.ShouldLog(lvl)) {
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 5);
+#endif
             this.__LogIt(loc, lvl, msg);
         }
     }
@@ -370,7 +382,11 @@ methodmap Logger < Handle
             loc = this.__GetSourceLoc(1);
 
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 4);
+#endif
 
             char buffer[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
             FormatEx(buffer, sizeof(buffer), "Stack trace requested: %s", msg);
@@ -410,7 +426,11 @@ methodmap Logger < Handle
         if (this.ShouldLog(LogLevel_Trace)) {
             SourceLoc loc;
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 3);
+#endif
             this.__LogIt(loc, LogLevel_Trace, msg);
         }
     }
@@ -431,7 +451,11 @@ methodmap Logger < Handle
         if (this.ShouldLog(LogLevel_Debug)) {
             SourceLoc loc;
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 3);
+#endif
             this.__LogIt(loc, LogLevel_Debug, msg);
         }
     }
@@ -452,7 +476,11 @@ methodmap Logger < Handle
         if (this.ShouldLog(LogLevel_Info)) {
             SourceLoc loc;
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 3);
+#endif
             this.__LogIt(loc, LogLevel_Info, msg);
         }
     }
@@ -473,7 +501,11 @@ methodmap Logger < Handle
         if (this.ShouldLog(LogLevel_Warn)) {
             SourceLoc loc;
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 3);
+#endif
             this.__LogIt(loc, LogLevel_Warn, msg);
         }
     }
@@ -494,7 +526,11 @@ methodmap Logger < Handle
         if (this.ShouldLog(LogLevel_Error)) {
             SourceLoc loc;
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 3);
+#endif
             this.__LogIt(loc, LogLevel_Error, msg);
         }
     }
@@ -515,7 +551,11 @@ methodmap Logger < Handle
         if (this.ShouldLog(LogLevel_Fatal)) {
             SourceLoc loc;
             char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+            FormatEx(msg, sizeof(msg), fmt, ...);
+#else
             VFormat(msg, sizeof(msg), fmt, 3);
+#endif
             this.__LogIt(loc, LogLevel_Fatal, msg);
         }
     }
@@ -804,7 +844,7 @@ methodmap Logger < Handle
 
     public bool IsValid() {
 #if !defined LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
-        return this
+        return view_as<bool>(this)
          && this.__Contains("m_cRef")
          && this.__Contains("m_szOwner")    && this.__Contains("m_szName")
          && this.__Contains("m_uNameLen")   && this.__Contains("m_eLvl")
@@ -812,7 +852,7 @@ methodmap Logger < Handle
          && this.__Contains("m_eFlushLvl")  && this.__Contains("m_hErrFwd")
          && this.__Contains("m_szErrPlugin");
 #else
-        return !!this;
+        return view_as<bool>(this);
 #endif      // LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
     }
 

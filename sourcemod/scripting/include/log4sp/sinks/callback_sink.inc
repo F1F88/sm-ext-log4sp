@@ -126,7 +126,7 @@ methodmap CallbackSink < Sink
                         Handle closePlugin, CallbackSinkCloseFunction closeFunc,
                         any data=0) {
         PrivateForward closeFwd;
-        if (closeFunc && closeFunc != INVALID_FUNCTION) {
+        if (closeFunc != INVALID_FUNCTION) {
             // void (any data);
             closeFwd = new PrivateForward(ET_Ignore, Param_Cell);
             closeFwd.AddFunction(closePlugin, closeFunc);

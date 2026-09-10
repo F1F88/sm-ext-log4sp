@@ -176,7 +176,7 @@ static any Native_Registry_InitializeLogger(Handle plugin, int numParams)
     logger.SetFlushLevel(m_eGlobalFlushLevel);
 
     // Set new error function according to previously configured error function
-    if (m_fnErrorFunc && m_fnErrorFunc != INVALID_FUNCTION)
+    if (m_fnErrorFunc != INVALID_FUNCTION)
         logger.SetErrorHandler(m_hErrorPlugin, m_fnErrorFunc);
 
     // Register if need
@@ -396,7 +396,7 @@ static any Native_Registry_SetErrorHandler(Handle plugin, int numParams)
     // https://github.com/alliedmodders/sourcepawn/pull/644
     // https://github.com/alliedmodders/sourcepawn/issues/671
     ErrorHandler errorFunc = GetNativeCell(3);
-    if (!errorFunc || errorFunc == INVALID_FUNCTION)
+    if (errorFunc == INVALID_FUNCTION)
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
 
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
