@@ -14,7 +14,11 @@ static cell_t GetLog4spVersion(SourcePawn::IPluginContext *ctx, const cell_t *pa
 #else
     "debug"
 #endif
+#if defined(LOG4SP_BUILD_TAGS)
+    ",git=" LOG4SP_SHA_SHORT "," LOG4SP_BUILD_TAGS;
+#else
     ",git=" LOG4SP_SHA_SHORT;
+#endif
 
     std::size_t bytes = 0;
     if (auto err = ctx->StringToLocalUTF8(params[1], params[2], BUILD_TIME, &bytes))
