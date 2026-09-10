@@ -344,9 +344,9 @@ methodmap Logger < Handle
             FormatEx(buffer, sizeof(buffer), "Stack trace requested: %s", msg);
             this.__LogIt(loc, lvl, buffer);
 
-            char pluginName[PLATFORM_MAX_PATH];
-            GetPluginFilename(null, pluginName, sizeof(pluginName));
-            FormatEx(buffer, sizeof(buffer), "Called from: %s", pluginName);
+            char filename[PLATFORM_MAX_PATH];
+            GetPluginFilename(null, filename, sizeof(filename));
+            FormatEx(buffer, sizeof(buffer), "Called from: %s", filename);
             this.__LogIt(loc, lvl, buffer);
 
             FrameIterator frame = new FrameIterator();
@@ -376,9 +376,9 @@ methodmap Logger < Handle
             FormatEx(buffer, sizeof(buffer), "Stack trace requested: %s", msg);
             this.__LogIt(loc, lvl, buffer);
 
-            char pluginName[PLATFORM_MAX_PATH];
-            GetPluginFilename(null, pluginName, sizeof(pluginName));
-            FormatEx(buffer, sizeof(buffer), "Called from: %s", pluginName);
+            char filename[PLATFORM_MAX_PATH];
+            GetPluginFilename(null, filename, sizeof(filename));
+            FormatEx(buffer, sizeof(buffer), "Called from: %s", filename);
             this.__LogIt(loc, lvl, buffer);
 
             FrameIterator frame = new FrameIterator();
@@ -664,23 +664,18 @@ methodmap Logger < Handle
             ThrowError("Invalid Logger Handle %x.", this);
 
         // Cleanup old function
-        char errPluginFile[PLATFORM_MAX_PATH];
-        this.__GetErrPlugin(errPluginFile, sizeof(errPluginFile));
-        if (errPluginFile[0]) {
-            Handle errPlugin = FindPluginByFile(errPluginFile);
-            if (errPlugin) {
+        char filename[PLATFORM_MAX_PATH];
+        this.__GetErrPlugin(filename, sizeof(filename));
+        if (filename[0]) {
+            Handle errPlugin = FindPluginByFile(filename);
+            if (errPlugin)
                 this.__GetErrFwd().RemoveAllFunctions(errPlugin);
-            } else {
-                // This code should never be executed.
-                LogError("[Logger.SetErrorHandler] Plugin \"%s\" for adding the ErrorHandler does not exist.", errPluginFile);
-            }
         }
 
         // Set a new function that will throw an error if it fails.
-        char buffer[PLATFORM_MAX_PATH];
-        GetPluginFilename(plugin, buffer, sizeof(buffer));
+        GetPluginFilename(plugin, filename, sizeof(filename));
         this.__GetErrFwd().AddFunction(plugin, func);
-        this.__SetErrPlugin(buffer);
+        this.__SetErrPlugin(filename);
     }
 
     public Logger Clone() {
@@ -928,13 +923,14 @@ methodmap Logger < Handle
         int time64[2];
         GetTime(time64);
 
-        // time head
+        // Time head
         char now[21];
         Int64ToString(time64, now, sizeof(now));
 
         int timeTail = RoundToNearest(FloatFraction(GetEngineTime()) * 1000000000);
         Format(now, sizeof(now), "%s%09d", now, timeTail);
 
+        // Logger name
         int maxlen = this.__GetNameLength() + 1;
         char[] name = new char[maxlen];
         this.__GetName(name, maxlen);
@@ -984,7 +980,7 @@ methodmap Logger < Handle
             Call_Finish();
         } else {
             // Default logging to SM's error log file
-            char locStr[256];
+            char source[256];
             if (!loc.IsEmpty()) {
                 int sepOffset = 0;
                 for (int i = 0; i < sizeof(SourceLoc::filename); ++i) {
@@ -993,9 +989,9 @@ methodmap Logger < Handle
                     if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                         sepOffset = i + 1;
                 }
-                FormatEx(locStr, sizeof(locStr), "[%s::%u] ", loc.filename[sepOffset], loc.line);
+                FormatEx(source, sizeof(source), "[%s::%u] ", loc.filename[sepOffset], loc.line);
             }
-            LogError("%s[%s] %s", locStr, origin, msg);
+            LogError("%s[%s] %s", source, origin, msg);
         }
     }
 

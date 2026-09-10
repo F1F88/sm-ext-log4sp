@@ -139,7 +139,7 @@ methodmap Sink < Handle
                 int time64[2];
                 GetTime(time64);
 
-                // time head
+                // Time head
                 char now[21];
                 Int64ToString(time64, now, sizeof(now));
 
