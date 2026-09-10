@@ -3,9 +3,6 @@
 #endif
 #define _log4sp_sinks_daily_file_sink_included
 
-#pragma newdecls required
-#pragma semicolon 1
-
 #include <log4sp/sinks/sink>
 
 #if defined LOG4SP_HEADER_ONLY

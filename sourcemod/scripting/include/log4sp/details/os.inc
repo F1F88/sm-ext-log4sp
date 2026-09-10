@@ -3,9 +3,6 @@
 #endif
 #define _log4sp_details_os_included
 
-#pragma newdecls required
-#pragma semicolon 1
-
 
 /**
  * return file path and its extension:

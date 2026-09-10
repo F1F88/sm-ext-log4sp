@@ -3,9 +3,6 @@
 #endif
 #define _log4sp_common_included
 
-#pragma newdecls required
-#pragma semicolon 1
-
 #if !defined LOG4SP_ES_CONST
     #if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR <= 11
         #define LOG4SP_ES_CONST

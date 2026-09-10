@@ -3,9 +3,6 @@
 #endif
 #define _log4sp_long_included
 
-#pragma newdecls required
-#pragma semicolon 1
-
 
 /**
  * Converts a string to a Long.
