@@ -3,9 +3,6 @@
 #endif
 #define _log4sp_included
 
-#pragma newdecls required
-#pragma semicolon 1
-
 
 #include <log4sp/common>
 #include <log4sp/logger>

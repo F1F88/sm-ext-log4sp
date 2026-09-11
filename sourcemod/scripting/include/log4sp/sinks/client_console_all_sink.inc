@@ -3,9 +3,6 @@
 #endif
 #define _log4sp_sinks_client_console_all_sink_included
 
-#pragma newdecls required
-#pragma semicolon 1
-
 #include <log4sp/logger>
 #include <log4sp/sinks/callback_sink>
 

@@ -3,9 +3,6 @@
 #endif
 #define _log4sp_test_utils_included
 
-#pragma newdecls required
-#pragma semicolon 1
-
 #define TEST_LOG4SP_LEVEL_TOTAL  view_as<int>(LogLevel_Total)
 // Pattern
 #define P_FOLDER_SEPS           "(/|\\)"
