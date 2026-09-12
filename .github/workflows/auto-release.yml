@@ -1,0 +1,292 @@
+name: Auto Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-extension:
+    name: Build extension
+    uses: ./.github/workflows/build-extension.yml
+    with:
+      source_ref: ${{ github.ref }}
+    secrets: inherit
+
+  build-plugin-manager:
+    name: Build plugin manager
+    uses: ./.github/workflows/build-plugin-manager.yml
+    with:
+      source_ref: ${{ github.ref }}
+    secrets: inherit
+
+  release:
+    name: Merge packages and release
+    runs-on: ubuntu-latest
+    needs:
+      - build-extension
+      - build-plugin-manager
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+
+      - name: Merge release packages
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 <<'PY'
+          import os
+          import re
+          import shutil
+          import zipfile
+          from pathlib import Path
+
+          artifacts_dir = Path("artifacts")
+          release_dir = Path("release")
+          release_dir.mkdir(parents=True, exist_ok=True)
+
+          # sm-ext-log4sp-<version>.<hash>-<os>-<sm>-<arch>
+          extension_re = re.compile(
+              r"^sm-ext-log4sp-"
+              r"(?P<version>v\d+\.\d+\.\d+)\."
+              r"(?P<hash>[0-9a-f]+)-"
+              r"(?P<os>[^-]+)-"
+              r"(?P<sm>[^-]+)-"
+              r"(?P<arch>x86|x64)$"
+          )
+
+          # sm-plugin-log4sp_manager-<version>.<hash>-<sm>
+          manager_re = re.compile(
+              r"^sm-plugin-log4sp_manager-"
+              r"(?P<version>v\d+\.\d+\.\d+)\."
+              r"(?P<hash>[0-9a-f]+)-"
+              r"(?P<sm>[^-]+)$"
+          )
+
+          extension_artifacts = []
+          manager_artifacts = []
+
+          for item in sorted(artifacts_dir.iterdir()):
+              if not item.is_dir():
+                  continue
+
+              match = extension_re.fullmatch(item.name)
+              if match:
+                  extension_artifacts.append((match.groupdict(), item))
+                  continue
+
+              match = manager_re.fullmatch(item.name)
+              if match:
+                  manager_artifacts.append((match.groupdict(), item))
+                  continue
+
+              print(f"Ignore unrelated artifact: {item.name}")
+
+          if not extension_artifacts:
+              raise SystemExit("No extension artifacts were found.")
+
+          if not manager_artifacts:
+              raise SystemExit("No plugin-manager artifacts were found.")
+
+          def copy_tree(src: Path, dst: Path) -> None:
+              """
+              Merge src into dst.
+
+              Existing files are replaced. Symlinks are copied as symlinks.
+              """
+              dst.mkdir(parents=True, exist_ok=True)
+
+              for entry in src.iterdir():
+                  target = dst / entry.name
+
+                  if entry.is_dir() and not entry.is_symlink():
+                      copy_tree(entry, target)
+                      continue
+
+                  if target.is_dir() and not target.is_symlink():
+                      shutil.rmtree(target)
+                  elif target.exists() or target.is_symlink():
+                      target.unlink()
+
+                  if entry.is_symlink():
+                      target.symlink_to(os.readlink(entry))
+                  else:
+                      shutil.copy2(entry, target)
+
+          def zip_dir(source: Path, archive: Path) -> None:
+              with zipfile.ZipFile(
+                  archive,
+                  "w",
+                  compression=zipfile.ZIP_DEFLATED,
+                  compresslevel=9,
+              ) as zf:
+                  for path in sorted(source.rglob("*")):
+                      if path.is_file():
+                          zf.write(path, path.relative_to(source))
+
+          # ------------------------------------------------------------------
+          # Validate that all artifacts belong to the same Log4sp build.
+          # ------------------------------------------------------------------
+
+          extension_revisions = {
+              (data["version"], data["hash"])
+              for data, _ in extension_artifacts
+          }
+
+          manager_revisions = {
+              (data["version"], data["hash"])
+              for data, _ in manager_artifacts
+          }
+
+          if len(extension_revisions) != 1:
+              raise SystemExit(
+                  "Extension artifacts do not share one version/hash pair: "
+                  f"{sorted(extension_revisions)}"
+              )
+
+          if len(manager_revisions) != 1:
+              raise SystemExit(
+                  "Plugin-manager artifacts do not share one version/hash pair: "
+                  f"{sorted(manager_revisions)}"
+              )
+
+          extension_version, extension_hash = next(iter(extension_revisions))
+          manager_version, manager_hash = next(iter(manager_revisions))
+
+          if extension_hash != manager_hash:
+              raise SystemExit(
+                  "Extension and plugin-manager artifacts were built from "
+                  f"different commits: extension={extension_hash}, "
+                  f"plugin-manager={manager_hash}"
+              )
+
+          version = extension_version
+          short_hash = extension_hash
+
+          print(f"Extension version: {extension_version}")
+          print(f"Plugin-manager version: {manager_version}")
+          print(f"Source hash: {short_hash}")
+
+          # ------------------------------------------------------------------
+          # Index plugin-manager artifacts by SourceMod version.
+          # ------------------------------------------------------------------
+
+          manager_by_sm = {
+              data["sm"]: (data, path)
+              for data, path in manager_artifacts
+          }
+
+          # ------------------------------------------------------------------
+          # Group extension artifacts by OS + SourceMod version.
+          #
+          # For example:
+          #
+          #   sm-ext-log4sp-1.0.0.abcdef1-win_latest-sm_latest-x86
+          #   sm-ext-log4sp-1.0.0.abcdef1-win_latest-sm_latest-x64
+          #
+          # become:
+          #
+          #   log4sp-1.0.0.abcdef1-win_latest-sm_latest.zip
+          # ------------------------------------------------------------------
+
+          extension_groups = {}
+
+          for data, path in extension_artifacts:
+              key = (data["os"], data["sm"])
+              extension_groups.setdefault(key, []).append((data, path))
+
+          for (os_name, sm_version), extension_items in sorted(
+              extension_groups.items()
+          ):
+              manager_item = manager_by_sm.get(sm_version)
+
+              if manager_item is None:
+                  raise SystemExit(
+                      f"Missing plugin-manager artifact for {sm_version}."
+                  )
+
+              package_name = (
+                  f"log4sp-{version}.{short_hash}-"
+                  f"{os_name}-{sm_version}"
+              )
+
+              package_dir = release_dir / package_name
+              package_dir.mkdir(parents=True, exist_ok=True)
+
+              # Merge x86/x64 extension artifacts.
+              #
+              # The artifacts contain architecture-specific files in their
+              # respective directories, so both can safely be merged.
+              for _, artifact_path in sorted(
+                  extension_items,
+                  key=lambda item: item[0]["arch"],
+              ):
+                  copy_tree(artifact_path, package_dir)
+
+              # Add the plugin-manager package.
+              copy_tree(manager_item[1], package_dir)
+
+              archive = release_dir / f"{package_name}.zip"
+
+              zip_dir(package_dir, archive)
+              shutil.rmtree(package_dir)
+
+              print(f"Created {archive}")
+
+          # ------------------------------------------------------------------
+          # Determine the release tag.
+          #
+          # Tag-triggered runs:
+          #   keep the exact tag, e.g. v1.4.0
+          #
+          # Manual workflow runs:
+          #   if a tag input is provided, use it and publish a release.
+          #   otherwise only build/package, do not publish.
+          # ------------------------------------------------------------------
+
+          event_ref = os.environ["GITHUB_REF"]
+
+          if event_ref.startswith("refs/tags/v"):
+              release_tag = event_ref.removeprefix("refs/tags/")
+          else:
+              release_tag = f"v{version}"
+
+          with open(
+              os.environ["GITHUB_OUTPUT"],
+              "a",
+              encoding="utf-8",
+          ) as output:
+              output.write(f"release_tag={release_tag}\n")
+              output.write(f"version={version}\n")
+              output.write(f"short_hash={short_hash}\n")
+
+          print(f"Release tag: {release_tag}")
+          PY
+
+      - name: Upload packaged artifacts for validation
+        if: github.event_name == 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: packaged-artifacts
+          path: release/*.zip
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.package.outputs.release_tag }}
+          name: log4sp ${{ steps.package.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          files: release/*.zip
