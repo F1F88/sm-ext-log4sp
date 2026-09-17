@@ -243,7 +243,7 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
             val = (int)(fval / tmp);
             out.push_back('0' + static_cast<char>(val));
             fval -= val * tmp;
-            tmp *= 0.1;
+            tmp /= 10.0;
         }
     }
 
@@ -267,7 +267,7 @@ void AddFloat(spdlog::memory_buf_t &out, double fval, unsigned int width, int pr
     {
         while (prec--)
         {
-            tmp *= 0.1;
+            tmp /= 10.0;
             val = (int)(fval / tmp);
             out.push_back('0' + static_cast<char>(val));
             fval -= val * tmp;
