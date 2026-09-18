@@ -101,7 +101,7 @@ methodmap Registry < Handle
      *
      * @param lvl       Log level enum.
      */
-    public native void SetFlushLevel(LogLevel flushLvl);
+    public native void SetFlushLevel(LogLevel lvl);
 
     /**
      * Periodically flush the contents of all loggers in the registry.

@@ -179,10 +179,10 @@ methodmap Logger < Handle
     /**
      * Gets whether trigger automatic flush for the given log level.
      *
-     * @param flushLvl  Log level enum.
+     * @param lvl       Log level enum.
      * @return          True if trigger automatic flush for the given log level.
      */
-    public native bool ShouldFlush(LogLevel flushLvl);
+    public native bool ShouldFlush(LogLevel lvl);
 
     /**
      * Gets the sinks clone of logger.
@@ -612,16 +612,16 @@ methodmap Logger < Handle
         return this.__GetFlushLevel();
     }
 
-    public void SetFlushLevel(LogLevel flushLvl) {
+    public void SetFlushLevel(LogLevel lvl) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
-        this.__SetFlushLevel(flushLvl);
+        this.__SetFlushLevel(lvl);
     }
 
-    public bool ShouldFlush(LogLevel flushLvl) {
+    public bool ShouldFlush(LogLevel lvl) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
-        return (flushLvl >= this.__GetFlushLevel()) && flushLvl != LogLevel_Off;
+        return (lvl >= this.__GetFlushLevel()) && lvl != LogLevel_Off;
     }
 
     /**
@@ -940,7 +940,7 @@ methodmap Logger < Handle
     public void __SetSinkOwners(ArrayList owners)   { this.__SetValue("m_hSinkOwners", owners); }
 
     public LogLevel __GetFlushLevel()               { return this.__GetValue("m_eFlushLvl"); }
-    public void __SetFlushLevel(LogLevel flushLvl)  { this.__SetValue("m_eFlushLvl", flushLvl); }
+    public void __SetFlushLevel(LogLevel lvl)       { this.__SetValue("m_eFlushLvl", lvl); }
 
     // Ownership and lifecycle are the same as this, closed in __Logger_OnClose().
     public PrivateForward __GetErrFwd()             { return this.__GetValue("m_hErrFwd"); }

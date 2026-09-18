@@ -333,7 +333,7 @@ static any Native_Registry_SetFlushLevel(Handle plugin, int numParams)
     if (!IsValidRegistryHandle(pThis))
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
 
-    LogLevel flushLvl = GetNativeCell(2);
+    LogLevel lvl = GetNativeCell(2);
 
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
     for (int i = 0; i < snapshot.Length; ++i)
@@ -344,12 +344,12 @@ static any Native_Registry_SetFlushLevel(Handle plugin, int numParams)
 
         Logger logger;
         if (m_hLoggers.GetValue(key, logger))
-            logger.SetFlushLevel(flushLvl);
+            logger.SetFlushLevel(lvl);
     }
     delete snapshot;
 
     // Set to global
-    m_eGlobalFlushLevel = flushLvl;
+    m_eGlobalFlushLevel = lvl;
     return 0;
 
 }
