@@ -21,14 +21,11 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     }
 
     SourcePawn::IPluginFunction *logFunc = nullptr;
-    if (!ctx->IsNullFunctionId(params[2]))
+    logPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[2], &logFunc);
+    if (!logFunc)
     {
-        logFunc = logPlugin->GetBaseContext()->GetFunctionById(params[2]);
-        if (!logFunc)
-        {
-            ctx->ReportError("Invalid log function id %x.", params[2]);
-            return BAD_HANDLE;
-        }
+        ctx->ReportError("Invalid log function id %x.", params[2]);
+        return BAD_HANDLE;
     }
 
     SourceMod::IPlugin *flushPlugin;
@@ -48,14 +45,11 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     }
 
     SourcePawn::IPluginFunction *flushFunc = nullptr;
-    if (!ctx->IsNullFunctionId(params[4]))
+    flushPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[4], &flushFunc);
+    if (!flushFunc)
     {
-        flushFunc = flushPlugin->GetBaseContext()->GetFunctionById(params[4]);
-        if (!flushFunc)
-        {
-            ctx->ReportError("Invalid flush function id %x.", params[4]);
-            return BAD_HANDLE;
-        }
+        ctx->ReportError("Invalid flush function id %x.", params[4]);
+        return BAD_HANDLE;
     }
 
     SourceMod::IPlugin *closePlugin;
@@ -75,14 +69,11 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     }
 
     SourcePawn::IPluginFunction *closeFunc = nullptr;
-    if (!ctx->IsNullFunctionId(params[6]))
+    closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[6], &closeFunc);
+    if (!closeFunc)
     {
-        closeFunc = closePlugin->GetBaseContext()->GetFunctionById(params[6]);
-        if (!closeFunc)
-        {
-            ctx->ReportError("Invalid close function id %x.", params[6]);
-            return BAD_HANDLE;
-        }
+        ctx->ReportError("Invalid close function id %x.", params[6]);
+        return BAD_HANDLE;
     }
 
     cell_t data = params[7];

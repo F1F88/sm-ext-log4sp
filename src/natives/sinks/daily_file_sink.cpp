@@ -41,14 +41,11 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *calcFunc = nullptr;
-    if (!ctx->IsNullFunctionId(params[7]))
+    calcPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[7], &calcFunc);
+    if (!calcFunc)
     {
-        calcFunc = calcPlugin->GetBaseContext()->GetFunctionById(params[7]);
-        if (!calcFunc)
-        {
-            ctx->ReportError("Invalid calc function id %x.", params[7]);
-            return BAD_HANDLE;
-        }
+        ctx->ReportError("Invalid calc function id %x.", params[7]);
+        return BAD_HANDLE;
     }
 
     Log4sp::Sinks::DailyFileSink::Calculator calculator = nullptr;
@@ -130,14 +127,11 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *openFunc = nullptr;
-    if (!ctx->IsNullFunctionId(params[9]))
+    openPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[9], &openFunc);
+    if (!openFunc)
     {
-        openFunc = openPlugin->GetBaseContext()->GetFunctionById(params[9]);
-        if (!openFunc)
-        {
-            ctx->ReportError("Invalid open function id %x.", params[9]);
-            return BAD_HANDLE;
-        }
+        ctx->ReportError("Invalid open function id %x.", params[9]);
+        return BAD_HANDLE;
     }
 
     SourceMod::IPlugin *closePlugin;
@@ -157,14 +151,11 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *closeFunc = nullptr;
-    if (!ctx->IsNullFunctionId(params[11]))
+    closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[11], &closeFunc);
+    if (!closeFunc)
     {
-        closeFunc = closePlugin->GetBaseContext()->GetFunctionById(params[11]);
-        if (!closeFunc)
-        {
-            ctx->ReportError("Invalid close function id %x.", params[11]);
-            return BAD_HANDLE;
-        }
+        ctx->ReportError("Invalid close function id %x.", params[11]);
+        return BAD_HANDLE;
     }
 
     spdlog::file_event_handlers handlers;
