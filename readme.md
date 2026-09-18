@@ -2,28 +2,28 @@
 
 # Log4sp
 
-Log4sp is a high‑performance logging library built on [spdlog](https://github.com/gabime/spdlog). It is designed to help developers efficiently record, format, and manage application logs. Building upon spdlog’s exceptional performance and flexibility, log4sp provides a more easily integrable logging interface for SourceMod, catering to logging needs ranging from lightweight plugins to large‑scale, high‑performance projects.
+Log4sp is a high‑performance logging library built on [spdlog](https://github.com/gabime/spdlog), supporting both header‑only and extension library usage modes. It is designed to help developers efficiently record, format, and manage application logs. Building upon spdlog’s exceptional performance and flexibility, log4sp provides a more easily integrable logging interface for SourceMod, catering to logging needs ranging from lightweight plugins to large‑scale, high‑performance projects.
 
 With log4sp, developers can easily track plugin behavior, debug issues, and monitor performance without adding significant overhead to their code.
-
 
 ## Features
 
 1. Very fast, much faster than [SourceMod Logging](https://sm.alliedmods.net/new-api/logging).
 2. Support log filtering - [log levels](#Log-Levels) can be modified at runtime as well as compile time.
-3. Support for large log message - over [1024](https://github.com/alliedmodders/sourcemod/blob/be89b25d96486900a57e07661f992836479f4fc4/core/logic/smn_filesystem.cpp#L936-L970) characters will not be [truncated](#Format)
+3. Support for large log message - over 1024 characters will not be [truncated](#Format)
 4. Support custom [log message pattern](#Pattern).
 5. Support logging [no error throwing](#Error-Handler).
 6. Support various [sinks (log targets)](./sourcemod/scripting/include/log4sp/sinks).
 7. Support console commands and management menus.
-8. Support int64.
-9. Support x64.
+8. Support header-only mode (Pure SourcePawn).
+9. Support int64
+10. Support x64
 
 ## Installation
 
 1. Download the appropriate version from [Releases](https://github.com/F1F88/sm-ext-log4sp/releases)
-    - `sm-ext-log4sp` contains the extension file and scripting include files.
-    - `sm-plugin-log4sp_manager` plugin adds user commands and menus to manage logger (depends on extension)
+    - `sm-ext-log4sp` contains the extension library and include files for logging-related API.
+    - `sm-plugin-log4sp_manager` contains the manager plugin and include files for manager-related API.
 2. Uploading "addons/sourcemod" files to the server
 
 ## Usage
@@ -106,28 +106,25 @@ File `game/addons/sourcemod/logs/simple-file.log`:
 
 ### Format
 
-Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) as an example, ordinary `Log` method only output the log message as is, while the `LogF` method will format the parameters first and then output the formatted log message.
+Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L33) as an example, ordinary `Log` method only output the log message as is, while the `LogF` method will format the parameters first and then output the formatted log message.
 
 Parameters formatting is performed at **Logger** layer and is triggered only if log message level **>=** logger log level.
 
-|                                                              |    Log    |                             LogF                             |                       SM - LogMessage                        |
-| :----------------------------------------------------------- | :-------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| **Speed**                                                    | Very Fast |                             Fast                             |                             Slow                             |
-| **Max character**                                            | unlimited |                          unlimited                           |                             1024                             |
-| **Param format**                                             |     ×     |                              √                               |                              √                               |
-| **Formatter**                                                |     ×     |            [Log4sp Format](./src/log4sp/format.h)            | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
-| **Usage**                                                    |     ×     | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
-| **Format error**                                             |     ×     |                  Handover to Error Handler                   |                         Throw error                          |
-| **Pads [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |     ×     |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
-| **Float [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** |     ×     |                       Fixed in v1.10.0                       | Fixed in [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |
-| **Symbols [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |     ×     |                       Fixed in v1.8.0                        | Fixed in [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |
-| **Justify [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |     ×     |                       Fixed in v1.5.0                        | Fixed in [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |
-| **Specifiers [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |     ×     |                       Added in v1.10.0                       | Added in [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |
-| **Specifiers [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** |     ×     |                       Added in v1.11.0                       | Added in [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |
-| **Float [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** |     ×     |                       Added in v1.11.0                       | Added in [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |
-| **Pads [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** |     ×     |                       Fixed in v1.8.0                        | Fixed in [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |
-| **Specifiers [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** |     ×     |                       Added in v1.11.0                       | Added in [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |
-
+|                                                              |                          SM Logging                          |                         Header-Only                          |                          Extension                           |
+| :----------------------------------------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| **Max character**                                            |                             1024                             |          Macro `LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH`           |                          Unlimited                           |
+| **Formatter**                                                | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |          [Log4sp Format](./src/log4sp/format.h#L10)          |
+| **Usage**                                                    | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
+| **Format error**                                             |                         Throw error                          |                         Throw error                          |                      Call Error Handler                      |
+| **Pads [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) | Fixed in [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |                       Fixed in v1.5.0                        |
+| **Float [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** | Added in [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) | Added in [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |                       Added in v1.10.0                       |
+| **Symbols [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** | Fixed in [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) | Fixed in [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |                       Fixed in v1.8.0                        |
+| **Justify [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** | Fixed in [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) | Fixed in [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |                       Fixed in v1.5.0                        |
+| **Specifiers [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** | Added in [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) | Added in [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |                       Added in v1.10.0                       |
+| **Specifiers [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** | Added in [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) | Added in [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |                      Added in  v1.11.0                       |
+| **Float [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** | Added in [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) | Added in  [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |                       Added in v1.11.0                       |
+| **Pads [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** | Fixed in [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) | Fixed in [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |                       Fixed in v1.8.0                        |
+| **Specifiers [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** | Added in [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) | Added in [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |                       Added in v1.11.0                       |
 
 ```sourcepawn
 #include <sourcemod>
@@ -172,7 +169,7 @@ Sink default pattern and sample outputs are:
 ```
 
 ```
-[2001-02-03 12:34:56.789] [my-logger] [info] [example.sp:123] Hello World!
+[2001-01-01 12:34:56.789] [log4sp] [info] [example.sp:123] Hello World!
 ```
 
 ```sourcepawn
@@ -213,9 +210,13 @@ File `game/addons/sourcemod/logs/rotate-file.log`:
 > [2001-02-03 12:34:56.789] [my-logger] [info] [test.sp:17] Some message<br>
 > [02/03/01 12:34:56 PM] [my-logger] [I] [OnPluginStart:19] Some message<br>
 
+> [!tip]
+>
+> Header-only uses a fixed pattern.
+
 ### Flush Policy
 
-Log4sp lets the underlying libc flush whenever it sees fit in order to achieve good performance.
+Log4sp lets the underlying libc flush whenever [it sees fit](https://github.com/gabime/spdlog/wiki/Flush-policy) in order to achieve good performance.
 
 You can override this with:
 
@@ -242,26 +243,24 @@ You can override this with:
     #include <sourcemod>
     #include <log4sp>
 
+    Logger g_hLogger;
+
     public void OnPluginStart()
     {
-        CreateTimer(5.0, Timer_FlushAll, _, TIMER_REPEAT);
+        g_hLogger = new Logger("my-logger");
+        CreateTimer(5.0, Timer_Flush, _, TIMER_REPEAT);
     }
 
-    Action Timer_FlushAll(Handle timer)
+    Action Timer_Flush(Handle timer)
     {
-        Logger.ApplyAll(ApplyAll_FlushAll);
+        g_hLogger.Flush();
         return Plugin_Continue;
-    }
-
-    void ApplyAll_FlushAll(Logger logger)
-    {
-        logger.Flush();
     }
     ```
 
 ### Error Handler
 
-Normally, Log4sp natives will throw an error and interrupt code execution when the parameters are invalid.
+Normally, Log4sp Natives will throw an error and interrupt code execution when the parameters are invalid.
 
 However, in the following situations, errors will not be thrown directly, but instead the error handler will be called:
 
@@ -302,33 +301,9 @@ void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
 }
 ```
 
-### Global Logger
-
-The global logger is named "**`log4sp`**" and is created by the extension when it is loaded. Its life cycle is the same as the extension and it will not be closed by any plugin.
-
-The global logger initially has only one sink of type ServerConsoleSink, and the rest of the properties are default values.
-
-```sourcepawn
-Logger GetGlobalLogger()
-{
-    Logger logger = Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME);
-
-    static bool init = false;
-    if (!init)
-    {
-        logger.SetPattern("[%Y-%m-%d %H:%M:%S] [Global] [%l] %v");
-        logger.SetErrorHandler(MyErrorHandler);
-        logger.Info("Hello log4sp global logger!");
-        init = true;
-    }
-    return logger;
-}
-
-void MyErrorHandler(const char[] msg, const char[] name, const char[] file, int line, const char[] func)
-{
-    LogMessage("[%s::%d] [%s] %s", file, line, name, msg);
-}
-```
+> [!tip]
+>
+> In header-only mode, formatting parameter errors in `Logger.LogF` will directly throw an error message.
 
 ### Multiple Sinks
 
@@ -390,83 +365,101 @@ Server console:
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [warn] Some warning<br>
 
-### Handle Lifecycle
+### Header Only
 
-The underlying Logger and Sink objects are only deleted from memory when the reference count is 0.
+All code for the header‑only mode is implemented in `.inc` header files, with no dependency on any external components. It can be easily integrated into any plugin, thereby simplifying the setup and integration process.
 
-Lines 13-15 close the sink handles, but the underlying Sink objects are not deleted because the logger created in line 11 references these Sinks objects.
+To use the header‑only mode, you must define the macro `LOG4SP_HEADER_ONLY` before including the `<log4sp>` header. Alternatively, you can enable it by adding the following compile‑time flag: `LOG4SP_HEADER_ONLY=`.
 
 ```sourcepawn
-Logger CreateMultiSinksLogger()
+#include <sourcemod>
+
+#define LOG4SP_HEADER_ONLY  // Enable header‑only
+#include <log4sp>
+
+public void OnPluginStart()
 {
-    char file[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, file, sizeof(file), "logs/log4sp-multi-sinks.log");
+    ServerConsoleSink sink = new ServerConsoleSink();
 
-    Sink sinks[3];
-    sinks[0] = new DailyFileSink(file);
-    sinks[1] = new ServerConsoleSink();
-    sinks[2] = new ClientChatAllSink();
+    Logger logger = new Logger("my-logger");
+    logger.AddSink(sink);
 
-    Logger logger = new Logger("multi-sink-logger");
-    logger.AddSink(sinks[0]);
-    logger.AddSink(sinks[1]);
-    logger.AddSink(sinks[2]);
+    logger.Info("Hello World!");
 
-    delete sinks[0];
-    delete sinks[1];
-    delete sinks[2];
-
-    logger.Info("Successfully created logger with multiple sinks");
-    return logger;
+    sink.Close();
+    logger.Close();
 }
 ```
 
-- Before line 12-14, the Sinks object is only referenced by the Handles system, so the number of Sinks references is 1;
+The main differences between header-only mode and extension library mode are as follows:
 
-- After line 12-14, the logger references the Sinks object, so the number of Sinks references increases to 2;
+|                                         |     Extension      |                         Header-only                          |
+| :-------------------------------------- | :----------------: | :----------------------------------------------------------: |
+| **LibraryExists("log4sp")**             |        True        |                            False                             |
+| **Log message max character**           |     Unlimited      |          Macro `LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH`           |
+| **Parameter Formatting Error Handling** | Call Error Handler |              Not supported<br/>（Throw error）               |
+| **Customized Pattern**                  |      Support       |      Not supported<br>(Modifying requires code changes)      |
+| **Clone Handle**                        |      Support       | Limited<br>(Only the `Clone` method of methodmap can be used)<br/>(Clones are also corrupted when the creator is uninstalled) |
+| **Close Handle**                        |      Support       | Limited<br>(Only the `Close` method of methodmap can be used)<br/>(Both `delete` and `CloseHandle()` leak handles) |
+| **Requirement**                         |      SM 1.12       |                           SM 1.11                            |
 
-- After lines 16-18, the Handles system removes the reference to the Sinks object, so the number of Sinks references is reduced to 1;
+### Cleaning Up Instances
 
-- After closing the logger handle, the logger object will automatically remove the reference to the Sinks object, so the Sinks reference count is reduced to 0 and deleted from memory.
+In the extended library, instances can be cleaned up directly using the `delete` keyword.
 
-| **Handle Type** |             Logger             | Sink |
-| :-------------: | :----------------------------: | :--: |
-|  **Closeable**  | Yes (Except for global logger) | Yes  |
-|  **Cloneable**  |              Yes               | Yes  |
+The header-only mode is similar to [sm-json](https://github.com/clugg/sm-json). It uses `StringMap` under the hood, you need to make sure you manage your memory properly by cleaning up instances when you're done with them. Simply using the `delete` keyword is insufficient, as there may be nested `ArrayList`, `PrivateForward`, `File`, etc. Handles. You need to use the `Close()` method of the corresponding `methodmap`, which will clean up and delete all handles.
+
+Additionally, there are some global helper function `LoggerCloseAndDelete()`, `LoggersCloseAndDelete()`, `SinkCloseAndDelete()`, `SinksCloseAndDelete()`, which first call the `Close()` method of the corresponding `methodmap`, and then set the passed variable or array element to `null`.
+
+```sourcepawn
+logger.Close();
+logger = null;
+// or
+LoggerCloseAndDelete(logger);
+
+sink.Close();
+sink = null;
+// or
+SinkCloseAndDelete(sink);
+```
+
+If a shared Handle has multiple references, it will only be truly cleaned up after the reference count reaches zero.
+
+For the Logger Handle, calling the `Logger.Clone()` method and registering with the `Registry` will increase the reference count; calling `Logger.Close()` and unregistering from the `Registry` will decrease the reference count.
+
+For the Sink object, calling the `Sink.Clone()` method and adding it to the `Logger` will increase the reference count; calling `Sink.Close()` and removing it from the `Logger` will decrease the reference count.
 
 ## Flowchart
 
 ```mermaid
 flowchart LR
- subgraph Logger["Logger"]
+ subgraph Sinks["`**Sink List**`"]
+        SinkShouldJunction["Junction"]
+        SinkShouldLog{"Should Log?"}
+        SinkLog("Log")
+        SinkPatternFormat["Pattern Format"]
+        SinkFlush("Flush")
+  end
+ subgraph Logger["`**Logger**`"]
         LoggerShouldLog{"Should Log?"}
         LoggerShouldJunction["Junction"]
         LoggerLogJunction["Junction"]
         LoggerShouldFlush{"Should Flush?"}
         LoggerLog("Log")
+        LoggerLogRaw["Raw Message"]
         LoggerLogF("LogF")
-        LoggerLogFormat["Raw"]
-        LoggerLogFFormat["Log4sp params format"]
+        LoggerLogFFormat["Params Format"]
   end
- subgraph Sinks["Sink List"]
-        SinkShouldJunction["Junction"]
-        SinkShouldLog{"Should Log?"}
-        SinkLog("Log")
-        SinkPatternFormat["Pattern format"]
-        SinkFlushJunction["Junction"]
-        SinkFlush("Flush")
-  end
-    Start((("Start"))) L_Start_LoggerShouldLog_0@== Log Message ==> LoggerShouldLog
+    Start((("`**Start**`"))) L_Start_LoggerShouldLog_0@== Log Message ==> LoggerShouldLog
     LoggerShouldLog -- Yes --- LoggerShouldJunction
     LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
-    LoggerShouldLog -. No .-> Stop((("End")))
+    LoggerShouldLog -. No .-> Stop((("`**End**`")))
     LoggerLogJunction --- LoggerLog & LoggerLogF
-    LoggerLog --- LoggerLogFormat
-    LoggerLogFormat --- SinkShouldJunction
+    LoggerLog --- LoggerLogRaw
+    LoggerLogRaw --- SinkShouldJunction
     LoggerLogF --- LoggerLogFFormat
     LoggerLogFFormat --- SinkShouldJunction
-    LoggerShouldFlush -- Yes --- SinkFlushJunction
-    SinkFlushJunction --> SinkFlush
+    LoggerShouldFlush -- Yes --- SinkFlush
     SinkFlush --> Stop
     LoggerShouldFlush -. No .-> Stop
     SinkShouldJunction --> SinkShouldLog
@@ -474,34 +467,164 @@ flowchart LR
     SinkPatternFormat --- SinkLog
     SinkLog --> Stop
     SinkShouldLog -. No .-> Stop
+
+    L_Start_LoggerShouldLog_0@{ animation: fast }
     LoggerShouldJunction@{ shape: junction}
     LoggerLogJunction@{ shape: junction}
-    LoggerLogFormat@{ shape: das}
+    LoggerLogRaw@{ shape: das}
     LoggerLogFFormat@{ shape: das}
     SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
-    SinkFlushJunction@{ shape: junction}
+    style Start stroke-width:4px,stroke-dasharray: 0,font-size:16px
+    style Logger fill:transparent
     style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
+    style LoggerShouldJunction fill:#00C853
+    style LoggerLogJunction fill:#00C853
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
+    style LoggerLogRaw stroke-width:1px,stroke-dasharray:1
     style LoggerLogF stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogFormat stroke-width:1px,stroke-dasharray: 1
-    style LoggerLogFFormat stroke-width:1px,stroke-dasharray: 1
+    style LoggerLogFFormat stroke-width:1px,stroke-dasharray:1
+    style LoggerShouldFlush stroke-width:4px,stroke-dasharray: 0
+    style Sinks fill:transparent
+    style SinkShouldJunction fill:#00C853
     style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
+    style SinkPatternFormat stroke-width:1px,stroke-dasharray:1
     style SinkLog stroke-width:4px,stroke-dasharray: 0
-    style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1
     style SinkFlush stroke-width:4px,stroke-dasharray: 0
+    style Stop stroke-width:3px,stroke-dasharray: 0
     linkStyle 1 stroke:#00C853,fill:none
     linkStyle 2 stroke:#00C853,fill:none
     linkStyle 3 stroke:#00C853,fill:none
     linkStyle 4 stroke:#D50000,fill:none
+    linkStyle 5 stroke:#00C853,fill:none
+    linkStyle 6 stroke:#00C853,fill:none
+    linkStyle 7 stroke:#00C853,fill:none
+    linkStyle 8 stroke:#00C853,fill:none
+    linkStyle 9 stroke:#00C853,fill:none
+    linkStyle 10 stroke:#00C853,fill:none
     linkStyle 11 stroke:#00C853,fill:none
     linkStyle 12 stroke:#00C853,fill:none
-    linkStyle 14 stroke:#D50000,fill:none
+    linkStyle 13 stroke:#D50000,fill:none
+    linkStyle 14 stroke:#00C853,fill:none
+    linkStyle 15 stroke:#00C853,fill:none
     linkStyle 16 stroke:#00C853,fill:none
-    linkStyle 19 stroke:#D50000,fill:none
-    L_Start_LoggerShouldLog_0@{ animation: fast }
+    linkStyle 17 stroke:#00C853,fill:none
+    linkStyle 18 stroke:#D50000,fill:none
 ```
+
+## Plugins
+
+### Manager
+
+The **log4sp_manager** plugin provides various management options for managing the logging behavior of each plugin, you just need to register the logger to the registry first.
+
+These loggers can then be managed using Registry Natives, menus or console commands.
+
+- Register Logger
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            Logger logger = new Logger("my-logger");
+            Log4spRegistry.Instance().RegisterLogger(logger);
+            logger.Close();
+        }
+    }
+
+    public void OnPluginEnd()
+    {
+        // Drop it when your plugin unloads.
+        Log4spRegistry.Instance().Drop("my-logger");
+    }
+    ```
+
+- Get Logger
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            Logger logger = Log4spRegistry.Instance().Get("my-logger");
+            if (logger != INVALID_HANDLE)
+            {
+                logger.Info("Some message");
+            }
+        }
+    }
+    ```
+
+- Global Logger
+
+    When the plugin loads, a logger with the empty name "" is created as the global logger; the global logger has a **ServerConsoleSink** and the rest are defaults and can be used directly by any plugin.
+
+    You can also create a logger by yourself and replace it with the global logger.
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            Logger logger = new Logger("my-logger");
+            Log4spRegistry.Instance().SetGlobalLogger(logger);
+            logger.Close();
+        }
+    }
+    ```
+
+- Modify all logger properties in the registry
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            // Set the logger log level of all loggers in the registry to Warn
+            Log4spRegistry.Instance().SetLevel(LogLevel_Warn);
+
+            // Set the logger flush level of all loggers in the registry to Error
+            Log4spRegistry.Instance().SetFlushLevel(LogLevel_Error);
+        }
+    }
+    ```
+
+- Regularly flush all loggers in the registry.
+
+    In the [Flush Policy](#Flush Policy) section, periodic refreshes require you to write your own code to implement, and the solution is not elegant.
+
+    A similar effect can be easily achieved with the manager plugin:
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            // Flush all loggers in the registry every 5 seconds
+            Log4spRegistry.Instance().SetFlushEvery(5.0);
+        }
+    }
+    ```
 
 
 
@@ -511,17 +634,30 @@ Test platform: Windows 11 + VMware + Ubuntu 24.04 LTS + SourceMod 1.13.0.7410
 
 Host configuration: Intel(R) Core(TM) Ultra 7 255H + 32 GB Memory
 
-VM Ubuntu configuration: 1 CPU + 8 kernel + 8 GB Memory
+VM Ubuntu configuration: 8 vCPU (1 socket × 8 cores) + 8 GB Memory
 
 Test case: [./sourcemod/scripting/testsuite/bench/bench-log4sp.sp](./sourcemod/scripting/testsuite/bench/bench-log4sp.sp)
 
-```
-[benchmark] basic-file      Runs: 10   Calls: 10000000   Elapsed: 1.694      5900143/sec
-[benchmark] callback        Runs: 10   Calls: 10000000   Elapsed: 1.814      5511962/sec
-[benchmark] daily-file      Runs: 10   Calls: 10000000   Elapsed: 1.708      5853536/sec
-[benchmark] ring-buffer     Runs: 10   Calls: 10000000   Elapsed: 0.763     13093170/sec
-[benchmark] rotate-file     Runs: 10   Calls: 10000000   Elapsed: 2.039      4903350/sec
-[benchmark] server-console  Runs: 10   Calls: 10000000   Elapsed: 20.733      482301/sec
+```shell
+*****************************************************************************
+* Bench log4sp v2.0.0  (release,git=c9c6141)                                *
+*****************************************************************************
+basic-file       Runs: 10   Calls: 10000000   Elapsed: 1.565      6386095/sec
+callback         Runs: 10   Calls: 10000000   Elapsed: 2.647      3777029/sec
+daily-file       Runs: 10   Calls: 10000000   Elapsed: 1.563      6394557/sec
+ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 0.726     13760458/sec
+rotate-file      Runs: 10   Calls: 10000000   Elapsed: 1.387      7208230/sec
+server-console   Runs: 10   Calls: 10000000   Elapsed: 22.392      446575/sec
+
+*****************************************************************************
+* Bench log4sp v2.0.0  (header-only,release,max-err=256,max-msg=1024)       *
+*****************************************************************************
+basic-file       Runs: 10   Calls: 10000000   Elapsed: 26.583      376169/sec
+callback         Runs: 10   Calls: 10000000   Elapsed: 8.157      1225858/sec
+daily-file       Runs: 10   Calls: 10000000   Elapsed: 29.052      344199/sec
+ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 301.502      33167/sec
+rotate-file      Runs: 10   Calls: 10000000   Elapsed: 28.438      351631/sec
+server-console   Runs: 10   Calls: 10000000   Elapsed: 53.877      185605/sec
 ```
 
 As a reference, [SourceMod - Logging](https://sm.alliedmods.net/new-api/logging) was also tested
@@ -563,7 +699,7 @@ Test case: [./sourcemod/scripting/testsuite/bench/bench-sm-logging.sp](./sourcem
     ```
 
     > [!tip]
-    > Local builds are able to enable [additional optimizations](./AMBuildScript#L235)
+    > Local builds are able to enable [additional optimizations](./AMBuildScript#L233)
 
 ### Windows
 
@@ -606,7 +742,7 @@ sudo apt install python3-pip
 pip install ./ambuild --break-system-packages
 ```
 
-### Extension
+### Extension library
 
 #### Build Problem
 
@@ -640,15 +776,15 @@ sudo apt-get install gcc-multilib g++-multilib
 
 /usr/bin/ld: cannot find -lstdc++
 
-> Remove "[cxx.linkflags += \['-static-libstdc++']](./AMBuildScript#L307)" in **`AMBuildScript`** file
+> Remove "[cxx.linkflags += \['-static-libstdc++']](./AMBuildScript#L306)" in **`AMBuildScript`** file
 
 #### Runtime Problem
 
 [SM] Unable to load extension "log4sp.ext": Could not find interface
 
-> Check if the `extension` version matches the operating system
+> Check if the `extension library` version matches the operating system
 >
-> Check if the `extension` version matches the SourceMod version
+> Check if the `extension library` version matches the SourceMod version
 
 bin/libstdc++.so.6: version 'GLIBCXX_3.4.20' not found
 
@@ -670,7 +806,7 @@ error 139: could not find type "Logger"
 
 [SM] Unable to load plugin "....smx": Required extension "Log4sp" file("log4sp.ext") not running
 
-> Check if the `log4sp.ext` extension file is missing in the server `"addons/sourcemod/extensions"` folder
+> Check if the `log4sp.ext` extension library file is missing in the server `"addons/sourcemod/extensions"` folder
 
 **The log file remains empty**
 
@@ -678,13 +814,12 @@ error 139: could not find type "Logger"
 
 ## Credits
 
-- **[gabime's](https://github.com/gabime) [spdlog](https://github.com/gabime/spdlog)** project implements most of the functionality, and log4sp wraps it into SourceMod natives.
-
+- **[gabime's](https://github.com/gabime) [spdlog](https://github.com/gabime/spdlog)** project implements most of the functionality, and log4sp wraps it into sourcemod natives.
 - Fyren, nosoop, Deathreus provides a solution for managing the sink handle.
 
 - [blueblur0730](https://github.com/blueblur0730), Digby helped improve the traversal operation of all loggers.
 
-- Bakugo, Anonymous Player, Fyren help fix crash with asynchronous calls to SourcePawn.
+- Bakugo, Anonymous Player, Fyren help fix crash with asynchronous calls to sourcepawn.
 
 - [blueblur0730](https://github.com/blueblur0730) added log4sp_manager plugin.
 
