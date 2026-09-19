@@ -8,7 +8,7 @@ on:
       - 'sourcemod/**'
       - 'src/**'
       - 'AMBuilder'
-      - 'AMBuilderScript'
+      - 'AMBuildScript'
       - 'PackageScript'
       - 'configure.py'
   push:
@@ -17,7 +17,7 @@ on:
       - 'sourcemod/**'
       - 'src/**'
       - 'AMBuilder'
-      - 'AMBuilderScript'
+      - 'AMBuildScript'
       - 'PackageScript'
       - 'configure.py'
 

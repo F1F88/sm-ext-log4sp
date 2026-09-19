@@ -8,7 +8,7 @@ on:
       - 'sourcemod/scripting/include/**'
       - 'src/**'
       - 'AMBuilder'
-      - 'AMBuilderScript'
+      - 'AMBuildScript'
       - 'PackageScript'
       - 'configure.py'
   push:
@@ -17,7 +17,7 @@ on:
       - 'sourcemod/scripting/include/**'
       - 'src/**'
       - 'AMBuilder'
-      - 'AMBuilderScript'
+      - 'AMBuildScript'
       - 'PackageScript'
       - 'configure.py'
   workflow_call:
