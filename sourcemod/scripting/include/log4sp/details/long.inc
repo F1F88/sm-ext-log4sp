@@ -1,7 +1,7 @@
-#if defined _log4sp_long_included
+#if defined _log4sp_details_long_included
     #endinput
 #endif
-#define _log4sp_long_included
+#define _log4sp_details_long_included
 
 
 /**
