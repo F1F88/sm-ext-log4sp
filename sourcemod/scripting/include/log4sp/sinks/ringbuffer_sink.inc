@@ -16,7 +16,7 @@
  * @param msg           Pre formatted log message.
  * @param data          Data value passed to callback.
  */
-typeset DrainFunction
+typeset RingBufferDrainFunction
 {
     function void (const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
     function void (const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
@@ -53,7 +53,7 @@ methodmap RingBufferSink < Sink
      * @return          True if can be drain log message, false otherwise.
      * @error           Invalid or corrupt plugin handle, or invalid function.
      */
-    public native bool DrainLatest(Handle plugin, DrainFunction func, any data=0);
+    public native bool DrainLatest(Handle plugin, RingBufferDrainFunction func, any data=0);
 
     /**
      * Apply a user defined function on the oldest buffered log messages.
@@ -65,7 +65,7 @@ methodmap RingBufferSink < Sink
      * @return          True if can be drain log message, false otherwise.
      * @error           Invalid or corrupt plugin handle, or invalid function.
      */
-    public native bool DrainOldest(Handle plugin, DrainFunction func, any data=0);
+    public native bool DrainOldest(Handle plugin, RingBufferDrainFunction func, any data=0);
 
     /**
      * Get the maximum number of log messages that can be stored in the buffer.
@@ -116,7 +116,7 @@ methodmap RingBufferSink < Sink
         return sink;
     }
 
-    public bool DrainLatest(Handle plugin, DrainFunction func, any data=0) {
+    public bool DrainLatest(Handle plugin, RingBufferDrainFunction func, any data=0) {
         if (!this.IsValid())
             ThrowError("Invalid RingBufferSink Handle %x.", this);
 
@@ -158,7 +158,7 @@ methodmap RingBufferSink < Sink
         return true;
     }
 
-    public bool DrainOldest(Handle plugin, DrainFunction func, any data=0) {
+    public bool DrainOldest(Handle plugin, RingBufferDrainFunction func, any data=0) {
         if (!this.IsValid())
             ThrowError("Invalid RingBufferSink Handle %x.", this);
 
