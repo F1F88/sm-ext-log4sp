@@ -36,7 +36,7 @@ static void DisplayManagerMenu(int client, int time = MENU_TIME_FOREVER)
         return;
 
     ArrayList names = new ArrayList(ByteCountToCells(64));
-    Registry.Instance().ApplyAll(null, ApplyAllLogger_GetNames, names);
+    Log4spRegistry.Instance().ApplyAll(null, ApplyAllLogger_GetNames, names);
 
     Menu menu = new Menu(MenuHandler_Manager);
     menu.SetTitle("Select Logger");
@@ -114,7 +114,7 @@ static void DisplayLoggerMenu(const char[] name, int client, int time = MENU_TIM
     if (!IsValidClient(client))
         return;
 
-    Logger logger = Registry.Instance().Get(name);
+    Logger logger = Log4spRegistry.Instance().Get(name);
     if (!logger)
         return;
 
@@ -144,7 +144,7 @@ static void DisplayLoggerSetLogLvlMenu(const char[] name, int client, int time =
     if (!IsValidClient(client))
         return;
 
-    Logger logger = Registry.Instance().Get(name);
+    Logger logger = Log4spRegistry.Instance().Get(name);
     if (!logger)
         return;
 
@@ -169,7 +169,7 @@ static void DisplayLoggerSetFlushLvlMenu(const char[] name, int client, int time
     if (!IsValidClient(client))
         return;
 
-    Logger logger = Registry.Instance().Get(name);
+    Logger logger = Log4spRegistry.Instance().Get(name);
     if (!logger)
         return;
 
@@ -204,7 +204,7 @@ static int MenuHandler_Manager(Menu menu, MenuAction action, int param1, int par
             {
                 char name[64];
                 menu.GetItem(param2, name, sizeof(name));
-                if (!Registry.Instance().Get(name))
+                if (!Log4spRegistry.Instance().Get(name))
                 {
                     PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
                     return 0;
@@ -236,7 +236,7 @@ static int MenuHandler_ApplyAll(Menu menu, MenuAction action, int param1, int pa
                 case 1:
                 {
                     PrintToChat(param1, "[SM] All loggers will flush its contents.");
-                    Registry.Instance().ApplyAll(null, ApplyAllLogger_FlushAll);
+                    Log4spRegistry.Instance().ApplyAll(null, ApplyAllLogger_FlushAll);
                 }
                 case 2:
                 {
@@ -266,7 +266,7 @@ static int MenuHandler_AllSetLogLvl(Menu menu, MenuAction action, int param1, in
             char level[32];
             menu.GetItem(param2, level, sizeof(level));
             PrintToChat(param1, "[SM] All loggers will set log level to '%s'.", level);
-            Registry.Instance().ApplyAll(null, ApplyAllLogger_SetLevel, NameToLogLevel(level));
+            Log4spRegistry.Instance().ApplyAll(null, ApplyAllLogger_SetLevel, NameToLogLevel(level));
         }
         case MenuAction_End:
         {
@@ -290,7 +290,7 @@ static int MenuHandler_AllSetFlushLvl(Menu menu, MenuAction action, int param1, 
             char level[32];
             menu.GetItem(param2, level, sizeof(level));
             PrintToChat(param1, "[SM] All loggers will set flush level to '%s'.", level);
-            Registry.Instance().ApplyAll(null, ApplyAllLogger_SetFlushLevel, NameToLogLevel(level));
+            Log4spRegistry.Instance().ApplyAll(null, ApplyAllLogger_SetFlushLevel, NameToLogLevel(level));
         }
         case MenuAction_End:
         {
@@ -314,7 +314,7 @@ static int MenuHandler_Logger(Menu menu, MenuAction action, int param1, int para
             const int nameIndex = 3;
             char name[64];
             menu.GetItem(nameIndex, name, sizeof(name));
-            Logger logger = Registry.Instance().Get(name);
+            Logger logger = Log4spRegistry.Instance().Get(name);
             if (!logger)
             {
                 PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
@@ -360,7 +360,7 @@ static int MenuHandler_SetLogLvl(Menu menu, MenuAction action, int param1, int p
             const int nameIndex = view_as<int>(LogLevel_Total);
             char name[64];
             menu.GetItem(nameIndex, name, sizeof(name));
-            Logger logger = Registry.Instance().Get(name);
+            Logger logger = Log4spRegistry.Instance().Get(name);
             if (!logger)
             {
                 PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
@@ -395,7 +395,7 @@ static int MenuHandler_SetFlushLvl(Menu menu, MenuAction action, int param1, int
             const int nameIndex = view_as<int>(LogLevel_Total);
             char name[64];
             menu.GetItem(nameIndex, name, sizeof(name));
-            Logger logger = Registry.Instance().Get(name);
+            Logger logger = Log4spRegistry.Instance().Get(name);
             if (!logger)
             {
                 PrintToChat(param1, "[SM] Logger with \"%s\" not exists.", name);
