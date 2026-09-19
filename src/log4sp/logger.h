@@ -15,7 +15,7 @@ class Logger final
 public:
     using Formatter         = spdlog::formatter;
     using LevelEnum         = spdlog::level::level_enum;
-    using Level_t           = spdlog::level_t;
+    using Level_t           = LevelEnum;
     using LogMsg            = spdlog::details::log_msg;
     using PatternTimeType   = spdlog::pattern_time_type;
     using SinkPtr           = spdlog::sinks::sink*;
@@ -58,19 +58,19 @@ public:
 
     // return true if logging is enabled for the given level.
     [[nodiscard]]
-    bool ShouldLog(LevelEnum msgLevel) const noexcept {
-        return msgLevel >= m_Level.load(std::memory_order_relaxed);
+    bool ShouldLog(LevelEnum lvl) const noexcept {
+        return lvl >= m_Level;
     }
 
     // return the active log level
     [[nodiscard]]
     LevelEnum GetLevel() const noexcept {
-        return static_cast<LevelEnum>(m_Level.load(std::memory_order_relaxed));
+        return m_Level;
     }
 
     // set the level of logging
-    void SetLevel(LevelEnum level) noexcept {
-        m_Level.store(level);
+    void SetLevel(LevelEnum lvl) noexcept {
+        m_Level = lvl;
     }
 
     // return the name of the logger
@@ -96,16 +96,16 @@ public:
     // return true if the given messages should be flushed
     [[nodiscard]]
     bool ShouldFlush(const LevelEnum lvl) const noexcept {
-        return (lvl >= m_FlushLevel.load(std::memory_order_relaxed)) && (lvl != LevelEnum::off);
+        return (lvl >= m_FlushLevel) && (lvl != LevelEnum::off);
     }
 
     [[nodiscard]]
     LevelEnum GetFlushLevel() const noexcept {
-        return static_cast<LevelEnum>(m_FlushLevel.load(std::memory_order_relaxed));
+        return m_FlushLevel;
     }
 
     void SetFlushLevel(LevelEnum lvl) noexcept {
-        m_FlushLevel.store(lvl);
+        m_FlushLevel = lvl;
     }
 
     // sinks
