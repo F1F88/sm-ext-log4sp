@@ -634,8 +634,15 @@ methodmap Logger < Handle
      * @return          Number of sinks clone written.
      */
     public int GetSinks(Sink[] sinks, int maxlen) {
+        if (!this.IsValid())
+            ThrowError("Invalid Logger Handle %x.", this);
+
+        int length = this.__GetSinks().Length;
+        if (length > maxlen)
+            length = maxlen;
+
         int counter = 0;
-        while (counter < maxlen) {
+        while (counter < length) {
             // To prevent the internal clone from being destroyed by the outside,
             // we return the clone of the internal clone.
             // Ownership belongs to an external party,

@@ -110,8 +110,12 @@ std::size_t Logger::GetSinksHandleClone(cell_t *sinks, std::size_t size, SourceM
     SourceMod::HandleError error;
     SourceMod::HandleSecurity security(owner, myself->GetIdentity());
 
+    auto length = m_SinkHandles.size();
+    if (length > size)
+        length = size;
+
     std::size_t counter = 0;
-    while (counter < size && counter < m_SinkHandles.size())
+    while (counter < size)
     {
         auto handle = m_SinkHandles.at(counter);
         auto cloned = SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
@@ -209,9 +213,12 @@ void Logger::DropSink(Handle_t handle)
     {
         if (m_Sinks.at(i) == sink)
         {
-            SinkHandler::Instance().FreeHandle(m_SinkHandles.at(i), &security);
+            // 必须先摘除再释放: FreeHandle 会同步销毁 sink, 其关闭回调 (FileCloseFunction /
+            // OnClose) 可能重入插件代码并再次遍历 m_Sinks, 若此时仍持有已释放的对象指针就是 UAF.
+            auto sinkHandle = m_SinkHandles.at(i);
             m_Sinks.erase(m_Sinks.begin() + i);
             m_SinkHandles.erase(m_SinkHandles.begin() + i);
+            SinkHandler::Instance().FreeHandle(sinkHandle, &security);
         }
     }
 }
