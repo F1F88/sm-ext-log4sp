@@ -550,8 +550,6 @@ static CommandCode CmdExecute_ApplyAll(DataPack data)
 
 static CommandCode CmdExecute_List(DataPack data)
 {
-    #pragma unused data
-
     // Get all registered logger names
     StringMap loggers = new StringMap();
     Log4spRegistry.Instance().ApplyAll(null, CB_OnApplyAll_GetNames, loggers);
@@ -578,8 +576,6 @@ static CommandCode CmdExecute_List(DataPack data)
 
 static CommandCode CmdExecute_Version(DataPack data)
 {
-    #pragma unused data
-
     char time[64], tags[256];
     int version = GetLog4spVersion(time, sizeof(time), tags, sizeof(tags));
 

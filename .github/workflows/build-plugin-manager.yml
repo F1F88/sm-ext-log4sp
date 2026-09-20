@@ -71,6 +71,7 @@ jobs:
             "sourcemod/scripting/log4sp_manager.sp"
             -i "sourcemod/scripting/include"
             -o "$OUTPUT_DIR/log4sp_manager.smx"
+            -E
             "NDEBUG="
           )
 
