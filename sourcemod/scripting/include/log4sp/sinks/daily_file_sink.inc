@@ -275,18 +275,12 @@ methodmap DailyFileSink < Sink
         Long now, today, rotationTime;
         now = Int64ToLong(time64);
 
-#if !defined SM_INT64_SUPPORTED
-        // Mod operations were very slow before int64 was supported.
         char buffer[8];
         FormatTime(buffer, sizeof(buffer), "%H%M%S");
         int hour   = (buffer[0] - '0') * 10 + (buffer[1] - '0');
         int minute = (buffer[2] - '0') * 10 + (buffer[3] - '0');
         int second = (buffer[4] - '0') * 10 + (buffer[5] - '0');
         today = now.Sub(IntToLong(hour * 3600 + minute * 60 + second));
-        today.ToStringFixed();
-#else
-        today = now.Sub(now.Mod(IntToLong(86400)));
-#endif      // SM_INT64_SUPPORTED
 
         rotationTime = today.Add(IntToLong(this.__GetHour() * 3600 + this.__GetMinute() * 60));
         if (rotationTime.Gt(now))

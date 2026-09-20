@@ -357,7 +357,7 @@ enum struct Long
         return this.__bits[1];
     }
 
-    int  __bits[2];
+    int __bits[2];
 
 #else
 

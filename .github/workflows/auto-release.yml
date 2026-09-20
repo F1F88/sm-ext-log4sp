@@ -39,7 +39,6 @@ jobs:
           path: artifacts
 
       - name: Merge release packages
-        id: package
         shell: bash
         run: |
           set -euo pipefail
@@ -191,12 +190,12 @@ jobs:
           #
           # For example:
           #
-          #   sm-ext-log4sp-1.0.0.abcdef1-win_latest-sm_latest-x86
-          #   sm-ext-log4sp-1.0.0.abcdef1-win_latest-sm_latest-x64
+          #   sm-ext-log4sp-v2.0.0.abcdef1-win_latest-sm_latest-x86
+          #   sm-ext-log4sp-v2.0.0.abcdef1-win_latest-sm_latest-x64
           #
           # become:
           #
-          #   log4sp-1.0.0.abcdef1-win_latest-sm_latest.zip
+          #   log4sp-v2.0.0.abcdef1-win_latest-sm_latest.zip
           # ------------------------------------------------------------------
 
           extension_groups = {}
@@ -242,35 +241,6 @@ jobs:
               shutil.rmtree(package_dir)
 
               print(f"Created {archive}")
-
-          # ------------------------------------------------------------------
-          # Determine the release tag.
-          #
-          # Tag-triggered runs:
-          #   keep the exact tag, e.g. v1.4.0
-          #
-          # Manual workflow runs:
-          #   if a tag input is provided, use it and publish a release.
-          #   otherwise only build/package, do not publish.
-          # ------------------------------------------------------------------
-
-          event_ref = os.environ["GITHUB_REF"]
-
-          if event_ref.startswith("refs/tags/v"):
-              release_tag = event_ref.removeprefix("refs/tags/")
-          else:
-              release_tag = f"v{version}"
-
-          with open(
-              os.environ["GITHUB_OUTPUT"],
-              "a",
-              encoding="utf-8",
-          ) as output:
-              output.write(f"release_tag={release_tag}\n")
-              output.write(f"version={version}\n")
-              output.write(f"short_hash={short_hash}\n")
-
-          print(f"Release tag: {release_tag}")
           PY
 
       - name: Upload packaged artifacts for validation
@@ -282,11 +252,14 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub Release
+        # Reachable only from a refs/tags/v* ref: a pushed v* tag, or a manual
+        # run started on one. Every other ref goes to the validation upload
+        # above instead. The tag labels the release; see github.ref_name.
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.package.outputs.release_tag }}
-          name: ${{ steps.package.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
           files: release/*.zip

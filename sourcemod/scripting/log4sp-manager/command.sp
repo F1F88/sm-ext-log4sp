@@ -1,7 +1,6 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#include <regex>
 #include <log4sp/common>
 
 #undef REQUIRE_PLUGIN
