@@ -191,13 +191,24 @@ static any Native_Registry_Get(Handle plugin, int numParams)
     if (!IsValidRegistryHandle(pThis))
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
 
-    int len;
-    GetNativeStringLength(2, len);
-    char[] name = new char[len + 1];
-    GetNativeString(2, name, len + 1);
+    if (IsNativeParamNullString(2))
+    {
+        char filename[PLATFORM_MAX_PATH];
+        GetPluginFilename(plugin, filename, sizeof(filename));
 
-    Logger logger;
-    return m_hLoggers.GetValue(name, logger) ? logger : null;
+        Logger logger;
+        return m_hLoggers.GetValue(filename, logger) ? logger : null;
+    }
+    else
+    {
+        int len;
+        GetNativeStringLength(2, len);
+        char[] name = new char[len + 1];
+        GetNativeString(2, name, len + 1);
+
+        Logger logger;
+        return m_hLoggers.GetValue(name, logger) ? logger : null;
+    }
 }
 
 static any Native_Registry_GetGlobal(Handle plugin, int numParams)
@@ -483,21 +494,40 @@ static any Native_Registry_Drop(Handle plugin, int numParams)
     if (!IsValidRegistryHandle(pThis))
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
 
-    int len;
-    GetNativeStringLength(2, len);
-    char[] name = new char[len + 1];
-    GetNativeString(2, name, len + 1);
+    if (IsNativeParamNullString(2))
+    {
+        char filename[PLATFORM_MAX_PATH];
+        GetPluginFilename(plugin, filename, sizeof(filename));
 
-    Logger logger;
-    if (!m_hLoggers.GetValue(name, logger))
-        return 0;
+        Logger logger;
+        if (!m_hLoggers.GetValue(filename, logger))
+            return 0;
 
-    // Drop and decrement the reference count
-    if (m_hGlobalLogger.IsValid() && logger.Equals(m_hGlobalLogger))
-        LoggerCleanupAndDelete(m_hGlobalLogger);
+        // Drop and decrement the reference count
+        if (m_hGlobalLogger.IsValid() && logger.Equals(m_hGlobalLogger))
+            LoggerCleanupAndDelete(m_hGlobalLogger);
 
-    m_hLoggers.Remove(name);
-    LoggerCleanupAndDelete(logger);
+        m_hLoggers.Remove(filename);
+        LoggerCleanupAndDelete(logger);
+    }
+    else
+    {
+        int len;
+        GetNativeStringLength(2, len);
+        char[] name = new char[len + 1];
+        GetNativeString(2, name, len + 1);
+
+        Logger logger;
+        if (!m_hLoggers.GetValue(name, logger))
+            return 0;
+
+        // Drop and decrement the reference count
+        if (m_hGlobalLogger.IsValid() && logger.Equals(m_hGlobalLogger))
+            LoggerCleanupAndDelete(m_hGlobalLogger);
+
+        m_hLoggers.Remove(name);
+        LoggerCleanupAndDelete(logger);
+    }
     return 0;
 }
 

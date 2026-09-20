@@ -48,15 +48,16 @@ methodmap Log4spRegistry < Handle
      * Gets a logger Handle by logger name.
      *
      * @param name      The name of the logger.
+     *                  If NULL_STRING, defaults to the plugin filename.
      * @return          Logger Handle or INVALID_HANDLE if a logger with such name doesn't exist.
      */
-    public native Logger Get(const char[] name);
+    public native Logger Get(const char[] name=NULL_STRING);
 
     /**
      * Gets the global logger Handle from the registry.
      *
-     * @note The global logger is created when the Log4sp Manager plugin is loaded;
-     *       it is nameless and has a ServerConsoleSink.
+     * @note The global logger is created when the Log4sp Manager plugin is loaded.
+     *       Its name is empty "" and has a ServerConsoleSink.
      *
      * @return          Logger Handle or INVALID_HANDLE when the global logger is dropped.
      */
@@ -64,6 +65,9 @@ methodmap Log4spRegistry < Handle
 
     /**
      * Gets the global logger Handle.
+     *
+     * @note The global logger is created when the Log4sp Manager plugin is loaded.
+     *       Its name is empty "" and has a ServerConsoleSink.
      *
      * @return          Logger Handle or INVALID_HANDLE when the global logger is dropped.
      */
@@ -144,8 +148,9 @@ methodmap Log4spRegistry < Handle
      * Unregister and close the cloned logger from the registry.
      *
      * @param name      The name of the logger.
+     *                  If NULL_STRING, defaults to the plugin filename.
      */
-    public native void Drop(const char[] name);
+    public native void Drop(const char[] name=NULL_STRING);
 
     /**
      * Unregister and close all cloned loggers from the registry.
