@@ -111,8 +111,8 @@ stock bool MakeDirs(const char[] directoryPath, int mode=FPERM_O_READ|FPERM_O_EX
 stock void SafeSleepForMilliseconds(int milliseconds)
 {
     // https://github.com/actions/runner/blob/c96dcd472907e514274cdb4af281116adf7aad18/src/Misc/layoutroot/safe_sleep.sh#L33
-    int endTickCount = GetSysTickCount() + milliseconds;
+    int startTickCount = GetSysTickCount();
     // PrintToServer("Start | sys tick = %u | time %u | engine time = %f |", GetSysTickCount(), GetTime(), GetEngineTime());
-    while (GetSysTickCount() < endTickCount) {}
+    while ((GetSysTickCount() - startTickCount) < milliseconds) {}
     // PrintToServer("End   | sys tick = %u | time %u | engine time = %f |", GetSysTickCount(), GetTime(), GetEngineTime());
 }
