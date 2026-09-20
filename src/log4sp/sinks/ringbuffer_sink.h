@@ -21,18 +21,26 @@ public:
         : m_MaxSize{maxSize} {}
     ~RingBufferSink() override = default;
 
-    void DrainLatest(std::function<void(const LogMsgBuffer &)> callback) noexcept {
+    // Returns true if a message was drained, false if the buffer is empty.
+    [[nodiscard]]
+    bool DrainLatest(std::function<void(const LogMsgBuffer &)> callback) noexcept {
         if (!m_Buffer.empty()) {
             callback(m_Buffer.back());
             m_Buffer.pop_back();
+            return true;
         }
+        return false;
     }
 
-    void DrainOldest(std::function<void(const LogMsgBuffer &)> callback) noexcept {
+    // Returns true if a message was drained, false if the buffer is empty.
+    [[nodiscard]]
+    bool DrainOldest(std::function<void(const LogMsgBuffer &)> callback) noexcept {
         if (!m_Buffer.empty()) {
             callback(m_Buffer.front());
             m_Buffer.pop_front();
+            return true;
         }
+        return false;
     }
 
     [[nodiscard]]

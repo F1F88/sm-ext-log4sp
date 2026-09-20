@@ -32,14 +32,14 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!sink)
     {
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
-        return 0;
+        return false;
     }
 
     auto ringBufferSink = dynamic_cast<Log4sp::Sinks::RingBufferSink*>(sink);
     if (!ringBufferSink)
     {
         ctx->ReportError("Invalid RingBufferSink Handle %x.", params[1]);
-        return 0;
+        return false;
     }
 
     SourceMod::IPlugin *plugin;
@@ -54,7 +54,7 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
         if (!plugin)
         {
             ctx->ReportError("Invalid Plugin Handle %x (error %d)", params[2], err);
-            return 0;
+            return false;
         }
     }
 
@@ -62,7 +62,7 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!func)
     {
         ctx->ReportError("Invalid function id %x.", params[3]);
-        return 0;
+        return false;
     }
 
     // void (const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
@@ -79,19 +79,19 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!fwd)
     {
         ctx->ReportError("Failed to create forward.");
-        return 0;
+        return false;
     }
 
     if (!fwd->AddFunction(func))
     {
         forwards->ReleaseForward(fwd);
         ctx->ReportError("Failed to add function.");
-        return 0;
+        return false;
     }
 
     auto data = params[4];
 
-    ringBufferSink->DrainLatest(
+    bool drained = ringBufferSink->DrainLatest(
         [&ctx, &fwd, &data](const spdlog::details::log_msg_buffer &logMsg)
         {
             std::array<char, 21> logTime;
@@ -136,7 +136,8 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
                 return;
             }
 
-            if (auto err = fwd->PushString(logMsg.payload.data()))
+            std::string msg{logMsg.payload.data(), logMsg.payload.size()};
+            if (auto err = fwd->PushString(msg.c_str()))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;
@@ -164,7 +165,7 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
     if (fwd)
         forwards->ReleaseForward(fwd);
-    return 0;
+    return drained;
 }
 
 static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -176,14 +177,14 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!sink)
     {
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
-        return 0;
+        return false;
     }
 
     auto ringBufferSink = dynamic_cast<Log4sp::Sinks::RingBufferSink*>(sink);
     if (!ringBufferSink)
     {
         ctx->ReportError("Invalid RingBufferSink Handle %x.", params[1]);
-        return 0;
+        return false;
     }
 
     SourceMod::IPlugin *plugin;
@@ -198,7 +199,7 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
         if (!plugin)
         {
             ctx->ReportError("Invalid Plugin Handle %x (error %d)", params[2], error);
-            return 0;
+            return false;
         }
     }
 
@@ -206,7 +207,7 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!func)
     {
         ctx->ReportError("Invalid function id %x.", params[3]);
-        return 0;
+        return false;
     }
 
     // void (const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
@@ -223,19 +224,19 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!fwd)
     {
         ctx->ReportError("Failed to create forward.");
-        return 0;
+        return false;
     }
 
     if (!fwd->AddFunction(func))
     {
         forwards->ReleaseForward(fwd);
         ctx->ReportError("Failed to add function.");
-        return 0;
+        return false;
     }
 
     auto data = params[4];
 
-    ringBufferSink->DrainOldest(
+    bool drained = ringBufferSink->DrainOldest(
         [&ctx, &fwd, &data](const spdlog::details::log_msg_buffer &logMsg)
         {
             std::array<char, 21> logTime;
@@ -280,7 +281,8 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
                 return;
             }
 
-            if (auto err = fwd->PushString(logMsg.payload.data()))
+            std::string msg{logMsg.payload.data(), logMsg.payload.size()};
+            if (auto err = fwd->PushString(msg.c_str()))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;
@@ -308,7 +310,7 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
 
     if (fwd)
         forwards->ReleaseForward(fwd);
-    return 0;
+    return drained;
 }
 
 static cell_t GetMaxSize(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
