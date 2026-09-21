@@ -8,23 +8,23 @@
 
 
 /**
- * Cleans up a logger handle and sets the passed variable to null.
+ * Close a logger handle and sets the passed variable to null.
  *
- * @param logger    Logger handle to clean up.
+ * @param logger    Logger handle to close.
  */
-stock void LoggerCleanupAndDelete(Logger &logger)
+stock void LoggerCloseAndDelete(Logger &logger)
 {
     logger.Close();
     logger = null;
 }
 
 /**
- * Cleans up a logger handle and sets the passed variable to null.
+ * Close all logger handles and set the passed variable to null.
  *
- * @param loggers   Logger handles to clean up.
+ * @param loggers   Logger handles to close.
  * @param maxlen    Maximum length of the loggers.
  */
-stock void LoggersCleanupAndDelete(Logger[] loggers, int maxlen)
+stock void LoggersCloseAndDelete(Logger[] loggers, int maxlen)
 {
     for (int i = 0; i < maxlen; ++i)
     {

@@ -63,7 +63,7 @@ void TestCustomCallbackLogger()
     Logger logger = new Logger("MyLogger");
     logger.AddSink(sink1);
     logger.AddSink(sink2);
-    SinkCleanupAndDelete(sink1);
+    SinkCloseAndDelete(sink1);
 
     logger.SetErrorHandler(null, CB_ErrorHandler);
 
@@ -86,8 +86,8 @@ void TestCustomCallbackLogger()
     // err count    = 2 = 1 [log LogLevel_Off] + 1 [flush]
     __AssertErrorCounter(2);
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink2);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink2);
 
     // close1 count = 1 = 1 [sink1.Close]
     // close2 count = 1 = 1 [sink2.Close]

@@ -68,8 +68,8 @@ void TestLog()
     logger.InfoF("Test message %d", 2);
     logger.InfoF("Test message %d", 3);
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink);
 
     AssertFileLinesEq("[logs by logger.Info]", filename, 2);
     AssertFileMatch("[logs by logger.Info]", filename, "Test message 2[^\\S ].*Test message 3[^\\S ]");
@@ -97,8 +97,8 @@ void TestFlush()
 
     logger.InfoF("Test message %d", 2);
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink);
 
     AssertFileLinesEq("[flush by sink.Close ]", filename, 3);
     AssertFileMatch("[flush by sink.Close ]", filename, "Test message 1[^\\S ].*Should not be flushed[^\\S ].*Test message 2[^\\S ]");
@@ -116,7 +116,7 @@ void TestGetFilename()
     char buffer[PLATFORM_MAX_PATH];
     sink.GetFilename(buffer, sizeof(buffer));
 
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     AssertStrEq("[sink.GetFilename]", buffer, filename);
 }
@@ -142,8 +142,8 @@ void TestTruncate()
 
     logger.InfoF("Test message %f", 6.28);
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink);
 
     AssertFileLinesEq("[after  sink.Close]", filename, 1);
 }
@@ -161,8 +161,8 @@ void TestFileCallback()
 
     logger.Info("Some message");
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink);
 }
 
 

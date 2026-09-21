@@ -89,7 +89,7 @@ void TestGetFilename()
     char buffer[PLATFORM_MAX_PATH];
     sink.GetFilename(buffer, sizeof(buffer));
 
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     AssertStrEq("[file name]", buffer, filename);
 }
@@ -107,13 +107,13 @@ void TestRotateLogger()
     RotatingFileSink sink = new RotatingFileSink(filename, MAX_SIZE, MAX_FILES);
     Logger logger = new Logger();
     logger.AddSink(sink);
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     for (int i = 0; i < 10; ++i)
     {
         logger.InfoF("Test message %d", i);
     }
-    LoggerCleanupAndDelete(logger);
+    LoggerCloseAndDelete(logger);
 
     AssertFileLinesEq("[Ten msgs]", filename, 10);
 }
@@ -132,18 +132,18 @@ void TestAutoRotate()
     RotatingFileSink sink = new RotatingFileSink(filename, MAX_SIZE, MAX_FILES, true);
     Logger logger = new Logger();
     logger.AddSink(sink);
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     for (int i = 0; i < 10; ++i)
     {
         logger.InfoF("Test message %d", i);
     }
-    LoggerCleanupAndDelete(logger);
+    LoggerCloseAndDelete(logger);
 
     sink = new RotatingFileSink(filename, MAX_SIZE, MAX_FILES, true);
     logger = new Logger();
     logger.AddSink(sink);
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     for (int i = 0; i < 10; ++i)
     {
@@ -157,7 +157,7 @@ void TestAutoRotate()
     {
         logger.InfoF("Test message %d", i);
     }
-    LoggerCleanupAndDelete(logger);
+    LoggerCloseAndDelete(logger);
 
     AssertLe("[After rotate file _ size]", FileSize(filename), MAX_SIZE);
 
@@ -183,10 +183,10 @@ void TestManualRotate()
     logger.Flush();
 
     AssertTrue("[RotateNow]", sink.RotateNow());
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     logger.Info("Test message - post-rotation");
-    LoggerCleanupAndDelete(logger);
+    LoggerCloseAndDelete(logger);
 
     AssertGt("[File Size]", FileSize(filename), 0);
     AssertLe("[File Size]", FileSize(filename), MAX_SIZE);
@@ -220,7 +220,7 @@ void TestChangeMaxSizeAndMaxFiles()
     AssertEq("[Max Size by setter]", sink.GetMaxSize(), maxSize);
     AssertEq("[Max Files by setter]", sink.GetMaxFiles(), maxFiles);
 
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
 #if !defined LOG4SP_HEADER_ONLY
     // 54: [2001-02-03 12:34:56.789] [test-rotate-logger] [info] ...
@@ -237,7 +237,7 @@ void TestChangeMaxSizeAndMaxFiles()
     for (int i = 0; i < numbers; ++i) {
         logger.Info(msg);
     }
-    LoggerCleanupAndDelete(logger); // force flush and close the file
+    LoggerCloseAndDelete(logger); // force flush and close the file
 
     // validate that the files were rotated correctly with the new max size and max files
     char buffer[PLATFORM_MAX_PATH];
@@ -266,7 +266,7 @@ void TestFileCallback()
     RotatingFileSink sink = new RotatingFileSink(filename, MAX_SIZE, MAX_FILES, _, null, CB_OnFileOpen, null, CB_OnFileClose);
     SourceLoc loc;
     sink.Log(NULL_STRING, loc, NULL_STRING, LogLevel_Info, "Some message");
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 }
 
 

@@ -33,7 +33,7 @@ void TestServerConsole()
     Logger logger = new Logger("test-server-console");
     logger.SetLevel(LogLevel_Trace);
     logger.AddSink(sink);
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     logger.Trace("Test server console 1");
     logger.Debug("Test server console 2");
@@ -42,5 +42,5 @@ void TestServerConsole()
     logger.LogSrc(LogLevel_Error, "Test server console 5");
     logger.LogSrcF(LogLevel_Fatal, "Test server console %d", 6);
 
-    LoggerCleanupAndDelete(logger);
+    LoggerCloseAndDelete(logger);
 }

@@ -83,7 +83,7 @@ void TestCommandLog()
     AssertStrMatch("[log]", buffer, "Logger \""...LOGGER_NAME..."\" log a \"info\" level message \"Hello Log4sp 2\\.\"\\.[^\\S ]");
     AssertEq("[log]", sink.GetLogCount(), 1);
 
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 }
 
 void TestCommandShouldLog()
@@ -138,7 +138,7 @@ void TestCommandFlush()
     AssertStrMatch("[flush]", buffer, "Logger \""...LOGGER_NAME..."\" flush its contents\\.[^\\S ]");
     AssertEq("[flush]", sink.GetFlushCount(), 2);
 
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 }
 
 void TestCommandShouldFlush()
@@ -186,7 +186,7 @@ void TestCommandApplyAll()
     AssertStrMatch("[apply_all log]", buffer, "[\\[SM\\] Logger \".*\" log a \"fatal\" level message \".*\".[^\\S ]]+");
     AssertEq("[apply_all log]", sink.GetLogCount(), 2);
 
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 }
 
 void TestCommandList()
@@ -220,8 +220,8 @@ static void RegisterLogger()
     TestSink sink = new TestSink();
     logger.AddSink(sink);
 
-    SinkCleanupAndDelete(sink);
-    LoggerCleanupAndDelete(logger);
+    SinkCloseAndDelete(sink);
+    LoggerCloseAndDelete(logger);
 }
 
 static void DropLogger()

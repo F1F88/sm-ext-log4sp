@@ -7,23 +7,23 @@
 
 
 /**
- * Cleans up a sink and sets the passed variable to null.
+ * Close a sink and sets the passed variable to null.
  *
- * @param sink      Sink handle to clean up.
+ * @param sink      Sink handle to close.
  */
-stock void SinkCleanupAndDelete(Sink &sink)
+stock void SinkCloseAndDelete(Sink &sink)
 {
     sink.Close();
     sink = null;
 }
 
 /**
- * Clean up the sinks array and set the elements of the array to null.
+ * Close all sink handles and set the passed variable to null.
  *
- * @param sinks     Sink handles to clean up.
+ * @param sinks     Sink handles to close.
  * @param maxlen    Maximum length of the sinks.
  */
-stock void SinksCleanupAndDelete(Sink[] sinks, int maxlen)
+stock void SinksCloseAndDelete(Sink[] sinks, int maxlen)
 {
     for (int i = 0; i < maxlen; ++i)
     {

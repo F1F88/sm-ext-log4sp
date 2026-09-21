@@ -51,12 +51,12 @@ void TestDefaultLevel()
 
     TestSink sink = new TestSink();
     LogLevel sinkLevel = sink.GetLevel();
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     Logger logger = new Logger("test-level");
     LogLevel loggerLevel = logger.GetLevel();
     LogLevel loggerFlushLevel = logger.GetFlushLevel();
-    LoggerCleanupAndDelete(logger);
+    LoggerCloseAndDelete(logger);
 
     AssertEq("[Sink log]",      sinkLevel,          LogLevel_Trace);
     AssertEq("[Logger log]",    loggerLevel,        LogLevel_Info);
@@ -110,6 +110,6 @@ void TestModifyLevel(LogLevel level)
     if (level <= LogLevel_Fatal)
         AssertEq("[Fatal]", sink.DrainLatest().lvl, LogLevel_Fatal);
 
-    SinkCleanupAndDelete(sink);
-    LoggerCleanupAndDelete(logger);
+    SinkCloseAndDelete(sink);
+    LoggerCloseAndDelete(logger);
 }

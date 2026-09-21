@@ -61,7 +61,7 @@ void InitializeRegistryMembers()
     ServerConsoleSink sink = new ServerConsoleSink();
     m_hGlobalLogger = new Logger("");
     m_hGlobalLogger.AddSink(sink);
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     // Register global logger
     Log4spRegistry.Instance().RegisterLogger(m_hGlobalLogger);
@@ -262,7 +262,7 @@ static any Native_Registry_SetGlobalLogger(Handle plugin, int numParams)
         m_hGlobalLogger.GetName(name, size);
 
         Log4spRegistry.Instance().Drop(name);
-        LoggerCleanupAndDelete(m_hGlobalLogger);
+        LoggerCloseAndDelete(m_hGlobalLogger);
     }
 
     // Set to global
@@ -505,10 +505,10 @@ static any Native_Registry_Drop(Handle plugin, int numParams)
 
         // Drop and decrement the reference count
         if (m_hGlobalLogger.IsValid() && logger.Equals(m_hGlobalLogger))
-            LoggerCleanupAndDelete(m_hGlobalLogger);
+            LoggerCloseAndDelete(m_hGlobalLogger);
 
         m_hLoggers.Remove(filename);
-        LoggerCleanupAndDelete(logger);
+        LoggerCloseAndDelete(logger);
     }
     else
     {
@@ -523,10 +523,10 @@ static any Native_Registry_Drop(Handle plugin, int numParams)
 
         // Drop and decrement the reference count
         if (m_hGlobalLogger.IsValid() && logger.Equals(m_hGlobalLogger))
-            LoggerCleanupAndDelete(m_hGlobalLogger);
+            LoggerCloseAndDelete(m_hGlobalLogger);
 
         m_hLoggers.Remove(name);
-        LoggerCleanupAndDelete(logger);
+        LoggerCloseAndDelete(logger);
     }
     return 0;
 }

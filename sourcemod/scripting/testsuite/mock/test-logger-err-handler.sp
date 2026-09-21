@@ -69,13 +69,13 @@ void TestDefaultErrorHandler()
     __TryRestoreSMErrorFile();
 
     logger.InfoF("Test message %d", 3);
-    LoggerCleanupAndDelete(logger);
+    LoggerCloseAndDelete(logger);
 
     int logCount = sink.GetLogCount();
     char messages[2][sizeof(LogEvent::msg)];
     strcopy(messages[0], sizeof(LogEvent::msg), sink.DrainOldest().msg);
     strcopy(messages[1], sizeof(LogEvent::msg), sink.DrainOldest().msg);
-    SinkCleanupAndDelete(sink);
+    SinkCloseAndDelete(sink);
 
     char expectedMessages[][] = {"Test message 1", "Test message 3"};
     char expectedErrorMessagesPattern[] = "L .*: \\[LOG4SP|.*test-logger-err-handler.smx\\] \\[.*test-logger-err-handler.sp::[0-9]+\\] \\[.*test-logger-err-handler\\.smx\\] Encountered an error![^\\S ]";
@@ -118,8 +118,8 @@ void TestCustomErrorHandler()
     strcopy(messages[1], sizeof(LogEvent::msg), sink.DrainLatest().msg);
     strcopy(messages[0], sizeof(LogEvent::msg), sink.DrainLatest().msg);
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink);
 
     char expectedMessages[][] = {"Test message 1", "Test message 2", "Test message 6", "Test message 7"};
 

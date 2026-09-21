@@ -91,8 +91,8 @@ void TestLog()
     AssertStrEq("Log funcname", sink.DrainLatest().loc.funcname, "");
     AssertStrEq("Log filename", sink.DrainLatest().loc.filename, "");
 
-    SinkCleanupAndDelete(sink);
-    LoggerCleanupAndDelete(logger);
+    SinkCloseAndDelete(sink);
+    LoggerCloseAndDelete(logger);
 }
 
 void TestLogSrc()
@@ -120,8 +120,8 @@ void TestLogSrc()
     AssertStrEq("LogSrc funcname", sink.DrainLatest().loc.funcname, "TestLogSrc");
     AssertStrEndsWith("LogSrc filename endwith", sink.DrainLatest().loc.filename, "test-logger-log.sp");
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink);
 }
 
 void TestLogLoc()
@@ -181,8 +181,8 @@ void TestLogLoc()
     AssertStrEq("LogLoc linux funcname", sink.DrainLatest().loc.funcname, LINUX_FUNCNAME);
     AssertStrEq("LogLoc linux filename", sink.DrainLatest().loc.filename, LINUX_FILENAME);
 
-    SinkCleanupAndDelete(sink);
-    LoggerCleanupAndDelete(logger);
+    SinkCloseAndDelete(sink);
+    LoggerCloseAndDelete(logger);
 }
 
 void TestLogStackTrace()
@@ -241,8 +241,8 @@ void TestLogStackTrace()
     AssertStrMatch("LogStackTraceF line 17", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::Test");
     AssertStrMatch("LogStackTraceF line 18", sink.DrainOldest().msg, "  \\[[0-9]+\\] Line [0-9]+, .*test-logger-log.sp::[OnPluginStart|Command_Test]");
 
-    LoggerCleanupAndDelete(logger);
-    SinkCleanupAndDelete(sink);
+    LoggerCloseAndDelete(logger);
+    SinkCloseAndDelete(sink);
 }
 
 public any Native_TestLoggerLogStackTrace(Handle plugin, int numParams)
