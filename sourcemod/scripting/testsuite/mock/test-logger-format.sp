@@ -191,7 +191,7 @@ enum Expected
 // 确保 worldspawn 生成后再开始测试
 public void OnMapStart()
 {
-    RequestFrame(Test);
+    Test();
     RegServerCmd("sm_log4sp_test_format", Command_Test);
 }
 
@@ -204,26 +204,13 @@ Action Command_Test(int args)
 
 void Test()
 {
-#if defined LOG4SP_HEADER_ONLY
-    static int major = -1, minor, patch, build;
-    if (major == -1)
-    {
-        FetchSourceModVersionFromCommand(major, minor, patch, build);
-        RequestFrame(Test);
-        return;
-    }
-
-    if ((major <= 1 && minor < 13) || (major <= 1 && minor == 13 && build < 7342))
-    {
-        PrintToServer(
-            "[Warn] Ignore format test (headler-only) because the SM version (%d.%d.%d.%d) is lower than 1.13.7342.",
-            major, minor, patch, build);
-        return;
-    }
-#endif
-
     PrintToServer("---------- Started testing Logger-Format ---------");
 
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR <= 12
+    TestChar();
+
+    TestTranslates();
+#else
     TestChar();
 
     TestBinary();
@@ -234,7 +221,7 @@ void Test()
 
     TestFloat();
 
-    TestSpecial();
+    RequestFrame(TestSpecial);
 
     TestString();
 
@@ -242,7 +229,6 @@ void Test()
 
     TestHex();
 
-#if defined SM_INT64_SUPPORTED
     TestBinary64();
 
     TestInt64();
@@ -250,7 +236,7 @@ void Test()
     TestUInt64();
 
     TestHex64();
-#endif
+#endif      // SOURCEMOD_V_*
 
     PrintToServer("------------ Test Logger-Format ended ------------");
 }
@@ -283,7 +269,7 @@ void TestChar()
 }
 
 
-void TestBinary()
+stock void TestBinary()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -471,7 +457,7 @@ void TestBinary()
 }
 
 
-void TestInt()
+stock void TestInt()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -745,7 +731,7 @@ void TestInt()
     }
 }
 
-void TestUInt()
+stock void TestUInt()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -1012,7 +998,7 @@ void TestUInt()
 }
 
 
-void TestFloat()
+stock void TestFloat()
 {
     // Ref sprintf: right-padding only with spaces, ZEROPAD is ignored
     // 尾部填充 '0' 会被替换为 ' '
@@ -2123,7 +2109,7 @@ void TestFloat()
 }
 
 
-void TestSpecial()
+stock void TestSpecial()
 {
     // 先获取字符串，后复用 AddString
     SetTestContext("Format Special");
@@ -2453,7 +2439,7 @@ void TestSpecial()
 }
 
 
-void TestString()
+stock void TestString()
 {
     // 永远填充 ' '
     SetTestContext("Format String");
@@ -2628,7 +2614,7 @@ void TestTranslates()
 }
 
 
-void TestHex()
+stock void TestHex()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -3029,8 +3015,8 @@ void TestHex()
 }
 
 
-#if defined SM_INT64_SUPPORTED
-void TestBinary64()
+#if defined SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR >= 13
+stock void TestBinary64()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -3294,7 +3280,7 @@ void TestBinary64()
 }
 
 
-void TestInt64()
+stock void TestInt64()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -3724,7 +3710,7 @@ void TestInt64()
 }
 
 
-void TestUInt64()
+stock void TestUInt64()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -4143,7 +4129,7 @@ void TestUInt64()
 }
 
 
-void TestHex64()
+stock void TestHex64()
 {
     // prec 没有传递给目标函数
     // 尾部填充 '0' 不会被替换为 ' '
@@ -4768,7 +4754,7 @@ void TestHex64()
         ASSERT_FMTS1(expecteds, widths, precs, specifier[1], value)
     }
 }
-#endif
+#endif      // SOURCEMOD_V_*
 
 
 
