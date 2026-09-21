@@ -1,8 +1,22 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#if !defined DEBUG
+    #define  DEBUG
+#endif
+
+#if !defined _DEBUG
+    #define  _DEBUG
+#endif
+
+#if defined NDEBUG
+    #undef  NDEBUG
+#endif
+
 #include <sourcemod>
 #include <log4sp>
+
+#include "../assert"
 
 
 public void OnPluginStart()
@@ -29,6 +43,8 @@ void Test()
 
 void TestServerConsole()
 {
+    SetTestContext("ServerConsole");
+
     ServerConsoleSink sink = new ServerConsoleSink();
     Logger logger = new Logger("test-server-console");
     logger.SetLevel(LogLevel_Trace);
@@ -43,4 +59,7 @@ void TestServerConsole()
     logger.LogSrcF(LogLevel_Fatal, "Test server console %d", 6);
 
     LoggerCloseAndDelete(logger);
+
+    AssertEq("Logger Handle", logger, INVALID_HANDLE);
+    AssertEq("Sink Handle", sink, INVALID_HANDLE);
 }
