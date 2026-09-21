@@ -40,7 +40,7 @@ public void OnPluginStart()
 
     CreateConVar("log4sp_manager_version", PLUGIN_VERSION, "Version of the helper plugin log4sp manager.", FCVAR_SPONLY | FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
-#if !defined NDEBUG
+#if defined DEBUG || defined _DEBUG
     PrintToServer("[SM] Log4sp Manager " ... PLUGIN_VERSION ... " initialize complete!");
     ServerCommand("sm_log4sp version");
 #endif
