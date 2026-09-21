@@ -227,7 +227,13 @@ jobs:
 
           PLUGINS_DIR="$GITHUB_WORKSPACE/gamedir/addons/sourcemod/plugins/optional"
 
-          for arch in x86 x86_64; do
+          archs=(x86)
+
+          if [[ "${{ matrix.sm_version }}" != "sm_1_11" ]]; then
+            archs+=(x86_64)
+          fi
+
+          for arch in ${archs[@]}; do
             echo "==================================="
             echo "Testing $arch..."
             echo "==================================="
@@ -236,7 +242,7 @@ jobs:
               plugin_name="$(basename "$plugin")"
 
               echo "==================================="
-              echo "Running $plugin_name ..."
+              echo "Running $arch - $plugin_name ..."
               echo "==================================="
               timeout 180 objdir/dist/$arch/srcds -game_dir "$GITHUB_WORKSPACE/gamedir" +map de_thunder -command "sm plugins load optional/$plugin_name" -run -run-ticks 20 |
               {
