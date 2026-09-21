@@ -32,13 +32,13 @@
 
 public void OnAllPluginsLoaded()
 {
-    RequestFrame(Test);
+    Test();
     RegServerCmd("sm_log4sp_test_commands", Command_Test);
 }
 
 Action Command_Test(int args)
 {
-    RequestFrame(Test);
+    Test();
     return Plugin_Handled;
 }
 
@@ -50,29 +50,21 @@ void Test()
     SetTestContext("Commands");
 
     AssertTrue("[log4sp manager library]", Log4spRegistry.LibraryExists());
+    RegisterLogger();
 
-    Logger logger = new Logger(LOGGER_NAME);
-    Log4spRegistry.Instance().RegisterLogger(logger);
-
-    TestSink sink = new TestSink();
-    logger.AddSink(sink);
-
-    SinkCleanupAndDelete(sink);
-    LoggerCleanupAndDelete(logger);
-
-    TestCommandLog();
-    TestCommandShouldLog();
-    TestCommandGetLvl();
-    TestCommandSetLvl();
-    TestCommandSetPattern();
-    TestCommandFlush();
-    TestCommandShouldFlush();
-    TestCommandGetFlushLvl();
-    TestCommandSetFlushLvl();
-    TestCommandApplyAll();
-    TestCommandList();
-    TestCommandVersion();
-    Log4spRegistry.Instance().Drop(LOGGER_NAME);
+    RequestFrame(TestCommandLog);
+    RequestFrame(TestCommandShouldLog);
+    RequestFrame(TestCommandGetLvl);
+    RequestFrame(TestCommandSetLvl);
+    RequestFrame(TestCommandSetPattern);
+    RequestFrame(TestCommandFlush);
+    RequestFrame(TestCommandShouldFlush);
+    RequestFrame(TestCommandGetFlushLvl);
+    RequestFrame(TestCommandSetFlushLvl);
+    RequestFrame(TestCommandApplyAll);
+    RequestFrame(TestCommandList);
+    RequestFrame(TestCommandVersion);
+    RequestFrame(DropLogger);
 
     PrintToServer("--------------- Test Commands ended --------------");
 }
@@ -218,4 +210,21 @@ static TestSink GetTestSinkFromTestLogger()
     Sink sink[1];
     Log4spRegistry.Instance().Get(LOGGER_NAME).GetSinks(sink, sizeof(sink));
     return view_as<TestSink>(sink[0]);
+}
+
+static void RegisterLogger()
+{
+    Logger logger = new Logger(LOGGER_NAME);
+    Log4spRegistry.Instance().RegisterLogger(logger);
+
+    TestSink sink = new TestSink();
+    logger.AddSink(sink);
+
+    SinkCleanupAndDelete(sink);
+    LoggerCleanupAndDelete(logger);
+}
+
+static void DropLogger()
+{
+    Log4spRegistry.Instance().Drop(LOGGER_NAME);
 }
