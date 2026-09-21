@@ -35,11 +35,13 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *openFunc = nullptr;
-    openPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[4], &openFunc);
-    if (!openFunc)
+    if (!ctx->IsNullFunctionId(params[4]))
     {
-        ctx->ReportError("Invalid open function id %x.", params[4]);
-        return BAD_HANDLE;
+        if (!openPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[4], &openFunc))
+        {
+            ctx->ReportError("Invalid open function id %x.", params[4]);
+            return BAD_HANDLE;
+        }
     }
 
     SourceMod::IPlugin *closePlugin;
@@ -59,11 +61,13 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *closeFunc = nullptr;
-    closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[6], &closeFunc);
-    if (!closeFunc)
+    if (!ctx->IsNullFunctionId(params[6]))
     {
-        ctx->ReportError("Invalid close function id %x.", params[6]);
-        return BAD_HANDLE;
+        if (!closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[6], &closeFunc))
+        {
+            ctx->ReportError("Invalid close function id %x.", params[6]);
+            return BAD_HANDLE;
+        }
     }
 
     spdlog::file_event_handlers handlers;

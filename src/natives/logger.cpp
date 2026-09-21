@@ -498,12 +498,9 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
         }
     }
 
-    SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionById(params[3]);
+    SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionByIdOrError(params[3]);
     if (!func)
-    {
-        ctx->ReportError("Invalid function id %x.", params[3]);
-        return 0;
-    }
+        return false;
 
     try
     {

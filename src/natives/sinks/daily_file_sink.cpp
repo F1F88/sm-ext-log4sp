@@ -41,11 +41,13 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *calcFunc = nullptr;
-    calcPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[7], &calcFunc);
-    if (!calcFunc)
+    if (!ctx->IsNullFunctionId(params[7]))
     {
-        ctx->ReportError("Invalid calc function id %x.", params[7]);
-        return BAD_HANDLE;
+        if (!calcPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[7], &calcFunc))
+        {
+            ctx->ReportError("Invalid calc function id %x.", params[7]);
+            return BAD_HANDLE;
+        }
     }
 
     Log4sp::Sinks::DailyFileSink::Calculator calculator = nullptr;
@@ -127,11 +129,13 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *openFunc = nullptr;
-    openPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[9], &openFunc);
-    if (!openFunc)
+    if (!ctx->IsNullFunctionId(params[9]))
     {
-        ctx->ReportError("Invalid open function id %x.", params[9]);
-        return BAD_HANDLE;
+        if (!openPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[9], &openFunc))
+        {
+            ctx->ReportError("Invalid open function id %x.", params[9]);
+            return BAD_HANDLE;
+        }
     }
 
     SourceMod::IPlugin *closePlugin;
@@ -151,11 +155,13 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     SourcePawn::IPluginFunction *closeFunc = nullptr;
-    closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[11], &closeFunc);
-    if (!closeFunc)
+    if (!ctx->IsNullFunctionId(params[11]))
     {
-        ctx->ReportError("Invalid close function id %x.", params[11]);
-        return BAD_HANDLE;
+        if (!closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[11], &closeFunc))
+        {
+            ctx->ReportError("Invalid close function id %x.", params[11]);
+            return BAD_HANDLE;
+        }
     }
 
     spdlog::file_event_handlers handlers;

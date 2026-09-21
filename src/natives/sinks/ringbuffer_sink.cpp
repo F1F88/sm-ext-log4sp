@@ -58,12 +58,9 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
         }
     }
 
-    SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionById(params[3]);
+    SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionByIdOrError(params[3]);
     if (!func)
-    {
-        ctx->ReportError("Invalid function id %x.", params[3]);
         return false;
-    }
 
     // void (const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
     auto fwd = forwards->CreateForwardEx(nullptr,
@@ -203,12 +200,9 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
         }
     }
 
-    SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionById(params[3]);
+    SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionByIdOrError(params[3]);
     if (!func)
-    {
-        ctx->ReportError("Invalid function id %x.", params[3]);
         return false;
-    }
 
     // void (const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
     auto fwd = forwards->CreateForwardEx(nullptr,

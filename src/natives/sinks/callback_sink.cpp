@@ -21,11 +21,13 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     }
 
     SourcePawn::IPluginFunction *logFunc = nullptr;
-    logPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[2], &logFunc);
-    if (!logFunc)
+    if (!ctx->IsNullFunctionId(params[2]))
     {
-        ctx->ReportError("Invalid log function id %x.", params[2]);
-        return BAD_HANDLE;
+        if (!logPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[2], &logFunc))
+        {
+            ctx->ReportError("Invalid log function id %x.", params[2]);
+            return BAD_HANDLE;
+        }
     }
 
     SourceMod::IPlugin *flushPlugin;
@@ -45,11 +47,13 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     }
 
     SourcePawn::IPluginFunction *flushFunc = nullptr;
-    flushPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[4], &flushFunc);
-    if (!flushFunc)
+    if (!ctx->IsNullFunctionId(params[4]))
     {
-        ctx->ReportError("Invalid flush function id %x.", params[4]);
-        return BAD_HANDLE;
+        if (!flushPlugin->GetBaseContext()->GetFunctionByIdOrNull(params[4], &flushFunc))
+        {
+            ctx->ReportError("Invalid flush function id %x.", params[4]);
+            return BAD_HANDLE;
+        }
     }
 
     SourceMod::IPlugin *closePlugin;
@@ -69,11 +73,13 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     }
 
     SourcePawn::IPluginFunction *closeFunc = nullptr;
-    closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[6], &closeFunc);
-    if (!closeFunc)
+    if (!ctx->IsNullFunctionId(params[6]))
     {
-        ctx->ReportError("Invalid close function id %x.", params[6]);
-        return BAD_HANDLE;
+        if (!closePlugin->GetBaseContext()->GetFunctionByIdOrNull(params[6], &closeFunc))
+        {
+            ctx->ReportError("Invalid close function id %x.", params[6]);
+            return BAD_HANDLE;
+        }
     }
 
     cell_t data = params[7];
