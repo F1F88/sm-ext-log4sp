@@ -113,7 +113,7 @@ void TestSourceLoc()
 
     char buildTime[256], buildTags[256];
     int version = GetLog4spVersion(buildTime, sizeof(buildTime), buildTags, sizeof(buildTags));
-    AssertEq("[version major]", (version >> 16) & 0xFF, 1);
-    AssertEq("[version minor]", (version >>  8) & 0xFF, 11);
+    AssertEq("[version major]", (version >> 16) & 0xFF, 2);
+    AssertEq("[version minor]", (version >>  8) & 0xFF, 0);
     AssertEq("[version patch]", (version >>  0) & 0xFF, 0);
 }
