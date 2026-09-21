@@ -440,7 +440,7 @@ static any Native_Registry_ApplyAll(Handle plugin, int numParams)
         applyAllPlugin = plugin;
 
     Function applyAllFunc = GetNativeFunction(3);
-    any data = GetNativeCell(3);
+    any data = GetNativeCell(4);
 
     PrivateForward fwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
     if (!fwd.AddFunction(applyAllPlugin, applyAllFunc))
