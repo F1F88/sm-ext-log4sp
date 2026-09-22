@@ -14,6 +14,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: build with ${{ matrix.sm_version }} ${{ matrix.variant }}
@@ -49,9 +52,10 @@ jobs:
         id: setup_sp
         uses: rumblefrog/setup-sp@master
         with:
-          version: ${{ matrix.sm_ref }}
           version-file: log4sp/sourcemod/scripting/log4sp_manager.sp
           define-name: PLUGIN_VERSION
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ matrix.sm_ref }}
 
       - name: Compiling plugin log4sp manager
         working-directory: log4sp
