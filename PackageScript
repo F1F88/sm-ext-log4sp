@@ -10,6 +10,7 @@ folder_list = [
   'addons/sourcemod/extensions',
   'addons/sourcemod/scripting/include',
   'addons/sourcemod/scripting/include/log4sp',
+  'addons/sourcemod/scripting/include/log4sp/details',
   'addons/sourcemod/scripting/include/log4sp/sinks',
   #'addons/sourcemod/gamedata',
   #'addons/sourcemod/configs',
@@ -42,7 +43,15 @@ CopyFiles('sourcemod/scripting/include', 'addons/sourcemod/scripting/include',
 CopyFiles('sourcemod/scripting/include/log4sp', 'addons/sourcemod/scripting/include/log4sp',
  [
    'common.inc',
-   'logger.inc'
+   'logger.inc',
+   'registry.inc',
+ ]
+)
+CopyFiles('sourcemod/scripting/include/log4sp/details', 'addons/sourcemod/scripting/include/log4sp/details',
+ [
+   'file_helper.inc',
+   'long.inc',
+   'os.inc',
  ]
 )
 CopyFiles('sourcemod/scripting/include/log4sp/sinks', 'addons/sourcemod/scripting/include/log4sp/sinks',

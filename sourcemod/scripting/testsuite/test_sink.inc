@@ -3,114 +3,312 @@
 #endif
 #define _log4sp_sinks_test_sink_included
 
-#include <log4sp/sinks/sink>
+#include <log4sp/details/os>
+#include <log4sp/sinks/callback_sink>
 
 
-typeset TestDrainCallback
+enum struct LogEvent
 {
-    function void (const char[] name, LogLevel lvl, const char[] msg);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime);
-    function void (const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, any data);
-}
-
-typeset TestDrainLineCallback
-{
-    function void (const char[] line);
-    function void (const char[] line, any data);
-}
-
-enum struct sLogMessage
-{
-    char name[64];
+    char time[22];
+    SourceLoc loc;
+    char name[MAX_NAME_LENGTH];
     LogLevel lvl;
-    char msg[2048];
-    char file[PLATFORM_MAX_PATH];
-    int line;
-    char func[256];
-    int logTime;
+#if !defined LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH
+    char msg[1024];
+#else
+    char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#endif
+
+    void Set(const char[] time, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg) {
+        strcopy(this.time, sizeof(LogEvent::time), time);
+        strcopy(this.loc.filename, sizeof(SourceLoc::filename), loc.filename);
+        this.loc.line = loc.line;
+        strcopy(this.loc.funcname, sizeof(SourceLoc::funcname), loc.funcname);
+        strcopy(this.name, sizeof(LogEvent::name), name);
+        this.lvl = lvl;
+        strcopy(this.msg, sizeof(LogEvent::msg), msg);
+    }
+
+    int ToString(char[] buffer, int maxlen) {
+        char level[8];
+        LogLevelToName(level, sizeof(level), this.lvl);
+        return FormatEx(buffer, maxlen,
+            "LogEvent{time=\"%s\",loc={func=\"%s\",line=%d,file=\"%s\"},name=\"%s\",lvl=\"%d\",msg=\"%s\"}.",
+            this.time, this.loc.funcname, this.loc.line, this.loc.filename, this.name, level, this.msg);
+    }
+
+    void __Debug() {
+        char buffer[1024];
+        this.ToString(buffer, sizeof(buffer));
+        PrintToServer("%s", buffer);
+    }
 }
 
 
 methodmap TestSink < Sink
 {
-    public native TestSink();
-
-    public native int GetLogCount();
-    public native int GetFlushCount();
-
-    public native void DrainMsgs(TestDrainCallback callback, any data=0);
-    public ArrayList DrainMsgsFast() {
-        ArrayList msgs = new ArrayList(.blocksize=ByteCountToCells(sizeof(sLogMessage)));
-        this.DrainMsgs(__CB_DrainMsgs, msgs);
-        if (msgs.Length == 0)
-            ThrowError("TestSink msgs is empty!");
-
-        return msgs;
+    public TestSink() {
+        // The underlying implementation is actually a CallbackSink
+        // Exposing the inheritance from Sink is intended to hide the CallbackSink.GetData().
+        TestSinkData data = new TestSinkData();
+        TestSink sink = view_as<TestSink>(new CallbackSink(null, __TestSink_OnLog,
+                                                           null, __TestSink_OnFlush,
+                                                           null, __TestSink_OnClose,
+                                                           data));
+        return sink;
     }
 
-    public native void DrainLastMsg(TestDrainCallback callback, any data=0);
-    public sLogMessage DrainLastMsgFast() {
-        ArrayList msg = new ArrayList(.blocksize=ByteCountToCells(sizeof(sLogMessage)));
-        this.DrainLastMsg(__CB_DrainMsgs, msg);
-        if (msg.Length == 0)
-            ThrowError("TestSink msg is empty!");
-
-        sLogMessage logMsg;
-        msg.GetArray(0, logMsg);
-        delete msg;
-        return logMsg;
+    public int GetLogCount() {
+        return view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).logCount;
     }
 
-    public native void DrainLines(TestDrainLineCallback callback, any data=0);
-    public ArrayList DrainLinesFast() {
-        ArrayList lines = new ArrayList(.blocksize=ByteCountToCells(2048));
-        this.DrainLines(__CB_DrainLines, lines);
-        if (lines.Length == 0)
-            ThrowError("TestSink lines is empty!");
-
-        return lines;
+    public void SetLogDelay(int milliseconds) {
+        view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).logDelay = milliseconds;
     }
 
-    public native void DrainLastLine(TestDrainLineCallback callback, any data=0);
-    public char[] DrainLastLineFast() {
-        ArrayList line = new ArrayList(.blocksize=ByteCountToCells(2048));
-        this.DrainLastLine(__CB_DrainLines, line);
-        if (line.Length == 0)
-            ThrowError("TestSink line is empty!");
-
-        char lineString[2048];
-        line.GetString(0, lineString, sizeof(lineString));
-        delete line;
-        return lineString;
+    public void SetLogError(const char[] logError) {
+        view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).SetLogError(logError);
     }
 
-    public native void SetLogDelay(int milliseconds);
-    public native void SetFlushDelay(int milliseconds);
+    public void ClearLogError() {
+        view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).SetLogError(NULL_STRING);
+    }
 
-    public native void SetLogException(const char[] msg);
-    public native void ClearLogException();
+    public ArrayList Drain() {
+        ArrayList logEvents = view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).logEvents;
+        if (logEvents.Length == 0)
+            ThrowError("TestSink::logEvents is empty.");
 
-    public native void SetFlushException(const char[] msg);
-    public native void ClearFlushException();
+        ArrayList copy = logEvents.Clone();
+        logEvents.Clear();
+        return copy;
+    }
+
+    public LogEvent DrainLatest() {
+        ArrayList logEvents = view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).logEvents;
+        if (logEvents.Length == 0)
+            ThrowError("TestSink::logEvents is empty.");
+
+        LogEvent logEvent;
+        logEvents.GetArray(logEvents.Length - 1, logEvent);
+        logEvents.Erase(logEvents.Length - 1);
+        return logEvent;
+    }
+
+    public LogEvent DrainOldest() {
+        ArrayList logEvents = view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).logEvents;
+        if (logEvents.Length == 0)
+            ThrowError("TestSink::logEvents is empty.");
+
+        LogEvent logEvent;
+        logEvents.GetArray(0, logEvent);
+        logEvents.Erase(0);
+        return logEvent;
+    }
+
+    public int GetFlushCount() {
+        return view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).flushCount;
+    }
+
+    public void SetFlushDelay(int milliseconds) {
+        view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).flushDelay = milliseconds;
+    }
+
+    public void SetFlushError(const char[] flushError) {
+        view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).SetFlushError(flushError);
+    }
+
+    public void ClearFlushError() {
+        view_as<TestSinkData>(view_as<CallbackSink>(this).GetData()).SetFlushError(NULL_STRING);
+    }
 }
 
 
-static void __CB_DrainMsgs(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int logTime, ArrayList msgs)
+public bool __TestSink_OnLog(TestSink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
-    sLogMessage logMsg;
-    strcopy(logMsg.name, sizeof(sLogMessage::name), name);
-    logMsg.lvl = lvl;
-    strcopy(logMsg.msg, sizeof(sLogMessage::msg), msg);
-    strcopy(logMsg.file, sizeof(sLogMessage::file), file);
-    logMsg.line = line;
-    strcopy(logMsg.func, sizeof(sLogMessage::func), func);
-    logMsg.logTime = logTime;
+    // Simulated delay
+    SafeSleepForMilliseconds(view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).logDelay);
 
-    msgs.PushArray(logMsg);
+    // Simulated error
+    char logError[256];
+    view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).GetLogError(logError, sizeof(logError));
+    if (logError[0])
+    {
+        strcopy(error, maxlen, logError);
+        return false;
+    }
+
+    // Increase LogCounter
+    view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).logCount++;
+
+    // Push LogEvent
+    LogEvent logEvent;
+    logEvent.Set(logTime, loc, name, lvl, msg);
+    view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).logEvents.PushArray(logEvent);
+    return true;
 }
 
-static void __CB_DrainLines(const char[] line, ArrayList lines)
+public bool __TestSink_OnFlush(TestSink sink, char[] error, int maxlen)
 {
-    lines.PushString(line);
+    // Simulated delay
+    SafeSleepForMilliseconds(view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).flushDelay);
+
+    // Simulated error
+    char flushError[256];
+    view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).GetFlushError(flushError, sizeof(flushError));
+    if (flushError[0])
+    {
+        strcopy(error, maxlen, flushError);
+        return false;
+    }
+
+    // Increase FlushCounter
+    view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).flushCount++;
+    return true;
+}
+
+public void __TestSink_OnClose(TestSinkData data)
+{
+    data.Close();
+}
+
+
+
+methodmap TestSinkData < Handle
+{
+    public TestSinkData() {
+        char owner[PLATFORM_MAX_PATH];
+        GetPluginFilename(null, owner, sizeof(owner));
+
+        TestSinkData data = view_as<TestSinkData>(new StringMap());
+        data.SetOwner(owner);
+        data.logCount = 0;
+        data.logDelay = 0;
+        data.SetLogError(NULL_STRING);
+        data.logEvents = new ArrayList(sizeof(LogEvent));
+        data.flushCount = 0;
+        data.flushDelay = 0;
+        data.SetFlushError(NULL_STRING);
+        return data;
+    }
+
+    public int GetOwner(char[] owner, int maxlen) {
+        return this.__GetString("m_szOwner", owner, maxlen);
+    }
+
+    public void SetOwner(const char[] owner) {
+        this.__SetString("m_szOwner", owner);
+    }
+
+    property int logCount {
+        public get()                    { return this.__GetValue("m_cLogCount"); }
+        public set(int logCount)        { this.__SetValue("m_cLogCount", logCount); }
+    }
+
+    property int logDelay {
+        public get()                    { return this.__GetValue("m_uLogDelay"); }
+        public set(int logDelay)        { this.__SetValue("m_uLogDelay", logDelay); }
+    }
+
+    public int GetLogError(char[] logError, int maxlen) {
+        return this.__GetString("m_szLogError", logError, maxlen);
+    }
+
+    public void SetLogError(const char[] logError) {
+        this.__SetString("m_szLogError", logError);
+    }
+
+    property ArrayList logEvents {
+        public get()                    { return this.__GetValue("m_hLogEvents"); }
+        public set(ArrayList logEvents) { this.__SetValue("m_hLogEvents", logEvents); }
+    }
+
+    property int flushCount {
+        public get()                    { return this.__GetValue("m_cFlushCount"); }
+        public set(int flushCount)      { this.__SetValue("m_cFlushCount", flushCount); }
+    }
+
+    property int flushDelay {
+        public get()                    { return this.__GetValue("m_uFlushDelay"); }
+        public set(int flushDelay)      { this.__SetValue("m_uFlushDelay", flushDelay);}
+    }
+
+    public int GetFlushError(char[] flushError, int maxlen) {
+        return this.__GetString("m_szFlushError", flushError, maxlen);
+    }
+
+    public void SetFlushError(const char[] flushError) {
+        this.__SetString("m_szFlushError", flushError);
+    }
+
+    public void Close() {
+        char owner[PLATFORM_MAX_PATH];
+        this.GetOwner(owner, sizeof(owner));
+        Handle plugin = FindPluginByFile(owner);
+        Function func = GetFunctionByName(plugin, "__TestSinkData_Close");
+
+        // void (TestSinkData data);
+        Call_StartFunction(plugin, func);
+        Call_PushCell(this);
+        Call_Finish();
+        delete view_as<StringMap>(this);
+    }
+
+    public int ToString(char[] buffer, int maxlen) {
+        char owner[PLATFORM_MAX_PATH];
+        char logError[256];
+        char flushError[256];
+        this.GetOwner(owner, sizeof(owner));
+        this.GetLogError(logError, sizeof(logError));
+        this.GetFlushError(flushError, sizeof(flushError));
+
+        return FormatEx(buffer, maxlen,
+            "TestSinkData{owner=\"%s\",logCount=%d,logDelay=%d,logError=\"%s\",logEvents=%X,logEventsLength=%d,flushCount=%d,flushDelay=%d,flushError=\"%s\"}",
+            owner, this.logCount, this.logDelay, logError, this.logEvents, this.logEvents.Length, this.flushCount, this.flushDelay, flushError);
+    }
+
+    public void __Debug() {
+        char buffer[1024];
+        this.ToString(buffer, sizeof(buffer));
+        PrintToServer("%s", buffer);
+        if (this.logEvents) {
+            for (int i = 0; i < this.logEvents.Length; ++i) {
+                LogEvent logEvent;
+                this.logEvents.GetArray(i, logEvent, sizeof(logEvent));
+                logEvent.ToString(buffer, sizeof(buffer));
+                PrintToServer("[%d/%d] %s", i, this.logEvents.Length, buffer);
+            }
+        }
+    }
+
+
+    public bool __Contains(const char[] key) {
+        return view_as<StringMap>(this).ContainsKey(key);
+    }
+
+    public any __GetValue(const char[] key) {
+        any value;
+        view_as<StringMap>(this).GetValue(key, value);
+        return value;
+    }
+
+    public void __SetValue(const char[] key, any value) {
+        view_as<StringMap>(this).SetValue(key, value);
+    }
+
+    public int __GetString(const char[] key, char[] value, int maxlen) {
+        int size;
+        view_as<StringMap>(this).GetString(key, value, maxlen, size);
+        return size;
+    }
+
+    public void __SetString(const char[] key, const char[] value) {
+        view_as<StringMap>(this).SetString(key, value);
+    }
+}
+
+
+public void __TestSinkData_Close(TestSinkData data)
+{
+    delete data.logEvents;
 }

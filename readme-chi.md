@@ -2,7 +2,7 @@
 
 # Log4sp
 
-Log4sp 是基于 [spdlog](https://github.com/gabime/spdlog) 构建的高性能日志库，旨在帮助开发者高效地记录、格式化和管理应用程序日志。Log4sp 充分利用了 spdlog 的卓越性能与灵活性，为 SourceMod 提供了一个更易于集成的日志接口，能够满足从轻量级插件到大型高性能项目的日志记录需求。
+Log4sp 是基于 [spdlog](https://github.com/gabime/spdlog) 构建的高性能日志库，支持仅头文件和扩展库两种使用方式，旨在帮助开发者高效地记录、格式化和管理应用程序日志。Log4sp 充分利用了 spdlog 的卓越性能与灵活性，为 SourceMod 提供了一个更易于集成的日志接口，能够满足从轻量级插件到大型高性能项目的日志记录需求。
 
 借助 log4sp，开发者可以轻松跟踪插件运行状态、定位问题并监控性能，同时利用高性能日志库降低日志记录对插件运行效率的影响。
 
@@ -15,17 +15,18 @@ Log4sp 是基于 [spdlog](https://github.com/gabime/spdlog) 构建的高性能�
 5. 支持日志操作[无错误中断](#错误处理器)
 6. 支持多种[输出源](./sourcemod/scripting/include/log4sp/sinks)
 7. 支持控制台指令以及管理菜单
-8. 支持 int64
-9. 支持 x64
+8. 支持仅头文件模式（纯 SourcePawn）
+9. 支持 int64
+10. 支持 x64
 
 ## 安装
 
 1. 从 [Releases](https://github.com/F1F88/sm-ext-log4sp/releases) 中下载合适的版本
     - `sm-ext-log4sp` 包含扩展库以及日志操作相关 API 的头文件
     - `sm-plugin-log4sp_manager` 包含管理插件以及管理记录器相关 API 的头文件
-2. 把压缩包中的文件复制到服务器的 "addons/sourcemod" 目录下
+2. 把压缩包中的文件复制到服务器的 "addons/sourcemod" 目录里
 
-## 使用
+## 用例
 
 Natives 文档：[./sourcemod/scripting/include/log4sp/](./sourcemod/scripting/include/log4sp)
 
@@ -105,27 +106,25 @@ public void OnPluginStart()
 
 ### 参数格式化
 
-以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L165) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogEx` / `LogAmxTpl` 则先将参数格式化，再输出格式化后的日志消息。
+以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L64) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogF` 方法则先将参数格式化，再输出格式化后的日志消息。
 
 参数格式化在 **Logger** 层执行，且仅当日志消息级别 **≥** logger 日志级别时才会触发。
 
-|                                                              |  Log   |                            LogEx                             |                          LogAmxTpl                           |                       SM - LogMessage                        |
-| :----------------------------------------------------------- | :----: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| **运行效率**                                                 |  最快  |                             较快                             |                             较快                             |                             较慢                             |
-| **最多字符数**                                               | 无限制 |                            无限制                            |                             2048                             |                             1024                             |
-| **参数格式化**                                               |   ×    |                              √                               |                              √                               |                              √                               |
-| **实现**                                                     |   ×    |            [Log4sp Format](./src/log4sp/format.h)            | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |
-| **用法**                                                     |   ×    | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
-| **格式错误**                                                 |   ×    |                      调用 Error Handler                      |                           抛出错误                           |                           抛出错误                           |
-| **填充 [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** |   ×    |                        修复于 v1.5.0                         |                        修复于 v1.5.0                         | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |
-| **浮点 [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** |   ×    |                        修复于 v1.10.0                        |                        修复于 v1.10.0                        | 新增于 [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |
-| **减号 [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** |   ×    |                        修复于 v1.8.0                         |                        修复于 v1.8.0                         | 修复于 [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |
-| **对齐 [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** |   ×    |                        修复于 v1.5.0                         |                        修复于 v1.5.0                         | 修复于 [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |
-| **通配符 [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** |   ×    |                        新增于 v1.10.0                        |                        新增于 v1.10.0                        | 新增于 [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |
-| **通配符 [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** |   ×    |                        新增于 v1.11.0                        |                        新增于 v1.11.0                        | 新增于 [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |
-| **浮点数 [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** |   ×    |                        新增于 v1.11.0                        |                        新增于 v1.11.0                        | 新增于 [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |
-| **填充 [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** |   ×    |                        修复于 v1.8.0                         |                        修复于 v1.8.0                         | 修复于 [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |
-| **通配符 [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** |   ×    |                        新增于 v1.11.0                        |                        新增于 v1.11.0                        | 新增于 [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |
+|                                                              |                          SM Logging                          |                           仅头文件                           |                            扩展库                            |
+| :----------------------------------------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| **最多字符数**                                               |                             1024                             |            宏 `LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH`            |                            无限制                            |
+| **实现**                                                     | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) | [SM Format](https://github.com/alliedmodders/sourcemod/blob/master/core/logic/sprintf.h#L40) |          [Log4sp Format](./src/log4sp/format.h#L10)          |
+| **用法**                                                     | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) | [Format wiki](https://wiki.alliedmods.net/Format_Class_Functions_(SourceMod_Scripting)) |
+| **格式错误**                                                 |                           抛出错误                           |                           抛出错误                           |                      调用 Error Handler                      |
+| **填充 [BUG](https://github.com/alliedmodders/sourcemod/issues/2221)** | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) | 修复于 [1.13.0.7198](https://github.com/alliedmodders/sourcemod/pull/2255) |                        修复于 v1.5.0                         |
+| **浮点 [Inf](https://github.com/alliedmodders/sourcemod/issues/2110)** | 新增于 [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) | 新增于 [1.13.0.7269](https://github.com/alliedmodders/sourcemod/pull/2324) |                        修复于 v1.10.0                        |
+| **减号 [BUG](https://github.com/alliedmodders/sourcemod/issues/2328)** | 修复于 [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) | 修复于 [1.13.0.7270](https://github.com/alliedmodders/sourcemod/pull/2329) |                        修复于 v1.8.0                         |
+| **对齐 [BUG](https://github.com/alliedmodders/sourcemod/issues/2331)** | 修复于 [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) | 修复于 [1.13.0.7271](https://github.com/alliedmodders/sourcemod/pull/2332) |                        修复于 v1.5.0                         |
+| **通配符 [%E](https://github.com/alliedmodders/sourcemod/issues/2099)** | 新增于 [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) | 新增于 [1.13.0.7276](https://github.com/alliedmodders/sourcemod/pull/2330) |                        新增于 v1.10.0                        |
+| **通配符 [%ld, %li, %lu](https://github.com/alliedmodders/sourcemod/issues/2413)** | 新增于 [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) | 新增于 [1.13.0.7326](https://github.com/alliedmodders/sourcemod/pull/2421) |                        新增于 v1.11.0                        |
+| **浮点数 [-Inf](https://github.com/alliedmodders/sourcemod/issues/2444)** | 新增于 [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) | 新增于 [1.13.0.7330](https://github.com/alliedmodders/sourcemod/pull/2444) |                        新增于 v1.11.0                        |
+| **填充 [BUG](https://github.com/alliedmodders/sourcemod/pull/2443)** | 修复于 [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) | 修复于 [1.13.0.7331](https://github.com/alliedmodders/sourcemod/pull/2443) |                        修复于 v1.8.0                         |
+| **通配符 [%lb, %lX, %lx](https://github.com/alliedmodders/sourcemod/pull/2448)** | 新增于 [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) | 新增于 [1.13.0.7342](https://github.com/alliedmodders/sourcemod/pull/2448) |                        新增于 v1.11.0                        |
 
 ```sourcepawn
 #include <sourcemod>
@@ -142,9 +141,9 @@ public void OnPluginStart()
     Logger logger = new Logger("my-logger");
     logger.AddSink(sink);
 
-    logger.InfoEx("d: %d, u: %u, b: %b", 1, 2, 3);
-    logger.WarnEx("f: %f, x: %x, X: %X", 4.0, 5, 6);
-    logger.ErrorEx("s: %s, c: %c, T: %T", "Some String", '!', "Yes", LANG_SERVER);
+    logger.InfoF("d: %d, u: %u, b: %b", 1, 2, 3);
+    logger.WarnF("f: %f, x: %x, X: %X", 4.0, 5, 6);
+    logger.ErrorF("s: %s, c: %c, T: %T", "Some String", '!', "Yes", LANG_SERVER);
 
     sink.Close();
     logger.Close();
@@ -213,6 +212,9 @@ public void OnPluginStart()
 > [2001-02-03 12:34:56.789] [my-logger] [info] [test.sp:17] Some message<br>
 > [02/03/01 12:34:56 PM] [my-logger] [I] [OnPluginStart:19] Some message<br>
 
+> [!TIP]
+> 仅头文件为固定模板，需要修改源码或者自定义 Sink 才能修改模板。
+
 ### 刷写策略
 
 Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki/Flush-policy)刷写缓冲区，以实现良好的性能。
@@ -229,7 +231,7 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
 2. 自动刷写
 
     ```sourcepawn
-    logger.FlushOn(LogLevel_Warn); // 当日志消息级别 ≥ "Warn" 时，立即刷写缓冲区
+    logger.SetFlushLevel(LogLevel_Warn); // 当日志消息级别 ≥ "Warn" 时，立即刷写缓冲区
     ```
 
     > [!TIP]
@@ -241,20 +243,18 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
     #include <sourcemod>
     #include <log4sp>
 
+    Logger g_hLogger;
+
     public void OnPluginStart()
     {
-        CreateTimer(5.0, Timer_FlushAll, _, TIMER_REPEAT);
+        g_hLogger = new Logger("my-logger");
+        CreateTimer(5.0, Timer_Flush, _, TIMER_REPEAT);
     }
 
-    Action Timer_FlushAll(Handle timer)
+    Action Timer_Flush(Handle timer)
     {
-        Logger.ApplyAll(ApplyAll_FlushAll);
+        g_hLogger.Flush();
         return Plugin_Continue;
-    }
-
-    void ApplyAll_FlushAll(Logger logger)
-    {
-        logger.Flush();
     }
     ```
 
@@ -264,7 +264,7 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
 
 但以下情况不会直接抛出错误，而是交由错误处理器处理，从而避免中断 SourcePawn 代码的执行：
 
-1. Logger.LogEx 格式化参数时的错误
+1. Logger.LogF 格式化参数时的错误
 2. Logger 遍历 Sinks 记录日志时的错误
 3. Logger 遍历 Sinks 刷写日志时的错误
 
@@ -275,46 +275,33 @@ Log4sp 让底层 libc 在[认为合适时](https://github.com/gabime/spdlog/wiki
 ```sourcepawn
 void SetMyErrorHandler(Logger logger)
 {
-    logger.SetErrorHandler(MyErrorHandler);
+    logger.SetErrorHandler(null, MyErrorHandler);
 }
 
-void MyErrorHandler(const char[] msg, const char[] name, const char[] file, int line, const char[] func)
+void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
 {
-    LogError("[%s::%d] [%s] %s", file, line, name, msg);
-}
-```
-
-> [!tip]
->
-> `Logger.LogAmxTpl` 格式化参数错误将直接抛出错误信息。
-
-### 全局记录器
-
-全局 logger 名为 "**`log4sp`**"，由拓展在加载时创建，其生命周期与拓展相同，且不会被任何插件释放。
-
-全局 logger 初始时仅有一个 ServerConsoleSink  类型的输出源，其余属性均为默认值。
-
-```sourcepawn
-Logger GetGlobalLogger()
-{
-    Logger logger = Logger.Get(LOG4SP_GLOBAL_LOGGER_NAME);
-
-    static bool init = false;
-    if (!init)
+    // source 取文件名拼接行号
+    char source[PLATFORM_MAX_PATH];
+    if (!loc.IsEmpty())
     {
-        logger.SetPattern("[%Y-%m-%d %H:%M:%S] [Global] [%l] %v");
-        logger.SetErrorHandler(MyErrorHandler);
-        logger.Info("Hello log4sp global logger!");
-        init = true;
+        int sepOffset = 0;
+        for (int i = 0; i < sizeof(SourceLoc::filename); ++i)
+        {
+            if (!loc.filename[i])
+                break;
+            if (loc.filename[i] == '\\' || loc.filename[i] == '/')
+                sepOffset = i + 1;
+        }
+        FormatEx(source, sizeof(source), "[%s::%d] ",
+                 loc.filename[sepOffset], loc.line);
     }
-    return logger;
-}
-
-void MyErrorHandler(const char[] msg, const char[] name, const char[] file, int line, const char[] func)
-{
-    LogMessage("[%s::%d] [%s] %s", file, line, name, msg);
+    LogError("[%s] %s%s", origin, source, msg);
 }
 ```
+
+>  [!tip]
+>
+>  仅头文件 `Logger.LogF` 格式化参数错误将直接抛出错误信息。
 
 ### 多个输出源
 
@@ -358,7 +345,6 @@ public void OnPluginStart()
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [warn] Some warning<br>
 
-
 文件 `game/addons/sourcemod/logs/log4sp-multi-daily-sink_20010203.log`：
 
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
@@ -377,86 +363,101 @@ public void OnPluginStart()
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [warn] Some warning<br>
 
-### 生命周期
+### 仅头文件
 
-底层 Logger 对象和 Sink 对象只有在引用计数为 0 时才会从内存中删除。
+仅头文件的所有代码实现于 `.inc` 头文件中，不依赖任何外部组件，可以轻易的整合到任何插件中，从而简化设置于集成工作。
 
-如下代码 13-15 行关闭了 sink handle，但底层 Sink 对象不会被删除，因为 11 行创建的 logger 引用了这些 Sinks 对象。
+使用仅头文件模式需在包含 `<log4sp>` 头文件之前定义宏 `LOG4SP_HEADER_ONLY`，也可以添加编译参数启用：`LOG4SP_HEADER_ONLY=`
 
 ```sourcepawn
-Logger CreateMultiSinksLogger()
+#include <sourcemod>
+
+#define LOG4SP_HEADER_ONLY  // 启用仅头文件
+#include <log4sp>
+
+public void OnPluginStart()
 {
-    char file[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, file, sizeof(file), "logs/log4sp-multi-sinks.log");
+    ServerConsoleSink sink = new ServerConsoleSink();
 
-    Sink sinks[3];
-    sinks[0] = new DailyFileSink(file);
-    sinks[1] = new ServerConsoleSink();
-    sinks[2] = new ClientChatAllSink();
+    Logger logger = new Logger("my-logger");
+    logger.AddSink(sink);
 
-    Logger logger = Logger.CreateLoggerWith("multi-sink-logger", sinks, 3);
+    logger.Info("Hello World!");
 
-    delete sinks[0];
-    delete sinks[1];
-    delete sinks[2];
-
-    logger.Info("Successfully created logger with multiple sinks");
-    return logger;
+    sink.Close();
+    logger.Close();
 }
 ```
 
-- 执行 11 行前，Sinks 对象只有 Handles 系统引用，因此 Sinks 的引用数为 1；
+仅头文件模式与扩展库模式主要区别如下：
 
-- 执行 11 行后，logger 引用了 Sinks 对象，因此 Sinks 的引用数增加为 2；
+|                             |     扩展库     |                           仅头文件                           |
+| :-------------------------- | :------------: | :----------------------------------------------------------: |
+| **LibraryExists("log4sp")** |      True      |                            False                             |
+| **日志消息最大字符数**      |     无限制     |            宏 `LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH`            |
+| **参数格式化错误处理**      | `ErrorHandler` |                   不支持<br>（抛出并中断）                   |
+| **自定义模板**              |      支持      |                  不支持<br>（需要修改代码）                  |
+| **克隆句柄**                |      支持      | 有限<br>（只能使用 methodmap 的 `Clone` 方法）<br>（创建者卸载后克隆体也会被破坏） |
+| **关闭句柄**                |      支持      | 有限<br>（只能使用 methodmap 的 `Close` 方法）<br>（`delete` 、 `CloseHandle()` 都会泄漏句柄） |
+| **要求**                    |    SM 1.12     |                           SM 1.11                            |
 
-- 执行 13-15 行后，Handles 系统移除引用 Sinks 对象，因此 Sinks 引用数减少为 1；
+### 清理实例
 
-- 关闭 logger handle 后，将自动移除对 Sinks 对象的引用，因此 Sinks 引用数减少为 0 并从内存中删除。
+拓展库模式可以直接使用 `delete` 关键字清理实例。
 
+而仅头文件模式与 [sm-json](https://github.com/clugg/sm-json) 类似，底层使用 `StringMap`，您需要确保在实例使用完后妥善管理内存，清理它们。仅使用 `delete` 关键字清理实例是不够的，因为可能还嵌套了 ArrayList、PrivateForward、File 等 Handle。您需要使用对应 `methodmap` 的 `Close()` 方法来清理并删除所有 Handle。
 
-| **Handle 类型** |         Logger         | Sink |
-| :-------------: | :--------------------: | :--: |
-|   **可关闭**    | 是（全局 Logger 除外） |  是  |
-|   **可克隆**    |           是           |  是  |
+此外，还有一些全局辅助函数 `LoggerCloseAndDelete()`，`LoggersCloseAndDelete()`， `SinkCloseAndDelete()`，`SinksCloseAndDelete()`，它会先调用对应 `methodmap` 的 `Close()` 方法，然后将传递的变量或数组元素设置为 `null`。
 
+```sourcepawn
+logger.Close();
+logger = null;
+// or
+LoggerCloseAndDelete(logger);
+
+sink.Close();
+sink = null;
+// or
+SinkCloseAndDelete(sink);
+```
+
+如果一个共享 Handle 有多个引用，则只有在引用计数归零后这个共享对象才会真正清理。
+
+对于 Logger Handle 而言，调用 `Logger.Clone()` 方法和注册到 `Registry` 会增加引用计数；调用 `Logger.Close()` 和从 `Registry` 注销会减少引用计数。
+
+对于 Sink Handle 而言，调用 `Sink.Clone()` 方法和添加到 `Logger` 会增加引用计数；调用 `Sink.Close()`  和从 `Logger` 移除会减少引用计数。
 
 ## 架构
 
 ```mermaid
 flowchart LR
- subgraph Logger["Logger"]
+ subgraph Sinks["`**Sink List**`"]
+        SinkShouldJunction["Junction"]
+        SinkShouldLog{"Should Log?"}
+        SinkLog("Log")
+        SinkPatternFormat["Pattern Format"]
+        SinkFlush("Flush")
+  end
+ subgraph Logger["`**Logger**`"]
         LoggerShouldLog{"Should Log?"}
         LoggerShouldJunction["Junction"]
         LoggerLogJunction["Junction"]
         LoggerShouldFlush{"Should Flush?"}
         LoggerLog("Log")
-        LoggerLogEx("LogEx")
-        LoggerLogAmxTpl("LogAmxTpl")
-        LoggerLogFormat["Raw"]
-        LoggerLogExFormat["Log4sp params format"]
-        LoggerLogAmxTplFormat["SourceMod params format"]
+        LoggerLogRaw["Raw Message"]
+        LoggerLogF("LogF")
+        LoggerLogFFormat["Params Format"]
   end
- subgraph Sinks["Sink List"]
-        SinkShouldJunction["Junction"]
-        SinkShouldLog{"Should Log?"}
-        SinkLog("Log")
-        SinkPatternFormat["Pattern format"]
-        SinkFlushJunction["Junction"]
-        SinkFlush("Flush")
-  end
-    Start((("Start"))) L_Start_LoggerShouldLog_0@== Log Message ==> LoggerShouldLog
+    Start((("`**Start**`"))) L_Start_LoggerShouldLog_0@== Log Message ==> LoggerShouldLog
     LoggerShouldLog -- Yes --- LoggerShouldJunction
     LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
-    LoggerShouldLog -. No .-> Stop((("End")))
-    LoggerLogJunction --- LoggerLog & LoggerLogEx & LoggerLogAmxTpl
-    LoggerLog --- LoggerLogFormat
-    LoggerLogFormat --- SinkShouldJunction
-    LoggerLogEx --- LoggerLogExFormat
-    LoggerLogExFormat --- SinkShouldJunction
-    LoggerLogAmxTpl --- LoggerLogAmxTplFormat
-    LoggerLogAmxTplFormat --- SinkShouldJunction
-    LoggerShouldFlush -- Yes --- SinkFlushJunction
-    SinkFlushJunction --> SinkFlush
+    LoggerShouldLog -. No .-> Stop((("`**End**`")))
+    LoggerLogJunction --- LoggerLog & LoggerLogF
+    LoggerLog --- LoggerLogRaw
+    LoggerLogRaw --- SinkShouldJunction
+    LoggerLogF --- LoggerLogFFormat
+    LoggerLogFFormat --- SinkShouldJunction
+    LoggerShouldFlush -- Yes --- SinkFlush
     SinkFlush --> Stop
     LoggerShouldFlush -. No .-> Stop
     SinkShouldJunction --> SinkShouldLog
@@ -464,55 +465,195 @@ flowchart LR
     SinkPatternFormat --- SinkLog
     SinkLog --> Stop
     SinkShouldLog -. No .-> Stop
+
+    L_Start_LoggerShouldLog_0@{ animation: fast }
     LoggerShouldJunction@{ shape: junction}
     LoggerLogJunction@{ shape: junction}
-    LoggerLogFormat@{ shape: das}
-    LoggerLogExFormat@{ shape: das}
-    LoggerLogAmxTplFormat@{ shape: das}
+    LoggerLogRaw@{ shape: das}
+    LoggerLogFFormat@{ shape: das}
     SinkShouldJunction@{ shape: junction}
     SinkPatternFormat@{ shape: das}
-    SinkFlushJunction@{ shape: junction}
+    style Start stroke-width:4px,stroke-dasharray: 0,font-size:16px
+    style Logger fill:transparent
     style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerShouldFlush stroke-width:1px,stroke-dasharray: 1
+    style LoggerShouldJunction fill:#00C853
+    style LoggerLogJunction fill:#00C853
     style LoggerLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogEx stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogAmxTpl stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogFormat stroke-width:1px,stroke-dasharray: 1
-    style LoggerLogExFormat stroke-width:1px,stroke-dasharray: 1
-    style LoggerLogAmxTplFormat stroke-width:1px,stroke-dasharray: 1
+    style LoggerLogRaw stroke-width:1px,stroke-dasharray:1
+    style LoggerLogF stroke-width:4px,stroke-dasharray: 0
+    style LoggerLogFFormat stroke-width:1px,stroke-dasharray:1
+    style LoggerShouldFlush stroke-width:4px,stroke-dasharray: 0
+    style Sinks fill:transparent
+    style SinkShouldJunction fill:#00C853
     style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
+    style SinkPatternFormat stroke-width:1px,stroke-dasharray:1
     style SinkLog stroke-width:4px,stroke-dasharray: 0
-    style SinkPatternFormat stroke-width:1px,stroke-dasharray: 1
     style SinkFlush stroke-width:4px,stroke-dasharray: 0
+    style Stop stroke-width:3px,stroke-dasharray: 0
     linkStyle 1 stroke:#00C853,fill:none
     linkStyle 2 stroke:#00C853,fill:none
     linkStyle 3 stroke:#00C853,fill:none
     linkStyle 4 stroke:#D50000,fill:none
+    linkStyle 5 stroke:#00C853,fill:none
+    linkStyle 6 stroke:#00C853,fill:none
+    linkStyle 7 stroke:#00C853,fill:none
+    linkStyle 8 stroke:#00C853,fill:none
+    linkStyle 9 stroke:#00C853,fill:none
+    linkStyle 10 stroke:#00C853,fill:none
+    linkStyle 11 stroke:#00C853,fill:none
+    linkStyle 12 stroke:#00C853,fill:none
+    linkStyle 13 stroke:#D50000,fill:none
     linkStyle 14 stroke:#00C853,fill:none
     linkStyle 15 stroke:#00C853,fill:none
-    linkStyle 17 stroke:#D50000,fill:none
-    linkStyle 19 stroke:#00C853,fill:none
-    linkStyle 22 stroke:#D50000,fill:none
-    L_Start_LoggerShouldLog_0@{ animation: fast }
+    linkStyle 16 stroke:#00C853,fill:none
+    linkStyle 17 stroke:#00C853,fill:none
+    linkStyle 18 stroke:#D50000,fill:none
 ```
+
+## 插件
+
+### Manager
+
+**log4sp_manager** 插件提供了多种管理方案用于管理各个插件的日志行为，只需要先将记录器注册到注册表即可。
+
+然后就可以使用 Registry Natives，菜单或控制台指令来管理这些记录器。
+
+- 注册记录器
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            Logger logger = new Logger("my-logger");
+            Log4spRegistry.Instance().RegisterLogger(logger);
+            logger.Close();
+        }
+    }
+
+    public void OnPluginEnd()
+    {
+        // Drop it when your plugin unloads.
+        Log4spRegistry.Instance().Drop("my-logger");
+    }
+    ```
+
+- 获取记录器
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            Logger logger = Log4spRegistry.Instance().Get("my-logger");
+            if (logger != INVALID_HANDLE)
+            {
+                logger.Info("Some message");
+            }
+        }
+    }
+    ```
+
+- 全局记录器
+
+    在插件加载时会创建一个空名 "" 的记录器作为全局记录器，全局记录器有一个 **ServerConsoleSink**，其余均为默认值，任何插件都可以直接使用。
+
+    您也可以自行创建一个记录器并替换为全局记录器。
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            Logger logger = new Logger("my-logger");
+            Log4spRegistry.Instance().SetGlobalLogger(logger);
+            logger.Close();
+        }
+    }
+    ```
+
+- 修改注册表中所有记录器属性
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            // 修改注册表中所有记录器的日志级别为 Warn
+            Log4spRegistry.Instance().SetLevel(LogLevel_Warn);
+
+            // 修改注册表中所有记录器的自动刷写级别为 Error
+            Log4spRegistry.Instance().SetFlushLevel(LogLevel_Error);
+        }
+    }
+    ```
+
+- 定期刷写注册表中所有记录器
+
+    在 [刷写策略](#刷写策略) 章节中，定期刷写需要自行编写代码来实现，且方案不够优雅。
+
+    如果借助 manager 插件则可以轻松实现类似的效果：
+
+    ```sourcepawn
+    #include <sourcemod>
+    #include <log4sp/registry>
+
+    public void OnPluginStart()
+    {
+        if (Log4spRegistry.LibraryExists())
+        {
+            // 每隔 5 秒刷写注册表中所有记录器
+            Log4spRegistry.Instance().SetFlushEvery(5.0);
+        }
+    }
+    ```
 
 ## 性能测试
 
-测试平台: Windows 11 + VMware + Ubuntu 24.04 LTS + SourceMod 1.13.0.7410
+测试平台：Windows 11 + VMware + Ubuntu 24.04 LTS + SourceMod 1.13.0.7410
 
-主机配置: Intel(R) Core(TM) Ultra 7 255H + 32 GB 内存
+主机配置：Intel(R) Core(TM) Ultra 7 255H + 32 GB 内存
 
-VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
+VM Ubuntu 配置：8 vCPU（1 socket × 8 cores） + 8 GB 内存
 
 测试用例：[./sourcemod/scripting/testsuite/bench/bench-log4sp.sp](./sourcemod/scripting/testsuite/bench/bench-log4sp.sp)
 
-```
-[benchmark] basic-file      Runs: 10   Calls: 10000000   Elapsed: 1.694      5900143/sec
-[benchmark] callback        Runs: 10   Calls: 10000000   Elapsed: 1.814      5511962/sec
-[benchmark] daily-file      Runs: 10   Calls: 10000000   Elapsed: 1.708      5853536/sec
-[benchmark] ring-buffer     Runs: 10   Calls: 10000000   Elapsed: 0.763     13093170/sec
-[benchmark] rotate-file     Runs: 10   Calls: 10000000   Elapsed: 2.039      4903350/sec
-[benchmark] server-console  Runs: 10   Calls: 10000000   Elapsed: 20.733      482301/sec
+```shell
+*****************************************************************************
+* Bench log4sp v2.0.0  (release,git=d6a93cc,manual)                         *
+*****************************************************************************
+basic-file       Runs: 10   Calls: 10000000   Elapsed: 1.535      6511315/sec
+callback         Runs: 10   Calls: 10000000   Elapsed: 3.064      3262996/sec
+daily-file       Runs: 10   Calls: 10000000   Elapsed: 1.582      6318177/sec
+ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 0.750     13326972/sec
+rotate-file      Runs: 10   Calls: 10000000   Elapsed: 1.379      7248320/sec
+server-console   Runs: 10   Calls: 10000000   Elapsed: 22.818      438239/sec
+
+*****************************************************************************
+* Bench log4sp v2.0.0  (header-only,release,max-err=256,max-msg=1024)       *
+*****************************************************************************
+basic-file       Runs: 10   Calls: 10000000   Elapsed: 26.465      377856/sec
+callback         Runs: 10   Calls: 10000000   Elapsed: 8.380      1193266/sec
+daily-file       Runs: 10   Calls: 10000000   Elapsed: 28.817      347016/sec
+ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 299.795      33356/sec
+rotate-file      Runs: 10   Calls: 10000000   Elapsed: 28.216      354407/sec
+server-console   Runs: 10   Calls: 10000000   Elapsed: 48.795      204938/sec
 ```
 
 作为参考, 还测试了 sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
@@ -525,7 +666,6 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
 [benchmark] LogToFileEx     Runs: 10   Calls: 10000000   Elapsed: 53.439    187128/sec
 [benchmark] PrintToServer   Runs: 10   Calls: 10000000   Elapsed: 18.596    537744/sec
 ```
-
 
 ## 编译构建
 
@@ -555,7 +695,7 @@ VM Ubuntu 配置: 1 CPU + 8 核心 + 8 GB 内存
     ```
 
     > [!TIP]
-    > 本地构建能够启用[额外优化](./AMBuildScript#L235)
+    > 本地构建能够启用[额外优化](./AMBuildScript#L233)
 
 ### Windows
 
@@ -632,7 +772,7 @@ sudo apt-get install gcc-multilib g++-multilib
 
 /usr/bin/ld: cannot find -lstdc++
 
-> 删除 **`AMBuildScript`** 中的 [cxx.linkflags += ['-static-libstdc++']](./AMBuildScript#L307)
+> 删除 **`AMBuildScript`** 中的 [cxx.linkflags += ['-static-libstdc++']](./AMBuildScript#L306)
 
 #### 运行问题
 

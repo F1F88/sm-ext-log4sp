@@ -1,8 +1,7 @@
 #if defined _log4sp_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_included
-
 
 #include <log4sp/common>
 #include <log4sp/logger>
@@ -28,14 +27,14 @@
  */
 public Extension __ext_log4sp =
 {
-    name = "Log4sp",
+    name = "log4sp",
     file = "log4sp.ext",
-#if defined AUTOLOAD_EXTENSIONS
+#if defined AUTOLOAD_EXTENSIONS && !defined LOG4SP_HEADER_ONLY
     autoload = 1,
 #else
     autoload = 0,
 #endif
-#if defined REQUIRE_EXTENSIONS
+#if defined REQUIRE_EXTENSIONS && !defined LOG4SP_HEADER_ONLY
     required = 1,
 #else
     required = 0,
@@ -43,102 +42,91 @@ public Extension __ext_log4sp =
 };
 
 
-#if !defined REQUIRE_EXTENSIONS
+#if !defined REQUIRE_EXTENSIONS || defined LOG4SP_HEADER_ONLY
 public void __ext_log4sp_SetNTVOptional()
 {
-    MarkNativeAsOptional("LogLevelToName");
-    MarkNativeAsOptional("LogLevelToShortName");
-    MarkNativeAsOptional("NameToLogLevel");
+    MarkNativeAsOptional("GetLog4spVersion");
 
     MarkNativeAsOptional("Logger.Logger");
-    MarkNativeAsOptional("Logger.CreateLoggerWith");
-    MarkNativeAsOptional("Logger.CreateLoggerWithEx");
-    MarkNativeAsOptional("Logger.Get");
-    MarkNativeAsOptional("Logger.ApplyAll");
+    MarkNativeAsOptional("Logger.Log");
+    MarkNativeAsOptional("Logger.LogF");
+    MarkNativeAsOptional("Logger.LogSrc");
+    MarkNativeAsOptional("Logger.LogSrcF");
+    MarkNativeAsOptional("Logger.LogLoc");
+    MarkNativeAsOptional("Logger.LogLocF");
+    MarkNativeAsOptional("Logger.LogStackTrace");
+    MarkNativeAsOptional("Logger.LogStackTraceF");
+    MarkNativeAsOptional("Logger.Trace");
+    MarkNativeAsOptional("Logger.TraceF");
+    MarkNativeAsOptional("Logger.Debug");
+    MarkNativeAsOptional("Logger.DebugF");
+    MarkNativeAsOptional("Logger.Info");
+    MarkNativeAsOptional("Logger.InfoF");
+    MarkNativeAsOptional("Logger.Warn");
+    MarkNativeAsOptional("Logger.WarnF");
+    MarkNativeAsOptional("Logger.Error");
+    MarkNativeAsOptional("Logger.ErrorF");
+    MarkNativeAsOptional("Logger.Fatal");
+    MarkNativeAsOptional("Logger.FatalF");
     MarkNativeAsOptional("Logger.GetName");
     MarkNativeAsOptional("Logger.GetNameLength");
     MarkNativeAsOptional("Logger.GetLevel");
     MarkNativeAsOptional("Logger.SetLevel");
-    MarkNativeAsOptional("Logger.SetPattern");
     MarkNativeAsOptional("Logger.ShouldLog");
-    MarkNativeAsOptional("Logger.Log");
-    MarkNativeAsOptional("Logger.LogEx");
-    MarkNativeAsOptional("Logger.LogAmxTpl");
-    MarkNativeAsOptional("Logger.LogSrc");
-    MarkNativeAsOptional("Logger.LogSrcEx");
-    MarkNativeAsOptional("Logger.LogSrcAmxTpl");
-    MarkNativeAsOptional("Logger.LogLoc");
-    MarkNativeAsOptional("Logger.LogLocEx");
-    MarkNativeAsOptional("Logger.LogLocAmxTpl");
-    MarkNativeAsOptional("Logger.LogStackTrace");
-    MarkNativeAsOptional("Logger.LogStackTraceEx");
-    MarkNativeAsOptional("Logger.LogStackTraceAmxTpl");
-    MarkNativeAsOptional("Logger.ThrowError");
-    MarkNativeAsOptional("Logger.ThrowErrorEx");
-    MarkNativeAsOptional("Logger.ThrowErrorAmxTpl");
-    MarkNativeAsOptional("Logger.Trace");
-    MarkNativeAsOptional("Logger.TraceEx");
-    MarkNativeAsOptional("Logger.TraceAmxTpl");
-    MarkNativeAsOptional("Logger.Debug");
-    MarkNativeAsOptional("Logger.DebugEx");
-    MarkNativeAsOptional("Logger.DebugAmxTpl");
-    MarkNativeAsOptional("Logger.Info");
-    MarkNativeAsOptional("Logger.InfoEx");
-    MarkNativeAsOptional("Logger.InfoAmxTpl");
-    MarkNativeAsOptional("Logger.Warn");
-    MarkNativeAsOptional("Logger.WarnEx");
-    MarkNativeAsOptional("Logger.WarnAmxTpl");
-    MarkNativeAsOptional("Logger.Error");
-    MarkNativeAsOptional("Logger.ErrorEx");
-    MarkNativeAsOptional("Logger.ErrorAmxTpl");
-    MarkNativeAsOptional("Logger.Fatal");
-    MarkNativeAsOptional("Logger.FatalEx");
-    MarkNativeAsOptional("Logger.FatalAmxTpl");
+    MarkNativeAsOptional("Logger.SetPattern");
     MarkNativeAsOptional("Logger.Flush");
     MarkNativeAsOptional("Logger.GetFlushLevel");
-    MarkNativeAsOptional("Logger.FlushOn");
+    MarkNativeAsOptional("Logger.SetFlushLevel");
+    MarkNativeAsOptional("Logger.ShouldFlush");
+    MarkNativeAsOptional("Logger.GetSinks");
+    MarkNativeAsOptional("Logger.GetSinksLength");
     MarkNativeAsOptional("Logger.AddSink");
-    MarkNativeAsOptional("Logger.AddSinkEx");
     MarkNativeAsOptional("Logger.DropSink");
     MarkNativeAsOptional("Logger.SetErrorHandler");
+    MarkNativeAsOptional("Logger.Equals");
+    MarkNativeAsOptional("Logger.IsValid");
 
     MarkNativeAsOptional("BasicFileSink.BasicFileSink");
     MarkNativeAsOptional("BasicFileSink.GetFilename");
     MarkNativeAsOptional("BasicFileSink.Truncate");
-    MarkNativeAsOptional("BasicFileSink.CreateLogger");
+    MarkNativeAsOptional("BasicFileSink.IsValid");
 
     MarkNativeAsOptional("CallbackSink.CallbackSink");
-    MarkNativeAsOptional("CallbackSink.SetLogCallback");
-    MarkNativeAsOptional("CallbackSink.SetLogPostCallback");
-    MarkNativeAsOptional("CallbackSink.SetFlushCallback");
-    MarkNativeAsOptional("CallbackSink.CreateLogger");
+    MarkNativeAsOptional("CallbackSink.SetData");
+    MarkNativeAsOptional("CallbackSink.GetData");
+    MarkNativeAsOptional("CallbackSink.IsValid");
 
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
     MarkNativeAsOptional("DailyFileSink.GetFilename");
-    MarkNativeAsOptional("DailyFileSink.GetFilenameLength");
-    MarkNativeAsOptional("DailyFileSink.CreateLogger");
+    MarkNativeAsOptional("DailyFileSink.IsValid");
 
     MarkNativeAsOptional("RingBufferSink.RingBufferSink");
-    MarkNativeAsOptional("RingBufferSink.Drain");
-    MarkNativeAsOptional("RingBufferSink.DrainFormatted");
-    MarkNativeAsOptional("RingBufferSink.CreateLogger");
+    MarkNativeAsOptional("RingBufferSink.DrainLatest");
+    MarkNativeAsOptional("RingBufferSink.DrainOldest");
+    MarkNativeAsOptional("RingBufferSink.GetMaxSize");
+    MarkNativeAsOptional("RingBufferSink.GetSize");
+    MarkNativeAsOptional("RingBufferSink.IsValid");
 
     MarkNativeAsOptional("RotatingFileSink.RotatingFileSink");
     MarkNativeAsOptional("RotatingFileSink.GetFilename");
-    MarkNativeAsOptional("RotatingFileSink.GetFilenameLength");
     MarkNativeAsOptional("RotatingFileSink.RotateNow");
+    MarkNativeAsOptional("RotatingFileSink.GetMaxSize");
+    MarkNativeAsOptional("RotatingFileSink.SetMaxSize");
+    MarkNativeAsOptional("RotatingFileSink.GetMaxFiles");
+    MarkNativeAsOptional("RotatingFileSink.SetMaxFiles");
+    MarkNativeAsOptional("RotatingFileSink.IsValid");
     MarkNativeAsOptional("RotatingFileSink.CalcFilename");
-    MarkNativeAsOptional("RotatingFileSink.CreateLogger");
 
     MarkNativeAsOptional("ServerConsoleSink.ServerConsoleSink");
-    MarkNativeAsOptional("ServerConsoleSink.CreateLogger");
+    MarkNativeAsOptional("ServerConsoleSink.IsValid");
 
+    MarkNativeAsOptional("Sink.Log");
+    MarkNativeAsOptional("Sink.Flush");
     MarkNativeAsOptional("Sink.GetLevel");
     MarkNativeAsOptional("Sink.SetLevel");
-    MarkNativeAsOptional("Sink.SetPattern");
     MarkNativeAsOptional("Sink.ShouldLog");
-    MarkNativeAsOptional("Sink.Log");
-    MarkNativeAsOptional("Sink.ToPattern");
-    MarkNativeAsOptional("Sink.Flush");
+    MarkNativeAsOptional("Sink.SetPattern");
+    MarkNativeAsOptional("Sink.Equals");
+    MarkNativeAsOptional("Sink.IsValid");
 }
 #endif

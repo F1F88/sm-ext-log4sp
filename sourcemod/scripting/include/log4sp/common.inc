@@ -1,10 +1,58 @@
 #if defined _log4sp_common_included
- #endinput
+    #endinput
 #endif
 #define _log4sp_common_included
 
-#pragma newdecls required
-#pragma semicolon 1
+#if !defined LOG4SP_ES_CONST
+    #if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR <= 11
+        #define LOG4SP_ES_CONST
+    #else
+        #define LOG4SP_ES_CONST const
+    #endif
+#endif
+
+#if !defined SM_INT64_SUPPORTED
+    /**
+     * Not entirely accurate, but more accurate than SOURCEMOD_V_***.
+     * Intrinsic float was introduced in pr-2405 (7295)
+     * int64 was introduced in pr-2414 (7302)
+     *
+     * @note Macro "__sourcepawn_intrinsic_float" is defined in `float.inc`.
+     *       It requires either "#include <sourcemod>" or "#include <float>"
+     *       to be placed above "#include <log4sp/common>" for it to work.
+     *
+     * @note The purpose is to select the internal implementation of Long.
+     *       It require "#include <log4sp/common>" to be placed above
+     *       "#include <log4sp/details/long>" for it to work.
+     */
+    #if defined __sourcepawn_intrinsic_float
+        #define SM_INT64_SUPPORTED
+    #endif
+#endif
+
+#if defined LOG4SP_HEADER_ONLY
+    #if !defined DEBUG && !defined _DEBUG
+        #if !defined LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
+            #define  LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
+        #endif
+    #endif
+
+    /**
+     * Set the maximum length of error messages.
+     * Error messages exceeding this length will be truncated.
+     */
+    #if !defined LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH
+        #define  LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH 256
+    #endif
+
+    /**
+     * Set the maximum length of log messages.
+     * Log messages exceeding this length will be truncated.
+     */
+    #if !defined LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH
+        #define  LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH 1024
+    #endif
+#endif
 
 #define LOG4SP_LEVEL_TRACE              0
 #define LOG4SP_LEVEL_DEBUG              1
@@ -29,8 +77,6 @@
 #define LOG4SP_LEVEL_SHORT_NAME_ERROR   "E"
 #define LOG4SP_LEVEL_SHORT_NAME_FATAL   "F"
 #define LOG4SP_LEVEL_SHORT_NAME_OFF     "O"
-
-#define LOG4SP_GLOBAL_LOGGER_NAME       "log4sp"
 
 
 /**
@@ -58,19 +104,38 @@ enum PatternTimeType
 };
 
 /**
- * Source code location.
+ * Source location.
  */
 enum struct SourceLoc
 {
-    char filename[PLATFORM_MAX_PATH];   // file name/path.
+    char filename[256];                 // file name/path.
     int line;                           // line number.
-    char funcname[PLATFORM_MAX_PATH];   // function name.
+    char funcname[256];                 // function name.
 
-    bool IsEmpty()
-    {
+    bool IsEmpty() {
         return !this.filename[0] || this.line <= 0 || !this.funcname[0];
     }
 }
+
+
+/**
+ * Called before opening the file.
+ */
+typedef FileOpenFunction = function void (const char[] filename);
+
+/**
+ * Called after closing the file.
+ */
+typedef FileCloseFunction = function void (const char[] filename);
+
+/**
+ * Callback function for user defined error handler.
+ *
+ * @param origin    The origin name of the error.
+ * @param loc       The source location of the error.
+ * @param msg       The details message of the error.
+ */
+typedef ErrorHandler = function void (const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg);
 
 
 /**
@@ -81,7 +146,19 @@ enum struct SourceLoc
  * @param lvl       Log level enum.
  * @return          Number of bytes written.
  */
-native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
+stock int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl)
+{
+    switch(lvl)
+    {
+        case LogLevel_Trace : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_TRACE);
+        case LogLevel_Debug : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_DEBUG);
+        case LogLevel_Info  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_INFO);
+        case LogLevel_Warn  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_WARN);
+        case LogLevel_Error : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_ERROR);
+        case LogLevel_Fatal : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_FATAL);
+        default             : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_NAME_OFF);
+    }
+}
 
 /**
  * Convert a log level enum to short name.
@@ -91,7 +168,19 @@ native int LogLevelToName(char[] buffer, int maxlen, LogLevel lvl);
  * @param lvl       Log level enum.
  * @return          Number of bytes written.
  */
-native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
+stock int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl)
+{
+    switch(lvl)
+    {
+        case LogLevel_Trace : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_TRACE);
+        case LogLevel_Debug : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_DEBUG);
+        case LogLevel_Info  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_INFO);
+        case LogLevel_Warn  : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_WARN);
+        case LogLevel_Error : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_ERROR);
+        case LogLevel_Fatal : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_FATAL);
+        default             : return FormatEx(buffer, maxlen, LOG4SP_LEVEL_SHORT_NAME_OFF);
+    }
+}
 
 /**
  * Convert a log level name to log level enum.
@@ -99,4 +188,50 @@ native int LogLevelToShortName(char[] buffer, int maxlen, LogLevel lvl);
  * @param name      Log level name.
  * @return          Log level enum or LogLevel_Off when the log level name does not exist.
  */
-native LogLevel NameToLogLevel(const char[] name);
+stock LogLevel NameToLogLevel(const char[] name)
+{
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_TRACE)) return LogLevel_Trace;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_DEBUG)) return LogLevel_Debug;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_INFO))  return LogLevel_Info;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_WARN))  return LogLevel_Warn;
+    if (StrEqual(name, "warning"))               return LogLevel_Warn;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_ERROR)) return LogLevel_Error;
+    if (StrEqual(name, "err"))                   return LogLevel_Error;
+    if (StrEqual(name, LOG4SP_LEVEL_NAME_FATAL)) return LogLevel_Fatal;
+    if (StrEqual(name, "critical"))              return LogLevel_Fatal;
+    return LogLevel_Off;
+}
+
+/**
+ * Convert a log level name to log level enum.
+ *
+ * @param buildTime Build time.
+ * @param maxlen1   Maximum length of the build time.
+ * @param buildTags Build tags.
+ * @param maxlen2   Maximum length of the tags.
+ * @return          numeric representation.
+ */
+#if !defined LOG4SP_HEADER_ONLY
+native int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags="", int maxlen2=0);
+#else
+stock  int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags="", int maxlen2=0)
+{
+    const int MAJOR = 2, MINOR = 0, PATCH = 0;
+    const int VERSION = (MAJOR << 16) | (MINOR << 8) | PATCH;
+    static const char BUILD_TIME[] = __DATE__ ... " " ... __TIME__;
+
+    strcopy(buildTime, maxlen1, BUILD_TIME);
+
+    FormatEx(buildTags, maxlen2,
+             "header-only,%s,max-err=%u,max-msg=%u",
+#if defined NDEBUG || (!defined DEBUG && !defined _DEBUG)
+             "release",
+#else
+             "debug",
+#endif
+             LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH,
+             LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH
+    );
+    return VERSION;
+}
+#endif

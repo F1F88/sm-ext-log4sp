@@ -28,7 +28,6 @@ def Normalize(path):
 def SetArchFlags(compiler):
   if compiler.behavior == 'gcc':
     if compiler.target.arch == 'x86_64':
-      return
       compiler.cflags += ['-fPIC']
   elif compiler.like('msvc'):
     if compiler.target.arch == 'x86_64':
@@ -166,6 +165,9 @@ class ExtensionConfig(object):
       'SPDLOG_SHORT_LEVEL_NAMES={"T", "D", "I", "W", "E", "F", "O"}',
       'LOG4SP_SHA_SHORT="' + GetGitHashCode()[:7] + '"',
     ]
+
+    if os.environ.get('GITHUB_ACTIONS') != 'true':
+      cxx.defines += ['LOG4SP_BUILD_TAGS="manual"']
 
     # Platform-specifics
     if cxx.target.platform == 'linux':
@@ -333,12 +335,6 @@ class ExtensionConfig(object):
       os.path.join(context.currentSourcePath, 'src'),
       os.path.join(context.currentSourcePath, 'extern', 'spdlog', 'include'),
     ]
-
-    #*** log4sp addition ***#
-    if builder.options.debug == '1':
-      compiler.cxxincludes += [
-        os.path.join(context.currentSourcePath, 'tests'),
-      ]
 
     #*** log4sp addition ***#
     if builder.options.opt == '1':

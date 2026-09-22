@@ -19,12 +19,13 @@ permissions:
 
 jobs:
   build:
-    name: build with ${{ matrix.sm_version }}
+    name: build with ${{ matrix.sm_version }} ${{ matrix.variant }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         sm_version: [sm_latest, sm_1_12, sm_1_11]
+        variant: [extension, header_only]
         include:
           - sm_version: sm_latest
             sm_ref: "1.13.x"
@@ -32,6 +33,13 @@ jobs:
             sm_ref: "1.12.x"
           - sm_version: sm_1_11
             sm_ref: "1.11.x"
+          - variant: extension
+            variant_define: ""
+          - variant: header_only
+            variant_define: "LOG4SP_HEADER_ONLY="
+        exclude:
+          - sm_version: sm_1_11
+            variant: extension
 
     steps:
       - name: Check out Log4sp
@@ -63,8 +71,13 @@ jobs:
             "sourcemod/scripting/log4sp_manager.sp"
             -i "sourcemod/scripting/include"
             -o "$OUTPUT_DIR/log4sp_manager.smx"
+            -E
             "NDEBUG="
           )
+
+          if [[ "${{ matrix.variant }}" == "header_only" ]]; then
+            COMPILE_ARGS+=("LOG4SP_HEADER_ONLY=")
+          fi
 
           spcomp "${COMPILE_ARGS[@]}"
 
@@ -84,6 +97,6 @@ jobs:
       - name: Uploading package
         uses: actions/upload-artifact@v7
         with:
-          name: sm-plugin-log4sp_manager-${{ steps.setup_sp.outputs.plugin-version }}.${{ steps.package.outputs.short_hash }}-${{ matrix.sm_version }}
+          name: sm-plugin-log4sp_manager-${{ steps.setup_sp.outputs.plugin-version }}.${{ steps.package.outputs.short_hash }}-${{ matrix.sm_version }}-${{ matrix.variant }}
           path: log4sp/build/package
           if-no-files-found: error

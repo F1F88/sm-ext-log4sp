@@ -1,49 +1,14 @@
 #include "spdlog/sinks/stdout_sinks.h"
 
-#include "log4sp/logger.h"
-#include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_handler.h"
 
 
 static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    std::shared_ptr<spdlog::sinks::stdout_sink_st> sink;
+    spdlog::sinks::stdout_sink_st *sink;
     try
     {
-        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
-    }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return BAD_HANDLE;
-    }
-
-    SourceMod::HandleSecurity security(nullptr, myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
-    if (!handle)
-    {
-        ctx->ReportError("Failed to creates a ServerConsoleSink Handle (error code: %d)", error);
-        return BAD_HANDLE;
-    }
-    return handle;
-}
-
-static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
-{
-    char *name;
-    CTX_LOCAL_TO_STRING(params[1], &name);
-    if (Log4sp::LoggerHandler::Instance().FindHandle(name))
-    {
-        ctx->ReportError("Logger with name \"%s\" already exists.", name);
-        return BAD_HANDLE;
-    }
-
-    std::shared_ptr<spdlog::sinks::stdout_sink_st> sink;
-    try
-    {
-        sink = std::make_shared<spdlog::sinks::stdout_sink_st>();
+        sink = new spdlog::sinks::stdout_sink_st();
     }
     catch (const std::exception &ex)
     {
@@ -54,21 +19,27 @@ static cell_t ServerConsoleSink_CreateLogger(SourcePawn::IPluginContext *ctx, co
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
-    auto logger = std::make_shared<Log4sp::Logger>(name, sink);
-    auto handle = Log4sp::LoggerHandler::Instance().CreateHandle(logger, &security, nullptr, &error);
+    auto handle = Log4sp::SinkHandler::Instance().CreateHandle(sink, &security, nullptr, &error);
     if (!handle)
     {
-        ctx->ReportError("Failed to creates a Logger Handle (error code: %d)", error);
+        delete sink;
+        ctx->ReportError("Failed to creates a ServerConsoleSink Handle (error %d)", error);
         return BAD_HANDLE;
     }
     return handle;
 }
 
+static cell_t IsValid(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    return !!sink && !!dynamic_cast<spdlog::sinks::stdout_sink_st*>(sink);
+}
+
 const sp_nativeinfo_t ServerConsoleSinkNatives[] =
 {
     {"ServerConsoleSink.ServerConsoleSink",         ServerConsoleSink},
-
-    {"ServerConsoleSink.CreateLogger",              ServerConsoleSink_CreateLogger},
+    {"ServerConsoleSink.IsValid",                   IsValid},
 
     {nullptr,                                       nullptr}
 };
