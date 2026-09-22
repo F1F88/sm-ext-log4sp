@@ -108,7 +108,8 @@ private:
                 throw_spdlog_ex(format("Failed to push loc into CallbackSink log forward (error {})", err));
             }
 
-            if (auto err = fwd->PushString(logMsg.logger_name.data())) {
+            std::string name{logMsg.logger_name.data(), logMsg.logger_name.size()};
+            if (auto err = fwd->PushString(name.c_str())) {
                 SinkHandler::Instance().FreeHandle(sink, &security);
                 throw_spdlog_ex(format("Failed to push name into CallbackSink log forward (error {})", err));
             }
@@ -118,7 +119,8 @@ private:
                 throw_spdlog_ex(format("Failed to push lvl into CallbackSink log forward (error {})", err));
             }
 
-            if (auto err = fwd->PushString(logMsg.payload.data())) {
+            std::string msg{logMsg.payload.data(), logMsg.payload.size()};
+            if (auto err = fwd->PushString(msg.c_str())) {
                 SinkHandler::Instance().FreeHandle(sink, &security);
                 throw_spdlog_ex(format("Failed to push msg into CallbackSink log forward (error {})", err));
             }
