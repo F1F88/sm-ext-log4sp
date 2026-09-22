@@ -636,24 +636,24 @@ VM Ubuntu 配置：8 vCPU（1 socket × 8 cores） + 8 GB 内存
 
 ```shell
 *****************************************************************************
-* Bench log4sp v2.0.0  (release,git=c9c6141)                                *
+* Bench log4sp v2.0.0  (release,git=d6a93cc,manual)                         *
 *****************************************************************************
-basic-file       Runs: 10   Calls: 10000000   Elapsed: 1.565      6386095/sec
-callback         Runs: 10   Calls: 10000000   Elapsed: 2.647      3777029/sec
-daily-file       Runs: 10   Calls: 10000000   Elapsed: 1.563      6394557/sec
-ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 0.726     13760458/sec
-rotate-file      Runs: 10   Calls: 10000000   Elapsed: 1.387      7208230/sec
-server-console   Runs: 10   Calls: 10000000   Elapsed: 22.392      446575/sec
+basic-file       Runs: 10   Calls: 10000000   Elapsed: 1.535      6511315/sec
+callback         Runs: 10   Calls: 10000000   Elapsed: 3.064      3262996/sec
+daily-file       Runs: 10   Calls: 10000000   Elapsed: 1.582      6318177/sec
+ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 0.750     13326972/sec
+rotate-file      Runs: 10   Calls: 10000000   Elapsed: 1.379      7248320/sec
+server-console   Runs: 10   Calls: 10000000   Elapsed: 22.818      438239/sec
 
 *****************************************************************************
 * Bench log4sp v2.0.0  (header-only,release,max-err=256,max-msg=1024)       *
 *****************************************************************************
-basic-file       Runs: 10   Calls: 10000000   Elapsed: 26.583      376169/sec
-callback         Runs: 10   Calls: 10000000   Elapsed: 8.157      1225858/sec
-daily-file       Runs: 10   Calls: 10000000   Elapsed: 29.052      344199/sec
-ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 301.502      33167/sec
-rotate-file      Runs: 10   Calls: 10000000   Elapsed: 28.438      351631/sec
-server-console   Runs: 10   Calls: 10000000   Elapsed: 53.877      185605/sec
+basic-file       Runs: 10   Calls: 10000000   Elapsed: 26.465      377856/sec
+callback         Runs: 10   Calls: 10000000   Elapsed: 8.380      1193266/sec
+daily-file       Runs: 10   Calls: 10000000   Elapsed: 28.817      347016/sec
+ring-buffer      Runs: 10   Calls: 10000000   Elapsed: 299.795      33356/sec
+rotate-file      Runs: 10   Calls: 10000000   Elapsed: 28.216      354407/sec
+server-console   Runs: 10   Calls: 10000000   Elapsed: 48.795      204938/sec
 ```
 
 作为参考, 还测试了 sourcemod 的 [logging API](https://sm.alliedmods.net/new-api/logging)
