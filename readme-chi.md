@@ -24,7 +24,7 @@ Log4sp 是基于 [spdlog](https://github.com/gabime/spdlog) 构建的高性能�
 1. 从 [Releases](https://github.com/F1F88/sm-ext-log4sp/releases) 中下载合适的版本
     - `sm-ext-log4sp` 包含扩展库以及日志操作相关 API 的头文件
     - `sm-plugin-log4sp_manager` 包含管理插件以及管理记录器相关 API 的头文件
-2. 把压缩包中的文件复制到服务器的 "addons/sourcemod" 目录下
+2. 把压缩包中的文件复制到服务器的 "addons/sourcemod" 目录里
 
 ## 用例
 
