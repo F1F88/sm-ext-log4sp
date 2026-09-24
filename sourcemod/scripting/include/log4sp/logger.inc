@@ -185,6 +185,28 @@ methodmap Logger < Handle
     public native bool ShouldFlush(LogLevel lvl);
 
     /**
+     * Gets the minimum log level that will trigger throw.
+     *
+     * @return          Minimum log level that will trigger throw.
+     */
+    public native LogLevel GetThrowLevel();
+
+    /**
+     * Sets the minimum log level that will trigger throw.
+     *
+     * @param lvl       Log level enum.
+     */
+    public native void SetThrowLevel(LogLevel lvl);
+
+    /**
+     * Gets whether trigger throw for the given log level.
+     *
+     * @param lvl       Log level enum.
+     * @return          True if trigger throw for the given log level.
+     */
+    public native bool ShouldThrow(LogLevel lvl);
+
+    /**
      * Gets the sinks clone of logger.
      *
      * @note Sinks clone handles must be freed via delete or CloseHandle() or Sink.Close().
@@ -268,6 +290,7 @@ methodmap Logger < Handle
         logger.__SetSinks(new ArrayList());
         logger.__SetSinkOwners(new ArrayList(.blocksize=PLATFORM_MAX_PATH));
         logger.__SetFlushLevel(LogLevel_Off);
+        logger.__SetThrowLevel(LogLevel_Off);
         // function void (const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg);
         logger.__SetErrFwd(new PrivateForward(ET_Ignore, Param_String, Param_Array, Param_String));
         logger.__SetErrPlugin("");
@@ -282,21 +305,33 @@ methodmap Logger < Handle
             SourceLoc loc;
             this.__LogIt(loc, lvl, msg);
         }
+
+        if (this.ShouldThrow(lvl))
+            ThrowError("[%d] %s", lvl, msg);
     }
     public void LogF(LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl)) {
-            SourceLoc loc;
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 4);
+        VFormat(msg, sizeof(msg), fmt, 4);
 #endif
+
+        if (shouldLog) {
+            SourceLoc loc;
             this.__LogIt(loc, lvl, msg);
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", lvl, msg);
     }
 
     public void LogSrc(LogLevel lvl, const char[] msg) {
@@ -305,20 +340,31 @@ methodmap Logger < Handle
 
         if (this.ShouldLog(lvl))
             this.__LogIt(this.__GetSourceLoc(1), lvl, msg);
+
+        if (this.ShouldThrow(lvl))
+            ThrowError("[%d] %s", lvl, msg);
     }
     public void LogSrcF(LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl)) {
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 4);
+        VFormat(msg, sizeof(msg), fmt, 4);
 #endif
+
+        if (shouldLog)
             this.__LogIt(this.__GetSourceLoc(1), lvl, msg);
-        }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", lvl, msg);
     }
 
     public void LogLoc(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
@@ -327,21 +373,32 @@ methodmap Logger < Handle
 
         if (this.ShouldLog(lvl))
             this.__LogIt(loc, lvl, msg);
+
+        if (this.ShouldThrow(lvl))
+            ThrowError("[%d] %s", lvl, msg);
     }
 
     public void LogLocF(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl)) {
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 5);
+        VFormat(msg, sizeof(msg), fmt, 5);
 #endif
+
+        if (shouldLog)
             this.__LogIt(loc, lvl, msg);
-        }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", lvl, msg);
     }
 
     public void LogStackTrace(LogLevel lvl, const char[] msg) {
@@ -372,21 +429,29 @@ methodmap Logger < Handle
             }
             delete arr;
         }
+
+        if (this.ShouldThrow(lvl))
+            ThrowError("[%d] %s", lvl, msg);
     }
     public void LogStackTraceF(LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl)) {
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+#if defined __sourcepawn2
+        FormatEx(msg, sizeof(msg), fmt, ...);
+#else
+        VFormat(msg, sizeof(msg), fmt, 4);
+#endif
+
+        if (shouldLog) {
             SourceLoc loc;
             loc = this.__GetSourceLoc(1);
-
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
-#if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
-#else
-            VFormat(msg, sizeof(msg), fmt, 4);
-#endif
 
             char buffer[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
             FormatEx(buffer, sizeof(buffer), "Stack trace requested: %s", msg);
@@ -408,6 +473,9 @@ methodmap Logger < Handle
             }
             delete arr;
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", lvl, msg);
     }
 
     public void Trace(const char[] msg) {
@@ -418,21 +486,33 @@ methodmap Logger < Handle
             SourceLoc loc;
             this.__LogIt(loc, LogLevel_Trace, msg);
         }
+
+        if (this.ShouldThrow(LogLevel_Trace))
+            ThrowError("[%d] %s", LogLevel_Trace, msg);
     }
     public void TraceF(const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Trace)) {
-            SourceLoc loc;
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(LogLevel_Trace);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Trace);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 3);
+        VFormat(msg, sizeof(msg), fmt, 3);
 #endif
+
+        if (shouldLog) {
+            SourceLoc loc;
             this.__LogIt(loc, LogLevel_Trace, msg);
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", LogLevel_Trace, msg);
     }
 
     public void Debug(const char[] msg) {
@@ -443,21 +523,33 @@ methodmap Logger < Handle
             SourceLoc loc;
             this.__LogIt(loc, LogLevel_Debug, msg);
         }
+
+        if (this.ShouldThrow(LogLevel_Debug))
+            ThrowError("[%d] %s", LogLevel_Debug, msg);
     }
     public void DebugF(const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Debug)) {
-            SourceLoc loc;
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(LogLevel_Debug);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Debug);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 3);
+        VFormat(msg, sizeof(msg), fmt, 3);
 #endif
+
+        if (shouldLog) {
+            SourceLoc loc;
             this.__LogIt(loc, LogLevel_Debug, msg);
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", LogLevel_Debug, msg);
     }
 
     public void Info(const char[] msg) {
@@ -468,21 +560,33 @@ methodmap Logger < Handle
             SourceLoc loc;
             this.__LogIt(loc, LogLevel_Info, msg);
         }
+
+        if (this.ShouldThrow(LogLevel_Info))
+            ThrowError("[%d] %s", LogLevel_Info, msg);
     }
     public void InfoF(const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Info)) {
-            SourceLoc loc;
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(LogLevel_Info);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Info);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 3);
+        VFormat(msg, sizeof(msg), fmt, 3);
 #endif
+
+        if (shouldLog) {
+            SourceLoc loc;
             this.__LogIt(loc, LogLevel_Info, msg);
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", LogLevel_Info, msg);
     }
 
     public void Warn(const char[] msg) {
@@ -493,21 +597,33 @@ methodmap Logger < Handle
             SourceLoc loc;
             this.__LogIt(loc, LogLevel_Warn, msg);
         }
+
+        if (this.ShouldThrow(LogLevel_Warn))
+            ThrowError("[%d] %s", LogLevel_Warn, msg);
     }
     public void WarnF(const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Warn)) {
-            SourceLoc loc;
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(LogLevel_Warn);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Warn);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 3);
+        VFormat(msg, sizeof(msg), fmt, 3);
 #endif
+
+        if (shouldLog) {
+            SourceLoc loc;
             this.__LogIt(loc, LogLevel_Warn, msg);
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", LogLevel_Warn, msg);
     }
 
     public void Error(const char[] msg) {
@@ -518,21 +634,33 @@ methodmap Logger < Handle
             SourceLoc loc;
             this.__LogIt(loc, LogLevel_Error, msg);
         }
+
+        if (this.ShouldThrow(LogLevel_Error))
+            ThrowError("[%d] %s", LogLevel_Error, msg);
     }
     public void ErrorF(const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Error)) {
-            SourceLoc loc;
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(LogLevel_Error);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Error);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 3);
+        VFormat(msg, sizeof(msg), fmt, 3);
 #endif
+
+        if (shouldLog) {
+            SourceLoc loc;
             this.__LogIt(loc, LogLevel_Error, msg);
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", LogLevel_Error, msg);
     }
 
     public void Fatal(const char[] msg) {
@@ -543,21 +671,33 @@ methodmap Logger < Handle
             SourceLoc loc;
             this.__LogIt(loc, LogLevel_Fatal, msg);
         }
+
+        if (this.ShouldThrow(LogLevel_Fatal))
+            ThrowError("[%d] %s", LogLevel_Fatal, msg);
     }
     public void FatalF(const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Fatal)) {
-            SourceLoc loc;
-            char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        bool shouldLog = this.ShouldLog(LogLevel_Fatal);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Fatal);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #if defined __sourcepawn2
-            FormatEx(msg, sizeof(msg), fmt, ...);
+        FormatEx(msg, sizeof(msg), fmt, ...);
 #else
-            VFormat(msg, sizeof(msg), fmt, 3);
+        VFormat(msg, sizeof(msg), fmt, 3);
 #endif
+
+        if (shouldLog) {
+            SourceLoc loc;
             this.__LogIt(loc, LogLevel_Fatal, msg);
         }
+
+        if (shouldThrow)
+            ThrowError("[%d] %s", LogLevel_Fatal, msg);
     }
 
     public int GetName(char[] buffer, int maxlen) {
@@ -622,6 +762,24 @@ methodmap Logger < Handle
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
         return (lvl >= this.__GetFlushLevel()) && lvl != LogLevel_Off;
+    }
+
+    public LogLevel GetThrowLevel() {
+        if (!this.IsValid())
+            ThrowError("Invalid Logger Handle %x.", this);
+        return this.__GetThrowLevel();
+    }
+
+    public void SetThrowLevel(LogLevel lvl) {
+        if (!this.IsValid())
+            ThrowError("Invalid Logger Handle %x.", this);
+        this.__SetThrowLevel(lvl);
+    }
+
+    public bool ShouldThrow(LogLevel lvl) {
+        if (!this.IsValid())
+            ThrowError("Invalid Logger Handle %x.", this);
+        return (lvl >= this.__GetThrowLevel()) && lvl != LogLevel_Off;
     }
 
     /**
@@ -798,6 +956,7 @@ methodmap Logger < Handle
         if (this.__GetRefCnt() != logger.__GetRefCnt()
          || this.__GetLevel() != logger.__GetLevel()
          || this.__GetFlushLevel() != logger.__GetFlushLevel()
+         || this.__GetThrowLevel() != logger.__GetThrowLevel()
          || this.__GetErrFwd() != logger.__GetErrFwd())
             return false;
 
@@ -856,8 +1015,8 @@ methodmap Logger < Handle
          && this.__Contains("m_szOwner")    && this.__Contains("m_szName")
          && this.__Contains("m_uNameLen")   && this.__Contains("m_eLvl")
          && this.__Contains("m_hSinks")     && this.__Contains("m_hSinkOwners")
-         && this.__Contains("m_eFlushLvl")  && this.__Contains("m_hErrFwd")
-         && this.__Contains("m_szErrPlugin");
+         && this.__Contains("m_eFlushLvl")  && this.__Contains("m_eThrowLvl")
+         && this.__Contains("m_hErrFwd")    && this.__Contains("m_szErrPlugin");
 #else
         return view_as<bool>(this);
 #endif      // LOG4SP_HEADER_ONLY_NO_VALID_HANDLE
@@ -948,6 +1107,9 @@ methodmap Logger < Handle
 
     public LogLevel __GetFlushLevel()               { return this.__GetValue("m_eFlushLvl"); }
     public void __SetFlushLevel(LogLevel lvl)       { this.__SetValue("m_eFlushLvl", lvl); }
+
+    public LogLevel __GetThrowLevel()               { return this.__GetValue("m_eThrowLvl"); }
+    public void __SetThrowLevel(LogLevel lvl)       { this.__SetValue("m_eThrowLvl", lvl); }
 
     // Ownership and lifecycle are the same as this, closed in __Logger_OnClose().
     public PrivateForward __GetErrFwd()             { return this.__GetValue("m_hErrFwd"); }
