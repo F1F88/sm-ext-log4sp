@@ -24,11 +24,12 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, strin
     if (!shouldLog && !shouldThrow)
         return;
 
+    auto logMsg = LogMsg(loc, m_Name, lvl, msg);
     if (shouldLog)
-        SinkIt(LogMsg(loc, m_Name, lvl, msg), ctx);
+        SinkIt(logMsg, ctx);
 
     if (shouldThrow)
-        ctx->ReportError("[%d] %s", lvl, msg.data());
+        ThrowIt(logMsg, ctx);
 }
 
 // log with log4sp format
@@ -43,11 +44,12 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
     {
         std::string msg = FormatToString(ctx, params, param);
 
+        auto logMsg = LogMsg(loc, m_Name, lvl, msg);
         if (shouldLog)
-            SinkIt(LogMsg(loc, m_Name, lvl, msg), ctx);
+            SinkIt(logMsg, ctx);
 
         if (shouldThrow)
-            ctx->ReportError("[%d] %s", lvl, msg.c_str());
+            ThrowIt(logMsg, ctx);
         return;
     }
     catch (const std::exception &ex)
@@ -55,7 +57,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
         m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(loc, ctx), ex);
 
         if (shouldThrow)
-            ctx->ReportError("[%d] %s", lvl, ex.what());
+            ThrowIt(LogMsg(loc, m_Name, lvl, ex.what()), ctx);
         return;
     }
     catch (...)
@@ -63,7 +65,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
         m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(loc, ctx));
 
         if (shouldThrow)
-            ctx->ReportError("[%d] %s", lvl, "unknown format exception");
+            ThrowIt(LogMsg(m_Name, lvl, "unknown format exception"), ctx);
         return;
     }
 }
@@ -89,7 +91,7 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, string_view_t msg
     }
 
     if (shouldThrow)
-        ctx->ReportError("[%d] %s", lvl, msg.data());
+        ThrowIt(LogMsg(m_Name, lvl, msg), ctx);
 }
 
 void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept
@@ -115,7 +117,7 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
         }
 
         if (shouldThrow)
-            ctx->ReportError("[%d] %s", lvl, msg.c_str());
+            ThrowIt(LogMsg(m_Name, lvl, msg), ctx);
         return;
     }
     catch (const std::exception &ex)
@@ -123,7 +125,7 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
         m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(ctx), ex);
 
         if (shouldThrow)
-            ctx->ReportError("[%d] %s", lvl, ex.what());
+            ThrowIt(LogMsg(m_Name, lvl, ex.what()), ctx);
         return;
     }
     catch (...)
@@ -131,7 +133,7 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
         m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(ctx));
 
         if (shouldThrow)
-            ctx->ReportError("[%d] %s", lvl, "unknown format exception");
+            ThrowIt(LogMsg(m_Name, lvl, "unknown format exception"), ctx);
         return;
     }
 }
@@ -322,61 +324,36 @@ void Logger::Flush(const ErrHelper::SrcHelper &source) const noexcept
 
 void Logger::ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
 {
-    std::array<char, 256> source;
-    auto loc = msg.source;
-    if (!loc.empty()) {
-        int sepOffset = 0;
-        for (int i = 0; true; ++i) {
-            if (!loc.filename[i])
-                break;
-            if (loc.filename[i] == '\\' || loc.filename[i] == '/')
-                sepOffset = i + 1;
-        }
-        smutils->Format(source.data(), sizeof(source), "[%s::%u] ", loc.filename[sepOffset], loc.line);
+    spdlog::memory_buf_t output;
+
+    // append short level
+    assert(msg.level >= Level_t::trace);
+    assert(msg.level <  Level_t::n_levels);
+    output.push_back('[');
+    output.push_back(to_short_c_str(msg.level)[0]);
+    output.push_back(']');
+    output.push_back(' ');
+
+    // append source location if present
+    if (!msg.source.empty()) {
+        using spdlog::details::null_scoped_padder;
+        using spdlog::details::short_filename_formatter;
+        using spdlog::details::fmt_helper::append_int;
+        using spdlog::details::fmt_helper::append_string_view;
+
+        const char *filename = short_filename_formatter<null_scoped_padder>::basename(msg.source.filename);
+
+        output.push_back('[');
+        append_string_view(filename, output);
+        output.push_back(':');
+        append_int(msg.source.line, output);
+        output.push_back(']');
+        output.push_back(' ');
     }
 
-    // 也许可以抽取到 LevelToChar
-    char level;
-    switch (msg.level)
-    {
-    case Level_t::trace:
-        {
-            level = 'T';
-            break;
-        }
-    case Level_t::debug:
-        {
-            level = 'I';
-            break;
-        }
-    case Level_t::info:
-        {
-            level = 'W';
-            break;
-        }
-    case Level_t::warn:
-        {
-            level = 'E';
-            break;
-        }
-    case Level_t::err:
-        {
-            level = 'F';
-            break;
-        }
-    case Level_t::critical:
-        {
-            level = 'O';
-            break;
-        }
-    default:
-        {
-            level = 'O';
-            break;
-        }
-    }
-
-    ctx->ReportError("[%c] %s%s", level, source, msg);
+    auto prefix = spdlog::fmt_lib::to_string(output);
+    std::string message{msg.payload.data(), msg.payload.size()};
+    ctx->ReportError("%s%s", prefix.c_str(), message.c_str());
 }
 
 
