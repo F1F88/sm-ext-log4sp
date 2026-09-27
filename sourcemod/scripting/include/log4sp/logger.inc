@@ -301,13 +301,17 @@ methodmap Logger < Handle
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl)) {
-            SourceLoc loc;
-            this.__LogIt(loc, lvl, msg);
-        }
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(lvl))
-            ThrowError("[%d] %s", lvl, msg);
+        SourceLoc loc;
+        if (shouldLog)
+            this.__LogIt(loc, lvl, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, lvl, msg);
     }
     public void LogF(LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -325,24 +329,30 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 4);
 #endif
 
-        if (shouldLog) {
-            SourceLoc loc;
+        SourceLoc loc;
+        if (shouldLog)
             this.__LogIt(loc, lvl, msg);
-        }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", lvl, msg);
+            this.__ThrowIt(loc, lvl, msg);
     }
 
     public void LogSrc(LogLevel lvl, const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl))
-            this.__LogIt(this.__GetSourceLoc(1), lvl, msg);
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(lvl))
-            ThrowError("[%d] %s", lvl, msg);
+        SourceLoc loc;
+        loc = this.__GetSourceLoc(1);
+        if (shouldLog)
+            this.__LogIt(loc, lvl, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, lvl, msg);
     }
     public void LogSrcF(LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -360,22 +370,29 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 4);
 #endif
 
+        SourceLoc loc;
+        loc = this.__GetSourceLoc(1);
         if (shouldLog)
             this.__LogIt(this.__GetSourceLoc(1), lvl, msg);
 
         if (shouldThrow)
-            ThrowError("[%d] %s", lvl, msg);
+            this.__ThrowIt(loc, lvl, msg);
     }
 
     public void LogLoc(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl))
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
+
+        if (shouldLog)
             this.__LogIt(loc, lvl, msg);
 
-        if (this.ShouldThrow(lvl))
-            ThrowError("[%d] %s", lvl, msg);
+        if (shouldThrow)
+            this.__ThrowIt(loc, lvl, msg);
     }
 
     public void LogLocF(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] fmt, any ...) {
@@ -398,17 +415,21 @@ methodmap Logger < Handle
             this.__LogIt(loc, lvl, msg);
 
         if (shouldThrow)
-            ThrowError("[%d] %s", lvl, msg);
+            this.__ThrowIt(loc, lvl, msg);
     }
 
     public void LogStackTrace(LogLevel lvl, const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(lvl)) {
-            SourceLoc loc;
-            loc = this.__GetSourceLoc(1);
+        bool shouldLog = this.ShouldLog(lvl);
+        bool shouldThrow = this.ShouldThrow(lvl);
+        if (!shouldLog && !shouldThrow)
+            return;
 
+        SourceLoc loc;
+        loc = this.__GetSourceLoc(1);
+        if (shouldLog) {
             char buffer[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
             FormatEx(buffer, sizeof(buffer), "Stack trace requested: %s", msg);
             this.__LogIt(loc, lvl, buffer);
@@ -430,8 +451,8 @@ methodmap Logger < Handle
             delete arr;
         }
 
-        if (this.ShouldThrow(lvl))
-            ThrowError("[%d] %s", lvl, msg);
+        if (shouldThrow)
+            this.__ThrowIt(loc, lvl, msg);
     }
     public void LogStackTraceF(LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -449,10 +470,9 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 4);
 #endif
 
+        SourceLoc loc;
+        loc = this.__GetSourceLoc(1);
         if (shouldLog) {
-            SourceLoc loc;
-            loc = this.__GetSourceLoc(1);
-
             char buffer[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
             FormatEx(buffer, sizeof(buffer), "Stack trace requested: %s", msg);
             this.__LogIt(loc, lvl, buffer);
@@ -475,20 +495,24 @@ methodmap Logger < Handle
         }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", lvl, msg);
+            this.__ThrowIt(loc, lvl, msg);
     }
 
     public void Trace(const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Trace)) {
-            SourceLoc loc;
-            this.__LogIt(loc, LogLevel_Trace, msg);
-        }
+        bool shouldLog = this.ShouldLog(LogLevel_Trace);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Trace);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(LogLevel_Trace))
-            ThrowError("[%d] %s", LogLevel_Trace, msg);
+        SourceLoc loc;
+        if (shouldLog)
+            this.__LogIt(loc, LogLevel_Trace, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, LogLevel_Trace, msg);
     }
     public void TraceF(const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -506,26 +530,29 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 3);
 #endif
 
-        if (shouldLog) {
-            SourceLoc loc;
+        SourceLoc loc;
+        if (shouldLog)
             this.__LogIt(loc, LogLevel_Trace, msg);
-        }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", LogLevel_Trace, msg);
+            this.__ThrowIt(loc, LogLevel_Trace, msg);
     }
 
     public void Debug(const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Debug)) {
-            SourceLoc loc;
-            this.__LogIt(loc, LogLevel_Debug, msg);
-        }
+        bool shouldLog = this.ShouldLog(LogLevel_Debug);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Debug);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(LogLevel_Debug))
-            ThrowError("[%d] %s", LogLevel_Debug, msg);
+        SourceLoc loc;
+        if (shouldLog)
+            this.__LogIt(loc, LogLevel_Debug, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, LogLevel_Debug, msg);
     }
     public void DebugF(const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -543,26 +570,29 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 3);
 #endif
 
-        if (shouldLog) {
-            SourceLoc loc;
+        SourceLoc loc;
+        if (shouldLog)
             this.__LogIt(loc, LogLevel_Debug, msg);
-        }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", LogLevel_Debug, msg);
+            this.__ThrowIt(loc, LogLevel_Debug, msg);
     }
 
     public void Info(const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Info)) {
-            SourceLoc loc;
-            this.__LogIt(loc, LogLevel_Info, msg);
-        }
+        bool shouldLog = this.ShouldLog(LogLevel_Info);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Info);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(LogLevel_Info))
-            ThrowError("[%d] %s", LogLevel_Info, msg);
+        SourceLoc loc;
+        if (shouldLog)
+            this.__LogIt(loc, LogLevel_Info, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, LogLevel_Info, msg);
     }
     public void InfoF(const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -580,26 +610,29 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 3);
 #endif
 
-        if (shouldLog) {
-            SourceLoc loc;
+        SourceLoc loc;
+        if (shouldLog)
             this.__LogIt(loc, LogLevel_Info, msg);
-        }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", LogLevel_Info, msg);
+            this.__ThrowIt(loc, LogLevel_Info, msg);
     }
 
     public void Warn(const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Warn)) {
-            SourceLoc loc;
-            this.__LogIt(loc, LogLevel_Warn, msg);
-        }
+        bool shouldLog = this.ShouldLog(LogLevel_Warn);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Warn);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(LogLevel_Warn))
-            ThrowError("[%d] %s", LogLevel_Warn, msg);
+        SourceLoc loc;
+        if (shouldLog)
+            this.__LogIt(loc, LogLevel_Warn, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, LogLevel_Warn, msg);
     }
     public void WarnF(const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -617,26 +650,29 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 3);
 #endif
 
-        if (shouldLog) {
-            SourceLoc loc;
+        SourceLoc loc;
+        if (shouldLog)
             this.__LogIt(loc, LogLevel_Warn, msg);
-        }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", LogLevel_Warn, msg);
+            this.__ThrowIt(loc, LogLevel_Warn, msg);
     }
 
     public void Error(const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Error)) {
-            SourceLoc loc;
-            this.__LogIt(loc, LogLevel_Error, msg);
-        }
+        bool shouldLog = this.ShouldLog(LogLevel_Error);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Error);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(LogLevel_Error))
-            ThrowError("[%d] %s", LogLevel_Error, msg);
+        SourceLoc loc;
+        if (shouldLog)
+            this.__LogIt(loc, LogLevel_Error, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, LogLevel_Error, msg);
     }
     public void ErrorF(const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -654,26 +690,29 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 3);
 #endif
 
-        if (shouldLog) {
-            SourceLoc loc;
+        SourceLoc loc;
+        if (shouldLog)
             this.__LogIt(loc, LogLevel_Error, msg);
-        }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", LogLevel_Error, msg);
+            this.__ThrowIt(loc, LogLevel_Error, msg);
     }
 
     public void Fatal(const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        if (this.ShouldLog(LogLevel_Fatal)) {
-            SourceLoc loc;
-            this.__LogIt(loc, LogLevel_Fatal, msg);
-        }
+        bool shouldLog = this.ShouldLog(LogLevel_Fatal);
+        bool shouldThrow = this.ShouldThrow(LogLevel_Fatal);
+        if (!shouldLog && !shouldThrow)
+            return;
 
-        if (this.ShouldThrow(LogLevel_Fatal))
-            ThrowError("[%d] %s", LogLevel_Fatal, msg);
+        SourceLoc loc;
+        if (shouldLog)
+            this.__LogIt(loc, LogLevel_Fatal, msg);
+
+        if (shouldThrow)
+            this.__ThrowIt(loc, LogLevel_Fatal, msg);
     }
     public void FatalF(const char[] fmt, any ...) {
         if (!this.IsValid())
@@ -691,13 +730,12 @@ methodmap Logger < Handle
         VFormat(msg, sizeof(msg), fmt, 3);
 #endif
 
-        if (shouldLog) {
-            SourceLoc loc;
+        SourceLoc loc;
+        if (shouldLog)
             this.__LogIt(loc, LogLevel_Fatal, msg);
-        }
 
         if (shouldThrow)
-            ThrowError("[%d] %s", LogLevel_Fatal, msg);
+            this.__ThrowIt(loc, LogLevel_Fatal, msg);
     }
 
     public int GetName(char[] buffer, int maxlen) {
@@ -1177,6 +1215,25 @@ methodmap Logger < Handle
                 this.__HandlerError(name, loc.IsEmpty() ? this.__GetSourceLoc(3) : loc, error);
             }
         }
+    }
+
+    public void __ThrowIt(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
+        char source[256];
+        if (!loc.IsEmpty()) {
+            int sepOffset = 0;
+            for (int i = 0; i < sizeof(SourceLoc::filename); ++i) {
+                if (!loc.filename[i])
+                    break;
+                if (loc.filename[i] == '\\' || loc.filename[i] == '/')
+                    sepOffset = i + 1;
+            }
+            FormatEx(source, sizeof(source), "[%s::%u] ", loc.filename[sepOffset], loc.line);
+        }
+
+        char level[2];
+        LogLevelToShortName(level, sizeof(level), lvl);
+
+        ThrowError("[%c] %s%s", level[0], source, msg);
     }
 
     public void __HandlerError(const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg) {

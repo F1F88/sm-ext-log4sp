@@ -167,8 +167,9 @@ private:
     };
 
     // source 用于发生错误时获取错误发生的源码位置
-    void SinkIt(const LogMsg &msg, const ErrHelper::SrcHelper &source) const noexcept;
+    void SinkIt(const LogMsg &msg, IPluginContext *ctx) const noexcept;
     void Flush(const ErrHelper::SrcHelper &source) const noexcept;
+    void ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept;
 
     const std::string m_Name;
     std::vector<SinkPtr> m_Sinks;

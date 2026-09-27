@@ -24,9 +24,8 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, strin
     if (!shouldLog && !shouldThrow)
         return;
 
-    auto source = ErrHelper::SrcHelper(loc, ctx);
     if (shouldLog)
-        SinkIt(LogMsg(loc, m_Name, lvl, msg), source);
+        SinkIt(LogMsg(loc, m_Name, lvl, msg), ctx);
 
     if (shouldThrow)
         ctx->ReportError("[%d] %s", lvl, msg.data());
@@ -40,13 +39,12 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
     if (!shouldLog && !shouldThrow)
         return;
 
-    auto source = ErrHelper::SrcHelper(loc, ctx);
     try
     {
         std::string msg = FormatToString(ctx, params, param);
 
         if (shouldLog)
-            SinkIt(LogMsg(loc, m_Name, lvl, msg), source);
+            SinkIt(LogMsg(loc, m_Name, lvl, msg), ctx);
 
         if (shouldThrow)
             ctx->ReportError("[%d] %s", lvl, msg.c_str());
@@ -54,7 +52,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
     }
     catch (const std::exception &ex)
     {
-        m_ErrHelper.HandleEx(m_Name, source, ex);
+        m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(loc, ctx), ex);
 
         if (shouldThrow)
             ctx->ReportError("[%d] %s", lvl, ex.what());
@@ -62,7 +60,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
     }
     catch (...)
     {
-        m_ErrHelper.HandleUnknownEx(m_Name, source);
+        m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(loc, ctx));
 
         if (shouldThrow)
             ctx->ReportError("[%d] %s", lvl, "unknown format exception");
@@ -79,15 +77,14 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, string_view_t msg
     if (!shouldLog && !shouldThrow)
         return;
 
-    auto source = ErrHelper::SrcHelper(ctx);
     if (shouldLog)
     {
         using spdlog::fmt_lib::format;
-        SinkIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), source);
-        SinkIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), source);
+        SinkIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
+        SinkIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
         for(const auto &info : StackTraceInfoFrom(ctx))
         {
-            SinkIt(LogMsg(m_Name, lvl, info), source);
+            SinkIt(LogMsg(m_Name, lvl, info), ctx);
         }
     }
 
@@ -102,7 +99,6 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
     if (!shouldLog && !shouldThrow)
         return;
 
-    auto source = ErrHelper::SrcHelper(ctx);
     try
     {
         std::string msg = FormatToString(ctx, params, param);
@@ -110,11 +106,11 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
         if (shouldLog)
         {
             using spdlog::fmt_lib::format;
-            SinkIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), source);
-            SinkIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), source);
+            SinkIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
+            SinkIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
             for(const auto &info : StackTraceInfoFrom(ctx))
             {
-                SinkIt(LogMsg(m_Name, lvl, info), source);
+                SinkIt(LogMsg(m_Name, lvl, info), ctx);
             }
         }
 
@@ -124,7 +120,7 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
     }
     catch (const std::exception &ex)
     {
-        m_ErrHelper.HandleEx(m_Name, source, ex);
+        m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(ctx), ex);
 
         if (shouldThrow)
             ctx->ReportError("[%d] %s", lvl, ex.what());
@@ -132,7 +128,7 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
     }
     catch (...)
     {
-        m_ErrHelper.HandleUnknownEx(m_Name, source);
+        m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(ctx));
 
         if (shouldThrow)
             ctx->ReportError("[%d] %s", lvl, "unknown format exception");
@@ -280,7 +276,7 @@ void Logger::DropSink(Handle_t handle)
     }
 }
 
-void Logger::SinkIt(const LogMsg &msg, const ErrHelper::SrcHelper &source) const noexcept
+void Logger::SinkIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
 {
     for (auto &sink : m_Sinks)
     {
@@ -292,17 +288,17 @@ void Logger::SinkIt(const LogMsg &msg, const ErrHelper::SrcHelper &source) const
             }
             catch (const std::exception &ex)
             {
-                m_ErrHelper.HandleEx(m_Name, source, ex);
+                m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(msg.source, ctx), ex);
             }
             catch (...)
             {
-                m_ErrHelper.HandleUnknownEx(m_Name, source);
+                m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(msg.source, ctx));
             }
         }
     }
 
     if (ShouldFlush(msg.level))
-        Flush(source);
+        Flush(ErrHelper::SrcHelper(msg.source, ctx));
 }
 
 void Logger::Flush(const ErrHelper::SrcHelper &source) const noexcept
@@ -322,6 +318,65 @@ void Logger::Flush(const ErrHelper::SrcHelper &source) const noexcept
             m_ErrHelper.HandleUnknownEx(m_Name, source);
         }
     }
+}
+
+void Logger::ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
+{
+    std::array<char, 256> source;
+    auto loc = msg.source;
+    if (!loc.empty()) {
+        int sepOffset = 0;
+        for (int i = 0; true; ++i) {
+            if (!loc.filename[i])
+                break;
+            if (loc.filename[i] == '\\' || loc.filename[i] == '/')
+                sepOffset = i + 1;
+        }
+        smutils->Format(source.data(), sizeof(source), "[%s::%u] ", loc.filename[sepOffset], loc.line);
+    }
+
+    // 也许可以抽取到 LevelToChar
+    char level;
+    switch (msg.level)
+    {
+    case Level_t::trace:
+        {
+            level = 'T';
+            break;
+        }
+    case Level_t::debug:
+        {
+            level = 'I';
+            break;
+        }
+    case Level_t::info:
+        {
+            level = 'W';
+            break;
+        }
+    case Level_t::warn:
+        {
+            level = 'E';
+            break;
+        }
+    case Level_t::err:
+        {
+            level = 'F';
+            break;
+        }
+    case Level_t::critical:
+        {
+            level = 'O';
+            break;
+        }
+    default:
+        {
+            level = 'O';
+            break;
+        }
+    }
+
+    ctx->ReportError("[%c] %s%s", level, source, msg);
 }
 
 
