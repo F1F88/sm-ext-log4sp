@@ -26,7 +26,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, strin
 
     auto logMsg = LogMsg(loc, m_Name, lvl, msg);
     if (shouldLog)
-        SinkIt(logMsg, ctx);
+        LogIt(logMsg, ctx);
 
     if (shouldThrow)
         ThrowIt(logMsg, ctx);
@@ -46,7 +46,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
 
         auto logMsg = LogMsg(loc, m_Name, lvl, msg);
         if (shouldLog)
-            SinkIt(logMsg, ctx);
+            LogIt(logMsg, ctx);
 
         if (shouldThrow)
             ThrowIt(logMsg, ctx);
@@ -82,11 +82,11 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, string_view_t msg
     if (shouldLog)
     {
         using spdlog::fmt_lib::format;
-        SinkIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
-        SinkIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
+        LogIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
+        LogIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
         for(const auto &info : StackTraceInfoFrom(ctx))
         {
-            SinkIt(LogMsg(m_Name, lvl, info), ctx);
+            LogIt(LogMsg(m_Name, lvl, info), ctx);
         }
     }
 
@@ -108,11 +108,11 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
         if (shouldLog)
         {
             using spdlog::fmt_lib::format;
-            SinkIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
-            SinkIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
+            LogIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
+            LogIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
             for(const auto &info : StackTraceInfoFrom(ctx))
             {
-                SinkIt(LogMsg(m_Name, lvl, info), ctx);
+                LogIt(LogMsg(m_Name, lvl, info), ctx);
             }
         }
 
@@ -278,7 +278,7 @@ void Logger::DropSink(Handle_t handle)
     }
 }
 
-void Logger::SinkIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
+void Logger::LogIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
 {
     for (auto &sink : m_Sinks)
     {
@@ -300,10 +300,10 @@ void Logger::SinkIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
     }
 
     if (ShouldFlush(msg.level))
-        Flush(ErrHelper::SrcHelper(msg.source, ctx));
+        FlushIt(ErrHelper::SrcHelper(msg.source, ctx));
 }
 
-void Logger::Flush(const ErrHelper::SrcHelper &source) const noexcept
+void Logger::FlushIt(const ErrHelper::SrcHelper &source) const noexcept
 {
     for (auto &sink : m_Sinks)
     {
@@ -361,7 +361,7 @@ void Logger::ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
  * SrcHelper 的设计初衷
  *  由于仅少数如 LogSrc, LogLoc 等 Log Natives 明确指定了 SourceLoc 的值
  *  其余大部分 Log Natives 的 SourceLoc 都使用默认值 (empty).
- *  这会意味着 Format, SinkIt, Flush 发生错误时 SourceLoc 值为 empty.
+ *  这会意味着 Format, LogIt, Flush 发生错误时 SourceLoc 值为 empty.
  *  即无法获取造成的错误的源码位置信息, 显然这是不利于排查错误的.
  *
  *  考虑到 logger 是一个单线程类, 且 Log Natives 必然包含一个有效的 ctx,

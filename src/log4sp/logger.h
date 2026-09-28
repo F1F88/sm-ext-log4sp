@@ -83,8 +83,8 @@ public:
     void SetPatternFormatter(std::unique_ptr<Formatter> fmt) noexcept;
 
     // flush
-    void Flush(IPluginContext *ctx) noexcept    { assert(ctx);          Flush(ErrHelper::SrcHelper(ctx)); }
-    void Flush(const SourceLoc &loc) noexcept   { assert(!loc.empty()); Flush(ErrHelper::SrcHelper(loc)); }
+    void Flush(IPluginContext *ctx) noexcept    { assert(ctx);          FlushIt(ErrHelper::SrcHelper(ctx)); }
+    void Flush(const SourceLoc &loc) noexcept   { assert(!loc.empty()); FlushIt(ErrHelper::SrcHelper(loc)); }
 
     // return true if the given messages should be flushed
     [[nodiscard]]
@@ -167,8 +167,8 @@ private:
     };
 
     // source 用于发生错误时获取错误发生的源码位置
-    void SinkIt(const LogMsg &msg, IPluginContext *ctx) const noexcept;
-    void Flush(const ErrHelper::SrcHelper &source) const noexcept;
+    void LogIt(const LogMsg &msg, IPluginContext *ctx) const noexcept;
+    void FlushIt(const ErrHelper::SrcHelper &source) const noexcept;
     void ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept;
 
     const std::string m_Name;
