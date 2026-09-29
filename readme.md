@@ -365,6 +365,75 @@ Server console:
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [warn] Some warning<br>
 
+### Throw Level
+
+Throw Level controls whether a Logger should also trigger a SourceMod runtime error and interrupt the current execution when processing a log message.
+
+Unlike the [Log Level](#log-level), Throw Level independently controls whether a runtime error should be triggered.
+
+A runtime error is triggered only when the log message level is **≥** the Logger's throw level.
+
+The default Throw Level of a **Logger** is `LogLevel_Off`.
+
+Throw Level and Log Level are independent of each other, allowing logging and error throwing to be controlled separately:
+
+| **Logger Log Level** | **Throw Level** | **`logger.Error(...)` Behavior** |
+| :------------------: | :-------------: | :------------------------------: |
+|        `Info`        |     `Error`     |       Log and throw error        |
+|        `Off`         |     `Error`     |   Do not log, only throw error   |
+|       `Error`        |      `Off`      |     Log without throw error      |
+
+The throw occurs after the log message has been processed.
+
+This allows the Logger to pass the message to the applicable Sinks before triggering the runtime error.
+
+```sourcepawn
+#include <sourcemod>
+#include <log4sp>
+public void OnPluginStart()
+{
+    ServerConsoleSink sink = new ServerConsoleSink();
+    Logger logger = new Logger();
+    logger.AddSink(sink);
+    logger.SetThrowLevel(LogLevel_Error);
+
+    logger.Warn("Warning ...");
+    logger.Error("Oops ..."); // Triggers a runtime error and interrupts execution
+
+    // The code below will not execute
+    logger.Warn("Warning ...");
+
+    sink.Close();
+    logger.Close();
+}
+```
+
+Server console:
+
+> [2001-02-03 12:34:56.789] [test.smx] [warn] Warning ...
+> [2001-02-03 12:34:56.789] [test.smx] [error] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Exception reported: [E] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Blaming: test.smx
+> L 02/03/2001 - 12:34:56: [SM] Call stack trace:
+> L 02/03/2001 - 12:34:56: [SM]   [0] Logger.Error
+> L 02/03/2001 - 12:34:56: [SM]   [1] Line 12, d:\sourcemod\plugins\testsuite\mock\test.sp::OnPluginStart
+
+This is particularly useful for scenarios where an error should both be logged and interrupt the current execution.
+
+Without Throw Level, a typical parameter validation would need to perform both operations separately:
+
+```sourcepawn
+logger.Error("Invalid client index: {}", client);
+ThrowError("Invalid client index: %d", client);
+```
+
+With Throw Level enabled, this can be simplified to:
+
+```sourcepawn
+logger.SetThrowLevel(LogLevel_Error);
+logger.ErrorF("Invalid client index: %d", client);
+```
+
 ### Header Only
 
 All code for the header‑only mode is implemented in `.inc` header files, with no dependency on any external components. It can be easily integrated into any plugin, thereby simplifying the setup and integration process.

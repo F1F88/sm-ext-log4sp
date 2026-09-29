@@ -363,6 +363,72 @@ public void OnPluginStart()
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [warn] Some warning<br>
 
+### 抛出级别
+
+抛出级别（Throw Level）用于控制 Logger 在处理日志消息时，是否同时触发 SourceMod runtime error，并中断当前调用的执行。
+
+与[日志级别](#日志级别)不同，抛出级别独立控制是否抛出错误。仅当日志消息级别 **≥** Logger 的抛出级别时，才会抛出错误。
+
+**Logger** 的默认抛出级别为 `LogLevel_Off`。
+
+抛出级别与日志级别相互独立，因此可以分别控制 "是否记录日志" 与 "是否抛出错误"：
+
+| 日志级别 | 抛出级别 | `logger.Error(...)` 行为 |
+| :------: | :------: | :----------------------: |
+|  `Info`  | `Error`  |    记录日志并抛出错误    |
+|  `Off`   | `Error`  |  不记录日志，仅抛出错误  |
+| `Error`  |  `Off`   |   记录日志，不抛出错误   |
+
+抛出发生在日志记录之后，因此错误日志不会丢失。
+
+```sourcepawn
+#include <sourcemod>
+#include <log4sp>
+
+public void OnPluginStart()
+{
+    ServerConsoleSink sink = new ServerConsoleSink();
+    Logger logger = new Logger();
+    logger.AddSink(sink);
+    logger.SetThrowLevel(LogLevel_Error);
+
+    logger.Warn("Warning ...");
+    logger.Error("Oops ..."); // 抛出错误，中断执行
+
+    // 下面的代码不会执行
+    logger.Warn("Warning ...");
+
+    sink.Close();
+    logger.Close();
+}
+```
+
+控制台输出：
+
+> [2001-02-03 12:34:56.789] [test.smx] [warn] Warning ...
+> [2001-02-03 12:34:56.789] [test.smx] [error] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Exception reported: [E] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Blaming: test.smx
+> L 02/03/2001 - 12:34:56: [SM] Call stack trace:
+> L 02/03/2001 - 12:34:56: [SM]   [0] Logger.Error
+> L 02/03/2001 - 12:34:56: [SM]   [1] Line 12, d:\sourcemod\plugins\testsuite\mock\test.sp::OnPluginStart
+
+这对于需要同时记录错误日志并中断当前执行的场景会很实用。
+
+在未启用抛出级别时，一个典型的参数校验通常需要分别完成“记录错误”和“中断执行”：
+
+```sourcepawn
+logger.ErrorF("Invalid client index: %d", client);
+ThrowError("Invalid client index: %d", client);
+```
+
+启用抛出级别后，可以简化为：
+
+```sourcepawn
+logger.SetThrowLevel(LogLevel_Error);
+logger.ErrorF("Invalid client index: %d", client);
+```
+
 ### 仅头文件
 
 仅头文件的所有代码实现于 `.inc` 头文件中，不依赖任何外部组件，可以轻易的整合到任何插件中，从而简化设置于集成工作。
