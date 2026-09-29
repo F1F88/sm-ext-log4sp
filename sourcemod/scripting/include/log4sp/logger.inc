@@ -57,6 +57,7 @@ methodmap Logger < Handle
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.
+     * @error           When lvl >= throwLvl and throwLvl != LogLevel_Off.
      */
     public native void Log(LogLevel lvl, const char[] msg);
     public native void LogF(LogLevel lvl, const char[] fmt, any ...);
@@ -66,6 +67,7 @@ methodmap Logger < Handle
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.
+     * @error           When lvl >= throwLvl and throwLvl != LogLevel_Off.
      */
     public native void LogSrc(LogLevel lvl, const char[] msg);
     public native void LogSrcF(LogLevel lvl, const char[] fmt, any ...);
@@ -76,6 +78,7 @@ methodmap Logger < Handle
      * @param loc       Source location.
      * @param lvl       Log level enum.
      * @param msg       Log message.
+     * @error           When lvl >= throwLvl and throwLvl != LogLevel_Off.
      */
     public native void LogLoc(const SourceLoc loc, LogLevel lvl, const char[] msg);
     public native void LogLocF(const SourceLoc loc, LogLevel lvl, const char[] fmt, any ...);
@@ -86,6 +89,7 @@ methodmap Logger < Handle
      *
      * @param lvl       Log level enum.
      * @param msg       Log message.
+     * @error           When lvl >= throwLvl and throwLvl != LogLevel_Off.
      */
     public native void LogStackTrace(LogLevel lvl, const char[] msg);
     public native void LogStackTraceF(LogLevel lvl, const char[] fmt, any ...);
