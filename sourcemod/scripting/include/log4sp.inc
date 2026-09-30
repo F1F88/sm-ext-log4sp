@@ -5,6 +5,7 @@
 
 #include <log4sp/common>
 #include <log4sp/logger>
+#include <log4sp/version>
 #include <log4sp/sinks/sink>
 #include <log4sp/sinks/basic_file_sink>
 #include <log4sp/sinks/callback_sink>

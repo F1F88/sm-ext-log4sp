@@ -3,10 +3,7 @@
 
 static cell_t GetLog4spVersion(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
-    constexpr int MAJOR = LOG4SP_V_MAJOR;
-    constexpr int MINOR = LOG4SP_V_MINOR;
-    constexpr int PATCH = LOG4SP_V_PATCH;
-    constexpr int VERSION = (MAJOR << 16) | (MINOR << 8) | PATCH;
+    constexpr int VERSION = LOG4SP_VERSION;
     constexpr const char *BUILD_TIME = __DATE__ " " __TIME__;
     constexpr const char *BUILD_TAGS =
 #if defined(NDEBUG) || (!defined(DEBUG) && !defined(_DEBUG))

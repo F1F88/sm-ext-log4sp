@@ -53,6 +53,7 @@ void Test()
     TestLogLevelToShortName();
     TestNameToLogLevel();
     TestSourceLoc();
+    TestVersion();
 
     PrintToServer("---------------- Test Common ended ---------------");
 }
@@ -110,10 +111,30 @@ void TestSourceLoc()
     AssertEq("[variable 2 line]", variable2.line, (__LINE__ - 2));
     AssertStrEq("[variable 2 filename]", variable2.filename, __BINARY_PATH__);
     AssertStrEq("[variable 2 funcname]", variable2.funcname, __BINARY_NAME__);
+}
 
+void TestVersion()
+{
+    SetTestContext("Version");
+    // 更新版本号需要同时修改 smsdk_config.h 和 version.inc
+    // 漏了任意一处都会导致 extension 和 header-only 版本不一致
+    // 这应该可以被 mocktest-extension 检测出来
     char buildTime[256], buildTags[256];
     int version = GetLog4spVersion(buildTime, sizeof(buildTime), buildTags, sizeof(buildTags));
-    AssertEq("[version major]", (version >> 16) & 0xFF, 2);
-    AssertEq("[version minor]", (version >>  8) & 0xFF, 0);
-    AssertEq("[version patch]", (version >>  0) & 0xFF, 0);
+    AssertEq("[version major]", (version >> 16) & 0xFF, LOG4SP_V_MAJOR);
+    AssertEq("[version minor]", (version >>  8) & 0xFF, LOG4SP_V_MINOR);
+    AssertEq("[version patch]", (version >>  0) & 0xFF, LOG4SP_V_PATCH);
+
+#if defined LOG4SP_HEADER_ONLY
+    AssertStrEq("[version time]", buildTime, __DATE__ ... " " ... __TIME__);
+    AssertStrContains("[version tags]", buildTags, "header-only");
+    AssertStrContains("[version tags]", buildTags, "max-err=");
+    AssertStrContains("[version tags]", buildTags, "max-msg=");
+#else
+    AssertStrContains("[version tags]", buildTags, "git=");
+#endif
+    AssertTrue(
+        "[version tags (release|debug)]",
+        (StrContains(buildTags, "release") != -1) ||
+        (StrContains(buildTags, "debug") != -1));
 }
