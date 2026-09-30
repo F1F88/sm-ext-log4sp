@@ -45,6 +45,8 @@
 #define LOG4SP_V_MINOR          0
 #define LOG4SP_V_PATCH          0
 
+#define LOG4SP_VERSION          ((LOG4SP_V_MAJOR << 16) | (LOG4SP_V_MINOR << 8) | LOG4SP_V_PATCH)
+
 /* Basic information exposed publicly */
 #define SMEXT_CONF_NAME         "Logging for SourcePawn"
 #define SMEXT_CONF_DESCRIPTION  "A high-performance logging framework"

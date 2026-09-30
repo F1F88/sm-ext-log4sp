@@ -577,9 +577,12 @@ static CommandCode CmdExecute_Version(DataPack data)
 {
     char time[64], tags[256];
     int version = GetLog4spVersion(time, sizeof(time), tags, sizeof(tags));
+    int major = (version >> 16) & 0xFF;
+    int minor = (version >>  8) & 0xFF;
+    int patch = (version >>  0) & 0xFF;
 
     PrintToServer(" Log4sp version information:");
-    PrintToServer("    Version: %u.%u.%u", (version >> 16) & 0xFF, (version >> 8) & 0xFF, version & 0xFF);
+    PrintToServer("    Version: %u.%u.%u", major, minor, patch);
     PrintToServer("    Build time: %s", time);
     PrintToServer("    Build tags: %s", tags);
     PrintToServer("    Manager version: " ... PLUGIN_VERSION);

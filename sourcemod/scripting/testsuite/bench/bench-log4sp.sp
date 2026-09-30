@@ -916,13 +916,13 @@ methodmap BenchDB
 
         char buildTags[128];
         int version = GetLog4spVersion(.buildTags=buildTags, .maxlen2=sizeof(buildTags));
+        int major = version & (0xFF << 16);
+        int minor = version & (0xFF <<  8);
+        int patch = version & (0xFF <<  0);
         Format(buildTags, sizeof(buildTags), "(%s)", buildTags);
 
         PrintToServer("*****************************************************************************");
-        PrintToServer("* Bench log4sp v%u.%u.%u  %-52s *",
-            (version >> 16) & 0xFF, (version >> 8) & 0xFF, version & 0xFF,
-            buildTags,
-            "*");
+        PrintToServer("* Bench log4sp v%u.%u.%u  %-52s *", major, minor, patch, buildTags, "*");
         PrintToServer("*****************************************************************************");
 
         for (int i = 0; i < datas.Length; ++i) {

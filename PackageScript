@@ -45,6 +45,7 @@ CopyFiles('sourcemod/scripting/include/log4sp', 'addons/sourcemod/scripting/incl
    'common.inc',
    'logger.inc',
    'registry.inc',
+   'version.inc',
  ]
 )
 CopyFiles('sourcemod/scripting/include/log4sp/details', 'addons/sourcemod/scripting/include/log4sp/details',

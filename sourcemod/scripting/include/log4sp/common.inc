@@ -3,6 +3,8 @@
 #endif
 #define _log4sp_common_included
 
+#include <log4sp/version>
+
 #if !defined LOG4SP_ES_CONST
     #if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR <= 11
         #define LOG4SP_ES_CONST
@@ -216,11 +218,7 @@ native int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags
 #else
 stock  int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags="", int maxlen2=0)
 {
-    const int MAJOR = 2, MINOR = 0, PATCH = 0;
-    const int VERSION = (MAJOR << 16) | (MINOR << 8) | PATCH;
-    static const char BUILD_TIME[] = __DATE__ ... " " ... __TIME__;
-
-    strcopy(buildTime, maxlen1, BUILD_TIME);
+    strcopy(buildTime, maxlen1, __DATE__ ... " " ... __TIME__);
 
     FormatEx(buildTags, maxlen2,
              "header-only,%s,max-err=%u,max-msg=%u",
@@ -232,6 +230,6 @@ stock  int GetLog4spVersion(char[] buildTime="", int maxlen1=0, char[] buildTags
              LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH,
              LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH
     );
-    return VERSION;
+    return LOG4SP_VERSION;
 }
 #endif
