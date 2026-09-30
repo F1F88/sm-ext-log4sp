@@ -39,7 +39,7 @@ jobs:
       matrix:
         # https://github.com/actions/runner-images#available-images
         os: [ubuntu-latest, ubuntu-22.04, windows-latest, windows-2022]
-        sm_version: [sm_latest, sm_1_12]
+        sm_version: [sm_1_13, sm_1_12]
         target_arch: [x86, x64]
         include:
           - os: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
             os_short: win_latest
           - os: windows-2022
             os_short: win_2022
-          - sm_version: sm_latest
+          - sm_version: sm_1_13
             sm_ref: master
           - sm_version: sm_1_12
             sm_ref: 1.12-dev

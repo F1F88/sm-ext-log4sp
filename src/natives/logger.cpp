@@ -86,7 +86,7 @@ static cell_t LogSrc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
 
     auto loc = Log4sp::SourceLocFrom(ctx);
 
-    logger->Log(loc, lvl, msg);
+    logger->Log(ctx, loc, lvl, msg);
     return 0;
 }
 
@@ -120,7 +120,7 @@ static cell_t LogLoc(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
         return 0;
     }
 
-    logger->Log(loc->ToSourceLoc(), lvl, msg);
+    logger->Log(ctx, loc->ToSourceLoc(), lvl, msg);
     return 0;
 }
 
@@ -415,6 +415,32 @@ static cell_t ShouldFlush(SourcePawn::IPluginContext *ctx, const cell_t *params)
     return logger->ShouldFlush(lvl);
 }
 
+static cell_t GetThrowLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    return logger->GetThrowLevel();
+}
+
+static cell_t SetThrowLevel(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    auto lvl = Log4sp::NumToLvl(params[2]);
+
+    logger->SetThrowLevel(lvl);
+    return 0;
+}
+
+static cell_t ShouldThrow(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+{
+    READ_LOGGER_HANDLE_OR_ERROR(params[1]);
+
+    auto lvl = Log4sp::NumToLvl(params[2]);
+
+    return logger->ShouldThrow(lvl);
+}
+
 static cell_t GetSinks(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
@@ -568,6 +594,9 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.GetFlushLevel",                    GetFlushLevel},
     {"Logger.SetFlushLevel",                    SetFlushLevel},
     {"Logger.ShouldFlush",                      ShouldFlush},
+    {"Logger.GetThrowLevel",                    GetThrowLevel},
+    {"Logger.SetThrowLevel",                    SetThrowLevel},
+    {"Logger.ShouldThrow",                      ShouldThrow},
     {"Logger.GetSinks",                         GetSinks},
     {"Logger.GetSinksLength",                   GetSinksLength},
     {"Logger.AddSink",                          AddSink},

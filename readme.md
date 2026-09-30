@@ -365,6 +365,75 @@ Server console:
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [warn] Some warning<br>
 
+### Throw Level
+
+Throw Level controls whether a Logger should also trigger a SourceMod runtime error and interrupt the current execution when processing a log message.
+
+Unlike the [Log Level](#log-level), Throw Level independently controls whether a runtime error should be triggered.
+
+A runtime error is triggered only when the log message level is **≥** the Logger's throw level.
+
+The default Throw Level of a **Logger** is `LogLevel_Off`.
+
+Throw Level and Log Level are independent of each other, allowing logging and error throwing to be controlled separately:
+
+| **Logger Log Level** | **Throw Level** | **`logger.Error(...)` Behavior** |
+| :------------------: | :-------------: | :------------------------------: |
+|        `Info`        |     `Error`     |       Log and throw error        |
+|        `Off`         |     `Error`     |   Do not log, only throw error   |
+|       `Error`        |      `Off`      |     Log without throw error      |
+
+The throw occurs after the log message has been processed.
+
+This allows the Logger to pass the message to the applicable Sinks before triggering the runtime error.
+
+```sourcepawn
+#include <sourcemod>
+#include <log4sp>
+public void OnPluginStart()
+{
+    ServerConsoleSink sink = new ServerConsoleSink();
+    Logger logger = new Logger();
+    logger.AddSink(sink);
+    logger.SetThrowLevel(LogLevel_Error);
+
+    logger.Warn("Warning ...");
+    logger.Error("Oops ..."); // Triggers a runtime error and interrupts execution
+
+    // The code below will not execute
+    logger.Warn("Warning ...");
+
+    sink.Close();
+    logger.Close();
+}
+```
+
+Server console:
+
+> [2001-02-03 12:34:56.789] [test.smx] [warn] Warning ...
+> [2001-02-03 12:34:56.789] [test.smx] [error] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Exception reported: [E] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Blaming: test.smx
+> L 02/03/2001 - 12:34:56: [SM] Call stack trace:
+> L 02/03/2001 - 12:34:56: [SM]   [0] Logger.Error
+> L 02/03/2001 - 12:34:56: [SM]   [1] Line 12, d:\sourcemod\plugins\testsuite\mock\test.sp::OnPluginStart
+
+This is particularly useful for scenarios where an error should both be logged and interrupt the current execution.
+
+Without Throw Level, a typical parameter validation would need to perform both operations separately:
+
+```sourcepawn
+logger.Error("Invalid client index: {}", client);
+ThrowError("Invalid client index: %d", client);
+```
+
+With Throw Level enabled, this can be simplified to:
+
+```sourcepawn
+logger.SetThrowLevel(LogLevel_Error);
+logger.ErrorF("Invalid client index: %d", client);
+```
+
 ### Header Only
 
 All code for the header‑only mode is implemented in `.inc` header files, with no dependency on any external components. It can be easily integrated into any plugin, thereby simplifying the setup and integration process.
@@ -432,84 +501,76 @@ For the Sink object, calling the `Sink.Clone()` method and adding it to the `Log
 ## Flowchart
 
 ```mermaid
-flowchart LR
- subgraph Sinks["`**Sink List**`"]
-        SinkShouldJunction["Junction"]
-        SinkShouldLog{"Should Log?"}
-        SinkLog("Log")
-        SinkPatternFormat["Pattern Format"]
-        SinkFlush("Flush")
-  end
- subgraph Logger["`**Logger**`"]
-        LoggerShouldLog{"Should Log?"}
-        LoggerShouldJunction["Junction"]
-        LoggerLogJunction["Junction"]
-        LoggerShouldFlush{"Should Flush?"}
-        LoggerLog("Log")
-        LoggerLogRaw["Raw Message"]
-        LoggerLogF("LogF")
-        LoggerLogFFormat["Params Format"]
-  end
-    Start((("`**Start**`"))) L_Start_LoggerShouldLog_0@== Log Message ==> LoggerShouldLog
-    LoggerShouldLog -- Yes --- LoggerShouldJunction
-    LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
-    LoggerShouldLog -. No .-> Stop((("`**End**`")))
-    LoggerLogJunction --- LoggerLog & LoggerLogF
-    LoggerLog --- LoggerLogRaw
-    LoggerLogRaw --- SinkShouldJunction
-    LoggerLogF --- LoggerLogFFormat
-    LoggerLogFFormat --- SinkShouldJunction
-    LoggerShouldFlush -- Yes --- SinkFlush
-    SinkFlush --> Stop
-    LoggerShouldFlush -. No .-> Stop
-    SinkShouldJunction --> SinkShouldLog
-    SinkShouldLog -- Yes --- SinkPatternFormat
-    SinkPatternFormat --- SinkLog
-    SinkLog --> Stop
-    SinkShouldLog -. No .-> Stop
+flowchart TD
+    %% =========================
+    %% Logger entry
+    %% =========================
+    LOGGER_LOG[/"Logger.Log(...)"/]
 
-    L_Start_LoggerShouldLog_0@{ animation: fast }
-    LoggerShouldJunction@{ shape: junction}
-    LoggerLogJunction@{ shape: junction}
-    LoggerLogRaw@{ shape: das}
-    LoggerLogFFormat@{ shape: das}
-    SinkShouldJunction@{ shape: junction}
-    SinkPatternFormat@{ shape: das}
-    style Start stroke-width:4px,stroke-dasharray: 0,font-size:16px
-    style Logger fill:transparent
-    style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerShouldJunction fill:#00C853
-    style LoggerLogJunction fill:#00C853
-    style LoggerLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogRaw stroke-width:1px,stroke-dasharray:1
-    style LoggerLogF stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogFFormat stroke-width:1px,stroke-dasharray:1
-    style LoggerShouldFlush stroke-width:4px,stroke-dasharray: 0
-    style Sinks fill:transparent
-    style SinkShouldJunction fill:#00C853
-    style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
-    style SinkPatternFormat stroke-width:1px,stroke-dasharray:1
-    style SinkLog stroke-width:4px,stroke-dasharray: 0
-    style SinkFlush stroke-width:4px,stroke-dasharray: 0
-    style Stop stroke-width:3px,stroke-dasharray: 0
-    linkStyle 1 stroke:#00C853,fill:none
-    linkStyle 2 stroke:#00C853,fill:none
-    linkStyle 3 stroke:#00C853,fill:none
-    linkStyle 4 stroke:#D50000,fill:none
-    linkStyle 5 stroke:#00C853,fill:none
-    linkStyle 6 stroke:#00C853,fill:none
-    linkStyle 7 stroke:#00C853,fill:none
-    linkStyle 8 stroke:#00C853,fill:none
-    linkStyle 9 stroke:#00C853,fill:none
-    linkStyle 10 stroke:#00C853,fill:none
-    linkStyle 11 stroke:#00C853,fill:none
-    linkStyle 12 stroke:#00C853,fill:none
-    linkStyle 13 stroke:#D50000,fill:none
-    linkStyle 14 stroke:#00C853,fill:none
-    linkStyle 15 stroke:#00C853,fill:none
-    linkStyle 16 stroke:#00C853,fill:none
-    linkStyle 17 stroke:#00C853,fill:none
-    linkStyle 18 stroke:#D50000,fill:none
+    LOGGER_LOG --> LOGGER_SHOULD_LOG(["Logger.ShouldLog(lvl)?"])
+    LOGGER_LOG --> LOGGER_SHOULD_THROW(["Logger.ShouldThrow(lvl)?"])
+
+    %% =========================
+    %% Logging
+    %% =========================
+    LOGGER_SHOULD_LOG -- "true" --> SINK_SHOULD_LOG(["Sink.ShouldLog(lvl)?"])
+    LOGGER_SHOULD_LOG -- "false" --> LOGGER_SHOULD_THROW
+
+    subgraph LOG_LOOP["LogIt — For each Sink"]
+        direction TB
+
+        SINK_SHOULD_LOG -- "true" --> SINK_LOG["Sink.Log(...)"]
+        SINK_SHOULD_LOG -- "false" --> LOG_NEXT(["More Sinks?"])
+
+        SINK_LOG ----> LOG_NEXT
+        SINK_LOG -. "on error" .-> LOG_ERROR["Logger.HandlerError(...)"]
+
+        LOG_ERROR -..-> LOG_NEXT
+    end
+
+    LOG_NEXT -- "true" --> SINK_SHOULD_LOG
+    LOG_NEXT -- "false" --> LOGGER_SHOULD_FLUSH(["Logger.ShouldFlush(lvl)?"])
+
+    %% =========================
+    %% Flush
+    %% =========================
+    LOGGER_SHOULD_FLUSH -- "true" --> SINK_FLUSH["Sink.Flush()"]
+    LOGGER_SHOULD_FLUSH -- "false" --> LOGGER_SHOULD_THROW
+
+    subgraph FLUSH_LOOP["FlushIt — For each Sink"]
+        direction TB
+
+        SINK_FLUSH ----> FLUSH_NEXT(["More Sinks?"])
+        SINK_FLUSH -. "on error" .-> FLUSH_ERROR["Logger.HandlerError(...)"]
+
+        FLUSH_ERROR -..-> FLUSH_NEXT
+    end
+
+    FLUSH_NEXT -- "true" --> SINK_FLUSH
+    FLUSH_NEXT -- "false" --> LOGGER_SHOULD_THROW
+
+    %% =========================
+    %% Throw
+    %% =========================
+    LOGGER_SHOULD_THROW -- "true" --> THROW[/"ThrowError(...)<br>Aborts the current callback"/]
+    LOGGER_SHOULD_THROW -- "false" --> RETURN[/"Return to caller<br>Code is executed following it"/]
+
+    %% =========================
+    %% Styles
+    %% =========================
+    classDef entry fill:#e8f1ff,stroke:#3674d9,stroke-width:2px,color:#111;
+    classDef sink fill:#eef9ed,stroke:#45a33d,stroke-width:1.5px,color:#111;
+    classDef decision fill:#fff8df,stroke:#d5a623,stroke-width:1.5px,color:#111;
+    classDef error fill:#fff0f0,stroke:#d94b5b,stroke-width:1.5px,color:#111;
+    classDef throw fill:#f5edff,stroke:#c43c4b,stroke-width:1.5px,color:#111;
+
+    class LOGGER_LOG,RETURN entry;
+    class SINK_LOG,SINK_FLUSH sink;
+    class LOGGER_SHOULD_LOG,LOGGER_SHOULD_THROW,SINK_SHOULD_LOG,LOG_NEXT,LOGGER_SHOULD_FLUSH,FLUSH_NEXT decision;
+    class LOG_ERROR,FLUSH_ERROR error;
+    class THROW throw;
+    style LOG_LOOP fill:#f0fdfa
+    style FLUSH_LOOP fill:#f0fdfa
 ```
 
 ## Plugins

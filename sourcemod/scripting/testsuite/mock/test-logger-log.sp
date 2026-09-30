@@ -63,6 +63,9 @@ void Test()
 
     TestLogStackTrace();
 
+    // 放在最后以避免内部改变 sv_echolog 的行为造成干扰
+    TestLogAndThrow();
+
     PrintToServer("-------------- Test Logger-Log ended -------------");
 }
 
@@ -245,6 +248,30 @@ void TestLogStackTrace()
     SinkCloseAndDelete(sink);
 }
 
+void TestLogAndThrow()
+{
+    SetTestContext("Logger.Log & Throw");
+
+    Logger logger = new Logger();
+    logger.SetLevel(LogLevel_Trace);
+    logger.SetThrowLevel(LogLevel_Error);
+
+    TestSink sink = new TestSink();
+    logger.AddSink(sink);
+    sink.Close();
+
+    logger.Trace("test message 1");
+    logger.Debug("test message 2");
+    logger.InfoF("test message %d", 3);
+    logger.WarnF("test message %d", 4);
+
+    RequestFrame(Frame_LogErrorAndThrow, logger);
+    RequestFrame(Frame_LogFatalAndThrow, logger);
+    RequestFrame(Frame_AssertLogAndThrow, logger);
+    RequestFrame(Frame_AssertSMLogFile);
+}
+
+
 public any Native_TestLoggerLogStackTrace(Handle plugin, int numParams)
 {
     Logger logger = GetNativeCell(1);
@@ -272,6 +299,83 @@ public any Native_TestLoggerLogStackTrace1(Handle plugin, int numParams)
     __Func3(logger);
     return 0;
 }
+
+public void Frame_LogErrorAndThrow(Logger logger)
+{
+    FindConVar("sv_logecho").SetBool(false);
+    logger.Error("test message 5");
+
+    FindConVar("sv_logecho").SetBool(true);
+    AssertTrue("should throw error", false);
+}
+
+public void Frame_LogFatalAndThrow(Logger logger)
+{
+    FindConVar("sv_logecho").SetBool(false);
+    logger.FatalF("test message %d", 6);
+
+    FindConVar("sv_logecho").SetBool(true);
+    AssertTrue("should throw fatal", false);
+}
+
+public void Frame_AssertLogAndThrow(Logger logger)
+{
+    FindConVar("sv_logecho").SetBool(true);
+
+    Sink sinks[1];
+    logger.GetSinks(sinks, sizeof(sinks));
+    logger.Close();
+
+    TestSink sink = view_as<TestSink>(sinks[0]);
+
+    AssertEq("log counter",     sink.GetLogCount(), 6);
+    AssertEq("log level",       sink.DrainOldest().lvl, LogLevel_Trace);
+    AssertStrEq("log message",  sink.DrainOldest().msg, "test message 2");
+    AssertEq("log level",       sink.DrainOldest().lvl, LogLevel_Info);
+    AssertStrEq("log message",  sink.DrainOldest().msg, "test message 4");
+    AssertEq("log level",       sink.DrainOldest().lvl, LogLevel_Error);
+    AssertStrEq("log message",  sink.DrainOldest().msg, "test message 6");
+    sink.Close();
+}
+
+public void Frame_AssertSMLogFile()
+{
+    char filename[PLATFORM_MAX_PATH];
+    GetSMErrorFilename(filename, sizeof(filename));
+
+    File file = OpenFile(filename, "r");
+    AssertTrue("valid sm err file", file != INVALID_HANDLE);
+
+    int index = 0;
+    char excepteds[][] = {
+        ": \\[SM] Exception reported: \\[E] test message 5",
+        ": \\[SM] Blaming: .*test-logger-log.smx",
+        ": \\[SM] Call stack trace:",
+        ": \\[SM]   \\[[0-9]+] .*Logger.Error",
+        ": \\[SM]   \\[[0-9]+] Line [0-9]+, .*test-logger-log.sp::Frame_LogErrorAndThrow",
+        ": \\[SM] Exception reported: \\[F\\] test message 6",
+        ": \\[SM] Blaming: .*test-logger-log.smx",
+        ": \\[SM] Call stack trace:",
+        ": \\[SM]   \\[[0-9]+] .*Logger.FatalF",
+        ": \\[SM]   \\[[0-9]+] Line [0-9]+, .*test-logger-log.sp::Frame_LogFatalAndThrow",
+    };
+
+    char line[2048];
+    while (file.ReadLine(line, sizeof(line)))
+    {
+        if (index >= sizeof(excepteds))
+            break;
+
+        if (SimpleRegexMatch(line, excepteds[index]) > 0)
+        {
+            index++;
+        }
+    }
+    delete file;
+
+    AssertEq("throw level match count", index, sizeof(excepteds));
+}
+
 
 static void __Func3(Logger logger)
 {

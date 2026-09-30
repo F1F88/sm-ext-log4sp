@@ -34,20 +34,13 @@ public:
 
     // Log with no format string, just string message
     void Log(IPluginContext *ctx, LevelEnum lvl, string_view_t msg) const noexcept {
-        assert(ctx);
-        if (ShouldLog(lvl))
-            SinkIt(LogMsg(m_Name, lvl, msg), ErrHelper::SrcHelper(ctx));
+        Log(ctx, {}, lvl, msg);
     }
-
-    void Log(const SourceLoc &loc, LevelEnum lvl, string_view_t msg) const noexcept {
-        assert(!loc.empty());
-        if (ShouldLog(lvl))
-            SinkIt(LogMsg(loc, m_Name, lvl, msg), ErrHelper::SrcHelper(loc));
-    }
+    void Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, string_view_t msg) const noexcept;
 
     // Log with format
     void Log(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept {
-        Log(ctx, SourceLoc{}, lvl, params, param);
+        Log(ctx, {}, lvl, params, param);
     }
     void Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
 
@@ -90,8 +83,8 @@ public:
     void SetPatternFormatter(std::unique_ptr<Formatter> fmt) noexcept;
 
     // flush
-    void Flush(IPluginContext *ctx) noexcept    { assert(ctx);          Flush(ErrHelper::SrcHelper(ctx)); }
-    void Flush(const SourceLoc &loc) noexcept   { assert(!loc.empty()); Flush(ErrHelper::SrcHelper(loc)); }
+    void Flush(IPluginContext *ctx) noexcept    { assert(ctx);          FlushIt(ErrHelper::SrcHelper(ctx)); }
+    void Flush(const SourceLoc &loc) noexcept   { assert(!loc.empty()); FlushIt(ErrHelper::SrcHelper(loc)); }
 
     // return true if the given messages should be flushed
     [[nodiscard]]
@@ -106,6 +99,21 @@ public:
 
     void SetFlushLevel(LevelEnum lvl) noexcept {
         m_FlushLevel = lvl;
+    }
+
+    // return true if the given messages should be throw
+    [[nodiscard]]
+    bool ShouldThrow(const LevelEnum lvl) const noexcept {
+        return (lvl >= m_ThrowLevel) && (lvl != LevelEnum::off);
+    }
+
+    [[nodiscard]]
+    LevelEnum GetThrowLevel() const noexcept {
+        return m_ThrowLevel;
+    }
+
+    void SetThrowLevel(LevelEnum lvl) noexcept {
+        m_ThrowLevel = lvl;
     }
 
     // sinks
@@ -159,14 +167,16 @@ private:
     };
 
     // source 用于发生错误时获取错误发生的源码位置
-    void SinkIt(const LogMsg &msg, const ErrHelper::SrcHelper &source) const noexcept;
-    void Flush(const ErrHelper::SrcHelper &source) const noexcept;
+    void LogIt(const LogMsg &msg, IPluginContext *ctx) const noexcept;
+    void FlushIt(const ErrHelper::SrcHelper &source) const noexcept;
+    void ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept;
 
     const std::string m_Name;
     std::vector<SinkPtr> m_Sinks;
     std::vector<Handle_t> m_SinkHandles;
     Level_t m_Level{LevelEnum::info};
     Level_t m_FlushLevel{LevelEnum::off};
+    Level_t m_ThrowLevel{LevelEnum::off};
     ErrHelper m_ErrHelper;
 };
 

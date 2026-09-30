@@ -16,29 +16,57 @@ Logger::~Logger()
     }
 }
 
+// Log with no format string, just string message
+void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, string_view_t msg) const noexcept
+{
+    bool shouldLog = ShouldLog(lvl);
+    bool shouldThrow = ShouldThrow(lvl);
+    if (!shouldLog && !shouldThrow)
+        return;
+
+    auto logMsg = LogMsg(loc, m_Name, lvl, msg);
+    if (shouldLog)
+        LogIt(logMsg, ctx);
+
+    if (shouldThrow)
+        ThrowIt(logMsg, ctx);
+}
+
 // log with log4sp format
 void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept
 {
-    assert(ctx && params);
+    bool shouldLog = ShouldLog(lvl);
+    bool shouldThrow = ShouldThrow(lvl);
+    if (!shouldLog && !shouldThrow)
+        return;
 
-    if (ShouldLog(lvl))
+    try
     {
-        ErrHelper::SrcHelper source(loc, ctx);
-        try
-        {
-            std::string msg = FormatToString(ctx, params, param);
-            SinkIt(LogMsg(loc, m_Name, lvl, msg), source);
-        }
-        catch (const std::exception &ex)
-        {
-            m_ErrHelper.HandleEx(m_Name, source, ex);
-            return;
-        }
-        catch (...)
-        {
-            m_ErrHelper.HandleUnknownEx(m_Name, source);
-            return;
-        }
+        std::string msg = FormatToString(ctx, params, param);
+
+        auto logMsg = LogMsg(loc, m_Name, lvl, msg);
+        if (shouldLog)
+            LogIt(logMsg, ctx);
+
+        if (shouldThrow)
+            ThrowIt(logMsg, ctx);
+        return;
+    }
+    catch (const std::exception &ex)
+    {
+        m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(loc, ctx), ex);
+
+        if (shouldThrow)
+            ThrowIt(LogMsg(loc, m_Name, lvl, ex.what()), ctx);
+        return;
+    }
+    catch (...)
+    {
+        m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(loc, ctx));
+
+        if (shouldThrow)
+            ThrowIt(LogMsg(m_Name, lvl, "unknown format exception"), ctx);
+        return;
     }
 }
 
@@ -46,40 +74,67 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
 // log with stack trace
 void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, string_view_t msg) const noexcept
 {
-    assert(ctx);
+    bool shouldLog = ShouldLog(lvl);
+    bool shouldThrow = ShouldThrow(lvl);
+    if (!shouldLog && !shouldThrow)
+        return;
 
-    if (ShouldLog(lvl))
+    if (shouldLog)
     {
         using spdlog::fmt_lib::format;
-        Log(ctx, lvl, format("Stack trace requested: {}", msg));
-        Log(ctx, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename()));
+        LogIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
+        LogIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
         for(const auto &info : StackTraceInfoFrom(ctx))
         {
-            Log(ctx, lvl, info);
+            LogIt(LogMsg(m_Name, lvl, info), ctx);
         }
     }
+
+    if (shouldThrow)
+        ThrowIt(LogMsg(m_Name, lvl, msg), ctx);
 }
 
 void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept
 {
-    if (ShouldLog(lvl))
+    bool shouldLog = ShouldLog(lvl);
+    bool shouldThrow = ShouldThrow(lvl);
+    if (!shouldLog && !shouldThrow)
+        return;
+
+    try
     {
-        auto src = ErrHelper::SrcHelper(ctx);
-        try
+        std::string msg = FormatToString(ctx, params, param);
+
+        if (shouldLog)
         {
-            std::string msg = FormatToString(ctx, params, param);
-            LogStackTrace(ctx, lvl, msg);
+            using spdlog::fmt_lib::format;
+            LogIt(LogMsg(m_Name, lvl, format("Stack trace requested: {}", msg)), ctx);
+            LogIt(LogMsg(m_Name, lvl, format("Called from: {}", PluginSysFindPluginByCtx(ctx)->GetFilename())), ctx);
+            for(const auto &info : StackTraceInfoFrom(ctx))
+            {
+                LogIt(LogMsg(m_Name, lvl, info), ctx);
+            }
         }
-        catch (const std::exception &ex)
-        {
-            m_ErrHelper.HandleEx(m_Name, src, ex);
-            return;
-        }
-        catch (...)
-        {
-            m_ErrHelper.HandleUnknownEx(m_Name, src);
-            return;
-        }
+
+        if (shouldThrow)
+            ThrowIt(LogMsg(m_Name, lvl, msg), ctx);
+        return;
+    }
+    catch (const std::exception &ex)
+    {
+        m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(ctx), ex);
+
+        if (shouldThrow)
+            ThrowIt(LogMsg(m_Name, lvl, ex.what()), ctx);
+        return;
+    }
+    catch (...)
+    {
+        m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(ctx));
+
+        if (shouldThrow)
+            ThrowIt(LogMsg(m_Name, lvl, "unknown format exception"), ctx);
+        return;
     }
 }
 
@@ -223,7 +278,7 @@ void Logger::DropSink(Handle_t handle)
     }
 }
 
-void Logger::SinkIt(const LogMsg &msg, const ErrHelper::SrcHelper &source) const noexcept
+void Logger::LogIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
 {
     for (auto &sink : m_Sinks)
     {
@@ -235,20 +290,20 @@ void Logger::SinkIt(const LogMsg &msg, const ErrHelper::SrcHelper &source) const
             }
             catch (const std::exception &ex)
             {
-                m_ErrHelper.HandleEx(m_Name, source, ex);
+                m_ErrHelper.HandleEx(m_Name, ErrHelper::SrcHelper(msg.source, ctx), ex);
             }
             catch (...)
             {
-                m_ErrHelper.HandleUnknownEx(m_Name, source);
+                m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(msg.source, ctx));
             }
         }
     }
 
     if (ShouldFlush(msg.level))
-        Flush(source);
+        FlushIt(ErrHelper::SrcHelper(msg.source, ctx));
 }
 
-void Logger::Flush(const ErrHelper::SrcHelper &source) const noexcept
+void Logger::FlushIt(const ErrHelper::SrcHelper &source) const noexcept
 {
     for (auto &sink : m_Sinks)
     {
@@ -267,12 +322,46 @@ void Logger::Flush(const ErrHelper::SrcHelper &source) const noexcept
     }
 }
 
+void Logger::ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
+{
+    spdlog::memory_buf_t output;
+
+    // append short level
+    assert(msg.level >= Level_t::trace);
+    assert(msg.level <  Level_t::n_levels);
+    output.push_back('[');
+    output.push_back(to_short_c_str(msg.level)[0]);
+    output.push_back(']');
+    output.push_back(' ');
+
+    // append source location if present
+    if (!msg.source.empty()) {
+        using spdlog::details::null_scoped_padder;
+        using spdlog::details::short_filename_formatter;
+        using spdlog::details::fmt_helper::append_int;
+        using spdlog::details::fmt_helper::append_string_view;
+
+        const char *filename = short_filename_formatter<null_scoped_padder>::basename(msg.source.filename);
+
+        output.push_back('[');
+        append_string_view(filename, output);
+        output.push_back(':');
+        append_int(msg.source.line, output);
+        output.push_back(']');
+        output.push_back(' ');
+    }
+
+    auto prefix = spdlog::fmt_lib::to_string(output);
+    std::string message{msg.payload.data(), msg.payload.size()};
+    ctx->ReportError("%s%s", prefix.c_str(), message.c_str());
+}
+
 
 /**
  * SrcHelper 的设计初衷
  *  由于仅少数如 LogSrc, LogLoc 等 Log Natives 明确指定了 SourceLoc 的值
  *  其余大部分 Log Natives 的 SourceLoc 都使用默认值 (empty).
- *  这会意味着 Format, SinkIt, Flush 发生错误时 SourceLoc 值为 empty.
+ *  这会意味着 Format, LogIt, Flush 发生错误时 SourceLoc 值为 empty.
  *  即无法获取造成的错误的源码位置信息, 显然这是不利于排查错误的.
  *
  *  考虑到 logger 是一个单线程类, 且 Log Natives 必然包含一个有效的 ctx,

@@ -363,6 +363,72 @@ public void OnPluginStart()
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [info] Some message<br>
 > [2001-02-03 12:34:56.789] [multi-sink-logger] [warn] Some warning<br>
 
+### 抛出级别
+
+抛出级别（Throw Level）用于控制 Logger 在处理日志消息时，是否同时触发 SourceMod runtime error，并中断当前调用的执行。
+
+与[日志级别](#日志级别)不同，抛出级别独立控制是否抛出错误。仅当日志消息级别 **≥** Logger 的抛出级别时，才会抛出错误。
+
+**Logger** 的默认抛出级别为 `LogLevel_Off`。
+
+抛出级别与日志级别相互独立，因此可以分别控制 "是否记录日志" 与 "是否抛出错误"：
+
+| 日志级别 | 抛出级别 | `logger.Error(...)` 行为 |
+| :------: | :------: | :----------------------: |
+|  `Info`  | `Error`  |    记录日志并抛出错误    |
+|  `Off`   | `Error`  |  不记录日志，仅抛出错误  |
+| `Error`  |  `Off`   |   记录日志，不抛出错误   |
+
+抛出发生在日志记录之后，因此错误日志不会丢失。
+
+```sourcepawn
+#include <sourcemod>
+#include <log4sp>
+
+public void OnPluginStart()
+{
+    ServerConsoleSink sink = new ServerConsoleSink();
+    Logger logger = new Logger();
+    logger.AddSink(sink);
+    logger.SetThrowLevel(LogLevel_Error);
+
+    logger.Warn("Warning ...");
+    logger.Error("Oops ..."); // 抛出错误，中断执行
+
+    // 下面的代码不会执行
+    logger.Warn("Warning ...");
+
+    sink.Close();
+    logger.Close();
+}
+```
+
+控制台输出：
+
+> [2001-02-03 12:34:56.789] [test.smx] [warn] Warning ...
+> [2001-02-03 12:34:56.789] [test.smx] [error] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Exception reported: [E] Oops ...
+> L 02/03/2001 - 12:34:56: [SM] Blaming: test.smx
+> L 02/03/2001 - 12:34:56: [SM] Call stack trace:
+> L 02/03/2001 - 12:34:56: [SM]   [0] Logger.Error
+> L 02/03/2001 - 12:34:56: [SM]   [1] Line 12, d:\sourcemod\plugins\testsuite\mock\test.sp::OnPluginStart
+
+这对于需要同时记录错误日志并中断当前执行的场景会很实用。
+
+在未启用抛出级别时，一个典型的参数校验通常需要分别完成“记录错误”和“中断执行”：
+
+```sourcepawn
+logger.ErrorF("Invalid client index: %d", client);
+ThrowError("Invalid client index: %d", client);
+```
+
+启用抛出级别后，可以简化为：
+
+```sourcepawn
+logger.SetThrowLevel(LogLevel_Error);
+logger.ErrorF("Invalid client index: %d", client);
+```
+
 ### 仅头文件
 
 仅头文件的所有代码实现于 `.inc` 头文件中，不依赖任何外部组件，可以轻易的整合到任何插件中，从而简化设置于集成工作。
@@ -430,84 +496,76 @@ SinkCloseAndDelete(sink);
 ## 架构
 
 ```mermaid
-flowchart LR
- subgraph Sinks["`**Sink List**`"]
-        SinkShouldJunction["Junction"]
-        SinkShouldLog{"Should Log?"}
-        SinkLog("Log")
-        SinkPatternFormat["Pattern Format"]
-        SinkFlush("Flush")
-  end
- subgraph Logger["`**Logger**`"]
-        LoggerShouldLog{"Should Log?"}
-        LoggerShouldJunction["Junction"]
-        LoggerLogJunction["Junction"]
-        LoggerShouldFlush{"Should Flush?"}
-        LoggerLog("Log")
-        LoggerLogRaw["Raw Message"]
-        LoggerLogF("LogF")
-        LoggerLogFFormat["Params Format"]
-  end
-    Start((("`**Start**`"))) L_Start_LoggerShouldLog_0@== Log Message ==> LoggerShouldLog
-    LoggerShouldLog -- Yes --- LoggerShouldJunction
-    LoggerShouldJunction --> LoggerLogJunction & LoggerShouldFlush
-    LoggerShouldLog -. No .-> Stop((("`**End**`")))
-    LoggerLogJunction --- LoggerLog & LoggerLogF
-    LoggerLog --- LoggerLogRaw
-    LoggerLogRaw --- SinkShouldJunction
-    LoggerLogF --- LoggerLogFFormat
-    LoggerLogFFormat --- SinkShouldJunction
-    LoggerShouldFlush -- Yes --- SinkFlush
-    SinkFlush --> Stop
-    LoggerShouldFlush -. No .-> Stop
-    SinkShouldJunction --> SinkShouldLog
-    SinkShouldLog -- Yes --- SinkPatternFormat
-    SinkPatternFormat --- SinkLog
-    SinkLog --> Stop
-    SinkShouldLog -. No .-> Stop
+flowchart TD
+    %% =========================
+    %% Logger entry
+    %% =========================
+    LOGGER_LOG[/"Logger.Log(...)"/]
 
-    L_Start_LoggerShouldLog_0@{ animation: fast }
-    LoggerShouldJunction@{ shape: junction}
-    LoggerLogJunction@{ shape: junction}
-    LoggerLogRaw@{ shape: das}
-    LoggerLogFFormat@{ shape: das}
-    SinkShouldJunction@{ shape: junction}
-    SinkPatternFormat@{ shape: das}
-    style Start stroke-width:4px,stroke-dasharray: 0,font-size:16px
-    style Logger fill:transparent
-    style LoggerShouldLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerShouldJunction fill:#00C853
-    style LoggerLogJunction fill:#00C853
-    style LoggerLog stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogRaw stroke-width:1px,stroke-dasharray:1
-    style LoggerLogF stroke-width:4px,stroke-dasharray: 0
-    style LoggerLogFFormat stroke-width:1px,stroke-dasharray:1
-    style LoggerShouldFlush stroke-width:4px,stroke-dasharray: 0
-    style Sinks fill:transparent
-    style SinkShouldJunction fill:#00C853
-    style SinkShouldLog stroke-width:4px,stroke-dasharray: 0
-    style SinkPatternFormat stroke-width:1px,stroke-dasharray:1
-    style SinkLog stroke-width:4px,stroke-dasharray: 0
-    style SinkFlush stroke-width:4px,stroke-dasharray: 0
-    style Stop stroke-width:3px,stroke-dasharray: 0
-    linkStyle 1 stroke:#00C853,fill:none
-    linkStyle 2 stroke:#00C853,fill:none
-    linkStyle 3 stroke:#00C853,fill:none
-    linkStyle 4 stroke:#D50000,fill:none
-    linkStyle 5 stroke:#00C853,fill:none
-    linkStyle 6 stroke:#00C853,fill:none
-    linkStyle 7 stroke:#00C853,fill:none
-    linkStyle 8 stroke:#00C853,fill:none
-    linkStyle 9 stroke:#00C853,fill:none
-    linkStyle 10 stroke:#00C853,fill:none
-    linkStyle 11 stroke:#00C853,fill:none
-    linkStyle 12 stroke:#00C853,fill:none
-    linkStyle 13 stroke:#D50000,fill:none
-    linkStyle 14 stroke:#00C853,fill:none
-    linkStyle 15 stroke:#00C853,fill:none
-    linkStyle 16 stroke:#00C853,fill:none
-    linkStyle 17 stroke:#00C853,fill:none
-    linkStyle 18 stroke:#D50000,fill:none
+    LOGGER_LOG --> LOGGER_SHOULD_LOG(["Logger.ShouldLog(lvl)?"])
+    LOGGER_LOG --> LOGGER_SHOULD_THROW(["Logger.ShouldThrow(lvl)?"])
+
+    %% =========================
+    %% Logging
+    %% =========================
+    LOGGER_SHOULD_LOG -- "true" --> SINK_SHOULD_LOG(["Sink.ShouldLog(lvl)?"])
+    LOGGER_SHOULD_LOG -- "false" --> LOGGER_SHOULD_THROW
+
+    subgraph LOG_LOOP["LogIt — For each Sink"]
+        direction TB
+
+        SINK_SHOULD_LOG -- "true" --> SINK_LOG["Sink.Log(...)"]
+        SINK_SHOULD_LOG -- "false" --> LOG_NEXT(["More Sinks?"])
+
+        SINK_LOG ----> LOG_NEXT
+        SINK_LOG -. "on error" .-> LOG_ERROR["Logger.HandlerError(...)"]
+
+        LOG_ERROR -..-> LOG_NEXT
+    end
+
+    LOG_NEXT -- "true" --> SINK_SHOULD_LOG
+    LOG_NEXT -- "false" --> LOGGER_SHOULD_FLUSH(["Logger.ShouldFlush(lvl)?"])
+
+    %% =========================
+    %% Flush
+    %% =========================
+    LOGGER_SHOULD_FLUSH -- "true" --> SINK_FLUSH["Sink.Flush()"]
+    LOGGER_SHOULD_FLUSH -- "false" --> LOGGER_SHOULD_THROW
+
+    subgraph FLUSH_LOOP["FlushIt — For each Sink"]
+        direction TB
+
+        SINK_FLUSH ----> FLUSH_NEXT(["More Sinks?"])
+        SINK_FLUSH -. "on error" .-> FLUSH_ERROR["Logger.HandlerError(...)"]
+
+        FLUSH_ERROR -..-> FLUSH_NEXT
+    end
+
+    FLUSH_NEXT -- "true" --> SINK_FLUSH
+    FLUSH_NEXT -- "false" --> LOGGER_SHOULD_THROW
+
+    %% =========================
+    %% Throw
+    %% =========================
+    LOGGER_SHOULD_THROW -- "true" --> THROW[/"ThrowError(...)<br>Aborts the current callback"/]
+    LOGGER_SHOULD_THROW -- "false" --> RETURN[/"Return to caller<br>Code is executed following it"/]
+
+    %% =========================
+    %% Styles
+    %% =========================
+    classDef entry fill:#e8f1ff,stroke:#3674d9,stroke-width:2px,color:#111;
+    classDef sink fill:#eef9ed,stroke:#45a33d,stroke-width:1.5px,color:#111;
+    classDef decision fill:#fff8df,stroke:#d5a623,stroke-width:1.5px,color:#111;
+    classDef error fill:#fff0f0,stroke:#d94b5b,stroke-width:1.5px,color:#111;
+    classDef throw fill:#f5edff,stroke:#c43c4b,stroke-width:1.5px,color:#111;
+
+    class LOGGER_LOG,RETURN entry;
+    class SINK_LOG,SINK_FLUSH sink;
+    class LOGGER_SHOULD_LOG,LOGGER_SHOULD_THROW,SINK_SHOULD_LOG,LOG_NEXT,LOGGER_SHOULD_FLUSH,FLUSH_NEXT decision;
+    class LOG_ERROR,FLUSH_ERROR error;
+    class THROW throw;
+    style LOG_LOOP fill:#f0fdfa
+    style FLUSH_LOOP fill:#f0fdfa
 ```
 
 ## 插件
