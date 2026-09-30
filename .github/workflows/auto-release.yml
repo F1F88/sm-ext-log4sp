@@ -190,12 +190,12 @@ jobs:
           #
           # For example:
           #
-          #   sm-ext-log4sp-v2.0.0.abcdef1-win_latest-sm_latest-x86
-          #   sm-ext-log4sp-v2.0.0.abcdef1-win_latest-sm_latest-x64
+          #   sm-ext-log4sp-v2.0.0.abcdef1-win_latest-sm_1_12-x86
+          #   sm-ext-log4sp-v2.0.0.abcdef1-win_latest-sm_1_12-x64
           #
           # become:
           #
-          #   log4sp-v2.0.0.abcdef1-win_latest-sm_latest.zip
+          #   log4sp-v2.0.0.abcdef1-win_latest-sm_1_12.zip
           # ------------------------------------------------------------------
 
           extension_groups = {}

@@ -33,11 +33,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sm_version: [sm_latest, sm_1_12, sm_1_11]
+        sm_version: [sm_1_13, sm_1_12, sm_1_11]
         variant: [extension, header_only]
         include:
-          - sm_version: sm_latest
-            sm_ref: master
+          - sm_version: sm_1_13
+            sm_ref: 1.13.0.7472
           - sm_version: sm_1_12
             sm_ref: 1.12-dev
           - sm_version: sm_1_11
@@ -62,7 +62,7 @@ jobs:
           repository: alliedmodders/metamod-source
           submodules: recursive
           path: metamod-source
-          ref: 1.12-dev
+          ref: 1.12.0.1226
 
       - name: Check out SourceMod
         uses: actions/checkout@v7
