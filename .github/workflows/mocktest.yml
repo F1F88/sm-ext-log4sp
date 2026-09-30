@@ -103,18 +103,13 @@ jobs:
           old = "\n      '-Werror',\n"
 
           if old not in content:
-              print(
-                  f"::warning file={path}::"
-                  "Expected code was not found; no modification was made."
-              )
+              print(f"::Warning file={path}::"
+                    "Expected code was not found; no modification was made.")
           else:
               content = content.replace(old, "", 1)
               path.write_text(content)
-              print(f"Successfully modified {path}")
+              print(f"::Debug::Successfully modified {path}")
           PY
-
-          echo "Current AMBuildScript content:"
-          grep -n -A2 -B2 "sdk\['name'\]" AMBuildScript || true
 
       # fix: https://github.com/alliedmodders/sourcemod/issues/2480
       - name: Enable SourceMod hl2sdk-mock SDK
@@ -141,12 +136,9 @@ jobs:
           if count == 0:
               print("Warning: no mock SDK skip block found")
           else:
-              print(f"Removed {count} mock SDK skip block(s)")
+              print(f"::Debug::Removed {count} mock SDK skip block(s)")
           path.write_text(content)
           PY
-
-          echo "Current extensions/sdktools/AMBuilder content:"
-          grep -n -A2 -B2 "sdk\['name'\]" extensions/sdktools/AMBuilder || true
 
       - name: Build SourceMod
         working-directory: sourcemod
@@ -266,7 +258,7 @@ jobs:
                   echo "$line"
                   for pattern in "${failure_patterns[@]}"; do
                     if [[ "$line" == *"$pattern"* ]]; then
-                      echo "::error::Detected failure pattern: $pattern"
+                      echo "::Error::Detected failure pattern: $pattern"
                       failed=1
                       break
                     fi
@@ -280,8 +272,11 @@ jobs:
                   done
                 done
 
-                if [ "$failed" = "1" ] || [ "$succeeded" = "0" ]; then
-                  echo "$plugin_name failed."
+                if [ "$failed" = "1" ] then
+                  echo "::Error::$plugin_name failed."
+                  exit 1
+                elif [ "$succeeded" = "0" ] then
+                  echo "::Error::No '${succeeded_patterns[0]}' marker was found for ${plugin_name}."
                   exit 1
                 fi
               }
