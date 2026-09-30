@@ -4,7 +4,7 @@
 #pragma once
 
 #ifndef SPDLOG_HEADER_ONLY
-    #include <spdlog/sinks/wincolor_sink.h>
+#include <spdlog/sinks/wincolor_sink.h>
 #endif
 
 #include <spdlog/details/windows_include.h>
@@ -98,15 +98,6 @@ void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::set_color_mode(color_mode mode) 
     set_color_mode_impl(mode);
 }
 
-//* @log4sp hack *//
-template <typename ConsoleMutex>
-[[nodiscard]] SPDLOG_INLINE std::string wincolor_sink<ConsoleMutex>::to_pattern(const details::log_msg &log_msg) {
-    std::lock_guard<mutex_t> lock(mutex_);
-    memory_buf_t formatted;
-    formatter_->format(log_msg, formatted);
-    return fmt_lib::to_string(formatted);
-}
-
 template <typename ConsoleMutex>
 void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::set_color_mode_impl(color_mode mode) {
     if (mode == color_mode::automatic) {
@@ -146,10 +137,10 @@ void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::print_range_(const memory_buf_t 
 #if defined(SPDLOG_UTF8_TO_WCHAR_CONSOLE)
         wmemory_buf_t wformatted;
         details::os::utf8_to_wstrbuf(string_view_t(formatted.data() + start, end - start),
-            wformatted);
+                                     wformatted);
         auto size = static_cast<DWORD>(wformatted.size());
         auto ignored = ::WriteConsoleW(static_cast<HANDLE>(out_handle_), wformatted.data(), size,
-            nullptr, nullptr);
+                                       nullptr, nullptr);
 #else
         auto size = static_cast<DWORD>(end - start);
         auto ignored = ::WriteConsoleA(static_cast<HANDLE>(out_handle_), formatted.data() + start,

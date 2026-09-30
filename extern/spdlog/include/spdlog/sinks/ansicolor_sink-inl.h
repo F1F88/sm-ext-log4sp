@@ -4,7 +4,7 @@
 #pragma once
 
 #ifndef SPDLOG_HEADER_ONLY
-    #include <spdlog/sinks/ansicolor_sink.h>
+#include <spdlog/sinks/ansicolor_sink.h>
 #endif
 
 #include <spdlog/details/os.h>
@@ -81,15 +81,6 @@ SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_formatter(
     formatter_ = std::move(sink_formatter);
 }
 
-//* @log4sp hack *//
-template <typename ConsoleMutex>
-[[nodiscard]] SPDLOG_INLINE std::string ansicolor_sink<ConsoleMutex>::to_pattern(const details::log_msg &log_msg) {
-    std::lock_guard<mutex_t> lock(mutex_);
-    memory_buf_t formatted;
-    formatter_->format(log_msg, formatted);
-    return fmt_lib::to_string(formatted);
-}
-
 template <typename ConsoleMutex>
 SPDLOG_INLINE bool ansicolor_sink<ConsoleMutex>::should_color() const {
     return should_do_colors_;
@@ -120,7 +111,8 @@ SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_color_mode_(color_mode mode
 }
 
 template <typename ConsoleMutex>
-SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::print_ccode_(const string_view_t &color_code) const {
+SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::print_ccode_(
+    const string_view_t &color_code) const {
     details::os::fwrite_bytes(color_code.data(), color_code.size(), target_file_);
 }
 

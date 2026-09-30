@@ -1,219 +1,142 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#if !defined DEBUG
+    #define  DEBUG
+#endif
+
+#if !defined _DEBUG
+    #define  _DEBUG
+#endif
+
+#if defined NDEBUG
+    #undef  NDEBUG
+#endif
+
 #include <sourcemod>
 #include <log4sp>
 
+#include "../assert"
 #include "../test_utils"
-
-
-#define PLUGIN_PATTERN  ".*test-ringbuffer-logger.sp"
-#define LOGGER_NAME     "test-ring-buffer"
 
 
 public void OnPluginStart()
 {
+    Test();
     RegServerCmd("sm_log4sp_test_ringbuffer_logger", Command_Test);
 }
 
 Action Command_Test(int args)
 {
-    PrintToServer("---- START TEST RING BUFFER LOGGER ----");
+    Test();
+    return Plugin_Handled;
+}
+
+
+void Test()
+{
+    PrintToServer("------- Started testing Ring-Buffer-Logger -------");
 
     TestDrain();
-
-    TestDrainFormatted();
-
-    TestDrainTwice();
-
-    TestDrainFormattedTwice();
 
     TestEmpty();
 
     TestEmptySize();
 
-    PrintToServer("---- STOP TEST RING BUFFER LOGGER ----");
-    return Plugin_Handled;
+    PrintToServer("---------- Test Ring-Buffer-Logger ended ---------");
 }
-
 
 void TestDrain()
 {
-    SetTestContext("Test Drain");
+    SetTestContext("RingBuffer Drain");
 
     static const int sinkSize = 3;
     RingBufferSink sink = new RingBufferSink(sinkSize);
-    sink.SetPattern("*** %v");
 
-    Logger logger = new Logger(LOGGER_NAME);
+    Logger logger = new Logger("MyLogger");
     logger.AddSink(sink);
 
     // log more than the sink size by one and test that the first message is dropped
     // test 3 times to make sure the ringbuffer is working correctly multiple times
-    for (int i = 0; i < 3; ++i)
+    for (int i = 1; i <= 3; ++i)
     {
-        for (int j = 0; j < sinkSize + 1; ++j)
+        for (int j = i; j <= sinkSize * i; ++j)
         {
-            logger.InfoAmxTpl("%d", j);
+            logger.InfoF("%d", j);
         }
 
-        DataPack data = new DataPack();
-        data.WriteCell(1);  // counter
-        sink.Drain(RBSink_Drain, data);
+        // 缓冲区只能存储预设条数消息
+        AssertEq("buffer length", sink.GetSize(), sinkSize);
 
-        data.Reset();
-        AssertEq("counter", data.ReadCell() - 1, sinkSize);
+        // 从最新的消息开始消费
+        DataPack data = new DataPack();
+        data.WriteCell(sinkSize * i);
+        while (sink.DrainLatest(null, CB_OnDrainLatest, data)) {}
         delete data;
     }
-    delete logger;
-    delete sink;
+    logger.Close();
+    sink.Close();
 }
-
-void TestDrainFormatted()
-{
-    SetTestContext("Test Drain Formatted");
-
-    static const int sinkSize = 3;
-    RingBufferSink sink = new RingBufferSink(sinkSize);
-    sink.SetPattern("fmt %v");
-
-    Logger logger = new Logger(LOGGER_NAME);
-    logger.AddSink(sink);
-
-    // log more than the sink size by one and test that the first message is dropped
-    // test 3 times to make sure the ringbuffer is working correctly multiple times
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < sinkSize + 1; ++j)
-        {
-            logger.InfoAmxTpl("%d", j);
-        }
-
-        sink.DrainFormatted(RBSink_DrainFormatted, 2);
-    }
-    delete logger;
-    delete sink;
-}
-
-
-void TestDrainTwice()
-{
-    SetTestContext("Test Drain Twice");
-
-    RingBufferSink sink = new RingBufferSink(3);
-    Logger logger = new Logger(LOGGER_NAME);
-    logger.AddSink(sink);
-
-    logger.Info("some message");
-    logger.Info("some message");
-
-    sink.Drain(RBSink_DrainTwice, false);
-    sink.Drain(RBSink_DrainTwice, true);
-
-    delete logger;
-    delete sink;
-}
-
-void TestDrainFormattedTwice()
-{
-    SetTestContext("Test Drain Formatted Twice");
-
-    RingBufferSink sink = new RingBufferSink(3);
-    Logger logger = new Logger(LOGGER_NAME);
-    logger.AddSink(sink);
-
-    logger.Info("some message");
-    logger.Info("some message");
-
-    sink.DrainFormatted(RBSink_DrainFormattedTwice, false);
-    sink.DrainFormatted(RBSink_DrainFormattedTwice, true);
-
-    delete logger;
-    delete sink;
-}
-
 
 void TestEmpty()
 {
-    SetTestContext("Test Empty");
+    SetTestContext("RingBuffer Drain Empty");
 
     static const int sinkSize = 3;
     RingBufferSink sink = new RingBufferSink(sinkSize);
 
-    Logger logger = new Logger(LOGGER_NAME);
+    Logger logger = new Logger();
     logger.AddSink(sink);
 
-    sink.Drain(RBSink_DrainEmpty);
+    AssertEq("buffer length", sink.GetSize(), 0);
+    sink.DrainLatest(null, CB_OnDrainLatest_Empty);
 
-    delete logger;
-    delete sink;
+    logger.Close();
+    sink.Close();
 }
 
 void TestEmptySize()
 {
-    SetTestContext("Test Empty Size");
+    SetTestContext("RingBuffer New Empty Size");
 
     static const int sinkSize = 0;
     RingBufferSink sink = new RingBufferSink(sinkSize);
 
-    Logger logger = new Logger(LOGGER_NAME);
+    Logger logger = new Logger();
     logger.AddSink(sink);
 
     for (int i = 0; i < sinkSize + 1; ++i)
     {
-        logger.InfoAmxTpl("%d", i);
+        logger.InfoF("%d", i);
     }
 
-    sink.DrainFormatted(RBSink_DrainFormattedEmpty);
+    AssertEq("buffer length", sink.GetSize(), 0);
+    sink.DrainLatest(null, CB_OnDrainLatest_EmptySize);
 
-    delete logger;
-    delete sink;
+    logger.Close();
+    sink.Close();
 }
 
 
-void RBSink_Drain(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int timePoint, DataPack data)
+public void CB_OnDrainLatest(const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, DataPack data)
 {
     data.Reset();
     int counter = data.ReadCell();
 
-    AssertStrEq("Drain name", name, LOGGER_NAME);
-    AssertEq("Drain lvl", lvl, LogLevel_Info);
+    AssertStrEq("Drain name", name, "MyLogger");
+    AssertEq("Drain lvl", lvl, LOG4SP_LEVEL_INFO);
     AssertEq("Drain msg", StringToInt(msg), counter);
 
     data.Reset(true);
-    data.WriteCell(++counter);
+    data.WriteCell(--counter);
 }
 
-void RBSink_DrainFormatted(const char[] msg, int data)
+public void CB_OnDrainLatest_Empty(const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
-    AssertStrMatch("Drain formatted msg match", msg, "fmt [0-9]+\\s");
-    AssertEq("Drain formatted data", data, 2);
+    AssertFalse("Drain empty", true); // should not be called since the sink is empty
 }
 
-
-void RBSink_DrainTwice(const char[] name, LogLevel lvl, const char[] msg, const char[] file, int line, const char[] func, int timePoint, bool shouldEmpty)
+public void CB_OnDrainLatest_EmptySize(const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
-    if (shouldEmpty)
-    {
-        AssertTrue("Drain twice should empty", false);
-    }
-}
-
-void RBSink_DrainFormattedTwice(const char[] msg, bool shouldEmpty)
-{
-    if (shouldEmpty)
-    {
-        AssertTrue("Drain formatted twice should empty", false);
-    }
-}
-
-
-void RBSink_DrainEmpty(const char[] name, LogLevel lvl, const char[] msg)
-{
-    AssertTrue("Drain empty", false); // should not be called since the sink is empty
-}
-
-void RBSink_DrainFormattedEmpty(const char[] msg)
-{
-    AssertTrue("Drain formatted empty", false); // should not be called since the sink size is 0
+    AssertFalse("Drain empty size", true); // should not be called since the sink size is 0
 }

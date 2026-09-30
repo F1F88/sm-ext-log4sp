@@ -1,20 +1,42 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#if !defined DEBUG
+    #define  DEBUG
+#endif
+
+#if !defined _DEBUG
+    #define  _DEBUG
+#endif
+
+#if defined NDEBUG
+    #undef  NDEBUG
+#endif
+
+#include <regex>
 #include <sourcemod>
 #include <log4sp>
 
+#include "../assert"
 #include "../test_utils"
 
 
 public void OnPluginStart()
 {
+    Test();
     RegServerCmd("sm_log4sp_test_daily_logger", Command_Test);
 }
 
 Action Command_Test(int args)
 {
-    PrintToServer("---- START TEST DAILY LOGGER ----");
+    Test();
+    return Plugin_Handled;
+}
+
+
+void Test()
+{
+    PrintToServer("-------- Started testing Daily-File-Logger -------");
 
     PrepareTestPath("daily/");
 
@@ -22,58 +44,95 @@ Action Command_Test(int args)
 
     TestFormatCalculator();
 
+    TestGetFilename();
+
     TestRotates();
 
     TestFileCallback();
 
-    PrintToServer("---- STOP TEST DAILY LOGGER ----");
-    return Plugin_Handled;
+    PrintToServer("---------- Test Daily-File-Logger ended ----------");
 }
 
 void TestDefaultCalculator()
 {
-    SetTestContext("Test Daily Default Calculator");
+    SetTestContext("DailyFile Calculator Default");
 
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "daily/daily_default_calculator.log");
+    char filename[PLATFORM_MAX_PATH];
+    BuildTestPath(filename, sizeof(filename), "daily/daily_default_calculator.log");
 
-    Logger logger = DailyFileSink.CreateLogger("test-daily-calc", path);
+    DailyFileSink sink = new DailyFileSink(filename);
+    Logger logger = new Logger("test-daily-default-calc");
+    logger.AddSink(sink);
     for (int i = 0; i < 10; ++i)
     {
-        logger.InfoAmxTpl("Test message %d", i);
+        logger.InfoF("Test message %d", i);
     }
-    delete logger;
 
-    FormatTime(path, sizeof(path), "daily/daily_default_calculator_%Y%m%d.log");
-    BuildTestPath(path, sizeof(path), path);
+    sink.GetFilename(filename, sizeof(filename));
 
-    AssertEq("Generated log file, count lines", CountLines(path), 10);
+    sink.Close();
+    logger.Close();
+
+    char buffer[PLATFORM_MAX_PATH];
+    FormatTime(buffer, sizeof(buffer), "daily/daily_default_calculator_%Y%m%d.log");
+    BuildTestPath(buffer, sizeof(buffer), buffer);
+
+    AssertStrEq("[file name]", filename, buffer);
+    AssertFileLinesEq("[file line]", filename, 10);
 }
 
 void TestFormatCalculator()
 {
-    SetTestContext("Test Daily Custom Calculator");
+    SetTestContext("DailyFile Calculator Format");
 
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "daily/daily_custom_calculator_%Y-%m-%d_%H-%M.log");
+    char filename[PLATFORM_MAX_PATH];
+    BuildTestPath(filename, sizeof(filename), "daily/daily_format_calculator_%Y-%m-%d_%H-%M.log");
 
-    Logger logger = DailyFileSink.CreateLogger("test-daily-custom-calc", path, 1, 2, true, 0, DailyFileFormatCalculator);
+    DailyFileSink sink = new DailyFileSink(filename, 1, 2, true, 0, null, DailyFileFormatCalculator);
+    Logger logger = new Logger("test-daily-format-calc");
+    logger.AddSink(sink);
     for (int i = 0; i < 10; ++i)
     {
-        logger.InfoAmxTpl("Test message %d", i);
+        logger.InfoF("Test message %d", i);
     }
-    delete logger;
 
-    FormatTime(path, sizeof(path), "daily/daily_custom_calculator_%Y-%m-%d_%H-%M.log");
-    BuildTestPath(path, sizeof(path), path);
+    sink.GetFilename(filename, sizeof(filename));
 
-    AssertEq("Generated log file, count lines", CountLines(path), 10);
+    sink.Close();
+    logger.Close();
+
+    char buffer[PLATFORM_MAX_PATH];
+    FormatTime(buffer, sizeof(buffer), "daily/daily_format_calculator_%Y-%m-%d_%H-%M.log");
+    BuildTestPath(buffer, sizeof(buffer), buffer);
+
+    AssertStrEq("[file name]", filename, buffer);
+    AssertFileLinesEq("[file line]", filename, 10);
+}
+
+void TestGetFilename()
+{
+    SetTestContext("DailyFile GetFilename");
+
+    char filename[PLATFORM_MAX_PATH];
+    BuildTestPath(filename, sizeof(filename), "daily/get_filename.log");
+
+    DailyFileSink sink = new DailyFileSink(filename);
+
+    char buffer[PLATFORM_MAX_PATH];
+    sink.GetFilename(buffer, sizeof(buffer));
+
+    sink.Close();
+
+    FormatTime(filename, sizeof(filename), "daily/get_filename_%Y%m%d.log");
+    BuildTestPath(filename, sizeof(filename), filename);
+
+    AssertStrEq("[file name]", buffer, filename);
 }
 
 /* Test removal of old files */
 void TestRotates()
 {
-    SetTestContext("Test Daily File Rotate");
+    SetTestContext("DailyFile Rotate");
 
     TestRotate(1, 0, 1);
     TestRotate(1, 1, 1);
@@ -91,49 +150,81 @@ void TestRotates()
 
 void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)
 {
-    char path[PLATFORM_MAX_PATH];
-    path = PrepareTestPath("daily/rotate/daily_rotate.log");
+    char filename[PLATFORM_MAX_PATH];
+    FormatEx(filename, sizeof(filename), "daily/rotate_%d_%d_%d", daysToRun, maxDays, expectedNumFiles);
+    if (DirExists(filename))
+        AssertTrue("Directory already exists", false);
 
-    DailyFileSink sink = new DailyFileSink(path, 2, 30, true, maxDays);
+    Format(filename, sizeof(filename), "%s/daily_rotate.log", filename);
+    BuildTestPath(filename, sizeof(filename), filename);
+
+    DailyFileSink sink = new DailyFileSink(filename, 2, 30, true, maxDays);
+
+    int time = GetTime(); // Current day
+
     for (int i = 0; i < daysToRun; ++i)
     {
-        sink.Log("test-daily", LogLevel_Info, "Hello Message",
-            __BINARY_PATH__, __LINE__, __BINARY_NAME__, GetTime() + 24 * 3600 * i);
-    }
-    delete sink;
+        char logTime[21];
+        FormatEx(logTime, sizeof(logTime), "%d000000000", time); // To nanoseconds
 
-    AssertEq("Generated log file, count files", CountFiles(path), expectedNumFiles);
+        SourceLoc loc = {__BINARY_PATH__, __LINE__, __BINARY_NAME__};
+
+        sink.Log(logTime, loc, "test-daily", LogLevel_Info, "Hello Message");
+
+        time += 86400; // Next day
+    }
+    sink.Close();
+
+    char name[64];
+    FormatEx(name, sizeof(name), "[daysToRun=%2d, maxDays=%2d]", daysToRun, maxDays);
+    AssertFilesEq(name, filename, expectedNumFiles);
 }
 
 void TestFileCallback()
 {
-    SetTestContext("Test File Callback");
+    SetTestContext("DailyFile File Callback");
 
-    char path[PLATFORM_MAX_PATH];
-    BuildTestPath(path, sizeof(path), "daily/file_callback.log");
-
-    Logger logger = DailyFileSink.CreateLogger("test-daily-file-logger", path, .openPre=OnOpenPre, .closePost=OnClosePost);
-    delete logger;
+    char filename[PLATFORM_MAX_PATH];
+    BuildTestPath(filename, sizeof(filename), "daily/file_callback.log");
+    DailyFileSink sink = new DailyFileSink(filename, _, _, _, _, _, _, null, CB_OnFileOpen, null, CB_OnFileClose);
+    SourceLoc loc;
+    sink.Log(NULL_STRING, loc, "daily-sink", LogLevel_Info, "Some message");
+    sink.Close();
 }
 
-void OnOpenPre(const char[] filename)
-{
-    char path[PLATFORM_MAX_PATH];
-    FormatTime(path, sizeof(path), "daily/file_callback_%Y%m%d.log");
-    BuildTestPath(path, sizeof(path), path);
 
-    AssertStrEq("OpenPre, file name", filename, path);
-    AssertFalse("OpenPre, file exists", FileExists(path));
+public void CB_OnFileOpen(const char[] filename)
+{
+    char expectedFilename[PLATFORM_MAX_PATH];
+    FormatTime(expectedFilename, sizeof(expectedFilename), "daily/file_callback_%Y%m%d.log");
+    BuildTestPath(expectedFilename, sizeof(expectedFilename), expectedFilename);
+
+    AssertStrEq("[OnOpen file name]", filename, expectedFilename);
+    AssertFalse("[OnOpen file exists]", FileExists(filename));
+
+    File file = OpenFile(filename, "w");
+    file.WriteString("Hello File Event Callback! ", false);
+    delete file;
+
+    AssertFileLinesEq("[OnOpen file write data]", filename, 1);
+    AssertFileMatch("[OnOpen file write data]", filename, "Hello File Event Callback! ");
 }
 
-void OnClosePost(const char[] filename)
+public void CB_OnFileClose(const char[] filename)
 {
-    char path[PLATFORM_MAX_PATH];
-    FormatTime(path, sizeof(path), "daily/file_callback_%Y%m%d.log");
-    BuildTestPath(path, sizeof(path), path);
+    char expectedFilename[PLATFORM_MAX_PATH];
+    FormatTime(expectedFilename, sizeof(expectedFilename), "daily/file_callback_%Y%m%d.log");
+    BuildTestPath(expectedFilename, sizeof(expectedFilename), expectedFilename);
 
-    AssertStrEq("ClosePost, file name", filename, path);
-    AssertTrue("ClosePost, file exists", FileExists(path));
+    AssertStrEq("[OnClose file name]", filename, expectedFilename);
+    AssertTrue("[OnClose file exists]", FileExists(filename));
+
+    File file = OpenFile(filename, "a");
+    file.WriteString("Goodbye File Event Callback!", false);
+    delete file;
+
+    AssertFileLinesEq("[OnClose file write data]", filename, 2);
+    AssertFileMatch("[OnClose file write data]", filename, "Hello File Event Callback! .*Some message[^\\S ]Goodbye File Event Callback!");
 }
 
 
