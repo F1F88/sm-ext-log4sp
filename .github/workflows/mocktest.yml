@@ -272,10 +272,10 @@ jobs:
                   done
                 done
 
-                if [ "$failed" = "1" ] then
+                if [ "$failed" = "1" ]; then
                   echo "::Error::$plugin_name failed."
                   exit 1
-                elif [ "$succeeded" = "0" ] then
+                elif [ "$succeeded" = "0" ]; then
                   echo "::Error::No '${succeeded_patterns[0]}' marker was found for ${plugin_name}."
                   exit 1
                 fi
