@@ -6,12 +6,12 @@ on:
     paths:
       - 'sourcemod/scripting/log4sp_manager.sp'
       - 'sourcemod/scripting/include/**'
-      - 'sourcemod/scripting/include/log4sp-manager/**'
+      - 'sourcemod/scripting/log4sp-manager/**'
   push:
     paths:
       - 'sourcemod/scripting/log4sp_manager.sp'
       - 'sourcemod/scripting/include/**'
-      - 'sourcemod/scripting/include/log4sp-manager/**'
+      - 'sourcemod/scripting/log4sp-manager/**'
   workflow_call:
     inputs:
       source_ref:
