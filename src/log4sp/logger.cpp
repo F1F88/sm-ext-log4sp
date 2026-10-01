@@ -170,7 +170,7 @@ std::size_t Logger::GetSinksHandleClone(cell_t *sinks, std::size_t size, SourceM
         length = size;
 
     std::size_t counter = 0;
-    while (counter < size)
+    while (counter < length)
     {
         auto handle = m_SinkHandles.at(counter);
         auto cloned = SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
