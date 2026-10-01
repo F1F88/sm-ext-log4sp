@@ -377,7 +377,7 @@ methodmap Logger < Handle
         SourceLoc loc;
         loc = this.__GetSourceLoc(1);
         if (shouldLog)
-            this.__LogIt(this.__GetSourceLoc(1), lvl, msg);
+            this.__LogIt(loc, lvl, msg);
 
         if (shouldThrow)
             this.__ThrowIt(loc, lvl, msg);
