@@ -34,6 +34,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         }
     }
 
+    SourceMod::Handle_t openPluginHandle = openPlugin->GetMyHandle();
     SourcePawn::IPluginFunction *openFunc = nullptr;
     if (!ctx->IsNullFunctionId(params[4]))
     {
@@ -60,6 +61,7 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         }
     }
 
+    SourceMod::Handle_t closePluginHandle = closePlugin->GetMyHandle();
     SourcePawn::IPluginFunction *closeFunc = nullptr;
     if (!ctx->IsNullFunctionId(params[6]))
     {
@@ -71,8 +73,8 @@ static cell_t BasicFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     }
 
     spdlog::file_event_handlers handlers;
-    handlers.before_open = FILE_EVENT_FUNCTION(openFunc);
-    handlers.after_close = FILE_EVENT_FUNCTION(closeFunc);
+    handlers.before_open = FILE_EVENT_FUNCTION(openPluginHandle, openFunc);
+    handlers.after_close = FILE_EVENT_FUNCTION(closePluginHandle, closeFunc);
 
     spdlog::sinks::basic_file_sink_st *sink;
     try

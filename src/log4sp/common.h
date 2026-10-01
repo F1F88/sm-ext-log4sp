@@ -254,10 +254,17 @@ SourceMod::IPlugin* PluginSysFindPluginByCtx(SourcePawn::IPluginContext *ctx) no
 }   // namespace Log4sp
 
 
-#define FILE_EVENT_FUNCTION(func)                                                                   \
-    [func](const spdlog::filename_t &filename)                                                      \
+/**
+ * 用于 file sink 的 spdlog::file_event_handlers
+ * 定义的函数参数仅有 const spdlog::filename_t &filename
+ * 而我们需要 call plugin function，因此至少需要目标 function
+ * 但光 function 无法确定所属插件是否卸载，因此还需要 plugin handle
+ * 在不改动 spdlog 源码的情况下，不能直接封装为函数，因此封装为宏匿名函数
+ */
+#define FILE_EVENT_FUNCTION(plugin, func)                                                           \
+    [plugin, func](const spdlog::filename_t &filename)                                              \
     {                                                                                               \
-        if (func)                                                                                   \
+        if (func && plsys->PluginFromHandle(plugin, nullptr))                                       \
         {                                                                                           \
             auto path = Log4sp::UnbuildPath<SourceMod::PathType::Path_Game>(filename);              \
             auto fwd  = forwards->CreateForwardEx(nullptr, SourceMod::ExecType::ET_Ignore, 1, nullptr, SourceMod::ParamType::Param_String);\
