@@ -103,7 +103,7 @@ private:
             }
 
             auto loc = CellSourceLoc(logMsg.source);
-            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc), 0)) {
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t), 0)) {
                 SinkHandler::Instance().FreeHandle(sink, &security);
                 throw_spdlog_ex(format("Failed to push loc into CallbackSink log forward (error {})", err));
             }

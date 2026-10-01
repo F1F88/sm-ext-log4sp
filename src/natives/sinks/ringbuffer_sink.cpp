@@ -108,7 +108,7 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
             }
 
             auto loc = Log4sp::CellSourceLoc(logMsg.source);
-            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc), 0))
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t), 0))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;
@@ -250,7 +250,7 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
             }
 
             auto loc = Log4sp::CellSourceLoc(logMsg.source);
-            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc), 0))
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t), 0))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;
