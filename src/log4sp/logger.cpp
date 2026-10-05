@@ -467,7 +467,7 @@ void Logger::ErrHelper::HandleEx(const std::string &origin, const SrcHelper &src
             }
             return;
         }
-        smutils->LogError(myself, "[%s::%d] [%s] %s", FilenameFrom(loc.filename), loc.line, origin.c_str(), ex.what());
+        smutils->LogError(myself, "[%s:%d] [%s] %s", FilenameFrom(loc.filename), loc.line, origin.c_str(), ex.what());
     }
     catch (const std::exception &ex)
     {

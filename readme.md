@@ -294,7 +294,7 @@ void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
             if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s::%d] ",
+        FormatEx(source, sizeof(source), "[%s:%d] ",
                  loc.filename[sepOffset], loc.line);
     }
     LogError("[%s] %s%s", origin, source, msg);

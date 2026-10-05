@@ -108,11 +108,11 @@ methodmap RingBufferSink < Sink
                                                                   null, INVALID_FUNCTION,
                                                                   null, __RingBufferSink_OnClose));
         sink.__SetMaxSize(maxSize);
-        sink.__SetLogTimes(new ArrayList(ByteCountToCells(22)));
+        sink.__SetLogTimes(new ArrayList(22));
         sink.__SetLocs(new ArrayList(sizeof(SourceLoc)));
-        sink.__SetNames(new ArrayList(ByteCountToCells(128)));
-        sink.__SetLvls(new ArrayList(_));
-        sink.__SetMsgs(new ArrayList(ByteCountToCells(LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH)));
+        sink.__SetNames(new ArrayList(128)); // HACK: Hard-coded size
+        sink.__SetLvls(new ArrayList());
+        sink.__SetMsgs(new ArrayList(LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH));
         return sink;
     }
 
@@ -130,15 +130,17 @@ methodmap RingBufferSink < Sink
         ArrayList lvls = this.__GetLvls();
         ArrayList msgs = this.__GetMsgs();
 
-        int index = length - 1;
         SourceLoc loc;
-        char logTime[21], name[128], msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        char logTime = new char[logTimes.BlockSize];
+        char name    = new char[names.BlockSize];
+        char msg     = new char[msgs.BlockSize];
 
-        logTimes.GetString(index, logTime, sizeof(logTime));
+        int index = length - 1;
+        logTimes.GetString(index, logTime, logTimes.BlockSize);
         locs.GetArray(index, loc);
-        names.GetString(index, name, sizeof(name));
+        names.GetString(index, name, names.BlockSize);
         LogLevel lvl = lvls.Get(index);
-        msgs.GetString(index, msg, sizeof(msg));
+        msgs.GetString(index, msg, msgs.BlockSize);
 
         logTimes.Erase(index);
         locs.Erase(index);
@@ -163,8 +165,7 @@ methodmap RingBufferSink < Sink
             ThrowError("Invalid RingBufferSink Handle %x.", this);
 
         ArrayList logTimes = this.__GetLogTimes();
-        int length = logTimes.Length;
-        if (length <= 0)
+        if (logTimes.Length <= 0)
             return false;
 
         ArrayList locs = this.__GetLocs();
@@ -172,10 +173,12 @@ methodmap RingBufferSink < Sink
         ArrayList lvls = this.__GetLvls();
         ArrayList msgs = this.__GetMsgs();
 
-        int index = 0;
         SourceLoc loc;
-        char logTime[21], name[128], msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
+        char logTime = new char[logTimes.BlockSize];
+        char name    = new char[names.BlockSize];
+        char msg     = new char[msgs.BlockSize];
 
+        int index = 0;
         logTimes.GetString(index, logTime, sizeof(logTime));
         locs.GetArray(index, loc);
         names.GetString(index, name, sizeof(name));

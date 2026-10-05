@@ -1231,7 +1231,7 @@ methodmap Logger < Handle
                 if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                     sepOffset = i + 1;
             }
-            FormatEx(source, sizeof(source), "[%s::%u] ", loc.filename[sepOffset], loc.line);
+            FormatEx(source, sizeof(source), "[%s:%u] ", loc.filename[sepOffset], loc.line);
         }
 
         char level[2];
@@ -1259,7 +1259,7 @@ methodmap Logger < Handle
                     if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                         sepOffset = i + 1;
                 }
-                FormatEx(source, sizeof(source), "[%s::%u] ", loc.filename[sepOffset], loc.line);
+                FormatEx(source, sizeof(source), "[%s:%u] ", loc.filename[sepOffset], loc.line);
             }
             LogError("%s[%s] %s", source, origin, msg);
         }

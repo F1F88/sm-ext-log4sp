@@ -81,7 +81,7 @@ public bool __ServerConsoleSink_OnLog(Sink sink, char[] error, int maxlen, const
             if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s::%u] ", loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%u] ", loc.filename[sepOffset], loc.line);
     }
 
     char level[2];

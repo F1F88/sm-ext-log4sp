@@ -361,7 +361,7 @@ public bool __DailyFileSink_OnLog(DailyFileSink sink, char[] error, int maxlen, 
             if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s::%d] ", loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%d] ", loc.filename[sepOffset], loc.line);
     }
 
     char level[6];

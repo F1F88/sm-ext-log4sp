@@ -360,7 +360,7 @@ public bool __RotatingFileSink_OnLog(RotatingFileSink sink, char[] error, int ma
             else if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s::%d] ", loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%d] ", loc.filename[sepOffset], loc.line);
     }
 
     char level[6];
