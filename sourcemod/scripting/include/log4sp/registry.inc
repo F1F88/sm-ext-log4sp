@@ -98,7 +98,7 @@ methodmap LoggerRegistry < Handle
      * @param pattern   Formatting pattern.
      * @param type      Pattern time.
      */
-    public native void SetPattern(const char[] pattern, PatternTimeType type);
+    public native void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local);
 
     /**
      * Set the global flush level and update all loggers in the registry.
