@@ -33,6 +33,9 @@ methodmap ClientConsoleAllSink < CallbackSink
             return false;
 
         StringMap data = sink.GetData();
+        if (!data)
+            return false;
+
         char classname[32];
         data.GetString("m_szClassname", classname, sizeof(classname));
         return StrEqual(classname, "ClientConsoleAllSink");
@@ -83,11 +86,8 @@ public bool __ClientConsoleAllSink_OnLog(Sink sink, char[] error, int maxlen, co
     return true;
 }
 
-public void __ClientConsoleAllSink_OnClose(CallbackSink sink)
+public void __ClientConsoleAllSink_OnClose(StringMap data)
 {
-    delete view_as<StringMap>(sink.GetData());
-
-    // It will be destroyed soon, so ignore resetting it to null.
-    // sink.SetData(null);
+    delete data;
 }
 

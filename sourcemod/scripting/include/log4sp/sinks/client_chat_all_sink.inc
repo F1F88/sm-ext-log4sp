@@ -33,6 +33,9 @@ methodmap ClientChatAllSink < CallbackSink
             return false;
 
         StringMap data = sink.GetData();
+        if (!data)
+            return false;
+
         char classname[32];
         data.GetString("m_szClassname", classname, sizeof(classname));
         return StrEqual(classname, "ClientChatAllSink");
@@ -73,10 +76,7 @@ public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, const
     return true;
 }
 
-public void __ClientChatAllSink_OnClose(CallbackSink sink)
+public void __ClientChatAllSink_OnClose(StringMap data)
 {
-    delete view_as<StringMap>(sink.GetData());
-
-    // It will be destroyed soon, so ignore resetting it to null.
-    // sink.SetData(null);
+    delete data;
 }
