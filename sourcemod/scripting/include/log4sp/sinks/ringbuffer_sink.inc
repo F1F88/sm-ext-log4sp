@@ -131,9 +131,9 @@ methodmap RingBufferSink < Sink
         ArrayList msgs = this.__GetMsgs();
 
         SourceLoc loc;
-        char logTime = new char[logTimes.BlockSize];
-        char name    = new char[names.BlockSize];
-        char msg     = new char[msgs.BlockSize];
+        char[] logTime = new char[logTimes.BlockSize];
+        char[] name    = new char[names.BlockSize];
+        char[] msg     = new char[msgs.BlockSize];
 
         int index = length - 1;
         logTimes.GetString(index, logTime, logTimes.BlockSize);
@@ -174,16 +174,16 @@ methodmap RingBufferSink < Sink
         ArrayList msgs = this.__GetMsgs();
 
         SourceLoc loc;
-        char logTime = new char[logTimes.BlockSize];
-        char name    = new char[names.BlockSize];
-        char msg     = new char[msgs.BlockSize];
+        char[] logTime = new char[logTimes.BlockSize];
+        char[] name    = new char[names.BlockSize];
+        char[] msg     = new char[msgs.BlockSize];
 
         int index = 0;
-        logTimes.GetString(index, logTime, sizeof(logTime));
+        logTimes.GetString(index, logTime, logTimes.BlockSize);
         locs.GetArray(index, loc);
-        names.GetString(index, name, sizeof(name));
+        names.GetString(index, name, names.BlockSize);
         LogLevel lvl = lvls.Get(index);
-        msgs.GetString(index, msg, sizeof(msg));
+        msgs.GetString(index, msg, msgs.BlockSize);
 
         logTimes.Erase(index);
         locs.Erase(index);

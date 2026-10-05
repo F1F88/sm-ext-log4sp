@@ -408,7 +408,7 @@ static any Native_Registry_SetErrorHandler(Handle plugin, int numParams)
     // https://github.com/alliedmodders/sourcepawn/issues/671
     ErrorHandler errorFunc = GetNativeCell(3);
     if (errorFunc == INVALID_FUNCTION)
-        ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid Error Handler.");
 
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
     for (int i = 0; i < snapshot.Length; ++i)

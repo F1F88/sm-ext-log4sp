@@ -855,6 +855,9 @@ methodmap Logger < Handle
     }
 
     public int GetSinksLength() {
+        if (!this.IsValid())
+            ThrowError("Invalid Logger Handle %x.", this);
+
         return this.__GetSinks().Length;
     }
 
