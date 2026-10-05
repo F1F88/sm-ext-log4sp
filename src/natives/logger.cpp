@@ -526,7 +526,7 @@ static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *par
 
     SourcePawn::IPluginFunction *func = plugin->GetBaseContext()->GetFunctionByIdOrError(params[3]);
     if (!func)
-        return false;
+        return 0;
 
     try
     {

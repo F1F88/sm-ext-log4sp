@@ -30,7 +30,7 @@ public:
     explicit Logger(std::string name) noexcept
         : m_Name(std::move(name)) {}
 
-    ~Logger();
+    ~Logger() noexcept;
 
     // Log with no format string, just string message
     void Log(IPluginContext *ctx, LevelEnum lvl, string_view_t msg) const noexcept {

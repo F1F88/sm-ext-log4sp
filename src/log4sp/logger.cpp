@@ -8,11 +8,35 @@
 
 namespace Log4sp {
 
-Logger::~Logger()
+Logger::~Logger() noexcept
 {
+    SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
     while (!m_SinkHandles.empty())
     {
-        DropSink(m_SinkHandles.back());
+        auto handle = m_SinkHandles.back();
+        auto sink = SinkHandler::Instance().ReadHandle(handle, &security, &error);
+
+        if (!sink)
+        {
+            // 内部逻辑错误?
+            std::array<char, 256> buffer;
+            smutils->Format(buffer.data(), buffer.size(), "Failed to read a Sink Handle %x (error %d)", handle, error);
+            spdlog::source_loc loc{__FILE__, __LINE__, SPDLOG_FUNCTION};
+            std::exception ex{buffer.data()};
+            m_ErrHelper.HandleEx(m_Name, {loc}, ex);
+        }
+        else
+        {
+            // HACK: CallbackSink
+            if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
+                callbackSink->DropHandle(handle);
+        }
+
+        m_Sinks.pop_back();
+        m_SinkHandles.pop_back();
+        SinkHandler::Instance().FreeHandle(handle, &security);
     }
 }
 
@@ -65,7 +89,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
         m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(loc, ctx));
 
         if (shouldThrow)
-            ThrowIt(LogMsg(m_Name, lvl, "unknown format exception"), ctx);
+            ThrowIt(LogMsg(loc, m_Name, lvl, "unknown format exception"), ctx);
         return;
     }
 }
@@ -258,9 +282,6 @@ void Logger::DropSink(Handle_t handle)
     // HACK: CallbackSink
     if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
         callbackSink->DropHandle(handle);
-
-    // 以拓展身份关闭 Sink
-    security.pOwner = myself->GetIdentity();
 
     // Sinks 里可能有多个同样的 Sink
     // 从后向前遍历，避免删除元素时索引变化的问题
