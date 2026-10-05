@@ -106,7 +106,7 @@ public void OnPluginStart()
 
 ### 参数格式化
 
-以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L64) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogF` 方法则先将参数格式化，再输出格式化后的日志消息。
+以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L62) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogF` 方法则先将参数格式化，再输出格式化后的日志消息。
 
 参数格式化在 **Logger** 层执行，且仅当日志消息级别 **≥** logger 日志级别时才会触发。
 
@@ -292,8 +292,7 @@ void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
             if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s:%d] ",
-                 loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%d] ", loc.filename[sepOffset], loc.line);
     }
     LogError("[%s] %s%s", origin, source, msg);
 }

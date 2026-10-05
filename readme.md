@@ -10,7 +10,7 @@ With log4sp, developers can easily track plugin behavior, debug issues, and moni
 
 1. Very fast, much faster than [SourceMod Logging](https://sm.alliedmods.net/new-api/logging).
 2. Support log filtering - [log levels](#Log-Levels) can be modified at runtime as well as compile time.
-3. Support for large log message - over 1024 characters will not be [truncated](#Format)
+3. Support for large log message - over [1024](https://github.com/alliedmodders/sourcemod/blob/be89b25d96486900a57e07661f992836479f4fc4/core/logic/smn_filesystem.cpp#L936-L970) characters will not be [truncated](#Format)
 4. Support custom [log message pattern](#Pattern).
 5. Support logging [no error throwing](#Error-Handler).
 6. Support various [sinks (log targets)](./sourcemod/scripting/include/log4sp/sinks).
@@ -106,7 +106,7 @@ File `game/addons/sourcemod/logs/simple-file.log`:
 
 ### Format
 
-Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L33) as an example, ordinary `Log` method only output the log message as is, while the `LogF` method will format the parameters first and then output the formatted log message.
+Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L62) as an example, ordinary `Log` method only output the log message as is, while the `LogF` method will format the parameters first and then output the formatted log message.
 
 Parameters formatting is performed at **Logger** layer and is triggered only if log message level **>=** logger log level.
 
@@ -169,7 +169,7 @@ Sink default pattern and sample outputs are:
 ```
 
 ```
-[2001-01-01 12:34:56.789] [log4sp] [info] [example.sp:123] Hello World!
+[2001-02-03 12:34:56.789] [my-logger] [info] [example.sp:123] Hello World!
 ```
 
 ```sourcepawn
@@ -294,8 +294,7 @@ void MyErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
             if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s:%d] ",
-                 loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%d] ", loc.filename[sepOffset], loc.line);
     }
     LogError("[%s] %s%s", origin, source, msg);
 }
@@ -369,7 +368,7 @@ Server console:
 
 Throw Level controls whether a Logger should also trigger a SourceMod runtime error and interrupt the current execution when processing a log message.
 
-Unlike the [Log Level](#log-level), Throw Level independently controls whether a runtime error should be triggered.
+Unlike the [Log Levels](#Log-Levels), Throw Level independently controls whether a runtime error should be triggered.
 
 A runtime error is triggered only when the log message level is **≥** the Logger's throw level.
 
@@ -423,7 +422,7 @@ This is particularly useful for scenarios where an error should both be logged a
 Without Throw Level, a typical parameter validation would need to perform both operations separately:
 
 ```sourcepawn
-logger.Error("Invalid client index: {}", client);
+logger.Error("Invalid client index: %d", client);
 ThrowError("Invalid client index: %d", client);
 ```
 
@@ -669,7 +668,7 @@ These loggers can then be managed using Registry Natives, menus or console comma
 
 - Regularly flush all loggers in the registry.
 
-    In the [Flush Policy](#Flush Policy) section, periodic refreshes require you to write your own code to implement, and the solution is not elegant.
+    In the [Flush Policy](#Flush-Policy) section, periodic refreshes require you to write your own code to implement, and the solution is not elegant.
 
     A similar effect can be easily achieved with the manager plugin:
 
