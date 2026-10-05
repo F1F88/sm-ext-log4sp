@@ -406,18 +406,30 @@ enum struct Long
     }
 
     Long Shl(int num) {
+        num &= 63;
+        if (num == 0)
+            return this;
+
         Long result;
         result.__digits = this.__digits << num;
         return result;
     }
 
     Long Shr(int num) {
+        num &= 63;
+        if (num == 0)
+            return this;
+
         Long result;
         result.__digits = this.__digits >>> num;
         return result;
     }
 
     Long Sar(int num) {
+        num &= 63;
+        if (num == 0)
+            return this;
+
         Long result;
         result.__digits = this.__digits >> num;
         return result;
