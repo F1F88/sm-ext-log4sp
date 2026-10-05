@@ -191,7 +191,7 @@ static CommandCode CmdExecute_Log(DataPack data)
         PrintToServer("[SM] Usage: %s", COMMANDS_USAGE[Cmd_Log]);
         return CmdCode_BadArgCount;
     }
-    char level[8];
+    char level[32];
     data.ReadString(level, sizeof(level));
 
     LogLevel lvl = NameToLogLevel(level);
@@ -232,7 +232,7 @@ static CommandCode CmdExecute_ShouldLog(DataPack data)
         PrintToServer("[SM] Usage: %s", COMMANDS_USAGE[Cmd_ShouldLog]);
         return CmdCode_BadArgCount;
     }
-    char level[8];
+    char level[32];
     data.ReadString(level, sizeof(level));
 
     LogLevel lvl = NameToLogLevel(level);
@@ -266,7 +266,7 @@ static CommandCode CmdExecute_GetLvl(DataPack data)
         return CmdCode_InvalidArg;
     }
 
-    char level[8];
+    char level[32];
     LogLevelToName(level, sizeof(level), logger.GetLevel());
 
     PrintToServer("[SM] Logger \"%s\" log level is \"%s\".", name, level);
@@ -297,7 +297,7 @@ static CommandCode CmdExecute_SetLvl(DataPack data)
         PrintToServer("[SM] Usage: %s", COMMANDS_USAGE[Cmd_SetLvl]);
         return CmdCode_BadArgCount;
     }
-    char level[8];
+    char level[32];
     data.ReadString(level, sizeof(level));
 
     LogLevel lvl = NameToLogLevel(level);
@@ -305,7 +305,7 @@ static CommandCode CmdExecute_SetLvl(DataPack data)
         StringToIntEx(level, view_as<int>(lvl));
     LogLevelToName(level, sizeof(level), lvl);
 
-    char oldLevel[8];
+    char oldLevel[32];
     LogLevelToName(oldLevel, sizeof(oldLevel), logger.GetLevel());
 
     logger.SetLevel(lvl);
@@ -397,7 +397,7 @@ static CommandCode CmdExecute_ShouldFlush(DataPack data)
         PrintToServer("[SM] Usage: %s", COMMANDS_USAGE[Cmd_ShouldFlush]);
         return CmdCode_BadArgCount;
     }
-    char level[8];
+    char level[32];
     data.ReadString(level, sizeof(level));
 
     LogLevel lvl = NameToLogLevel(level);
@@ -431,7 +431,7 @@ static CommandCode CmdExecute_GetFlushLvl(DataPack data)
         return CmdCode_InvalidArg;
     }
 
-    char level[8];
+    char level[32];
     LogLevelToName(level, sizeof(level), logger.GetFlushLevel());
 
     PrintToServer("[SM] Logger \"%s\" flush level is \"%s\".", name, level);
@@ -463,7 +463,7 @@ static CommandCode CmdExecute_SetFlushLvl(DataPack data)
         PrintToServer("[SM] Usage: %s", COMMANDS_USAGE[Cmd_SetFlushLvl]);
         return CmdCode_BadArgCount;
     }
-    char level[8];
+    char level[32];
     data.ReadString(level, sizeof(level));
 
     LogLevel lvl = NameToLogLevel(level);
@@ -471,7 +471,7 @@ static CommandCode CmdExecute_SetFlushLvl(DataPack data)
         StringToIntEx(level, view_as<int>(lvl));
     LogLevelToName(level, sizeof(level), lvl);
 
-    char oldLevel[8];
+    char oldLevel[32];
     LogLevelToName(oldLevel, sizeof(oldLevel), logger.GetFlushLevel());
 
     logger.SetFlushLevel(lvl);
@@ -543,7 +543,7 @@ static CommandCode CmdExecute_ApplyAll(DataPack data)
         return CmdCode_OK;
     }
 
-    PrintToServer("[SM] Apply all command \"%s\" noe exists.", command);
+    PrintToServer("[SM] Apply all command \"%s\" not exists.", command);
     return CmdCode_InvalidArg;
 }
 

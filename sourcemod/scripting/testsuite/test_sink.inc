@@ -30,7 +30,7 @@ enum struct LogEvent
     }
 
     int ToString(char[] buffer, int maxlen) {
-        char level[8];
+        char level[32];
         LogLevelToName(level, sizeof(level), this.lvl);
         return FormatEx(buffer, maxlen,
             "LogEvent{time=\"%s\",loc={func=\"%s\",line=%d,file=\"%s\"},name=\"%s\",lvl=\"%d\",msg=\"%s\"}.",
