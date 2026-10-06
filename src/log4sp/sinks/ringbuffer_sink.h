@@ -1,3 +1,6 @@
+// Portions of this file are derived from spdlog (https://github.com/gabime/spdlog):
+// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
 // ref: https://github.com/gabime/spdlog/blob/v2.x/include/spdlog/sinks/ringbuffer_sink.h
 #pragma once
 
