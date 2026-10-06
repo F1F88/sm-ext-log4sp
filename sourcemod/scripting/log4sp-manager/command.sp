@@ -179,7 +179,7 @@ static CommandCode CmdExecute_Log(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -220,7 +220,7 @@ static CommandCode CmdExecute_ShouldLog(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -259,7 +259,7 @@ static CommandCode CmdExecute_GetLvl(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -285,7 +285,7 @@ static CommandCode CmdExecute_SetLvl(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -325,7 +325,7 @@ static CommandCode CmdExecute_SetPattern(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -361,7 +361,7 @@ static CommandCode CmdExecute_Flush(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -385,7 +385,7 @@ static CommandCode CmdExecute_ShouldFlush(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -424,7 +424,7 @@ static CommandCode CmdExecute_GetFlushLvl(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -450,7 +450,7 @@ static CommandCode CmdExecute_SetFlushLvl(DataPack data)
     char name[COMMAND_MAX_LENGTH];
     data.ReadString(name, sizeof(name));
 
-    Logger logger = Log4spRegistry.Instance().Get(name);
+    Logger logger = LoggerRegistry.Instance().Get(name);
     if (!logger)
     {
         PrintToServer("[SM] Logger \"%s\" not exists.", name);
@@ -510,7 +510,7 @@ static CommandCode CmdExecute_ApplyAll(DataPack data)
 
         // Get all registered logger names
         StringMap loggers = new StringMap();
-        Log4spRegistry.Instance().ApplyAll(null, CB_OnApplyAll_GetNames, loggers);
+        LoggerRegistry.Instance().ApplyAll(null, CB_OnApplyAll_GetNames, loggers);
         StringMapSnapshot snapshot = loggers.Snapshot();
         delete loggers;
 
@@ -551,7 +551,7 @@ static CommandCode CmdExecute_List(DataPack data)
 {
     // Get all registered logger names
     StringMap loggers = new StringMap();
-    Log4spRegistry.Instance().ApplyAll(null, CB_OnApplyAll_GetNames, loggers);
+    LoggerRegistry.Instance().ApplyAll(null, CB_OnApplyAll_GetNames, loggers);
     StringMapSnapshot snapshot = loggers.Snapshot();
     delete loggers;
 

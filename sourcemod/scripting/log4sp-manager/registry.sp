@@ -25,26 +25,26 @@ static bool             m_bAutomaticRegistration = true;
 void CreateRegistryNatives()
 {
     //* 不要忘记添加新增的 Native 到 __pl_log4sp_manager_SetNTVOptional !!! *//
-    CreateNative("Log4spRegistry.RegisterLogger",           Native_Registry_RegisterLogger);
-    CreateNative("Log4spRegistry.InitializeLogger",         Native_Registry_InitializeLogger);
-    CreateNative("Log4spRegistry.Get",                      Native_Registry_Get);
-    CreateNative("Log4spRegistry.GetGlobal",                Native_Registry_GetGlobal);
-    CreateNative("Log4spRegistry.GetGlobalRaw",             Native_Registry_GetGlobalRaw);
-    CreateNative("Log4spRegistry.SetGlobalLogger",          Native_Registry_SetGlobalLogger);
-    CreateNative("Log4spRegistry.SetLevel",                 Native_Registry_SetLevel);
-    CreateNative("Log4spRegistry.SetPattern",               Native_Registry_SetPattern);
-    CreateNative("Log4spRegistry.SetFlushLevel",            Native_Registry_SetFlushLevel);
-    CreateNative("Log4spRegistry.SetFlushEvery",            Native_Registry_SetFlushEvery);
-    CreateNative("Log4spRegistry.GetFlusher",               Native_Registry_GetFlusher);
-    CreateNative("Log4spRegistry.SetErrorHandler",          Native_Registry_SetErrorHandler);
-    CreateNative("Log4spRegistry.ApplyAll",                 Native_Registry_ApplyAll);
-    CreateNative("Log4spRegistry.FlushAll",                 Native_Registry_FlushAll);
-    CreateNative("Log4spRegistry.Drop",                     Native_Registry_Drop);
-    CreateNative("Log4spRegistry.DropAll",                  Native_Registry_DropAll);
-    CreateNative("Log4spRegistry.SetAutomaticRegistration", Native_Registry_SetAutomaticRegistration);
-    CreateNative("Log4spRegistry.SetLevels",                Native_Registry_SetLevels);
-    CreateNative("Log4spRegistry.ApplyLoggerEnvLevels",     Native_Registry_ApplyLoggerEnvLevels);
-    CreateNative("Log4spRegistry.Instance",                 Native_Registry_Instance);
+    CreateNative("LoggerRegistry.RegisterLogger",           Native_Registry_RegisterLogger);
+    CreateNative("LoggerRegistry.InitializeLogger",         Native_Registry_InitializeLogger);
+    CreateNative("LoggerRegistry.Get",                      Native_Registry_Get);
+    CreateNative("LoggerRegistry.GetGlobal",                Native_Registry_GetGlobal);
+    CreateNative("LoggerRegistry.GetGlobalRaw",             Native_Registry_GetGlobalRaw);
+    CreateNative("LoggerRegistry.SetGlobalLogger",          Native_Registry_SetGlobalLogger);
+    CreateNative("LoggerRegistry.SetLevel",                 Native_Registry_SetLevel);
+    CreateNative("LoggerRegistry.SetPattern",               Native_Registry_SetPattern);
+    CreateNative("LoggerRegistry.SetFlushLevel",            Native_Registry_SetFlushLevel);
+    CreateNative("LoggerRegistry.SetFlushEvery",            Native_Registry_SetFlushEvery);
+    CreateNative("LoggerRegistry.GetFlusher",               Native_Registry_GetFlusher);
+    CreateNative("LoggerRegistry.SetErrorHandler",          Native_Registry_SetErrorHandler);
+    CreateNative("LoggerRegistry.ApplyAll",                 Native_Registry_ApplyAll);
+    CreateNative("LoggerRegistry.FlushAll",                 Native_Registry_FlushAll);
+    CreateNative("LoggerRegistry.Drop",                     Native_Registry_Drop);
+    CreateNative("LoggerRegistry.DropAll",                  Native_Registry_DropAll);
+    CreateNative("LoggerRegistry.SetAutomaticRegistration", Native_Registry_SetAutomaticRegistration);
+    CreateNative("LoggerRegistry.SetLevels",                Native_Registry_SetLevels);
+    CreateNative("LoggerRegistry.ApplyLoggerEnvLevels",     Native_Registry_ApplyLoggerEnvLevels);
+    CreateNative("LoggerRegistry.Instance",                 Native_Registry_Instance);
 }
 
 void InitializeRegistryMembers()
@@ -64,7 +64,7 @@ void InitializeRegistryMembers()
     SinkCloseAndDelete(sink);
 
     // Register global logger
-    Log4spRegistry.Instance().RegisterLogger(m_hGlobalLogger);
+    LoggerRegistry.Instance().RegisterLogger(m_hGlobalLogger);
     m_hLoggers.SetValue("", m_hGlobalLogger.Clone());
 }
 
@@ -95,7 +95,7 @@ void RegistryHandleOwnershipPatch(Handle plugin)
 
             if (StrEqual(filename, owner))
             {
-                Log4spRegistry.Instance().Drop(key);
+                LoggerRegistry.Instance().Drop(key);
                 LogMessage("[Patch] Due to the unload of plugin \"%s\", the registry drop the logger \"%s\".", filename, key);
             }
         }
@@ -181,7 +181,7 @@ static any Native_Registry_InitializeLogger(Handle plugin, int numParams)
 
     // Register if need
     if (m_bAutomaticRegistration)
-        Log4spRegistry.Instance().RegisterLogger(logger);
+        LoggerRegistry.Instance().RegisterLogger(logger);
     return 0;
 }
 
@@ -261,7 +261,7 @@ static any Native_Registry_SetGlobalLogger(Handle plugin, int numParams)
         char[] name = new char[size];
         m_hGlobalLogger.GetName(name, size);
 
-        Log4spRegistry.Instance().Drop(name);
+        LoggerRegistry.Instance().Drop(name);
         LoggerCloseAndDelete(m_hGlobalLogger);
     }
 
@@ -269,7 +269,7 @@ static any Native_Registry_SetGlobalLogger(Handle plugin, int numParams)
     m_hGlobalLogger = view_as<Logger>(logger.Clone());
 
     // Register new global logger
-    Log4spRegistry.Instance().RegisterLogger(m_hGlobalLogger);
+    LoggerRegistry.Instance().RegisterLogger(m_hGlobalLogger);
     return 0;
 }
 
@@ -544,7 +544,7 @@ static any Native_Registry_DropAll(Handle plugin, int numParams)
         char[] key = new char[keyLen + 1];
         snapshot.GetKey(i, key, keyLen + 1);
 
-        Log4spRegistry.Instance().Drop(key);
+        LoggerRegistry.Instance().Drop(key);
     }
     delete snapshot;
     return 0;

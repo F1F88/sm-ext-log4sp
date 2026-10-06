@@ -13,19 +13,19 @@
  * @param logger    Logger Handle.
  * @param data      Data value passed to callback.
  */
-typeset Log4spRegistryApplyAllFunction
+typeset LoggerRegistryApplyAllFunction
 {
     function void (Logger logger);
     function void (Logger logger, any data);
 };
 
 
-methodmap Log4spRegistry < Handle
+methodmap LoggerRegistry < Handle
 {
     /**
      * Clone the logger Handle and register it in the registry.
      *
-     * @note Registered loggers must be freed via Log4spRegistry.Drop().
+     * @note Registered loggers must be freed via LoggerRegistry.Drop().
      *
      * @param logger    Logger Handle to be registered.
      * @error           Invalid Logger Handle, or Logger with name already exists.
@@ -37,7 +37,7 @@ methodmap Log4spRegistry < Handle
      * according to the global settings, then clone the logger Handle and register it in the
      * registry.
      *
-     * @note Registered loggers must be freed via Log4spRegistry.Drop().
+     * @note Registered loggers must be freed via LoggerRegistry.Drop().
      *
      * @param logger    Logger Handle to be registered.
      * @error           Invalid Logger Handle, or Logger with name already exists.
@@ -137,7 +137,7 @@ methodmap Log4spRegistry < Handle
      * @param data      Extra data value to pass to the callback.
      * @error           Invalid apply all function.
      */
-    public native void ApplyAll(Handle plugin, Log4spRegistryApplyAllFunction func, any data=0);
+    public native void ApplyAll(Handle plugin, LoggerRegistryApplyAllFunction func, any data=0);
 
     /**
      * Manual flush the contents of all loggers in the registry.
@@ -184,7 +184,7 @@ methodmap Log4spRegistry < Handle
      */
     public native void ApplyLoggerEnvLevels(Logger logger);
 
-    public static native Log4spRegistry Instance();
+    public static native LoggerRegistry Instance();
 
     public static bool LibraryExists() {
         return LibraryExists("log4sp_manager");
@@ -209,25 +209,25 @@ public SharedPlugin __pl_log4sp_manager =
 #if !defined REQUIRE_PLUGIN
 public void __pl_log4sp_manager_SetNTVOptional()
 {
-    MarkNativeAsOptional("Log4spRegistry.RegisterLogger");
-    MarkNativeAsOptional("Log4spRegistry.InitializeLogger");
-    MarkNativeAsOptional("Log4spRegistry.Get");
-    MarkNativeAsOptional("Log4spRegistry.GetGlobal");
-    MarkNativeAsOptional("Log4spRegistry.GetGlobalRaw");
-    MarkNativeAsOptional("Log4spRegistry.SetGlobalLogger");
-    MarkNativeAsOptional("Log4spRegistry.SetLevel");
-    MarkNativeAsOptional("Log4spRegistry.SetPattern");
-    MarkNativeAsOptional("Log4spRegistry.SetFlushLevel");
-    MarkNativeAsOptional("Log4spRegistry.SetFlushEvery");
-    MarkNativeAsOptional("Log4spRegistry.GetFlusher");
-    MarkNativeAsOptional("Log4spRegistry.SetErrorHandler");
-    MarkNativeAsOptional("Log4spRegistry.ApplyAll");
-    MarkNativeAsOptional("Log4spRegistry.FlushAll");
-    MarkNativeAsOptional("Log4spRegistry.Drop");
-    MarkNativeAsOptional("Log4spRegistry.DropAll");
-    MarkNativeAsOptional("Log4spRegistry.SetAutomaticRegistration");
-    MarkNativeAsOptional("Log4spRegistry.SetLevels");
-    MarkNativeAsOptional("Log4spRegistry.ApplyLoggerEnvLevels");
-    MarkNativeAsOptional("Log4spRegistry.Instance");
+    MarkNativeAsOptional("LoggerRegistry.RegisterLogger");
+    MarkNativeAsOptional("LoggerRegistry.InitializeLogger");
+    MarkNativeAsOptional("LoggerRegistry.Get");
+    MarkNativeAsOptional("LoggerRegistry.GetGlobal");
+    MarkNativeAsOptional("LoggerRegistry.GetGlobalRaw");
+    MarkNativeAsOptional("LoggerRegistry.SetGlobalLogger");
+    MarkNativeAsOptional("LoggerRegistry.SetLevel");
+    MarkNativeAsOptional("LoggerRegistry.SetPattern");
+    MarkNativeAsOptional("LoggerRegistry.SetFlushLevel");
+    MarkNativeAsOptional("LoggerRegistry.SetFlushEvery");
+    MarkNativeAsOptional("LoggerRegistry.GetFlusher");
+    MarkNativeAsOptional("LoggerRegistry.SetErrorHandler");
+    MarkNativeAsOptional("LoggerRegistry.ApplyAll");
+    MarkNativeAsOptional("LoggerRegistry.FlushAll");
+    MarkNativeAsOptional("LoggerRegistry.Drop");
+    MarkNativeAsOptional("LoggerRegistry.DropAll");
+    MarkNativeAsOptional("LoggerRegistry.SetAutomaticRegistration");
+    MarkNativeAsOptional("LoggerRegistry.SetLevels");
+    MarkNativeAsOptional("LoggerRegistry.ApplyLoggerEnvLevels");
+    MarkNativeAsOptional("LoggerRegistry.Instance");
 }
 #endif

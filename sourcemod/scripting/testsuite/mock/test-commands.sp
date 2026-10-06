@@ -49,7 +49,7 @@ void Test()
 
     SetTestContext("Commands");
 
-    AssertTrue("[log4sp manager library]", Log4spRegistry.LibraryExists());
+    AssertTrue("[log4sp manager library]", LoggerRegistry.LibraryExists());
     RegisterLogger();
 
     RequestFrame(TestCommandLog);
@@ -72,7 +72,7 @@ void Test()
 void TestCommandLog()
 {
     TestSink sink = GetTestSinkFromTestLogger();
-    Log4spRegistry.Instance().Get(LOGGER_NAME);
+    LoggerRegistry.Instance().Get(LOGGER_NAME);
 
     char buffer[1024];
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp log "...LOGGER_NAME..." trace \"Hello Log4sp 1.\"");
@@ -91,11 +91,11 @@ void TestCommandShouldLog()
     char buffer[1024];
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_log "...LOGGER_NAME..." debug");
     AssertStrMatch("[should_log]", buffer, "Logger \""...LOGGER_NAME..."\" are not enabled logging for \"debug\" level\\.[^\\S ]");
-    AssertFalse("[should_log]", Log4spRegistry.Instance().Get(LOGGER_NAME).ShouldLog(LogLevel_Debug));
+    AssertFalse("[should_log]", LoggerRegistry.Instance().Get(LOGGER_NAME).ShouldLog(LogLevel_Debug));
 
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_log "...LOGGER_NAME..." 3");
     AssertStrMatch("[should_log]", buffer, "Logger \""...LOGGER_NAME..."\" are enabled logging for \"warn\" level\\.[^\\S ]");
-    AssertTrue("[should_log]", Log4spRegistry.Instance().Get(LOGGER_NAME).ShouldLog(LogLevel_Warn));
+    AssertTrue("[should_log]", LoggerRegistry.Instance().Get(LOGGER_NAME).ShouldLog(LogLevel_Warn));
 }
 
 void TestCommandGetLvl()
@@ -103,7 +103,7 @@ void TestCommandGetLvl()
     char buffer[1024];
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp get_lvl " ... LOGGER_NAME);
     AssertStrMatch("[get_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" log level is \"info\"\\.[^\\S ]");
-    AssertEq("[get_lvl]", Log4spRegistry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Info);
+    AssertEq("[get_lvl]", LoggerRegistry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Info);
 }
 
 void TestCommandSetLvl()
@@ -111,11 +111,11 @@ void TestCommandSetLvl()
     char buffer[1024];
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_lvl "...LOGGER_NAME..." info");
     AssertStrMatch("[set_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set log level to \"info\"\\. \\(original: \"info\"\\)[^\\S ]");
-    AssertEq("[set_lvl]", Log4spRegistry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Info);
+    AssertEq("[set_lvl]", LoggerRegistry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Info);
 
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_lvl "...LOGGER_NAME..." 4");
     AssertStrMatch("[set_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set log level to \"error\"\\. \\(original: \"info\"\\)[^\\S ]");
-    AssertEq("[set_lvl]", Log4spRegistry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Error);
+    AssertEq("[set_lvl]", LoggerRegistry.Instance().Get(LOGGER_NAME).GetLevel(), LogLevel_Error);
 }
 
 void TestCommandSetPattern()
@@ -146,11 +146,11 @@ void TestCommandShouldFlush()
     char buffer[1024];
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_flush "...LOGGER_NAME..." warn");
     AssertStrMatch("[should_flush]", buffer, "Logger \""...LOGGER_NAME..."\" are not trigger automatic flush for \"warn\" level\\.[^\\S ]");
-    AssertFalse("[should_flush]", Log4spRegistry.Instance().Get(LOGGER_NAME).ShouldFlush(LogLevel_Warn));
+    AssertFalse("[should_flush]", LoggerRegistry.Instance().Get(LOGGER_NAME).ShouldFlush(LogLevel_Warn));
 
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp should_flush "...LOGGER_NAME..." 5");
     AssertStrMatch("[should_flush]", buffer, "Logger \""...LOGGER_NAME..."\" are not trigger automatic flush for \"fatal\" level\\.[^\\S ]");
-    AssertFalse("[should_flush]", Log4spRegistry.Instance().Get(LOGGER_NAME).ShouldFlush(LogLevel_Fatal));
+    AssertFalse("[should_flush]", LoggerRegistry.Instance().Get(LOGGER_NAME).ShouldFlush(LogLevel_Fatal));
 }
 
 void TestCommandGetFlushLvl()
@@ -158,7 +158,7 @@ void TestCommandGetFlushLvl()
     char buffer[1024];
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp get_flush_lvl " ... LOGGER_NAME);
     AssertStrMatch("[get_flush_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" flush level is \"off\"\\.[^\\S ]");
-    AssertEq("[get_flush_lvl]", Log4spRegistry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Off);
+    AssertEq("[get_flush_lvl]", LoggerRegistry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Off);
 }
 
 void TestCommandSetFlushLvl()
@@ -166,11 +166,11 @@ void TestCommandSetFlushLvl()
     char buffer[1024];
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_flush_lvl "...LOGGER_NAME..." error");
     AssertStrMatch("[set_flush_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set flush level to \"error\"\\. \\(original: \"off\"\\)[^\\S ]");
-    AssertEq("[set_flush_lvl]", Log4spRegistry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Error);
+    AssertEq("[set_flush_lvl]", LoggerRegistry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Error);
 
     ServerCommandEx(buffer, sizeof(buffer), "sm_log4sp set_flush_lvl "...LOGGER_NAME..." 6");
     AssertStrMatch("[set_flush_lvl]", buffer, "Logger \""...LOGGER_NAME..."\" set flush level to \"off\"\\. \\(original: \"error\"\\)[^\\S ]");
-    AssertEq("[set_flush_lvl]", Log4spRegistry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Off);
+    AssertEq("[set_flush_lvl]", LoggerRegistry.Instance().Get(LOGGER_NAME).GetFlushLevel(), LogLevel_Off);
 }
 
 void TestCommandApplyAll()
@@ -208,14 +208,14 @@ void TestCommandVersion()
 static TestSink GetTestSinkFromTestLogger()
 {
     Sink sink[1];
-    Log4spRegistry.Instance().Get(LOGGER_NAME).GetSinks(sink, sizeof(sink));
+    LoggerRegistry.Instance().Get(LOGGER_NAME).GetSinks(sink, sizeof(sink));
     return view_as<TestSink>(sink[0]);
 }
 
 static void RegisterLogger()
 {
     Logger logger = new Logger(LOGGER_NAME);
-    Log4spRegistry.Instance().RegisterLogger(logger);
+    LoggerRegistry.Instance().RegisterLogger(logger);
 
     TestSink sink = new TestSink();
     logger.AddSink(sink);
@@ -226,5 +226,5 @@ static void RegisterLogger()
 
 static void DropLogger()
 {
-    Log4spRegistry.Instance().Drop(LOGGER_NAME);
+    LoggerRegistry.Instance().Drop(LOGGER_NAME);
 }

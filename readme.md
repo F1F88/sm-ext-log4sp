@@ -590,10 +590,10 @@ These loggers can then be managed using Registry Natives, menus or console comma
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             Logger logger = new Logger("my-logger");
-            Log4spRegistry.Instance().RegisterLogger(logger);
+            LoggerRegistry.Instance().RegisterLogger(logger);
             logger.Close();
         }
     }
@@ -601,7 +601,7 @@ These loggers can then be managed using Registry Natives, menus or console comma
     public void OnPluginEnd()
     {
         // Drop it when your plugin unloads.
-        Log4spRegistry.Instance().Drop("my-logger");
+        LoggerRegistry.Instance().Drop("my-logger");
     }
     ```
 
@@ -614,9 +614,9 @@ These loggers can then be managed using Registry Natives, menus or console comma
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
-            Logger logger = Log4spRegistry.Instance().Get("my-logger");
+            Logger logger = LoggerRegistry.Instance().Get("my-logger");
             if (logger != INVALID_HANDLE)
             {
                 logger.Info("Some message");
@@ -638,10 +638,10 @@ These loggers can then be managed using Registry Natives, menus or console comma
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             Logger logger = new Logger("my-logger");
-            Log4spRegistry.Instance().SetGlobalLogger(logger);
+            LoggerRegistry.Instance().SetGlobalLogger(logger);
             logger.Close();
         }
     }
@@ -656,13 +656,13 @@ These loggers can then be managed using Registry Natives, menus or console comma
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             // Set the logger log level of all loggers in the registry to Warn
-            Log4spRegistry.Instance().SetLevel(LogLevel_Warn);
+            LoggerRegistry.Instance().SetLevel(LogLevel_Warn);
 
             // Set the logger flush level of all loggers in the registry to Error
-            Log4spRegistry.Instance().SetFlushLevel(LogLevel_Error);
+            LoggerRegistry.Instance().SetFlushLevel(LogLevel_Error);
         }
     }
     ```
@@ -679,10 +679,10 @@ These loggers can then be managed using Registry Natives, menus or console comma
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             // Flush all loggers in the registry every 5 seconds
-            Log4spRegistry.Instance().SetFlushEvery(5.0);
+            LoggerRegistry.Instance().SetFlushEvery(5.0);
         }
     }
     ```

@@ -585,10 +585,10 @@ flowchart TD
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             Logger logger = new Logger("my-logger");
-            Log4spRegistry.Instance().RegisterLogger(logger);
+            LoggerRegistry.Instance().RegisterLogger(logger);
             logger.Close();
         }
     }
@@ -596,7 +596,7 @@ flowchart TD
     public void OnPluginEnd()
     {
         // Drop it when your plugin unloads.
-        Log4spRegistry.Instance().Drop("my-logger");
+        LoggerRegistry.Instance().Drop("my-logger");
     }
     ```
 
@@ -609,9 +609,9 @@ flowchart TD
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
-            Logger logger = Log4spRegistry.Instance().Get("my-logger");
+            Logger logger = LoggerRegistry.Instance().Get("my-logger");
             if (logger != INVALID_HANDLE)
             {
                 logger.Info("Some message");
@@ -633,10 +633,10 @@ flowchart TD
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             Logger logger = new Logger("my-logger");
-            Log4spRegistry.Instance().SetGlobalLogger(logger);
+            LoggerRegistry.Instance().SetGlobalLogger(logger);
             logger.Close();
         }
     }
@@ -651,13 +651,13 @@ flowchart TD
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             // 修改注册表中所有记录器的日志级别为 Warn
-            Log4spRegistry.Instance().SetLevel(LogLevel_Warn);
+            LoggerRegistry.Instance().SetLevel(LogLevel_Warn);
 
             // 修改注册表中所有记录器的自动刷写级别为 Error
-            Log4spRegistry.Instance().SetFlushLevel(LogLevel_Error);
+            LoggerRegistry.Instance().SetFlushLevel(LogLevel_Error);
         }
     }
     ```
@@ -674,10 +674,10 @@ flowchart TD
 
     public void OnPluginStart()
     {
-        if (Log4spRegistry.LibraryExists())
+        if (LoggerRegistry.LibraryExists())
         {
             // 每隔 5 秒刷写注册表中所有记录器
-            Log4spRegistry.Instance().SetFlushEvery(5.0);
+            LoggerRegistry.Instance().SetFlushEvery(5.0);
         }
     }
     ```
