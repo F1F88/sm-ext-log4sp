@@ -593,10 +593,10 @@ static any Native_Registry_SetLevels(Handle plugin, int numParams)
             // else: SM BUG?
         }
         delete snapshot;
+        delete m_hLogLevels;
+        m_hLogLevels = view_as<StringMap>(CloneHandle(levels));
     }
 
-    delete m_hLogLevels;
-    m_hLogLevels = view_as<StringMap>(CloneHandle(levels));
     m_eGlobalLogLevel = globalLevel;
     return 0;
 }
@@ -618,7 +618,7 @@ static any Native_Registry_ApplyLoggerEnvLevels(Handle plugin, int numParams)
 
     // Set new level according to previously configured level or default level
     LogLevel lvl;
-    if (m_hLogLevels.GetValue(name, lvl))
+    if (m_hLogLevels && m_hLogLevels.GetValue(name, lvl))
         logger.SetLevel(lvl);
     else
         logger.SetLevel(m_eGlobalLogLevel);
