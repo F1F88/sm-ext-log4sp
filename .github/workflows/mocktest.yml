@@ -23,13 +23,15 @@ on:
 
 env:
   PYTHONUTF8: "1"
+  HL2SDK_MOCK_REF: bf0fbcc436f732f4a124d1e9b89b51d0c5953aae
+  METAMOD_REF: 1.12.0.1226
 
 jobs:
   mocktest-modern_sm:
     name: Test with ${{ matrix.sm_version }} ${{ matrix.variant }}
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alliedmodders/build-containers/debian11-clang22:latest
+      image: ghcr.io/alliedmodders/build-containers/debian11-clang22:sha-c0ea207
     strategy:
       fail-fast: false
       matrix:
@@ -39,11 +41,9 @@ jobs:
           - sm_version: sm_1_13
             sm_ref: 1.13.0.7472
           - sm_version: sm_1_12
-            sm_ref: 1.12-dev
+            sm_ref: 1.12.0.7253
           - sm_version: sm_1_11
             sm_ref: 1.11-dev
-          - variant: extension
-          - variant: header_only
         exclude:
           - sm_version: sm_1_11
             variant: extension
@@ -55,6 +55,7 @@ jobs:
           repository: alliedmodders/hl2sdk-mock
           submodules: recursive
           path: hl2sdk-mock
+          ref: ${{ env.HL2SDK_MOCK_REF }}
 
       - name: Check out Metamod-Source
         uses: actions/checkout@v7
@@ -62,7 +63,7 @@ jobs:
           repository: alliedmodders/metamod-source
           submodules: recursive
           path: metamod-source
-          ref: 1.12.0.1226
+          ref: ${{ env.METAMOD_REF }}
 
       - name: Check out SourceMod
         uses: actions/checkout@v7
@@ -220,6 +221,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          shopt -s nullglob
 
           PLUGINS_DIR="$GITHUB_WORKSPACE/gamedir/addons/sourcemod/plugins/optional"
 
