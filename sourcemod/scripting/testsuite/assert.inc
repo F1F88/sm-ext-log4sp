@@ -88,23 +88,30 @@ static int  __Assert_iCounter = 0;
 static char __Assert_sSuiteName[ASSERT_OPTION_MAX_CONTEXT_LENGTH] = {'\0', ...};
 
 
-// *** Optional code modification to customize processing logic on failure/success *** //
-static void ASSERT_OPTION_ON_FAIL(const char[] name, char[] fmt, any ...)
+// *** Optional macro function to customize processing logic on failure/success *** //
+static void AssertOnFail(const char[] name, char[] fmt, any ...)
 {
-    char buffer[512];
-    VFormat(buffer, sizeof(buffer), fmt, 3);
-    ThrowError("[%2u] [FAIL] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), buffer);
+    char message[1024];
+    VFormat(message, sizeof(message), fmt, 3);
+
+#if !defined ASSERT_OPTION_ON_FAIL
+    ThrowError("[%2u] [FAIL] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), message);
+#else
+    ASSERT_OPTION_ON_FAIL(__Assert_iCounter, __Assert_sSuiteName, name, message);
+#endif
 }
 
-static void ASSERT_OPTION_ON_OK(const char[] name, char[] fmt, any ...)
+static void AssertOnPass(const char[] name, char[] fmt, any ...)
 {
-#if defined ASSERT_QUIET
-    #pragma unused name
-    #pragma unused fmt
+    char message[1024];
+    VFormat(message, sizeof(message), fmt, 3);
+
+#if !defined ASSERT_OPTION_ON_PASS
+#if !defined ASSERT_QUIET
+    PrintToServer("[%2u] [ OK ] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), message);
+#endif
 #else
-    char buffer[1024];
-    VFormat(buffer, sizeof(buffer), fmt, 3);
-    PrintToServer("[%2u] [ OK ] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), buffer);
+    ASSERT_OPTION_ON_PASS(__Assert_iCounter, __Assert_sSuiteName, name, message);
 #endif
 }
 
@@ -119,112 +126,64 @@ stock void AssertTrue(const char[] name, bool value)
 {
     __Assert_iCounter++;
     bool ok = value;
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value == true, got false");
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value == true");
-    }
+    if (!ok)    AssertOnFail(name, "expected value == true, got false");
+    else        AssertOnPass(name, "value == true");
 }
 
 stock void AssertFalse(const char[] name, bool value)
 {
     __Assert_iCounter++;
     bool ok = !value;
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value == false, got true");
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value == false");
-    }
+    if (!ok)    AssertOnFail(name, "expected value == false, got true");
+    else        AssertOnPass(name, "value == false");
 }
 
 stock void AssertLt(const char[] name, any value, any expected)
 {
     __Assert_iCounter++;
     bool ok = (value < expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value < %d, got %d", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %d < %d", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value < %d, got %d", expected, value);
+    else        AssertOnPass(name, "value %d < %d", value, expected);
 }
 
 stock void AssertLe(const char[] name, any value, any expected)
 {
     __Assert_iCounter++;
     bool ok = (value <= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value <= %d, got %d", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %d <= %d", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value <= %d, got %d", expected, value);
+    else        AssertOnPass(name, "value %d <= %d", value, expected);
 }
 
 stock void AssertEq(const char[] name, any value, any expected)
 {
     __Assert_iCounter++;
     bool ok = (value == expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value == %d, got %d", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value == %d", expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value == %d, got %d", expected, value);
+    else        AssertOnPass(name, "value == %d", expected);
 }
 
 stock void AssertNe(const char[] name, any value, any expected)
 {
     __Assert_iCounter++;
     bool ok = (value != expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value != %d, got equals", expected);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %d != %d", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value != %d, got equals", expected);
+    else        AssertOnPass(name, "value %d != %d", value, expected);
 }
 
 stock void AssertGe(const char[] name, any value, any expected)
 {
     __Assert_iCounter++;
     bool ok = (value >= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value >= %d, got %d", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %d >= %d", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value >= %d, got %d", expected, value);
+    else        AssertOnPass(name, "value %d >= %d", value, expected);
 }
 
 stock void AssertGt(const char[] name, any value, any expected)
 {
     __Assert_iCounter++;
     bool ok = (value > expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value > %d, got %d", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %d > %d", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value > %d, got %d", expected, value);
+    else        AssertOnPass(name, "value %d > %d", value, expected);
 }
 
 stock void AssertArrayEq(const char[] name, const any[] value, const any[] expected, int length)
@@ -236,13 +195,13 @@ stock void AssertArrayEq(const char[] name, const any[] value, const any[] expec
         char valueStr[512], expectedStr[512];
         __ArrayToString(valueStr, sizeof(valueStr), value, length);
         __ArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_FAIL(name, "expected array == %s, got %s", expectedStr, valueStr);
+        AssertOnFail(name, "expected array == %s, got %s", expectedStr, valueStr);
     }
     else
     {
         char expectedStr[1024];
         __ArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_OK(name, "array == %s", expectedStr);
+        AssertOnPass(name, "array == %s", expectedStr);
     }
 }
 
@@ -254,14 +213,14 @@ stock void AssertArrayNe(const char[] name, const any[] value, const any[] expec
     {
         char expectedStr[1024];
         __ArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_FAIL(name, "expected array != %s, got equals", expectedStr);
+        AssertOnFail(name, "expected array != %s, got equals", expectedStr);
     }
     else
     {
         char valueStr[512], expectedStr[512];
         __ArrayToString(valueStr, sizeof(valueStr), value, length);
         __ArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_OK(name, "array %s != %s", valueStr, expectedStr);
+        AssertOnPass(name, "array %s != %s", valueStr, expectedStr);
     }
 }
 
@@ -274,13 +233,13 @@ stock void AssertArray2DEq(const char[] name, const any[][] value, const any[][]
         char valueStr[512], expectedStr[512];
         __Array2DToString(valueStr, sizeof(valueStr), value, rows, cols);
         __Array2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_FAIL(name, "expected array 2D == %s, got %s", expectedStr, valueStr);
+        AssertOnFail(name, "expected array 2D == %s, got %s", expectedStr, valueStr);
     }
     else
     {
         char expectedStr[1024];
         __Array2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_OK(name, "array 2D == %s", expectedStr);
+        AssertOnPass(name, "array 2D == %s", expectedStr);
     }
 }
 
@@ -292,14 +251,14 @@ stock void AssertArray2DNe(const char[] name, const any[][] value, const any[][]
     {
         char expectedStr[1024];
         __Array2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_FAIL(name, "expected array 2D != %s, got equals", expectedStr);
+        AssertOnFail(name, "expected array 2D != %s, got equals", expectedStr);
     }
     else
     {
         char valueStr[512], expectedStr[512];
         __Array2DToString(valueStr, sizeof(valueStr), value, rows, cols);
         __Array2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_OK(name, "array 2D %s != %s", valueStr, expectedStr);
+        AssertOnPass(name, "array 2D %s != %s", valueStr, expectedStr);
     }
 }
 
@@ -307,28 +266,16 @@ stock void AssertFloatEq(const char[] name, float value, float expected)
 {
     __Assert_iCounter++;
     bool ok = __FloatNearlyEq(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value == %f, got %f", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value == %f", expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value == %f, got %f", expected, value);
+    else        AssertOnPass(name, "value == %f", expected);
 }
 
 stock void AssertFloatNe(const char[] name, float value, float expected)
 {
     __Assert_iCounter++;
     bool ok = !__FloatNearlyEq(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value != %f, got equals", expected);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %f != %f", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value != %f, got equals", expected);
+    else        AssertOnPass(name, "value %f != %f", value, expected);
 }
 
 stock void AssertFloatArrayEq(const char[] name, const float[] value, const float[] expected, int length)
@@ -340,13 +287,13 @@ stock void AssertFloatArrayEq(const char[] name, const float[] value, const floa
         char valueStr[512], expectedStr[512];
         __FloatArrayToString(valueStr, sizeof(valueStr), value, length);
         __FloatArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_FAIL(name, "expected array == %s, got %s", expectedStr, valueStr);
+        AssertOnFail(name, "expected array == %s, got %s", expectedStr, valueStr);
     }
     else
     {
         char expectedStr[1024];
         __FloatArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_OK(name, "array == %s", expectedStr);
+        AssertOnPass(name, "array == %s", expectedStr);
     }
 }
 
@@ -358,14 +305,14 @@ stock void AssertFloatArrayNe(const char[] name, const float[] value, const floa
     {
         char expectedStr[1024];
         __FloatArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_FAIL(name, "expected array != %s, got equals", expectedStr);
+        AssertOnFail(name, "expected array != %s, got equals", expectedStr);
     }
     else
     {
         char valueStr[512], expectedStr[512];
         __FloatArrayToString(valueStr, sizeof(valueStr), value, length);
         __FloatArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_OK(name, "array %s != %s", valueStr, expectedStr);
+        AssertOnPass(name, "array %s != %s", valueStr, expectedStr);
     }
 }
 
@@ -378,13 +325,13 @@ stock void AssertFloatArray2DEq(const char[] name, const any[][] value, const an
         char valueStr[512], expectedStr[512];
         __FloatArray2DToString(valueStr, sizeof(valueStr), value, rows, cols);
         __FloatArray2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_FAIL(name, "expected array 2D == %s, got %s", expectedStr, valueStr);
+        AssertOnFail(name, "expected array 2D == %s, got %s", expectedStr, valueStr);
     }
     else
     {
         char expectedStr[1024];
         __FloatArray2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_OK(name, "array 2D == %s", expectedStr);
+        AssertOnPass(name, "array 2D == %s", expectedStr);
     }
 }
 
@@ -396,14 +343,14 @@ stock void AssertFloatArray2DNe(const char[] name, const any[][] value, const an
     {
         char expectedStr[1024];
         __FloatArray2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_FAIL(name, "expected array 2D != %s, got equals", expectedStr);
+        AssertOnFail(name, "expected array 2D != %s, got equals", expectedStr);
     }
     else
     {
         char valueStr[512], expectedStr[512];
         __FloatArray2DToString(valueStr, sizeof(valueStr), value, rows, cols);
         __FloatArray2DToString(expectedStr, sizeof(expectedStr), expected, rows, cols);
-        ASSERT_OPTION_ON_OK(name, "array 2D %s != %s", valueStr, expectedStr);
+        AssertOnPass(name, "array 2D %s != %s", valueStr, expectedStr);
     }
 }
 
@@ -411,28 +358,16 @@ stock void AssertStrEq(const char[] name, const char[] value, const char[] expec
 {
     __Assert_iCounter++;
     bool ok = StrEqual(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string == \"%s\", got \"%s\"", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string == \"%s\"", expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string == \"%s\", got \"%s\"", expected, value);
+    else        AssertOnPass(name, "string == \"%s\"", expected);
 }
 
 stock void AssertStrNe(const char[] name, const char[] value, const char[] expected)
 {
     __Assert_iCounter++;
     bool ok = !StrEqual(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string != \"%s\", got equals", expected);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string \"%s\" != \"%s\"", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string != \"%s\", got equals", expected);
+    else        AssertOnPass(name, "string \"%s\" != \"%s\"", value, expected);
 }
 
 stock void AssertStrArrayEq(const char[] name, const char[][] value, const char[][] expected, int length)
@@ -452,13 +387,13 @@ stock void AssertStrArrayEq(const char[] name, const char[][] value, const char[
 
     if (!ok)
     {
-        ASSERT_OPTION_ON_FAIL(name, "expected array[%u] == \"%s\", got \"%s\"", index, expected[index], value[index]);
+        AssertOnFail(name, "expected array[%u] == \"%s\", got \"%s\"", index, expected[index], value[index]);
     }
     else
     {
         char expectedStr[1024];
         __StrArrayToString(expectedStr, sizeof(expectedStr), value, length);
-        ASSERT_OPTION_ON_OK(name, "array == %s", expectedStr);
+        AssertOnPass(name, "array == %s", expectedStr);
     }
 }
 
@@ -479,14 +414,14 @@ stock void AssertStrArrayNe(const char[] name, const char[][] value, const char[
 
     if (!ok)
     {
-        ASSERT_OPTION_ON_FAIL(name, "expected array[%u] != \"%s\", got equals", index, expected[index], value[index]);
+        AssertOnFail(name, "expected array[%u] != \"%s\", got equals", index, expected[index], value[index]);
     }
     else
     {
         char valueStr[512], expectedStr[512];
         __StrArrayToString(valueStr, sizeof(valueStr), value, length);
         __StrArrayToString(expectedStr, sizeof(expectedStr), expected, length);
-        ASSERT_OPTION_ON_OK(name, "array %s != %s", valueStr, expectedStr);
+        AssertOnPass(name, "array %s != %s", valueStr, expectedStr);
     }
 }
 
@@ -494,84 +429,48 @@ stock void AssertStrContains(const char[] name, const char[] value, const char[]
 {
     __Assert_iCounter++;
     bool ok = (StrContains(value, expected) != -1);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string contains \"%s\", got \"%s\"", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string \"%s\" contains \"%s\"", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string contains \"%s\", got \"%s\"", expected, value);
+    else        AssertOnPass(name, "string \"%s\" contains \"%s\"", value, expected);
 }
 
 stock void AssertStrNotContains(const char[] name, const char[] value, const char[] expected)
 {
     __Assert_iCounter++;
     bool ok = (StrContains(value, expected) == -1);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string not contains \"%s\", got \"%s\"", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string \"%s\" not contains \"%s\"", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string not contains \"%s\", got \"%s\"", expected, value);
+    else        AssertOnPass(name, "string \"%s\" not contains \"%s\"", value, expected);
 }
 
 stock void AssertStrStartsWith(const char[] name, const char[] value, const char[] expected)
 {
     __Assert_iCounter++;
     bool ok = __StrStartsWith(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string starts with \"%s\", got \"%s\"", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string \"%s\" starts with \"%s\"", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string starts with \"%s\", got \"%s\"", expected, value);
+    else        AssertOnPass(name, "string \"%s\" starts with \"%s\"", value, expected);
 }
 
 stock void AssertStrNotStartsWith(const char[] name, const char[] value, const char[] expected)
 {
     __Assert_iCounter++;
     bool ok = !__StrStartsWith(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string not starts with \"%s\", got \"%s\"", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string \"%s\" not starts with \"%s\"", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string not starts with \"%s\", got \"%s\"", expected, value);
+    else        AssertOnPass(name, "string \"%s\" not starts with \"%s\"", value, expected);
 }
 
 stock void AssertStrEndsWith(const char[] name, const char[] value, const char[] expected)
 {
     __Assert_iCounter++;
     bool ok = __StrEndsWith(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string ends with \"%s\", got \"%s\"", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string \"%s\" ends with \"%s\"", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string ends with \"%s\", got \"%s\"", expected, value);
+    else        AssertOnPass(name, "string \"%s\" ends with \"%s\"", value, expected);
 }
 
 stock void AssertStrNotEndsWith(const char[] name, const char[] value, const char[] expected)
 {
     __Assert_iCounter++;
     bool ok = !__StrEndsWith(value, expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string not ends with \"%s\", got \"%s\"", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string \"%s\" not ends with \"%s\"", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected string not ends with \"%s\", got \"%s\"", expected, value);
+    else        AssertOnPass(name, "string \"%s\" not ends with \"%s\"", value, expected);
 }
 
 stock void AssertFilesLt(const char[] name, const char[] directory, int expected)
@@ -580,15 +479,10 @@ stock void AssertFilesLt(const char[] name, const char[] directory, int expected
     char buffer[PLATFORM_MAX_PATH];
     __SplitPathByFile(buffer, sizeof(buffer), "", 0, directory);
     int value = __CountFiles(buffer);
+
     bool ok = (value < expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected directory \"%s\" files < %u, got %u", buffer, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "directory \"%s\" files %u < %u", buffer, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected directory \"%s\" files < %u, got %u", buffer, expected, value);
+    else        AssertOnPass(name, "directory \"%s\" files %u < %u", buffer, value, expected);
 }
 
 stock void AssertFilesLe(const char[] name, const char[] directory, int expected)
@@ -598,14 +492,8 @@ stock void AssertFilesLe(const char[] name, const char[] directory, int expected
     __SplitPathByFile(buffer, sizeof(buffer), "", 0, directory);
     int value = __CountFiles(buffer);
     bool ok = (value <= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected directory \"%s\" files <= %u, got %u", buffer, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "directory \"%s\" files %u <= %u", buffer, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected directory \"%s\" files <= %u, got %u", buffer, expected, value);
+    else        AssertOnPass(name, "directory \"%s\" files %u <= %u", buffer, value, expected);
 }
 
 stock void AssertFilesEq(const char[] name, const char[] directory, int expected)
@@ -614,15 +502,10 @@ stock void AssertFilesEq(const char[] name, const char[] directory, int expected
     char buffer[PLATFORM_MAX_PATH];
     __SplitPathByFile(buffer, sizeof(buffer), "", 0, directory);
     int value = __CountFiles(buffer);
+
     bool ok = (value == expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected directory \"%s\" files == %u, got %u", buffer, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "directory \"%s\" files == %u", buffer, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected directory \"%s\" files == %u, got %u", buffer, expected, value);
+    else        AssertOnPass(name, "directory \"%s\" files == %u", buffer, expected);
 }
 
 stock void AssertFilesNe(const char[] name, const char[] directory, int expected)
@@ -631,15 +514,10 @@ stock void AssertFilesNe(const char[] name, const char[] directory, int expected
     char buffer[PLATFORM_MAX_PATH];
     __SplitPathByFile(buffer, sizeof(buffer), "", 0, directory);
     int value = __CountFiles(buffer);
+
     bool ok = (value != expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected directory \"%s\" files != %u, got equals", buffer, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "directory \"%s\" files %u != %u", buffer, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected directory \"%s\" files != %u, got equals", buffer, expected, value);
+    else        AssertOnPass(name, "directory \"%s\" files %u != %u", buffer, value, expected);
 }
 
 stock void AssertFilesGe(const char[] name, const char[] directory, int expected)
@@ -648,15 +526,10 @@ stock void AssertFilesGe(const char[] name, const char[] directory, int expected
     char buffer[PLATFORM_MAX_PATH];
     __SplitPathByFile(buffer, sizeof(buffer), "", 0, directory);
     int value = __CountFiles(buffer);
+
     bool ok = (value >= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected directory \"%s\" files >= %u, got %u", buffer, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "directory \"%s\" files %u >= %u", buffer, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected directory \"%s\" files >= %u, got %u", buffer, expected, value);
+    else        AssertOnPass(name, "directory \"%s\" files %u >= %u", buffer, value, expected);
 }
 
 stock void AssertFilesGt(const char[] name, const char[] directory, int expected)
@@ -665,15 +538,10 @@ stock void AssertFilesGt(const char[] name, const char[] directory, int expected
     char buffer[PLATFORM_MAX_PATH];
     __SplitPathByFile(buffer, sizeof(buffer), "", 0, directory);
     int value = __CountFiles(buffer);
+
     bool ok = (value > expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected directory \"%s\" files > %u, got %u", buffer, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "directory \"%s\" files %u > %u", buffer, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected directory \"%s\" files > %u, got %u", buffer, expected, value);
+    else        AssertOnPass(name, "directory \"%s\" files %u > %u", buffer, value, expected);
 }
 
 stock void AssertFileLinesLt(const char[] name, const char[] filename, int expected)
@@ -681,14 +549,8 @@ stock void AssertFileLinesLt(const char[] name, const char[] filename, int expec
     __Assert_iCounter++;
     int value = __CountFileLines(filename);
     bool ok = (value < expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" lines < %u, got %u", filename, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" lines %u < %u", filename, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" lines < %u, got %u", filename, expected, value);
+    else        AssertOnPass(name, "file \"%s\" lines %u < %u", filename, value, expected);
 }
 
 stock void AssertFileLinesLe(const char[] name, const char[] filename, int expected)
@@ -696,14 +558,8 @@ stock void AssertFileLinesLe(const char[] name, const char[] filename, int expec
     __Assert_iCounter++;
     int value = __CountFileLines(filename);
     bool ok = (value <= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" lines <= %u, got %u", filename, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" lines %u <= %u", filename, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" lines <= %u, got %u", filename, expected, value);
+    else        AssertOnPass(name, "file \"%s\" lines %u <= %u", filename, value, expected);
 }
 
 stock void AssertFileLinesEq(const char[] name, const char[] filename, int expected)
@@ -711,14 +567,8 @@ stock void AssertFileLinesEq(const char[] name, const char[] filename, int expec
     __Assert_iCounter++;
     int value = __CountFileLines(filename);
     bool ok = (value == expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" lines == %u, got %u", filename, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" lines == %u", filename, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" lines == %u, got %u", filename, expected, value);
+    else        AssertOnPass(name, "file \"%s\" lines == %u", filename, expected);
 }
 
 stock void AssertFileLinesNe(const char[] name, const char[] filename, int expected)
@@ -726,14 +576,8 @@ stock void AssertFileLinesNe(const char[] name, const char[] filename, int expec
     __Assert_iCounter++;
     int value = __CountFileLines(filename);
     bool ok = (value != expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" lines != %u, got equals", filename, expected);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" lines %u != %u", filename, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" lines != %u, got equals", filename, expected);
+    else        AssertOnPass(name, "file \"%s\" lines %u != %u", filename, value, expected);
 }
 
 stock void AssertFileLinesGe(const char[] name, const char[] filename, int expected)
@@ -741,14 +585,8 @@ stock void AssertFileLinesGe(const char[] name, const char[] filename, int expec
     __Assert_iCounter++;
     int value = __CountFileLines(filename);
     bool ok = (value >= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" lines >= %u, got %u", filename, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" lines %u >= %u", filename, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" lines >= %u, got %u", filename, expected, value);
+    else        AssertOnPass(name, "file \"%s\" lines %u >= %u", filename, value, expected);
 }
 
 stock void AssertFileLinesGt(const char[] name, const char[] filename, int expected)
@@ -756,14 +594,8 @@ stock void AssertFileLinesGt(const char[] name, const char[] filename, int expec
     __Assert_iCounter++;
     int value = __CountFileLines(filename);
     bool ok = (value > expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" lines > %u, got %u", filename, expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" lines %u > %u", filename, value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" lines > %u, got %u", filename, expected, value);
+    else        AssertOnPass(name, "file \"%s\" lines %u > %u", filename, value, expected);
 }
 
 #if defined _regex_included
@@ -779,14 +611,8 @@ stock void AssertStrMatch(const char[] name, const char[] value, const char[] ex
         ThrowError("Regular matching error %s.", error);
 
     bool ok = (substrings > 0);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string match \"%s\", got \"%s\"", expectedPattern, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string match \"%s\"", expectedPattern);
-    }
+    if (!ok)    AssertOnFail(name, "expected string match \"%s\", got \"%s\"", expectedPattern, value);
+    else        AssertOnPass(name, "string match \"%s\"", expectedPattern);
 }
 
 stock void AssertStrNotMatch(const char[] name, const char[] value, const char[] expectedPattern)
@@ -798,14 +624,8 @@ stock void AssertStrNotMatch(const char[] name, const char[] value, const char[]
         ThrowError("Regular matching error %s.", error);
 
     bool ok = (substrings <= 0);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected string not match \"%s\", got \"%s\"", expectedPattern, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "string not match \"%s\"", expectedPattern);
-    }
+    if (!ok)    AssertOnFail(name, "expected string not match \"%s\", got \"%s\"", expectedPattern, value);
+    else        AssertOnPass(name, "string not match \"%s\"", expectedPattern);
 }
 
 stock void AssertFileMatch(const char[] name, const char[] filename, const char[] expectedPattern)
@@ -824,14 +644,8 @@ stock void AssertFileMatch(const char[] name, const char[] filename, const char[
         ThrowError("Regular matching error %s.", error);
 
     bool ok = (substrings > 0);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" match \"%s\", got not match", filename, expectedPattern, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" match \"%s\"", filename, expectedPattern);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" match \"%s\", got not match", filename, expectedPattern, value);
+    else        AssertOnPass(name, "file \"%s\" match \"%s\"", filename, expectedPattern);
 }
 
 stock void AssertFileNotMatch(const char[] name, const char[] filename, const char[] expectedPattern)
@@ -850,14 +664,8 @@ stock void AssertFileNotMatch(const char[] name, const char[] filename, const ch
         ThrowError("Regular matching error %s.", error);
 
     bool ok = (substrings <= 0);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected file \"%s\" not match \"%s\", got match", filename, expectedPattern, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "file \"%s\" not match \"%s\"", filename, expectedPattern);
-    }
+    if (!ok)    AssertOnFail(name, "expected file \"%s\" not match \"%s\", got match", filename, expectedPattern, value);
+    else        AssertOnPass(name, "file \"%s\" not match \"%s\"", filename, expectedPattern);
 }
 #endif
 
@@ -866,84 +674,48 @@ stock void AssertInt64Lt(const char[] name, int64 value, int64 expected)
 {
     __Assert_iCounter++;
     bool ok = (value < expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value < %ld, got %ld", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %ld < %ld", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value < %ld, got %ld", expected, value);
+    else        AssertOnPass(name, "value %ld < %ld", value, expected);
 }
 
 stock void AssertInt64Le(const char[] name, int64 value, int64 expected)
 {
     __Assert_iCounter++;
     bool ok = (value <= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value <= %ld, got %ld", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %ld <= %ld", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value <= %ld, got %ld", expected, value);
+    else        AssertOnPass(name, "value %ld <= %ld", value, expected);
 }
 
 stock void AssertInt64Eq(const char[] name, int64 value, int64 expected)
 {
     __Assert_iCounter++;
     bool ok = (value == expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value == %ld, got %ld", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value == %ld", expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value == %ld, got %ld", expected, value);
+    else        AssertOnPass(name, "value == %ld", expected);
 }
 
 stock void AssertInt64Ne(const char[] name, int64 value, int64 expected)
 {
     __Assert_iCounter++;
     bool ok = (value != expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value != %ld, got equals", expected);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %ld != %ld", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value != %ld, got equals", expected);
+    else        AssertOnPass(name, "value %ld != %ld", value, expected);
 }
 
 stock void AssertInt64Ge(const char[] name, int64 value, int64 expected)
 {
     __Assert_iCounter++;
     bool ok = (value >= expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value >= %ld, got %ld", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %ld >= %ld", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value >= %ld, got %ld", expected, value);
+    else        AssertOnPass(name, "value %ld >= %ld", value, expected);
 }
 
 stock void AssertInt64Gt(const char[] name, int64 value, int64 expected)
 {
     __Assert_iCounter++;
     bool ok = (value > expected);
-    if (!ok)
-    {
-        ASSERT_OPTION_ON_FAIL(name, "expected value > %ld, got %ld", expected, value);
-    }
-    else
-    {
-        ASSERT_OPTION_ON_OK(name, "value %ld > %ld", value, expected);
-    }
+    if (!ok)    AssertOnFail(name, "expected value > %ld, got %ld", expected, value);
+    else        AssertOnPass(name, "value %ld > %ld", value, expected);
 }
 #endif
 
