@@ -26,49 +26,6 @@ spdlog::level::level_enum NumToLvl(const int value) noexcept
 }
 
 [[nodiscard]] constexpr
-spdlog::level::level_enum StrToLvl(const char *name) noexcept
-{
-    using spdlog::level::level_enum;
-    using spdlog::string_view_t;
-    constexpr string_view_t levels[] SPDLOG_LEVEL_NAMES;
-    constexpr int size = std::size(levels);
-    static_assert(size == level_enum::n_levels);
-
-    for (int i = 0; i < size; ++i)
-    {
-        if (!strcmp(name, levels[i].data()))
-            return NumToLvl(i);
-    }
-
-    if (!strcmp(name, "warning"))
-        return level_enum::warn;
-
-    if (!strcmp(name, "err"))
-        return level_enum::err;
-
-    if (!strcmp(name, "critical"))
-        return level_enum::critical;
-
-    return level_enum::off;
-}
-
-[[nodiscard]] constexpr
-spdlog::level::level_enum ShortNameToLevel(const char *name) noexcept
-{
-    using spdlog::level::level_enum;
-    constexpr const char *levels[] SPDLOG_SHORT_LEVEL_NAMES;
-    constexpr int size = std::size(levels);
-    static_assert(size == level_enum::n_levels);
-
-    for (int i = 0; i < size; ++i)
-    {
-        if (!strcmp(name, levels[i]))
-            return NumToLvl(i);
-    }
-    return level_enum::off;
-}
-
-[[nodiscard]] constexpr
 spdlog::pattern_time_type NumToPatternTimeType(const int type) noexcept
 {
     using spdlog::pattern_time_type;
