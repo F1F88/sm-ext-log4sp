@@ -11,32 +11,22 @@ namespace Log4sp {
 Logger::~Logger() noexcept
 {
     SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
 
     while (!m_SinkHandles.empty())
     {
         auto handle = m_SinkHandles.back();
-        auto sink = SinkHandler::Instance().ReadHandle(handle, &security, &error);
+        auto sink = SinkHandler::Instance().ReadHandle(handle, &security, nullptr);
 
-        if (!sink)
-        {
-            // 内部逻辑错误?
-            std::array<char, 256> buffer;
-            smutils->Format(buffer.data(), buffer.size(), "Failed to read a Sink Handle %x (error %d)", handle, error);
-            spdlog::source_loc loc{__FILE__, __LINE__, SPDLOG_FUNCTION};
-            std::exception ex{buffer.data()};
-            m_ErrHelper.HandleEx(m_Name, {loc}, ex);
-        }
-        else
-        {
-            // HACK: CallbackSink
-            if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
-                callbackSink->DropHandle(handle);
-        }
+        assert(sink);
+
+        // HACK: CallbackSink
+        if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
+            callbackSink->DropHandle(handle);
 
         m_Sinks.pop_back();
         m_SinkHandles.pop_back();
-        SinkHandler::Instance().FreeHandle(handle, &security);
+        auto error = SinkHandler::Instance().FreeHandle(handle, &security);
+        assert(error == SourceMod::HandleError::HandleError_None);
     }
 }
 
@@ -90,6 +80,8 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
 
         if (shouldThrow)
             ThrowIt(LogMsg(loc, m_Name, lvl, "unknown format exception"), ctx);
+
+        assert(false);
         return;
     }
 }
@@ -158,6 +150,8 @@ void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *par
 
         if (shouldThrow)
             ThrowIt(LogMsg(m_Name, lvl, "unknown format exception"), ctx);
+
+        assert(false);
         return;
     }
 }
@@ -203,7 +197,8 @@ std::size_t Logger::GetSinksHandleClone(cell_t *sinks, std::size_t size, SourceM
             // 发生错误, 先清理已克隆的 sink handle 再抛出错误信息
             for (std::size_t i = 0; i < counter; ++i)
             {
-                SinkHandler::Instance().FreeHandle(sinks[i], &security);
+                error = SinkHandler::Instance().FreeHandle(sinks[i], &security);
+                assert(error == SourceMod::HandleError::HandleError_None);
             }
 
             using spdlog::fmt_lib::format;
@@ -294,13 +289,17 @@ void Logger::DropSink(Handle_t handle)
             auto sinkHandle = m_SinkHandles.at(i);
             m_Sinks.erase(m_Sinks.begin() + i);
             m_SinkHandles.erase(m_SinkHandles.begin() + i);
-            SinkHandler::Instance().FreeHandle(sinkHandle, &security);
+            error = SinkHandler::Instance().FreeHandle(sinkHandle, &security);
+            assert(error == SourceMod::HandleError::HandleError_None);
         }
     }
 }
 
 void Logger::LogIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
 {
+    assert(msg.level >= Level_t::trace);
+    assert(msg.level <  Level_t::n_levels);
+
     for (auto &sink : m_Sinks)
     {
         if (sink->should_log(msg.level))
@@ -316,6 +315,7 @@ void Logger::LogIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
             catch (...)
             {
                 m_ErrHelper.HandleUnknownEx(m_Name, ErrHelper::SrcHelper(msg.source, ctx));
+                assert(false);
             }
         }
     }
@@ -339,17 +339,18 @@ void Logger::FlushIt(const ErrHelper::SrcHelper &source) const noexcept
         catch (...)
         {
             m_ErrHelper.HandleUnknownEx(m_Name, source);
+            assert(false);
         }
     }
 }
 
 void Logger::ThrowIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
 {
-    spdlog::memory_buf_t output;
-
-    // append short level
     assert(msg.level >= Level_t::trace);
     assert(msg.level <  Level_t::n_levels);
+
+    // append short level
+    spdlog::memory_buf_t output;
     output.push_back('[');
     output.push_back(to_short_c_str(msg.level)[0]);
     output.push_back(']');
