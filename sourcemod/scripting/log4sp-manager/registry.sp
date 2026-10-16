@@ -58,14 +58,17 @@ void InitializeRegistryMembers()
     m_hPatternData = new DataPack();
 
     // Create global logger
+    char name[] = "";
     ServerConsoleSink sink = new ServerConsoleSink();
-    m_hGlobalLogger = new Logger("");
+    m_hGlobalLogger = new Logger(name);
     m_hGlobalLogger.AddSink(sink);
     SinkCloseAndDelete(sink);
 
     // Register global logger
-    LoggerRegistry.Instance().RegisterLogger(m_hGlobalLogger);
-    m_hLoggers.SetValue("", m_hGlobalLogger.Clone());
+    // raw global handle        -->
+    //                              ==>  Global logger
+    // registry clone handle    -->
+    m_hLoggers.SetValue(name, m_hGlobalLogger.Clone());
 }
 
 // HACK: Remove when the Handle in Header Only mode can be completely cloned and closed
@@ -130,7 +133,7 @@ static any Native_Registry_RegisterLogger(Handle plugin, int numParams)
     if (m_hLoggers.ContainsKey(name))
         ThrowNativeError(SP_ERROR_PARAM, "Logger with name \"%s\" already exists.", name);
 
-    // Register and increment the reference count
+    // Cloning and registering the clone's handle
     m_hLoggers.SetValue(name, logger.Clone());
     return 0;
 }
@@ -217,7 +220,7 @@ static any Native_Registry_GetGlobal(Handle plugin, int numParams)
     if (!IsValidRegistryHandle(pThis))
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
 
-    if (!m_hGlobalLogger)
+    if (!m_hGlobalLogger.IsValid())
         return INVALID_HANDLE;
 
     // Get logger name
@@ -255,7 +258,7 @@ static any Native_Registry_SetGlobalLogger(Handle plugin, int numParams)
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Logger Handle %x.", logger);
 
     // Close and Drop global logger
-    if (m_hGlobalLogger)
+    if (m_hGlobalLogger.IsValid())
     {
         int size = m_hGlobalLogger.GetNameLength() + 1;
         char[] name = new char[size];
@@ -401,6 +404,8 @@ static any Native_Registry_SetErrorHandler(Handle plugin, int numParams)
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
 
     Handle errorPlugin = GetNativeCell(2);
+    if (!errorPlugin)
+        errorPlugin = plugin;
 
     // HACK: Replace GetNativeFunction() with GetNativeCell() to suppress compiler warnings.
     // warning 237: coercing functions to and from primitives is unsupported and will be removed in the future
@@ -503,10 +508,11 @@ static any Native_Registry_Drop(Handle plugin, int numParams)
         if (!m_hLoggers.GetValue(filename, logger))
             return 0;
 
-        // Drop and decrement the reference count
+        // Close the raw global logger
         if (m_hGlobalLogger.IsValid() && logger.Equals(m_hGlobalLogger))
             LoggerCloseAndDelete(m_hGlobalLogger);
 
+        // Close and unregister the clone's handle.
         m_hLoggers.Remove(filename);
         LoggerCloseAndDelete(logger);
     }
@@ -521,10 +527,11 @@ static any Native_Registry_Drop(Handle plugin, int numParams)
         if (!m_hLoggers.GetValue(name, logger))
             return 0;
 
-        // Drop and decrement the reference count
+        // Close the raw global logger
         if (m_hGlobalLogger.IsValid() && logger.Equals(m_hGlobalLogger))
             LoggerCloseAndDelete(m_hGlobalLogger);
 
+        // Close and unregister the clone's handle.
         m_hLoggers.Remove(name);
         LoggerCloseAndDelete(logger);
     }
