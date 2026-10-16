@@ -95,7 +95,28 @@ static void AssertOnFail(const char[] name, char[] fmt, any ...)
     VFormat(message, sizeof(message), fmt, 3);
 
 #if !defined ASSERT_OPTION_ON_FAIL
-    ThrowError("[%2u] [FAIL] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), message);
+    static Function func = INVALID_FUNCTION;
+    static bool initialized = false;
+    if (!initialized)
+    {
+        initialized = true;
+        func = GetFunctionByName(INVALID_HANDLE, "ASSERT_OPTION_ON_FAIL");
+    }
+
+    // public void ASSERT_OPTION_ON_FAIL(int counter, const char[] suite, const char[] name, const char[] msg)
+    if (func != INVALID_FUNCTION)
+    {
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(__Assert_iCounter);
+        Call_PushString(__Assert_sSuiteName);
+        Call_PushString(name);
+        Call_PushString(message);
+        Call_Finish();
+    }
+    else
+    {
+        ThrowError("[%2u] [FAIL] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), message);
+    }
 #else
     ASSERT_OPTION_ON_FAIL(__Assert_iCounter, __Assert_sSuiteName, name, message);
 #endif
@@ -107,9 +128,30 @@ static void AssertOnPass(const char[] name, char[] fmt, any ...)
     VFormat(message, sizeof(message), fmt, 3);
 
 #if !defined ASSERT_OPTION_ON_PASS
-#if !defined ASSERT_QUIET
-    PrintToServer("[%2u] [ OK ] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), message);
-#endif
+    static Function func = INVALID_FUNCTION;
+    static bool initialized = false;
+    if (!initialized)
+    {
+        initialized = true;
+        func = GetFunctionByName(INVALID_HANDLE, "ASSERT_OPTION_ON_PASS");
+    }
+
+    // public void ASSERT_OPTION_ON_PASS(int counter, const char[] suite, const char[] name, const char[] msg)
+    if (func != INVALID_FUNCTION)
+    {
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(__Assert_iCounter);
+        Call_PushString(__Assert_sSuiteName);
+        Call_PushString(name);
+        Call_PushString(message);
+        Call_Finish();
+    }
+    else
+    {
+        #if !defined ASSERT_QUIET
+        PrintToServer("[%2u] [ OK ] [%s] %s%s%s.", __Assert_iCounter, __Assert_sSuiteName, name, (name[0] ? " " : ""), message);
+        #endif
+    }
 #else
     ASSERT_OPTION_ON_PASS(__Assert_iCounter, __Assert_sSuiteName, name, message);
 #endif
