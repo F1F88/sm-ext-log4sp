@@ -56,6 +56,7 @@ public:
      * @param error     Optional pointer to store an error code on failure (undefined on success).
      * @return          A duplicated handle, or BAD_HANDLE on failure.
      */
+    [[nodiscard]]
     auto CloneHandle(SourceMod::Handle_t handle,
                      SourceMod::IdentityToken_t *owner,
                      SourceMod::HandleSecurity *security,
@@ -70,6 +71,7 @@ public:
      * @param security  Security information struct (may be NULL).
      * @return          A HandleError error code.
      */
+    [[nodiscard]]
     auto FreeHandle(SourceMod::Handle_t handle,
                     const SourceMod::HandleSecurity *security) noexcept -> SourceMod::HandleError;
 
@@ -93,7 +95,7 @@ public:
     IHandleTypeDispatchAdapter &operator=(const IHandleTypeDispatchAdapter &) = delete;
 
     static void Initialize()        { (void)Instance(); }
-    static void Destroy() noexcept  { Instance().RemoveHandleType(); }
+    static void Destroy() noexcept  { (void)Instance().RemoveHandleType(); }
 
     [[nodiscard]]
     static IHandleTypeDispatchAdapter &Instance() noexcept {
@@ -107,12 +109,14 @@ protected:
     IHandleTypeDispatchAdapter();
     virtual ~IHandleTypeDispatchAdapter() = default;
 
+    [[nodiscard]]
     auto CreateHandleType(const char *name,
                           SourceMod::HandleType_t parent,
                           const SourceMod::TypeAccess *typeAccess,
                           const SourceMod::HandleAccess *hndlAccess,
                           SourceMod::IdentityToken_t *ident) noexcept -> SourceMod::HandleError;
-    void RemoveHandleType() noexcept;
+    [[nodiscard]]
+    auto RemoveHandleType() noexcept -> bool;
 
     void OnHandleDestroy(SourceMod::HandleType_t type, void *object) noexcept override;
 };
@@ -208,13 +212,15 @@ inline auto IHandleTypeDispatchAdapter<TypePointer, TypeName>::CreateHandleType(
 }
 
 template <class TypePointer, const char *TypeName>
-inline void IHandleTypeDispatchAdapter<TypePointer, TypeName>::RemoveHandleType() noexcept
+inline bool IHandleTypeDispatchAdapter<TypePointer, TypeName>::RemoveHandleType() noexcept
 {
     if (m_HandleType)
     {
-        handlesys->RemoveType(m_HandleType, myself->GetIdentity());
+        bool result = handlesys->RemoveType(m_HandleType, myself->GetIdentity());
         m_HandleType = NO_HANDLE_TYPE;
+        return result;
     }
+    return false;
 }
 
 template <class TypePointer, const char *TypeName>
