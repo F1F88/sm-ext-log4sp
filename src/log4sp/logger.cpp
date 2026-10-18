@@ -31,7 +31,7 @@ Logger::~Logger() noexcept
 }
 
 // Log with no format string, just string message
-void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, string_view_t msg) const noexcept
+void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, StringView_t msg) const noexcept
 {
     bool shouldLog = ShouldLog(lvl);
     bool shouldThrow = ShouldThrow(lvl);
@@ -88,7 +88,7 @@ void Logger::Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, const
 
 // special log
 // log with stack trace
-void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, string_view_t msg) const noexcept
+void Logger::LogStackTrace(IPluginContext *ctx, LevelEnum lvl, StringView_t msg) const noexcept
 {
     bool shouldLog = ShouldLog(lvl);
     bool shouldThrow = ShouldThrow(lvl);
@@ -239,7 +239,7 @@ void Logger::AddSink(Handle_t handle)
     //    或关闭 Logger 来关闭所有 Sinks
     // 2. 不必存储 AddSink 时的 Plugin Info, 关闭 Logger 时清理 Sinks 更轻松
     // 3. 不必担心插件卸载导致克隆体被自动关闭
-    IdentityToken_t *owner = myself->GetIdentity();
+    SourceMod::IdentityToken_t *owner = myself->GetIdentity();
     auto cloned = SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
     if (!cloned)
     {

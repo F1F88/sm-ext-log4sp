@@ -21,7 +21,7 @@ public:
     using SinkPtr           = spdlog::sinks::sink*;
     using SinksInitList     = std::initializer_list<SinkPtr>;
     using SourceLoc         = spdlog::source_loc;
-    using string_view_t     = spdlog::string_view_t;
+    using StringView_t     = spdlog::string_view_t;
     using Handle_t          = SourceMod::Handle_t;
     using IdentityToken_t   = SourceMod::IdentityToken_t;
     using IPluginContext    = SourcePawn::IPluginContext;
@@ -33,10 +33,10 @@ public:
     ~Logger() noexcept;
 
     // Log with no format string, just string message
-    void Log(IPluginContext *ctx, LevelEnum lvl, string_view_t msg) const noexcept {
+    void Log(IPluginContext *ctx, LevelEnum lvl, StringView_t msg) const noexcept {
         Log(ctx, {}, lvl, msg);
     }
-    void Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, string_view_t msg) const noexcept;
+    void Log(IPluginContext *ctx, const SourceLoc &loc, LevelEnum lvl, StringView_t msg) const noexcept;
 
     // Log with format
     void Log(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept {
@@ -46,7 +46,7 @@ public:
 
     // special log
     // log with stack trace
-    void LogStackTrace(IPluginContext *ctx, LevelEnum lvl, string_view_t msg) const noexcept;
+    void LogStackTrace(IPluginContext *ctx, LevelEnum lvl, StringView_t msg) const noexcept;
     void LogStackTrace(IPluginContext *ctx, LevelEnum lvl, const cell_t *params, unsigned int param) const noexcept;
 
     // return true if logging is enabled for the given level.
