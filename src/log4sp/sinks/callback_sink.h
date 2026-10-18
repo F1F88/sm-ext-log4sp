@@ -194,7 +194,7 @@ private:
             }
 
             if (auto err = fwd->Execute()) {
-                smutils->LogError(myself, "Failed to execute CallbackSink close forward (error {})", err);
+                smutils->LogError(myself, "Failed to execute CallbackSink close forward (error %d)", err);
                 return;
             }
         }

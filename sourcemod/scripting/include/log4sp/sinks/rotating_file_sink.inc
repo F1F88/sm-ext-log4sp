@@ -156,7 +156,7 @@ methodmap RotatingFileSink < Sink
                             Handle openPlugin=null,  FileOpenFunction openFunc=INVALID_FUNCTION,
                             Handle closePlugin=null, FileCloseFunction closeFunc=INVALID_FUNCTION) {
         if (maxSize <= 0)
-            ThrowError("RotatingFileSink constructor param maxFile cannot be less than or equal to zero.");
+            ThrowError("RotatingFileSink constructor param maxSize cannot be less than or equal to zero.");
         if (maxFiles < 0)
             ThrowError("RotatingFileSink constructor param maxFiles cannot be less than zero.");
         if (maxFiles > RotatingFileSink.MaxFiles())

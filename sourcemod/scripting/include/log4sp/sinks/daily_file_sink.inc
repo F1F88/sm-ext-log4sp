@@ -128,8 +128,10 @@ methodmap DailyFileSink < Sink
                          Handle openPlugin=null,  FileOpenFunction openFunc=INVALID_FUNCTION,
                          Handle closePlugin=null, FileCloseFunction closeFunc=INVALID_FUNCTION) {
         const int UINT16_MAX = 0xFFFF;
-        if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
-            ThrowError("Invalid rotation time in ctor.");
+        if (hour < 0 || hour > 23)
+            ThrowError("Invalid rotation hour %d. [0-23]", hour);
+        if (minute < 0 || minute > 59)
+            ThrowError("Invalid rotation minute %d. [0-59]", minute);
         if (maxFiles < 0 || maxFiles > UINT16_MAX)
             ThrowError("Invalid maxFiles %u. [0-%u]", maxFiles, UINT16_MAX);
 

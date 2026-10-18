@@ -18,6 +18,18 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
     auto truncate = static_cast<bool>(params[4]);
     auto maxFiles = static_cast<uint16_t>(params[5]);
 
+    if (hour < 0 || hour > 23)
+    {
+        ctx->ReportError("Invalid rotation hour %d. [0-23]", hour);
+        return BAD_HANDLE;
+    }
+
+    if (minute < 0 || minute > 59)
+    {
+        ctx->ReportError("Invalid rotation minute %d. [0-59]", minute);
+        return BAD_HANDLE;
+    }
+
     if (params[5] < 0 || params[5] > UINT16_MAX)
     {
         ctx->ReportError("Invalid maxFiles %d. (0-%d)", params[5], UINT16_MAX);
