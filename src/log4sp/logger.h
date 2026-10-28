@@ -118,12 +118,16 @@ public:
 
     // sinks
     [[nodiscard]]
-    std::size_t GetSinksHandleClone(cell_t *sinks, std::size_t size, IdentityToken_t *owner) const;
-    [[nodiscard]]
-    std::size_t GetSinksLength() const noexcept;
+    const std::vector<SinkPtr> &Sinks() const noexcept;
 
-    void AddSink(Handle_t sink);
-    void DropSink(Handle_t sink);
+    [[nodiscard]]
+    std::vector<SinkPtr> &Sinks() noexcept;
+
+    [[nodiscard]]
+    const std::vector<Handle_t> &SinksHandle() const noexcept;
+
+    [[nodiscard]]
+    std::vector<Handle_t> &SinksHandle() noexcept;
 
     // error handler
     void SetErrorHandler(IPluginFunction *handler) {
@@ -173,7 +177,7 @@ private:
 
     const std::string m_Name;
     std::vector<SinkPtr> m_Sinks;
-    std::vector<Handle_t> m_SinkHandles;
+    std::vector<Handle_t> m_SinksHandle;
     Level_t m_Level{LevelEnum::info};
     Level_t m_FlushLevel{LevelEnum::off};
     Level_t m_ThrowLevel{LevelEnum::off};

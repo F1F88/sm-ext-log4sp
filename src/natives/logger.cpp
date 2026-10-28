@@ -1,5 +1,7 @@
 #include "log4sp/common.h"
 #include "log4sp/adapter/logger_handler.h"
+#include "log4sp/adapter/sink_handler.h"
+#include "log4sp/sinks/callback_sink.h"
 
 /**
  * 封装读取 logger handle 代码
@@ -452,40 +454,74 @@ static cell_t GetSinks(SourcePawn::IPluginContext *ctx, const cell_t *params) no
         return 0;
     }
 
+    // 槽位大于 sink 个数时填入 sink 数量即可
+    // 反之填满槽位即可
     cell_t size = params[3];
+    if (size > logger->Sinks().size())
+        size = logger->Sinks().size();
 
     // 克隆体所有权归于 native caller
     SourceMod::IdentityToken_t *owner = ctx->GetIdentity();
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
 
-    try
+    cell_t counter = 0;
+    while (counter < size)
     {
-        return static_cast<cell_t>(logger->GetSinksHandleClone(sinks, size, owner));
+        auto handle = logger->SinksHandle().at(counter);
+        auto cloned = Log4sp::SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
+        if (!cloned)
+        {
+            // 发生错误, 先清理已克隆的 sink handle 再抛出错误信息
+            for (std::size_t i = 0; i < counter; ++i)
+            {
+                error = Log4sp::SinkHandler::Instance().FreeHandle(sinks[i], &security);
+                assert(error == SourceMod::HandleError::HandleError_None);
+            }
+
+            ctx->ReportError("Failed to clone a Sink Handle %x (error %d)", handle, error);
+            return 0;
+        }
+        sinks[counter++] = cloned;
     }
-    catch (const std::exception &ex)
-    {
-        ctx->ReportError(ex.what());
-        return 0;
-    }
+    return counter;
 }
 
 static cell_t GetSinksLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
-    return static_cast<cell_t>(logger->GetSinksLength());
+    return static_cast<cell_t>(logger->Sinks().size());
 }
 
 static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    try
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[2], &security, &error);
+    if (!sink)
     {
-        logger->AddSink(params[2]);
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[2], error);
+        return 0;
     }
-    catch (const std::exception &ex)
+
+    SourceMod::IdentityToken_t *owner = myself->GetIdentity();
+    security.pOwner = owner;
+    auto cloned = Log4sp::SinkHandler::Instance().CloneHandle(params[2], owner, &security, &error);
+    if (!cloned)
     {
-        ctx->ReportError(ex.what());
+        ctx->ReportError("Failed to clone Sink Handle %x (error %d)", params[2], error);
+        return 0;
     }
+
+    logger->Sinks().push_back(sink);
+    logger->SinksHandle().push_back(cloned);
+
+    // HACK: CallbackSink
+    if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
+        callbackSink->TryRegisterHandle(cloned);
     return 0;
 }
 
@@ -493,13 +529,44 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    try
+    SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[2], &security, &error);
+    if (!sink)
     {
-        logger->DropSink(params[2]);
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[2], error);
+        return 0;
     }
-    catch (const std::exception &ex)
+
+    auto &sinks = logger->Sinks();
+    auto &handles = logger->SinksHandle();
+    security.pOwner = myself->GetIdentity();
+
+    // Sinks 里可能有多个同样的 Sink
+    // 从后向前遍历，避免删除元素时索引变化的问题
+    for (int i = static_cast<int>(sinks.size()) - 1; i >= 0; --i)
     {
-        ctx->ReportError(ex.what());
+        if (sinks.at(i) != sink)
+            continue;
+
+        // 必须先摘除再释放: FreeHandle 会同步销毁 sink, 其关闭回调 (FileCloseFunction /
+        // OnClose) 可能重入插件代码并再次遍历 m_Sinks, 若此时仍持有已释放的对象指针就是 UAF.
+        auto cloned = handles.at(i);
+
+        // HACK: CallbackSink
+        if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
+            callbackSink->DropHandle(cloned);
+
+        sinks.erase(sinks.begin() + i);
+        handles.erase(handles.begin() + i);
+
+        error = Log4sp::SinkHandler::Instance().FreeHandle(cloned, &security);
+        if (error != SourceMod::HandleError::HandleError_None)
+        {
+            ctx->ReportError("Failed to free a Sink Handle %x (error %d)", cloned, error);
+            return 0;
+        }
     }
     return 0;
 }

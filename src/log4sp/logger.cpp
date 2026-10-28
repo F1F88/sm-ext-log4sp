@@ -12,20 +12,20 @@ Logger::~Logger() noexcept
 {
     SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
 
-    while (!m_SinkHandles.empty())
+    while (!m_SinksHandle.empty())
     {
-        auto handle = m_SinkHandles.back();
-        auto sink = SinkHandler::Instance().ReadHandle(handle, &security, nullptr);
+        auto cloned = m_SinksHandle.back();
+        auto sink = SinkHandler::Instance().ReadHandle(cloned, &security, nullptr);
 
         assert(sink);
 
         // HACK: CallbackSink
         if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
-            callbackSink->DropHandle(handle);
+            callbackSink->DropHandle(cloned);
 
         m_Sinks.pop_back();
-        m_SinkHandles.pop_back();
-        auto error = SinkHandler::Instance().FreeHandle(handle, &security);
+        m_SinksHandle.pop_back();
+        auto error = SinkHandler::Instance().FreeHandle(cloned, &security);
         assert(error == SourceMod::HandleError::HandleError_None);
     }
 }
@@ -176,123 +176,24 @@ void Logger::SetPatternFormatter(std::unique_ptr<Formatter> fmt) noexcept
     }
 }
 
-[[nodiscard]]
-std::size_t Logger::GetSinksHandleClone(cell_t *sinks, std::size_t size, SourceMod::IdentityToken_t *owner) const
+const std::vector<Log4sp::Logger::SinkPtr> &Logger::Sinks() const noexcept
 {
-    // 克隆体所有权归于 native caller
-    SourceMod::HandleError error;
-    SourceMod::HandleSecurity security(owner, myself->GetIdentity());
-
-    auto length = m_SinkHandles.size();
-    if (length > size)
-        length = size;
-
-    std::size_t counter = 0;
-    while (counter < length)
-    {
-        auto handle = m_SinkHandles.at(counter);
-        auto cloned = SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
-        if (!cloned)
-        {
-            // 发生错误, 先清理已克隆的 sink handle 再抛出错误信息
-            for (std::size_t i = 0; i < counter; ++i)
-            {
-                error = SinkHandler::Instance().FreeHandle(sinks[i], &security);
-                assert(error == SourceMod::HandleError::HandleError_None);
-            }
-
-            using spdlog::fmt_lib::format;
-            using spdlog::throw_spdlog_ex;
-            throw_spdlog_ex(
-                format("Failed to clone a Sink Handle {:x} (error {})",
-                    static_cast<int>(handle), static_cast<int>(error)));
-        }
-        sinks[counter++] = cloned;
-    }
-    return static_cast<cell_t>(counter);
+    return m_Sinks;
 }
 
-[[nodiscard]]
-std::size_t Logger::GetSinksLength() const noexcept
+std::vector<Log4sp::Logger::SinkPtr> &Logger::Sinks() noexcept
 {
-    return m_Sinks.size();
+    return m_Sinks;
 }
 
-void Logger::AddSink(Handle_t handle)
+const std::vector<Log4sp::Logger::Handle_t> &Logger::SinksHandle() const noexcept
 {
-    // Sink Handle 可以被任意读取
-    SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = SinkHandler::Instance().ReadHandle(handle, &security, &error);
-    if (!sink)
-    {
-        using spdlog::fmt_lib::format;
-        using spdlog::throw_spdlog_ex;
-        throw_spdlog_ex(
-            format("Invalid Sink Handle {:x} (error {})",
-                static_cast<int>(handle), static_cast<int>(error)));
-    }
-
-    // 克隆的 Sink 所有权归于拓展
-    // 1. 外部不能获取也不能操纵这些 Sinks, 只能通过 Logger.DropSink() 关闭部分 Sink
-    //    或关闭 Logger 来关闭所有 Sinks
-    // 2. 不必存储 AddSink 时的 Plugin Info, 关闭 Logger 时清理 Sinks 更轻松
-    // 3. 不必担心插件卸载导致克隆体被自动关闭
-    SourceMod::IdentityToken_t *owner = myself->GetIdentity();
-    auto cloned = SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
-    if (!cloned)
-    {
-        using spdlog::fmt_lib::format;
-        using spdlog::throw_spdlog_ex;
-        throw_spdlog_ex(
-            format("Failed to clone a Sink Handle {:x} (error {})",
-                static_cast<int>(handle), static_cast<int>(error)));
-    }
-
-    m_Sinks.push_back(sink);
-    m_SinkHandles.push_back(cloned);
-
-    // HACK: CallbackSink
-    if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
-        callbackSink->TryRegisterHandle(cloned);
+    return m_SinksHandle;
 }
 
-void Logger::DropSink(Handle_t handle)
+std::vector<Log4sp::Logger::Handle_t> &Logger::SinksHandle() noexcept
 {
-    // Sink Handle 可以被任意读取
-    SourceMod::HandleSecurity security(myself->GetIdentity(), myself->GetIdentity());
-    SourceMod::HandleError error;
-
-    auto sink = SinkHandler::Instance().ReadHandle(handle, &security, &error);
-    if (!sink)
-    {
-        using spdlog::fmt_lib::format;
-        using spdlog::throw_spdlog_ex;
-        throw_spdlog_ex(
-            format("Invalid Sink Handle {:x} (error {})",
-                static_cast<int>(handle), static_cast<int>(error)));
-    }
-
-    // HACK: CallbackSink
-    if (auto callbackSink = dynamic_cast<Sinks::CallbackSink*>(sink))
-        callbackSink->DropHandle(handle);
-
-    // Sinks 里可能有多个同样的 Sink
-    // 从后向前遍历，避免删除元素时索引变化的问题
-    for (int i = static_cast<int>(m_Sinks.size() - 1); i >= 0; --i)
-    {
-        if (m_Sinks.at(i) == sink)
-        {
-            // 必须先摘除再释放: FreeHandle 会同步销毁 sink, 其关闭回调 (FileCloseFunction /
-            // OnClose) 可能重入插件代码并再次遍历 m_Sinks, 若此时仍持有已释放的对象指针就是 UAF.
-            auto sinkHandle = m_SinkHandles.at(i);
-            m_Sinks.erase(m_Sinks.begin() + i);
-            m_SinkHandles.erase(m_SinkHandles.begin() + i);
-            error = SinkHandler::Instance().FreeHandle(sinkHandle, &security);
-            assert(error == SourceMod::HandleError::HandleError_None);
-        }
-    }
+    return m_SinksHandle;
 }
 
 void Logger::LogIt(const LogMsg &msg, IPluginContext *ctx) const noexcept
