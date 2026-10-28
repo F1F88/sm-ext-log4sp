@@ -14,7 +14,7 @@
  *                      It will automatically close after the callback function finishes.
  * @param error         Error message buffer in case of log failure.
  * @param maxlen        Maximum length of the error.
- * @param logTime       Log message timestamps (in nanoseconds).
+ * @param logTime       Log message timestamps (in milliseconds).
  * @param loc           Source location.
  * @param name          The name of the logger.
  * @param lvl           Log level enum.
@@ -25,7 +25,7 @@ typedef CallbackSinkLogFunction = function bool (
     Sink sink,
     char[] error,
     int maxlen,
-    const char[] logTime,
+    LOG4SP_ES_CONST Long logTime,
     LOG4SP_ES_CONST SourceLoc loc,
     const char[] name,
     LogLevel lvl,

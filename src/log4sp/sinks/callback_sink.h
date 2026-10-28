@@ -90,20 +90,18 @@ private:
                 throw_spdlog_ex(format("Failed to push maxlen into CallbackSink log forward (error {})", err));
             }
 
-            std::array<char, 21> logTime; {
-                auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(logMsg.time.time_since_epoch()).count();
-                auto result = std::to_chars(logTime.data(), logTime.data() + sizeof(logTime) - 1, nanoseconds);
-                if (result.ec == std::errc{})
-                    *result.ptr = '\0';  // 明确写入字符串终止符
-            }
+            auto logTime = Log4sp::CellLong(
+                static_cast<std::int64_t>(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        logMsg.time.time_since_epoch()).count()));
 
-            if (auto err = fwd->PushString(logTime.data())) {
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&logTime), sizeof(logTime) / sizeof(cell_t))) {
                 (void)SinkHandler::Instance().FreeHandle(sink, &security);
                 throw_spdlog_ex(format("Failed to push logTime into CallbackSink log forward (error {})", err));
             }
 
             auto loc = CellSourceLoc(logMsg.source);
-            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t), 0)) {
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t))) {
                 (void)SinkHandler::Instance().FreeHandle(sink, &security);
                 throw_spdlog_ex(format("Failed to push loc into CallbackSink log forward (error {})", err));
             }

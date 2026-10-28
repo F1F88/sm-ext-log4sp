@@ -7,7 +7,6 @@
 
 #if defined LOG4SP_HEADER_ONLY
 #include <log4sp/details/file_helper>
-#include <log4sp/details/long>
 #endif      // LOG4SP_HEADER_ONLY
 
 
@@ -18,17 +17,17 @@
  * @param maxlen    Maximum length of the filename.
  * @param timestamp Timestamp in seconds.
  */
-typedef DailyFileCalculator = function void (char[] filename, int maxlen, const char[] timestamp);
+typedef DailyFileCalculator = function void (char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp);
 
 
 /**
  * Generator of daily log file names with strftime format.
  */
-public void DailyFileFormatCalculator(char[] filename, int maxlen, const char[] timestamp) {
+public void DailyFileFormatCalculator(char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp) {
     // FormatTime buffer cannot be the same as the format
     char buffer[256];
     strcopy(buffer, sizeof(buffer), filename);
-    FormatTime(filename, maxlen, buffer, StringToInt(timestamp)); // FIXME: Possible Year 2038 Problem
+    FormatTime(filename, maxlen, buffer, timestamp.Low()); // FIXME: Possible Year 2038 Problem
 }
 
 
@@ -137,8 +136,8 @@ methodmap DailyFileSink < Sink
 
         PrivateForward calcFwd;
         if (calcFunc != INVALID_FUNCTION) {
-            // void (char[] filename, int maxlen, const char[] timestamp)
-            calcFwd = new PrivateForward(ET_Ignore, Param_String, Param_Cell, Param_String);
+            // void (char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp)
+            calcFwd = new PrivateForward(ET_Ignore, Param_String, Param_Cell, Param_Array);
             calcFwd.AddFunction(calcPlugin, calcFunc);
         }
 
@@ -156,14 +155,13 @@ methodmap DailyFileSink < Sink
         sink.__SetFilenames(null);
         sink.__SetCalcFwd(calcFwd);
 
-        int time64[2];
-        GetTime(time64);
-
-        char timeStr[21];
-        Int64ToString(time64, timeStr, sizeof(timeStr));
+        int bigStamp[2];
+        GetTime(bigStamp);
+        Long timestamp;
+        timestamp = Int64ToLong(bigStamp);
 
         char filename[PLATFORM_MAX_PATH];
-        sink.__CalcFilename(filename, sizeof(filename), timeStr);
+        sink.__CalcFilename(filename, sizeof(filename), timestamp);
 
         char error[LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH];
         if (!sink.__GetFileHelper().Open(filename, truncate, error, sizeof(error))) {
@@ -238,17 +236,16 @@ methodmap DailyFileSink < Sink
     public void __SetCalcFwd(PrivateForward value)      { this.__SetValue("m_hCalcFwd", value); }
 
     public void __InitFilenamesQueue() {
-        int time64[2];
-        GetTime(time64);
-
-        Long now; // seconds
-        now = Int64ToLong(time64);
+        int bigStamp[2];
+        GetTime(bigStamp);
+        Long now;
+        now = Int64ToLong(bigStamp);
 
         int maxFiles = this.__GetMaxFiles();
         char filename[PLATFORM_MAX_PATH];
         ArrayList temp = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
         while (temp.Length < maxFiles) {
-            this.__CalcFilename(filename, sizeof(filename), now.ToStringFixed());
+            this.__CalcFilename(filename, sizeof(filename), now);
             if (!FileExists(filename))
                 break;
 
@@ -267,11 +264,11 @@ methodmap DailyFileSink < Sink
 
     // Returns a timestamp in seconds.
     public Long __NextRotationTimestamp() {
-        int time64[2];
-        GetTime(time64);
+        int bigStamp[2];
+        GetTime(bigStamp);
 
         Long now, today, rotationTime;
-        now = Int64ToLong(time64);
+        now = Int64ToLong(bigStamp);
 
         char buffer[8];
         FormatTime(buffer, sizeof(buffer), "%H%M%S");
@@ -311,14 +308,14 @@ methodmap DailyFileSink < Sink
     }
 
     // Unit of timestamp is seconds.
-    public void __CalcFilename(char[] filename, int maxlen, const char[] timestamp) {
+    public void __CalcFilename(char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp) {
         this.__GetBaseFilename(filename, maxlen);
         PrivateForward calcFwd = this.__GetCalcFwd();
         if (calcFwd) {
             Call_StartForward(calcFwd);
             Call_PushStringEx(filename, maxlen, SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); // filename
-            Call_PushCell(maxlen);              // maxlen
-            Call_PushString(timestamp);         // timestamp
+            Call_PushCell(maxlen);                          // maxlen
+            Call_PushArray(timestamp, sizeof(timestamp));   // timestamp
             Call_Finish();
         } else {
             // Generator of daily log file names in format baseFilename_YYYYMMDD.ext
@@ -329,7 +326,7 @@ methodmap DailyFileSink < Sink
             char buffer[PLATFORM_MAX_PATH];
             FormatEx(buffer, sizeof(buffer), "%s_%s%s", file, "%Y%m%d", ext);
 
-            FormatTime(filename, maxlen, buffer, StringToInt(timestamp)); // FIXME: Possible Year 2038 Problem
+            FormatTime(filename, maxlen, buffer, timestamp.Low()); // FIXME: Possible Year 2038 Problem
         }
     }
 #endif      // LOG4SP_HEADER_ONLY
@@ -337,16 +334,39 @@ methodmap DailyFileSink < Sink
 
 
 #if defined LOG4SP_HEADER_ONLY
-public bool __DailyFileSink_OnLog(DailyFileSink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __DailyFileSink_OnLog(DailyFileSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
-    int len = strlen(logTime);
-    char seconds[21], millisecond[4];
-    strcopy(seconds, len - 8, logTime);
-    strcopy(millisecond, sizeof(millisecond), logTime[len - 9]);
+    int secs, msec;
+    Long seconds;
+#if !defined SM_INT64_SUPPORTED
+    {
+        // Bitwise division DivideAndRetain performs poorly
+        char buf[21];
+        int len = logTime.ToString(buf, sizeof(buf));
+        if (len < 3)
+        {
+            msec = logTime.Low();
+            secs = 0;
+        }
+        else
+        {
+            msec = (buf[len - 3] - '0') * 100 + (buf[len - 2] - '0') * 10 + (buf[len - 1] - '0');
+            buf[len - 3] = '\0';
+            secs = StringToInt(buf);
+        }
+        seconds = IntToLong(secs);
+    }
+#else
+    {
+        Long milliseconds;
+        logTime.DivideAndRemainder(IntToLong(1000), seconds, milliseconds);
+        msec = milliseconds.Low();
+        secs = seconds.Low();
+    }
+#endif      // SM_INT64_SUPPORTED
 
     char date[20]; // 2026-01-01 12:34:56
-    FormatTime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", StringToInt(seconds)); // FIXME: Possible Year 2038 Problem
-    // PrintToServer("__DailyFileSink_OnLog %s | %d | %s", seconds, StringToInt(seconds), date);
+    FormatTime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", secs); // FIXME: Possible Year 2038 Problem
 
     char source[256];
     if (!loc.IsEmpty())
@@ -366,10 +386,10 @@ public bool __DailyFileSink_OnLog(DailyFileSink sink, char[] error, int maxlen, 
     LogLevelToName(level, sizeof(level), lvl);
 
     char buffer[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
-    len = FormatEx(buffer, sizeof(buffer), "[%s.%s] [%s] [%s] %s%s\n", date, millisecond, name, level, source, msg);
+    int len = FormatEx(buffer, sizeof(buffer), "[%s.%03d] [%s] [%s] %s%s\n", date, msec, name, level, source, msg);
     buffer[len - 1] = '\n'; // buffer[len] of FormatEx must be '\0'.
 
-    bool shouldRotate = StringToLong(seconds).Ge(sink.__GetRotateTime());
+    bool shouldRotate = seconds.Ge(sink.__GetRotateTime());
     if (shouldRotate)
     {
         char filename[PLATFORM_MAX_PATH];

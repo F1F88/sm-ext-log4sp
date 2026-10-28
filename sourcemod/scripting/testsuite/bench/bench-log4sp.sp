@@ -610,7 +610,7 @@ void BenchLogF(int calls, bool fmts, Logger logger)
 
 
 
-bool CB_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel level, const char[] msg)
+bool CB_OnLog(Sink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel level, const char[] msg)
 {
     return true;
 }

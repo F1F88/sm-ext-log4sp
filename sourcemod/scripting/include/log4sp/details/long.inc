@@ -7,10 +7,10 @@
 /**
  * Converts a string to a Long.
  *
- * @param str           String to convert.
- * @param nBase         Numerical base to use.  10 is default.
- * @param nConsumed     Number of characters consumed.
- * @return              Long conversion of string, or 0 on failure.
+ * @param str       String to convert.
+ * @param nBase     Numerical base to use.  10 is default.
+ * @param nConsumed Number of characters consumed.
+ * @return          Long conversion of string, or 0 on failure.
  */
 stock Long StringToLong(const char[] str, int nBase=10, int &nConsumed=0)
 {
@@ -22,8 +22,8 @@ stock Long StringToLong(const char[] str, int nBase=10, int &nConsumed=0)
 /**
  * Converts an integer to a Long.
  *
- * @param value         Integer to convert.
- * @return              Long conversion of integer.
+ * @param value     Integer to convert.
+ * @return          Long conversion of integer.
  */
 stock Long IntToLong(int value)
 {
@@ -40,9 +40,9 @@ stock Long IntToLong(int value)
 /**
  * Converts a 64-bit integer to a Long.
  *
- * @param num           Array containing the upper and lower
- *                      32-bits of a 64-bit integer.
- * @return              Long conversion of 64-bit integer.
+ * @param num       Array containing the upper and lower
+ *                  32-bits of a 64-bit integer.
+ * @return          Long conversion of 64-bit integer.
  */
 stock Long Int64ToLong(const int value[2])
 {
@@ -62,9 +62,8 @@ stock Long Int64ToLong(const int value[2])
 /**
  * Converts an int64 value to a Long.
  *
- * @param num           int64 value to convert.
- *                      32-bits of a 64-bit integer.
- * @return              Long conversion of int64 value.
+ * @param num       int64 value to convert.
+ * @return          Long conversion of int64 value.
  */
 stock Long I64ToLong(const int64 value)
 {
@@ -73,6 +72,83 @@ stock Long I64ToLong(const int64 value)
     return result;
 }
 #endif      // SM_INT64_SUPPORTED
+
+/**
+ * Returns the estimated Unix timestamp in milliseconds.
+ *
+ * The result is a signed 64-bit integer represented by Long.
+ *
+ * Time intervals are measured using GetSysTickCount().
+ * System time is periodically reconciled using GetTime().
+ *
+ * @return  Unix timestamp in milliseconds.
+ */
+stock Long GetMilliseconds()
+{
+    static bool initialized;
+    static int lastTick, subsecond;
+    static Long seconds, milliseconds;
+
+    if (!initialized)
+    {
+        int bigStamp[2];
+        GetTime(bigStamp);
+
+        seconds = Int64ToLong(bigStamp);
+        milliseconds = seconds.Mul(IntToLong(1000));
+
+        // Sample the tick counter after GetTime().
+        lastTick = GetSysTickCount();
+        initialized = true;
+
+        return milliseconds;
+    }
+
+    int tick = GetSysTickCount();
+
+    // Calculate the elapsed time, handling platform-specific wraparound.
+    // Requires sampling at intervals shorter than INT_MAX milliseconds.
+    int elapsed = tick - lastTick;
+    lastTick = tick;
+
+    if (elapsed < 0)
+    {
+        elapsed += 0x7FFFFFFF;
+    }
+
+    // Accumulate the elapsed milliseconds.
+    milliseconds = milliseconds.Add(IntToLong(elapsed));
+
+    // Accumulate whole seconds.
+    seconds = seconds.Add(IntToLong(elapsed / 1000));
+
+    // Accumulate the remaining milliseconds.
+    subsecond += elapsed % 1000;
+
+    if (subsecond >= 1000)
+    {
+        subsecond -= 1000;
+        seconds = seconds.Add(IntToLong(1));
+    }
+
+    // Reconcile with the current system time.
+    int bigStamp[2];
+    GetTime(bigStamp);
+
+    Long wallSeconds, difference;
+    wallSeconds = Int64ToLong(bigStamp);
+    difference = wallSeconds.Sub(seconds);
+
+    // Ignore a one-second discrepancy caused by clock alignment.
+    if (difference.Gt(IntToLong(1)) || difference.Lt(IntToLong(-1)))
+    {
+        seconds = wallSeconds;
+
+        // Preserve the accumulated fractional milliseconds.
+        milliseconds = seconds.Mul(IntToLong(1000)).Add(IntToLong(subsecond));
+    }
+    return milliseconds;
+}
 
 
 enum struct Long
@@ -241,7 +317,7 @@ enum struct Long
     }
 
     Long Neg() {
-        // -value = value + 1
+        // -value = ~value + 1
         Long result;
         result.__bits[0] = (~this.__bits[0]) + 1;
         result.__bits[1] = (~this.__bits[1]) + ((result.__bits[0] != 0) ? 0 : 1);
@@ -481,7 +557,7 @@ enum struct Long
         num &= 63;
         // (Computes (this | (1<<n)).)
         Long result;
-        result.__digits = this.__digits | (result.__digits + (1 << num));
+        result.__digits = this.__digits | ((result.__digits + 1) << num);
         return result;
     }
 
@@ -489,7 +565,7 @@ enum struct Long
         num &= 63;
         // (Computes (this & ~(1<<n)).)
         Long result;
-        result.__digits = this.__digits & ~(result.__digits + (1 << num));
+        result.__digits = this.__digits & ~((result.__digits + 1) << num);
         return result;
     }
 
@@ -497,7 +573,7 @@ enum struct Long
         num &= 63;
         // (Computes (this ^ (1<<n)).)
         Long result;
-        result.__digits = this.__digits ^ (result.__digits + (1 << num));
+        result.__digits = this.__digits ^ ((result.__digits + 1) << num);
         return result;
     }
 

@@ -160,18 +160,16 @@ void TestRotate(int daysToRun, int maxDays, int expectedNumFiles)
 
     DailyFileSink sink = new DailyFileSink(filename, 2, 30, true, maxDays);
 
-    int time = GetTime(); // Current day
+    // Current day (milliseconds)
+    Long logTime;
+    logTime = GetMilliseconds();
+    SourceLoc loc = {__BINARY_PATH__, __LINE__, __BINARY_NAME__};
 
     for (int i = 0; i < daysToRun; ++i)
     {
-        char logTime[21];
-        FormatEx(logTime, sizeof(logTime), "%d000000000", time); // To nanoseconds
-
-        SourceLoc loc = {__BINARY_PATH__, __LINE__, __BINARY_NAME__};
-
         sink.Log(logTime, loc, "test-daily", LogLevel_Info, "Hello Message");
 
-        time += 86400; // Next day
+        logTime = logTime.Add(IntToLong(24 * 60 * 60 * 1000)); // Next day
     }
     sink.Close();
 
@@ -187,8 +185,9 @@ void TestFileCallback()
     char filename[PLATFORM_MAX_PATH];
     BuildTestPath(filename, sizeof(filename), "daily/file_callback.log");
     DailyFileSink sink = new DailyFileSink(filename, _, _, _, _, _, _, null, CB_OnFileOpen, null, CB_OnFileClose);
+    Long logTime;
     SourceLoc loc;
-    sink.Log(NULL_STRING, loc, "daily-sink", LogLevel_Info, "Some message");
+    sink.Log(logTime, loc, "daily-sink", LogLevel_Info, "Some message");
     sink.Close();
 }
 

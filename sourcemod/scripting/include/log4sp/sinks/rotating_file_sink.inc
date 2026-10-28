@@ -347,15 +347,37 @@ methodmap RotatingFileSink < Sink
 
 
 #if defined LOG4SP_HEADER_ONLY
-public bool __RotatingFileSink_OnLog(RotatingFileSink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __RotatingFileSink_OnLog(RotatingFileSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
-    int len = strlen(logTime);
-    char seconds[21], millisecond[4];
-    strcopy(seconds, len - 8, logTime);
-    strcopy(millisecond, sizeof(millisecond), logTime[len - 9]);
+    int secs, msec;
+#if !defined SM_INT64_SUPPORTED
+    {
+        // Bitwise division DivideAndRetain performs poorly
+        char buf[21];
+        int len = logTime.ToString(buf, sizeof(buf));
+        if (len < 3)
+        {
+            msec = logTime.Low();
+            secs = 0;
+        }
+        else
+        {
+            msec = (buf[len - 3] - '0') * 100 + (buf[len - 2] - '0') * 10 + (buf[len - 1] - '0');
+            buf[len - 3] = '\0';
+            secs = StringToInt(buf);
+        }
+    }
+#else
+    {
+        Long seconds, milliseconds;
+        logTime.DivideAndRemainder(IntToLong(1000), seconds, milliseconds);
+        msec = milliseconds.Low();
+        secs = seconds.Low();
+    }
+#endif      // SM_INT64_SUPPORTED
 
     char date[20]; // 2026-01-01 12:34:56
-    FormatTime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", StringToInt(seconds)); // FIXME: Possible Year 2038 Problem
+    FormatTime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", secs); // FIXME: Possible Year 2038 Problem
 
     char source[256];
     if (!loc.IsEmpty())
@@ -375,7 +397,7 @@ public bool __RotatingFileSink_OnLog(RotatingFileSink sink, char[] error, int ma
     LogLevelToName(level, sizeof(level), lvl);
 
     char buffer[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
-    len = FormatEx(buffer, sizeof(buffer), "[%s.%s] [%s] [%s] %s%s\n", date, millisecond, name, level, source, msg);
+    int len = FormatEx(buffer, sizeof(buffer), "[%s.%03d] [%s] [%s] %s%s\n", date, msec, name, level, source, msg);
     buffer[len - 1] = '\n'; // buffer[len] of FormatEx must be '\0'.
 
     // rotate if the new estimated file size exceeds max size.

@@ -62,12 +62,12 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!func)
         return false;
 
-    // void (const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+    // void (LOG4SP_ES_CONST Long logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
     auto fwd = forwards->CreateForwardEx(nullptr,
                 SourceMod::ExecType::ET_Ignore,
                 6,
                 nullptr,
-                SourceMod::ParamType::Param_String,      // logTime
+                SourceMod::ParamType::Param_Array,       // logTime
                 SourceMod::ParamType::Param_Array,       // loc
                 SourceMod::ParamType::Param_String,      // name
                 SourceMod::ParamType::Param_Cell,        // lvl
@@ -91,15 +91,11 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     bool drained = ringBufferSink->DrainLatest(
         [&ctx, &fwd, &data](const spdlog::details::log_msg_buffer &logMsg)
         {
-            std::array<char, 21> logTime;
-            {
-                auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(logMsg.time.time_since_epoch()).count();
-                auto result = std::to_chars(logTime.data(), logTime.data() + sizeof(logTime) - 1, nanoseconds);
-                if (result.ec == std::errc{})
-                    *result.ptr = '\0';  // 明确写入字符串终止符
-            }
-
-            if (auto err = fwd->PushString(logTime.data()))
+            auto logTime = Log4sp::CellLong(
+                static_cast<std::int64_t>(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        logMsg.time.time_since_epoch()).count()));
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&logTime), sizeof(logTime) / sizeof(cell_t)))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;
@@ -108,7 +104,7 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
             }
 
             auto loc = Log4sp::CellSourceLoc(logMsg.source);
-            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t), 0))
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t)))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;
@@ -157,8 +153,7 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
                 ctx->ReportError("Failed to execute drain latest forward (error %d)", err);
                 return;
             }
-        }
-    );
+        });
 
     if (fwd)
         forwards->ReleaseForward(fwd);
@@ -204,12 +199,12 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!func)
         return false;
 
-    // void (const char[] logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+    // void (LOG4SP_ES_CONST Long logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
     auto fwd = forwards->CreateForwardEx(nullptr,
                 SourceMod::ExecType::ET_Ignore,
                 6,
                 nullptr,
-                SourceMod::ParamType::Param_String,      // logTime
+                SourceMod::ParamType::Param_Array,       // logTime
                 SourceMod::ParamType::Param_Array,       // loc
                 SourceMod::ParamType::Param_String,      // name
                 SourceMod::ParamType::Param_Cell,        // lvl
@@ -233,15 +228,11 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     bool drained = ringBufferSink->DrainOldest(
         [&ctx, &fwd, &data](const spdlog::details::log_msg_buffer &logMsg)
         {
-            std::array<char, 21> logTime;
-            {
-                auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(logMsg.time.time_since_epoch()).count();
-                auto result = std::to_chars(logTime.data(), logTime.data() + sizeof(logTime) - 1, nanoseconds);
-                if (result.ec == std::errc{})
-                    *result.ptr = '\0';  // 明确写入字符串终止符
-            }
-
-            if (auto err = fwd->PushString(logTime.data()))
+            auto logTime = Log4sp::CellLong(
+                static_cast<std::int64_t>(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        logMsg.time.time_since_epoch()).count()));
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&logTime), sizeof(logTime) / sizeof(cell_t)))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;
@@ -250,7 +241,7 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
             }
 
             auto loc = Log4sp::CellSourceLoc(logMsg.source);
-            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t), 0))
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t)))
             {
                 forwards->ReleaseForward(fwd);
                 fwd = nullptr;

@@ -265,7 +265,7 @@ void TestFileCallback()
 
     RotatingFileSink sink = new RotatingFileSink(filename, MAX_SIZE, MAX_FILES, _, null, CB_OnFileOpen, null, CB_OnFileClose);
     SourceLoc loc;
-    sink.Log(NULL_STRING, loc, NULL_STRING, LogLevel_Info, "Some message");
+    sink.Log(IntToLong(0), loc, NULL_STRING, LogLevel_Info, "Some message");
     SinkCloseAndDelete(sink);
 }
 

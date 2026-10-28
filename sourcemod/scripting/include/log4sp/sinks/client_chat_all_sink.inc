@@ -43,15 +43,37 @@ methodmap ClientChatAllSink < CallbackSink
 }
 
 
-public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
-    int len = strlen(logTime);
-    char seconds[21], millisecond[4];
-    strcopy(seconds, len - 8, logTime);
-    strcopy(millisecond, sizeof(millisecond), logTime[len - 9]);
+    int secs, msec;
+#if !defined SM_INT64_SUPPORTED
+    {
+        // Bitwise division DivideAndRetain performs poorly
+        char buf[21];
+        int len = logTime.ToString(buf, sizeof(buf));
+        if (len < 3)
+        {
+            msec = logTime.Low();
+            secs = 0;
+        }
+        else
+        {
+            msec = (buf[len - 3] - '0') * 100 + (buf[len - 2] - '0') * 10 + (buf[len - 1] - '0');
+            buf[len - 3] = '\0';
+            secs = StringToInt(buf);
+        }
+    }
+#else
+    {
+        Long seconds, milliseconds;
+        logTime.DivideAndRemainder(IntToLong(1000), seconds, milliseconds);
+        msec = milliseconds.Low();
+        secs = seconds.Low();
+    }
+#endif      // SM_INT64_SUPPORTED
 
     char date[9]; // 12:34:56
-    FormatTime(date, sizeof(date), "%H:%M:%S", StringToInt(seconds)); // FIXME: Possible Year 2038 Problem
+    FormatTime(date, sizeof(date), "%H:%M:%S", secs); // FIXME: Possible Year 2038 Problem
 
     char source[256];
     if (!loc.IsEmpty())
@@ -72,7 +94,7 @@ public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, const
 
     // https://github.com/alliedmodders/sourcemod/blob/1bc536fdfa0fe088300ae3532ede2da84b7a80d9/core/smn_halflife.cpp#L332
     // Due to limited buffer size (254), use short dates and levels.
-    PrintToChatAll("[%s.%s] [%s] [%c] %s%s", date, millisecond, name, level[0], source, msg);
+    PrintToChatAll("[%s.%03d] [%s] [%c] %s%s", date, msec, name, level[0], source, msg);
     return true;
 }
 

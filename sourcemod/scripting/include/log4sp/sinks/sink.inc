@@ -4,10 +4,7 @@
 #define _log4sp_sinks_sink_included
 
 #include <log4sp/common>
-
-#if defined LOG4SP_HEADER_ONLY
 #include <log4sp/details/long>
-#endif      // LOG4SP_HEADER_ONLY
 
 
 /**
@@ -48,8 +45,8 @@ methodmap Sink < Handle
     /**
      * Logs a message.
      *
-     * @param logTime   Log message timestamps (in nanoseconds).
-     *                  If invalid, defaults to the current time.
+     * @param logTime   Log message timestamps (in milliseconds).
+     *                  If zero, defaults to the current time.
      * @param loc       Source location.
      * @param name      The name of the logger.
      * @param lvl       Log level enum.
@@ -58,7 +55,7 @@ methodmap Sink < Handle
      * @param maxlen    Maximum length of the error.
      * @return          True on success, false on error.
      */
-    public native bool Log(const char[] logTime, const SourceLoc loc,
+    public native bool Log(const Long logTime, const SourceLoc loc,
                            const char[] name, LogLevel lvl, const char[] msg,
                            char[] error="", int maxlen=0);
 
@@ -120,7 +117,7 @@ methodmap Sink < Handle
 
 #else
 
-    public bool Log(const char[] logTime, LOG4SP_ES_CONST SourceLoc loc,
+    public bool Log(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc,
                     const char[] name, LogLevel lvl, const char[] msg,
                     char[] error="", int maxlen=0) {
         if (!this.IsValid())
@@ -133,27 +130,10 @@ methodmap Sink < Handle
             Call_PushStringEx(error, maxlen, SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK); // error
             Call_PushCell(maxlen);              // maxlen
 
-            if (!logTime[0] || IsNullString(logTime)) {
-                /**
-                 * HACK: SourceMod can only retrieve timestamps in seconds.
-                 *
-                 * It appends 9 decimal places from the Engine Time timetamp to simulate a nanosecond timestamp.
-                 * This isn't very accurate, but I think an error within 1 second is acceptable.
-                 */
-                int time64[2];
-                GetTime(time64);
-
-                // Time head
-                char now[21];
-                Int64ToString(time64, now, sizeof(now));
-
-                int timeTail = RoundToNearest(FloatFraction(GetEngineTime()) * 1000000000);
-                Format(now, sizeof(now), "%s%09d", now, timeTail);
-
-                Call_PushString(now);           // logTime (now)
-            } else {
-                Call_PushString(logTime);       // logTime (User specified)
-            }
+            if (logTime.IsZero())
+                Call_PushArray(GetMilliseconds(), sizeof(Long)); // logTime (now)
+            else
+                Call_PushArray(logTime, sizeof(logTime));        // logTime (User specified)
 
             Call_PushArray(loc, sizeof(loc));   // loc
             Call_PushString(name);              // name
@@ -386,9 +366,9 @@ methodmap Sink < Handle
 
         PrivateForward logFwd;
         if (logFunc != INVALID_FUNCTION) {
-            // bool (Sink sink, char[] error, int maxlen, const char[] logTime,
+            // bool (Sink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime,
             //       LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
-            logFwd = new PrivateForward(ET_Single,   Param_Cell,   Param_String, Param_Cell, Param_String,
+            logFwd = new PrivateForward(ET_Single,   Param_Cell,   Param_String, Param_Cell, Param_Array,
                                         Param_Array, Param_String, Param_Cell,   Param_String);
             logFwd.AddFunction(logPlugin, logFunc);
         }

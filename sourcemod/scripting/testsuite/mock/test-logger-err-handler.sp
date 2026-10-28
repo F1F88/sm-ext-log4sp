@@ -78,7 +78,7 @@ void TestDefaultErrorHandler()
     SinkCloseAndDelete(sink);
 
     char expectedMessages[][] = {"Test message 1", "Test message 3"};
-    char expectedErrorMessagesPattern[] = "L .*: \\[LOG4SP|.*test-logger-err-handler.smx\\] \\[.*test-logger-err-handler.sp::[0-9]+\\] \\[.*test-logger-err-handler\\.smx\\] Encountered an error![^\\S ]";
+    char expectedErrorMessagesPattern[] = "L .*: \\[LOG4SP|.*test-logger-err-handler.smx\\] \\[.*test-logger-err-handler.sp:[0-9]+\\] \\[.*test-logger-err-handler\\.smx\\] Encountered an error![^\\S ]";
 
     AssertEq("[Skip log error]", logCount, 2);
     AssertStrArrayEq("[Skip log error]", messages, expectedMessages, sizeof(expectedMessages));
@@ -129,7 +129,7 @@ void TestCustomErrorHandler()
 }
 
 
-public void CB_ErrorHandler(const char[] origin, SourceLoc loc, const char[] msg)
+public void CB_ErrorHandler(const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg)
 {
     __iCustomErrCnt++;
 

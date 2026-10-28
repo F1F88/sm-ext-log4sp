@@ -1174,21 +1174,9 @@ methodmap Logger < Handle
     public void __SetErrPlugin(const char[] value)  { this.__SetString("m_szErrPlugin", value); }
 
     public void __LogIt(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
-        /**
-         * HACK: SourceMod can only retrieve timestamps in seconds.
-         *
-         * It appends 9 decimal places from the Engine Time timetamp to simulate a nanosecond timestamp.
-         * This isn't very accurate, but I think an error within 1 second is acceptable.
-         */
-        int time64[2];
-        GetTime(time64);
-
-        // Time head
-        char now[21];
-        Int64ToString(time64, now, sizeof(now));
-
-        int timeTail = RoundToNearest(FloatFraction(GetEngineTime()) * 1000000000);
-        Format(now, sizeof(now), "%s%09d", now, timeTail);
+        // Log Time (nanoseconds)
+        Long now;
+        now = GetMilliseconds();
 
         // Logger name
         int maxlen = this.__GetNameLength() + 1;

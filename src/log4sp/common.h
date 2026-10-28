@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstring>
+#include <cstdint>
+#include <limits>
 
 #include "spdlog/common.h"
 
@@ -119,6 +121,39 @@ struct CellSourceLoc
 static_assert(offsetof(CellSourceLoc, filename) == 0);
 static_assert(offsetof(CellSourceLoc, line) == 256);
 static_assert(offsetof(CellSourceLoc, funcname) == 256 + 4);
+
+
+#pragma pack(push, 1)
+struct CellLong
+{
+    // https://github.com/alliedmodders/sourcepawn/pull/1055
+    cell_t bits[2];
+
+    CellLong() = default;
+    CellLong(int64_t value) noexcept
+    {
+        // ref: StringToInt64
+        bits[0] = (cell_t)(value & 0xFFFFFFFFull);
+        bits[1] = (cell_t)(value >> 32ull);
+    }
+
+    [[nodiscard]]
+    int64_t ToInt64() const noexcept
+    {
+        // ref: Int64ToString
+        return (uint64_t)bits[1] << 32ll | (uint32_t)bits[0];
+    }
+
+    [[nodiscard]]
+    bool IsZero() const noexcept
+    {
+        return (bits[0] == 0) && (bits[1] == 0);
+    }
+};
+#pragma pack(pop)
+
+static_assert(offsetof(CellLong, bits) == 0);
+static_assert(sizeof(cell_t) == 4);
 
 
 [[nodiscard]] inline

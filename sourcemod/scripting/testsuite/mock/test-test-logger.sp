@@ -87,6 +87,12 @@ void TestTestSinkDrain()
     Logger logger = new Logger("test-sink");
     logger.AddSink(sink);
 
+    int bigStamp[2];
+    GetTime(bigStamp);
+
+    Long logTime;
+    logTime = Int64ToLong(bigStamp).Mul(IntToLong(1000));
+
     logger.Trace("hello test sink 1");
     logger.Debug("hello test sink 2");
     logger.Info("hello test sink 3");
@@ -107,6 +113,8 @@ void TestTestSinkDrain()
 
     LogEvent logEvent;
     logEvents.GetArray(0, logEvent);
+    AssertTrue("[LogEvents logTime]", logTime.Sub(IntToLong(1000)).Lt(logEvent.logTime));
+    AssertTrue("[LogEvents logTime]", logTime.Add(IntToLong(1000)).Gt(logEvent.logTime));
     AssertStrEq("[LogEvents name]", logEvent.name, "test-sink");
 
     logEvents.GetArray(1, logEvent);
@@ -132,10 +140,11 @@ void TestTestSinkDelay()
     sink.SetLogDelay(logDelay);
     sink.SetFlushDelay(flushDelay);
 
+    Long logTime;
     SourceLoc loc;
     int beforeTime = GetSysTickCount();
 
-    AssertTrue("Log result", sink.Log(NULL_STRING, loc, "name", LogLevel_Info, "msg"));
+    AssertTrue("Log result", sink.Log(logTime, loc, "name", LogLevel_Info, "msg"));
     AssertGe("[Log delay >= delay - tolerance]", (GetSysTickCount() - beforeTime), (logDelay - tolerance));
     AssertLe("[Log delay <= delay + tolerance]", (GetSysTickCount() - beforeTime), (logDelay + tolerance));
 
@@ -158,16 +167,17 @@ void TestTestSinkLogError()
     TestSink sink = new TestSink();
     sink.SetLogError(errorDescription);
 
+    Long logTime;
     SourceLoc loc;
 
     char error1[256];
-    bool result1 = sink.Log("", loc, name, lvl, msg, .error=error1, .maxlen=sizeof(error1));
+    bool result1 = sink.Log(logTime, loc, name, lvl, msg, .error=error1, .maxlen=sizeof(error1));
     int  logCnt1 = sink.GetLogCount();
 
     sink.ClearLogError();
 
     char error2[256];
-    bool result2 = sink.Log("", loc, name, lvl, msg, .error=error2, .maxlen=sizeof(error2));
+    bool result2 = sink.Log(logTime, loc, name, lvl, msg, .error=error2, .maxlen=sizeof(error2));
     int  logCnt2 = sink.GetLogCount();
 
     sink.Close();

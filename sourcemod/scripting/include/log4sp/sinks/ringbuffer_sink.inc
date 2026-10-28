@@ -9,7 +9,7 @@
 /**
  * Callback function called on RingBufferSink.DrainLatest() or RingBufferSink.DrainOldest().
  *
- * @param logTime       Log message timestamps (in nanoseconds).
+ * @param logTime       Log message timestamps (in milliseconds).
  * @param loc           Source location.
  * @param name          The name of the logger.
  * @param lvl           Log level enum.
@@ -18,8 +18,8 @@
  */
 typeset RingBufferDrainFunction
 {
-    function void (const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
-    function void (const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+    function void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
+    function void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
 }
 
 
@@ -108,7 +108,7 @@ methodmap RingBufferSink < Sink
                                                                   null, INVALID_FUNCTION,
                                                                   null, __RingBufferSink_OnClose));
         sink.__SetMaxSize(maxSize);
-        sink.__SetLogTimes(new ArrayList(22));
+        sink.__SetLogTimes(new ArrayList(sizeof(Long)));
         sink.__SetLocs(new ArrayList(sizeof(SourceLoc)));
         sink.__SetNames(new ArrayList(128)); // HACK: Hard-coded size
         sink.__SetLvls(new ArrayList());
@@ -130,13 +130,13 @@ methodmap RingBufferSink < Sink
         ArrayList lvls = this.__GetLvls();
         ArrayList msgs = this.__GetMsgs();
 
+        Long logTime;
         SourceLoc loc;
-        char[] logTime = new char[logTimes.BlockSize];
         char[] name    = new char[names.BlockSize];
         char[] msg     = new char[msgs.BlockSize];
 
         int index = length - 1;
-        logTimes.GetString(index, logTime, logTimes.BlockSize);
+        logTimes.GetArray(index, logTime);
         locs.GetArray(index, loc);
         names.GetString(index, name, names.BlockSize);
         LogLevel lvl = lvls.Get(index);
@@ -148,9 +148,9 @@ methodmap RingBufferSink < Sink
         lvls.Erase(index);
         msgs.Erase(index);
 
-        // void (const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+        // void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
         Call_StartFunction(plugin, func);
-        Call_PushString(logTime);
+        Call_PushArray(logTime, sizeof(logTime));
         Call_PushArray(loc, sizeof(loc));
         Call_PushString(name);
         Call_PushCell(lvl);
@@ -173,13 +173,13 @@ methodmap RingBufferSink < Sink
         ArrayList lvls = this.__GetLvls();
         ArrayList msgs = this.__GetMsgs();
 
+        Long logTime;
         SourceLoc loc;
-        char[] logTime = new char[logTimes.BlockSize];
         char[] name    = new char[names.BlockSize];
         char[] msg     = new char[msgs.BlockSize];
 
         int index = 0;
-        logTimes.GetString(index, logTime, logTimes.BlockSize);
+        logTimes.GetArray(index, logTime);
         locs.GetArray(index, loc);
         names.GetString(index, name, names.BlockSize);
         LogLevel lvl = lvls.Get(index);
@@ -191,9 +191,9 @@ methodmap RingBufferSink < Sink
         lvls.Erase(index);
         msgs.Erase(index);
 
-        // void (const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+        // void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
         Call_StartFunction(plugin, func);
-        Call_PushString(logTime);
+        Call_PushArray(logTime, sizeof(logTime));
         Call_PushArray(loc, sizeof(loc));
         Call_PushString(name);
         Call_PushCell(lvl);
@@ -260,7 +260,7 @@ methodmap RingBufferSink < Sink
 
 
 #if defined LOG4SP_HEADER_ONLY
-public bool __RingBufferSink_OnLog(RingBufferSink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __RingBufferSink_OnLog(RingBufferSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     int maxSize = sink.__GetMaxSize();
     if (maxSize)
@@ -280,7 +280,7 @@ public bool __RingBufferSink_OnLog(RingBufferSink sink, char[] error, int maxlen
             msgs.Erase(0);
         }
 
-        logTimes.PushString(logTime);
+        logTimes.PushArray(logTime, sizeof(logTime));
         locs.PushArray(loc, sizeof(loc));
         names.PushString(name);
         lvls.Push(lvl);

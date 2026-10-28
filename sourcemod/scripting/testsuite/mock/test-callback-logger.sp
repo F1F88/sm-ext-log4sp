@@ -95,7 +95,7 @@ void TestCustomCallbackLogger()
 }
 
 
-public bool CB_OnLog1(CallbackSink sink, char[] error, int maxlen, LOG4SP_ES_CONST char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool CB_OnLog1(CallbackSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     __iLog1Count++;
     AssertStrEq("[OnLog1 funcname]", loc.funcname, "TestCustomCallbackLogger");
@@ -111,7 +111,7 @@ public bool CB_OnLog1(CallbackSink sink, char[] error, int maxlen, LOG4SP_ES_CON
     return true;
 }
 
-public bool CB_OnLog2(CallbackSink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool CB_OnLog2(CallbackSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     __iLog2Count++;
     AssertStrEq("[OnLog2 funcname]", loc.funcname, "TestCustomCallbackLogger");

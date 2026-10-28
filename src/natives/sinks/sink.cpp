@@ -22,10 +22,10 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
     if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
         callbackSink->TryRegisterHandle(params[1]);
 
-    char *logTime;
-    if (auto err = ctx->LocalToString(params[2], &logTime))
+    Log4sp::CellLong *logTime;
+    if (auto err = ctx->LocalToPhysAddr(params[2], reinterpret_cast<cell_t**>(&logTime)))
     {
-        ctx->ReportError("Invalid log time (error %d)", err);
+        ctx->ReportError("Invalid logTime (error %d)", err);
         return 0;
     }
 
@@ -52,18 +52,18 @@ static cell_t Log(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcep
         return 0;
     }
 
-    using std::chrono::duration_cast;
     using std::chrono::system_clock;
-    using spdlog::details::os::now;
     system_clock::time_point logTimePoint;
-    try
+    if (logTime->IsZero())
     {
-        auto nanoseconds = std::chrono::nanoseconds(std::stoull(logTime));
-        logTimePoint = system_clock::time_point(duration_cast<system_clock::duration>(nanoseconds));
-    }
-    catch (const std::exception &)
-    {
+        using spdlog::details::os::now;
         logTimePoint = now();
+    }
+    else
+    {
+        using std::chrono::duration_cast;
+        auto msec = std::chrono::milliseconds(logTime->ToInt64());
+        logTimePoint = system_clock::time_point(duration_cast<system_clock::duration>(msec));
     }
 
     try

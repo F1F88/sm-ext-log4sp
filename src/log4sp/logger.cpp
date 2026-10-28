@@ -350,7 +350,7 @@ void Logger::ErrHelper::HandleEx(const std::string &origin, const SrcHelper &src
                 return;
             }
 
-            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t), 0))
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&loc), sizeof(loc) / sizeof(cell_t)))
             {
                 smutils->LogError(myself, "Failed to push loc into ErrorHandler forward (error %d)", err);
                 return;

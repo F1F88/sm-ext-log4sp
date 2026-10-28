@@ -9,7 +9,7 @@
 
 enum struct LogEvent
 {
-    char time[22];
+    Long logTime;
     SourceLoc loc;
     char name[MAX_NAME_LENGTH];
     LogLevel lvl;
@@ -19,11 +19,9 @@ enum struct LogEvent
     char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #endif
 
-    void Set(const char[] time, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg) {
-        strcopy(this.time, sizeof(LogEvent::time), time);
-        strcopy(this.loc.filename, sizeof(SourceLoc::filename), loc.filename);
-        this.loc.line = loc.line;
-        strcopy(this.loc.funcname, sizeof(SourceLoc::funcname), loc.funcname);
+    void Set(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg) {
+        this.logTime = logTime;
+        this.loc = loc;
         strcopy(this.name, sizeof(LogEvent::name), name);
         this.lvl = lvl;
         strcopy(this.msg, sizeof(LogEvent::msg), msg);
@@ -34,7 +32,7 @@ enum struct LogEvent
         LogLevelToName(level, sizeof(level), this.lvl);
         return FormatEx(buffer, maxlen,
             "LogEvent{time=\"%s\",loc={func=\"%s\",line=%d,file=\"%s\"},name=\"%s\",lvl=\"%d\",msg=\"%s\"}.",
-            this.time, this.loc.funcname, this.loc.line, this.loc.filename, this.name, level, this.msg);
+            this.logTime.ToStringFixed(), this.loc.funcname, this.loc.line, this.loc.filename, this.name, level, this.msg);
     }
 
     void __Debug() {
@@ -124,7 +122,7 @@ methodmap TestSink < Sink
 }
 
 
-public bool __TestSink_OnLog(TestSink sink, char[] error, int maxlen, const char[] logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __TestSink_OnLog(TestSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     // Simulated delay
     SafeSleepForMilliseconds(view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).logDelay);

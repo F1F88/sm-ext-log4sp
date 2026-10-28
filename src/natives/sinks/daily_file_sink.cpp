@@ -78,16 +78,16 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
             ke::SafeStrcpy(relPath.data(), sizeof(relPath), filename.data());
 
             tm tmp = nowTime;
-            auto timestamp = std::to_string(mktime(&tmp));
+            auto timestamp = Log4sp::CellLong(static_cast<std::int64_t>(mktime(&tmp)));
 
-            /* void (char[] filename, int maxlen, const char[] sec); */
+            /* void (char[] filename, int maxlen, LOG4SP_ES_CONST Long sec); */
             auto fwd = forwards->CreateForwardEx(nullptr,
                         SourceMod::ExecType::ET_Ignore,
                         3,
                         nullptr,
                         SourceMod::ParamType::Param_String,
                         SourceMod::ParamType::Param_Cell,
-                        SourceMod::ParamType::Param_String);
+                        SourceMod::ParamType::Param_Array);
             using spdlog::throw_spdlog_ex;
             using spdlog::fmt_lib::format;
 
@@ -112,7 +112,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
                 throw_spdlog_ex(format("Failed to push maxlen into calculator forward (error {})", err));
             }
 
-            if (auto err = fwd->PushString(timestamp.c_str()))
+            if (auto err = fwd->PushArray(reinterpret_cast<cell_t*>(&timestamp), sizeof(timestamp) / sizeof(cell_t)))
             {
                 forwards->ReleaseForward(fwd);
                 throw_spdlog_ex(format("Failed to push timestamp into calculator forward (error {})", err));
