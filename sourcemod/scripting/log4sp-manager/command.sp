@@ -558,7 +558,7 @@ static CommandCode CmdExecute_List(DataPack data)
     // https://github.com/alliedmodders/sourcemod/blob/1bc536fdfa0fe088300ae3532ede2da84b7a80d9/core/logic/smn_console.cpp#L91
     const int MAX_CONSOLE_LENGTH = 1024;
     char buffer[MAX_CONSOLE_LENGTH];
-    for (int i = snapshot.Length - 1; i >= 0; --i)
+    for (int i = 0; i < snapshot.Length; ++i)
     {
         int keyLen = snapshot.KeyBufferSize(i);
         char[] key = new char[keyLen + 1];
