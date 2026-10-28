@@ -211,10 +211,14 @@ methodmap RotatingFileSink < Sink
     }
 
     public int GetMaxSize() {
+        if (!this.IsValid())
+            ThrowError("Invalid RotatingFileSink Handle %x.", this);
         return this.__GetMaxSize();
     }
 
     public bool SetMaxSize(const int maxSize, char[] error="", int maxlen=0) {
+        if (!this.IsValid())
+            ThrowError("Invalid RotatingFileSink Handle %x.", this);
         if (maxSize <= 0) {
             strcopy(error, maxlen, "Param maxSize cannot be less than or equal to 0.");
             return false;
@@ -224,12 +228,16 @@ methodmap RotatingFileSink < Sink
     }
 
     public int GetMaxFiles() {
+        if (!this.IsValid())
+            ThrowError("Invalid RotatingFileSink Handle %x.", this);
         return this.__GetMaxFiles();
     }
 
     public bool SetMaxFiles(const int maxFiles, char[] error="", int maxlen=0) {
-        if (maxFiles <= 0) {
-            strcopy(error, maxlen, "Param maxFiles cannot be less than or equal to 0.");
+        if (!this.IsValid())
+            ThrowError("Invalid RotatingFileSink Handle %x.", this);
+        if (maxFiles < 0) {
+            strcopy(error, maxlen, "Param maxFiles cannot be less than zero.");
             return false;
         }
         if (maxFiles > RotatingFileSink.MaxFiles()) {
