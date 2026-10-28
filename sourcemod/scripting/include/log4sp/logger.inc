@@ -292,7 +292,7 @@ methodmap Logger < Handle
         logger.__SetNameLength(IsNullString(name) ? strlen(owner) : strlen(name));
         logger.__SetLevel(LogLevel_Info);
         logger.__SetSinks(new ArrayList());
-        logger.__SetSinkOwners(new ArrayList(.blocksize=PLATFORM_MAX_PATH));
+        logger.__SetSinksOwner(new ArrayList(.blocksize=PLATFORM_MAX_PATH));
         logger.__SetFlushLevel(LogLevel_Off);
         logger.__SetThrowLevel(LogLevel_Off);
         // function void (const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg);
@@ -778,8 +778,10 @@ methodmap Logger < Handle
     public void SetPattern(const char[] pattern, PatternTimeType type=PatternTimeType_Local) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
-        for (int i = 0; i < this.__GetSinks().Length; ++i)
-            view_as<Sink>(this.__GetSinks().Get(i)).SetPattern(pattern, type);
+
+        ArrayList sinks = this.__GetSinks();
+        for (int i = 0; i < sinks.Length; ++i)
+            view_as<Sink>(sinks.Get(i)).SetPattern(pattern, type);
     }
 
     public void Flush() {
@@ -837,7 +839,8 @@ methodmap Logger < Handle
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
-        int length = this.__GetSinks().Length;
+        ArrayList sinks = this.__GetSinks();
+        int length = sinks.Length;
         if (length > maxlen)
             length = maxlen;
 
@@ -847,7 +850,7 @@ methodmap Logger < Handle
             // we return the clone of the internal clone.
             // Ownership belongs to an external party,
             // and the external party must manually shut it down.
-            Sink sink = view_as<Sink>(this.__GetSinks().Get(counter));
+            Sink sink = sinks.Get(counter);
             buffer[counter] = sink.Clone();
             ++counter;
         }
@@ -876,7 +879,7 @@ methodmap Logger < Handle
         // Clones cannot be obtained externally;
         // they can only be closed using "logger.Drop()".
         this.__GetSinks().Push(sink.Clone());
-        this.__GetSinkOwners().PushString(owner);
+        this.__GetSinksOwner().PushString(owner);
     }
 
     public void DropSink(Sink sink) {
@@ -886,14 +889,16 @@ methodmap Logger < Handle
             ThrowError("Invalid Sink Handle %x.", sink);
 
         // Remove and close
-        for (int i = 0; i < this.__GetSinks().Length; ++i) {
-            Sink cloned = view_as<Sink>(this.__GetSinks().Get(i));
+        ArrayList sinks = this.__GetSinks();
+        ArrayList owners = this.__GetSinksOwner();
+        for (int i = 0; i < sinks.Length; ++i) {
+            Sink cloned = sinks.Get(i);
             if (!cloned.Equals(sink))
                 continue;
 
             // Close as the adder
             char owner[PLATFORM_MAX_PATH];
-            this.__GetSinkOwners().GetString(i, owner, sizeof(owner));
+            owners.GetString(i, owner, sizeof(owner));
             Handle plugin = FindPluginByFile(owner);
             Function func = GetFunctionByName(plugin, "__Logger_OnDropSink");
 
@@ -903,8 +908,8 @@ methodmap Logger < Handle
             Call_Finish();
 
             // Remove
-            this.__GetSinks().Erase(i);
-            this.__GetSinkOwners().Erase(i);
+            sinks.Erase(i);
+            owners.Erase(i);
             --i;
         }
     }
@@ -962,8 +967,9 @@ methodmap Logger < Handle
         // Cleanup if no references
         if (refCnt <= 0) {
             // Cleanup all sinks
-            for (int i = this.__GetSinks().Length - 1; i >= 0 ; --i) {
-                this.DropSink(view_as<Sink>(this.__GetSinks().Get(i)));
+            ArrayList sinks = this.__GetSinks();
+            for (int i = sinks.Length - 1; i >= 0 ; --i) {
+                this.DropSink(sinks.Get(i));
             }
 
             // Cleanup all nested handles that the same ownership and lifecycle as this
@@ -979,7 +985,7 @@ methodmap Logger < Handle
 
             // It will be destroyed soon, so ignore resetting it to null.
             // logger.__SetSinks(null);
-            // logger.__SetSinkOwners(null);
+            // logger.__GetSinksOwner(null);
             // logger.__SetErrorFwd(null);
         }
         delete view_as<StringMap>(this);
@@ -1029,14 +1035,14 @@ methodmap Logger < Handle
         if (sinks1 != sinks2 || sinks1.Length != sinks2.Length)
             return false;
 
-        ArrayList owners1 = this.__GetSinkOwners();
-        ArrayList owners2 = logger.__GetSinkOwners();
+        ArrayList owners1 = this.__GetSinksOwner();
+        ArrayList owners2 = logger.__GetSinksOwner();
         if (owners1 != owners2 || owners1.Length != owners2.Length)
             return false;
 
         for (int i = 0; i < sinks1.Length; ++i) {
-            Sink sink1 = view_as<Sink>(sinks1.Get(i));
-            Sink sink2 = view_as<Sink>(sinks2.Get(i));
+            Sink sink1 = sinks1.Get(i);
+            Sink sink2 = sinks2.Get(i);
             if (!sink1.Equals(sink2))
                 return false;
 
@@ -1059,7 +1065,7 @@ methodmap Logger < Handle
          && this.__Contains("m_cRef")
          && this.__Contains("m_szOwner")    && this.__Contains("m_szName")
          && this.__Contains("m_uNameLen")   && this.__Contains("m_eLvl")
-         && this.__Contains("m_hSinks")     && this.__Contains("m_hSinkOwners")
+         && this.__Contains("m_hSinks")     && this.__Contains("m_hSinksOwner")
          && this.__Contains("m_eFlushLvl")  && this.__Contains("m_eThrowLvl")
          && this.__Contains("m_hErrFwd")    && this.__Contains("m_szErrPlugin");
 #else
@@ -1128,7 +1134,7 @@ methodmap Logger < Handle
     /**
      * Ownership and lifecycle are the same as this, closed in __Logger_OnClose().
      * Ownership and lifecycle of elements are uncertain,
-     * they are closed individually based on SinkOwners.
+     * they are closed individually based on SinksOwner.
      */
     public ArrayList __GetSinks()                   { return this.__GetValue("m_hSinks"); }
     public void __SetSinks(ArrayList value)         { this.__SetValue("m_hSinks", value); }
@@ -1142,13 +1148,13 @@ methodmap Logger < Handle
      *
      * Sink handle need to be close as plugin A.
      *
-     * SinkOwners is used to store and retrieve Plugin A.
+     * SinksOwner is used to store and retrieve Plugin A.
      * Ultimately, calling Plugin A's __Logger_OnDropSink() cleanup the sink handle.
      *
      * Ownership and lifecycle are the same as this, closed in __Logger_OnClose().
      */
-    public ArrayList __GetSinkOwners()              { return this.__GetValue("m_hSinkOwners"); }
-    public void __SetSinkOwners(ArrayList value)    { this.__SetValue("m_hSinkOwners", value); }
+    public ArrayList __GetSinksOwner()              { return this.__GetValue("m_hSinksOwner"); }
+    public void __SetSinksOwner(ArrayList value)    { this.__SetValue("m_hSinksOwner", value); }
 
     public LogLevel __GetFlushLevel()               { return this.__GetValue("m_eFlushLvl"); }
     public void __SetFlushLevel(LogLevel value)     { this.__SetValue("m_eFlushLvl", value); }
@@ -1335,7 +1341,7 @@ public void __Logger_OnDropSink(Sink sink)
 public void __Logger_OnClose(Logger logger)
 {
     delete logger.__GetSinks();
-    delete logger.__GetSinkOwners();
+    delete logger.__GetSinksOwner();
     delete logger.__GetErrFwd();
 }
 #endif      // LOG4SP_HEADER_ONLY
