@@ -5,6 +5,10 @@
 
 #include <log4sp/common>
 
+#if defined LOG4SP_HEADER_ONLY
+#include <log4sp/details/long>
+#endif      // LOG4SP_HEADER_ONLY
+
 
 /**
  * Close a sink and sets the passed variable to null.
@@ -339,29 +343,38 @@ methodmap Sink < Handle
         view_as<StringMap>(this).SetString(key, value);
     }
 
+    public Long __GetLong(const char[] key) {
+        Long value;
+        view_as<StringMap>(this).GetArray(key, value, sizeof(Long));
+        return value;
+    }
+    public void __SetLong(const char[] key, LOG4SP_ES_CONST Long value) {
+        view_as<StringMap>(this).SetArray(key, value, sizeof(Long));
+    }
+
     public any __GetRefCnt()                        { return this.__GetValue("m_cRef"); }
-    public void __SetRefCnt(int refCnt)             { this.__SetValue("m_cRef", refCnt); }
+    public void __SetRefCnt(int value)              { this.__SetValue("m_cRef", value); }
 
-    public int __GetOwner(char[] owner, int maxlen) { return this.__GetString("m_szOwner", owner, maxlen); }
-    public void __SetOwner(const char[] owner)      { this.__SetString("m_szOwner", owner); }
+    public int __GetOwner(char[] value, int maxlen) { return this.__GetString("m_szOwner", value, maxlen); }
+    public void __SetOwner(const char[] value)      { this.__SetString("m_szOwner", value); }
 
-    public int __GetClassname(char[] classname, int maxlen) { return this.__GetString("m_szClassname", classname, maxlen); }
-    public void __SetClassname(const char[] classname)      { this.__SetString("m_szClassname", classname); }
+    public int __GetClassname(char[] value, int maxlen) { return this.__GetString("m_szClassname", value, maxlen); }
+    public void __SetClassname(const char[] value)  { this.__SetString("m_szClassname", value); }
 
     public LogLevel __GetLevel()                    { return this.__GetValue("m_eLvl"); }
-    public void __SetLevel(LogLevel lvl)            { this.__SetValue("m_eLvl", lvl); }
+    public void __SetLevel(LogLevel value)          { this.__SetValue("m_eLvl", value); }
 
     // Ownership are the same as this, closed in __Sink_OnClose().
     public PrivateForward __GetLogFwd()             { return this.__GetValue("m_hLogFwd"); }
-    public void __SetLogFwd(PrivateForward fwd)     { this.__SetValue("m_hLogFwd", fwd); }
+    public void __SetLogFwd(PrivateForward value)   { this.__SetValue("m_hLogFwd", value); }
 
     // Ownership are the same as this, closed in __Sink_OnClose().
     public PrivateForward __GetFlushFwd()           { return this.__GetValue("m_hFlushFwd"); }
-    public void __SetFlushFwd(PrivateForward fwd)   { this.__SetValue("m_hFlushFwd", fwd); }
+    public void __SetFlushFwd(PrivateForward value) { this.__SetValue("m_hFlushFwd", value); }
 
     // Ownership are the same as this, closed in __Sink_OnClose().
     public PrivateForward __GetCloseFwd()           { return this.__GetValue("m_hCloseFwd"); }
-    public void __SetCloseFwd(PrivateForward fwd)   { this.__SetValue("m_hCloseFwd", fwd); }
+    public void __SetCloseFwd(PrivateForward value) { this.__SetValue("m_hCloseFwd", value); }
 
     // Use a derived methodmap instead of creating the Sink directly.
     public static Sink __Sink(const char[] classname,

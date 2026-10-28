@@ -234,27 +234,27 @@ methodmap RingBufferSink < Sink
 
     // *** Do not use the function below this line! *** //
     public int __GetMaxSize()                       { return this.__GetValue("m_uMaxSize"); }
-    public void __SetMaxSize(int maxSize)           { this.__SetValue("m_uMaxSize", maxSize); }
+    public void __SetMaxSize(int value)             { this.__SetValue("m_uMaxSize", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public ArrayList __GetLogTimes()                { return this.__GetValue("m_hLogTimes"); }
-    public void __SetLogTimes(ArrayList logTimes)   { this.__SetValue("m_hLogTimes", logTimes); }
+    public void __SetLogTimes(ArrayList value)      { this.__SetValue("m_hLogTimes", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public ArrayList __GetLocs()                    { return this.__GetValue("m_hLocs"); }
-    public void __SetLocs(ArrayList locs)           { this.__SetValue("m_hLocs", locs); }
+    public void __SetLocs(ArrayList value)          { this.__SetValue("m_hLocs", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public ArrayList __GetNames()                   { return this.__GetValue("m_hNames"); }
-    public void __SetNames(ArrayList names)         { this.__SetValue("m_hNames", names); }
+    public void __SetNames(ArrayList value)         { this.__SetValue("m_hNames", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public ArrayList __GetLvls()                    { return this.__GetValue("m_hLvls"); }
-    public void __SetLvls(ArrayList lvls)           { this.__SetValue("m_hLvls", lvls); }
+    public void __SetLvls(ArrayList value)          { this.__SetValue("m_hLvls", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public ArrayList __GetMsgs()                    { return this.__GetValue("m_hMsgs"); }
-    public void __SetMsgs(ArrayList msgs)           { this.__SetValue("m_hMsgs", msgs); }
+    public void __SetMsgs(ArrayList value)          { this.__SetValue("m_hMsgs", value); }
 #endif      // LOG4SP_HEADER_ONLY
 }
 

@@ -126,7 +126,7 @@ methodmap BasicFileSink < Sink
     // *** Do not use the function below this line! *** //
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public FileHelper __GetFileHelper()                 { return this.__GetValue("m_hFileHelper"); }
-    public void __SetFileHelper(FileHelper fileHelper)  { this.__SetValue("m_hFileHelper", fileHelper); }
+    public void __SetFileHelper(FileHelper value)       { this.__SetValue("m_hFileHelper", value); }
 #endif      // LOG4SP_HEADER_ONLY
 }
 

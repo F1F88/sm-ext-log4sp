@@ -273,21 +273,21 @@ methodmap RotatingFileSink < Sink
 
 
     // *** Do not use the function below this line! *** //
-    public int __GetBaseFilename(char[] filename, int maxlen) { return this.__GetString("m_szBaseFilename", filename, maxlen); }
-    public void __SetBaseFilename(const char[] filename)      { this.__SetString("m_szBaseFilename", filename); }
+    public int __GetBaseFilename(char[] value, int maxlen) { return this.__GetString("m_szBaseFilename", value, maxlen); }
+    public void __SetBaseFilename(const char[] value)   { this.__SetString("m_szBaseFilename", value); }
 
     public int __GetMaxSize()                           { return this.__GetValue("m_uMaxSize"); }
-    public void __SetMaxSize(int maxSize)               { this.__SetValue("m_uMaxSize", maxSize); }
+    public void __SetMaxSize(int value)                 { this.__SetValue("m_uMaxSize", value); }
 
     public int __GetMaxFiles()                          { return this.__GetValue("m_uMaxFiles"); }
-    public void __SetMaxFiles(int maxFiles)             { this.__SetValue("m_uMaxFiles", maxFiles); }
+    public void __SetMaxFiles(int value)                { this.__SetValue("m_uMaxFiles", value); }
 
     public int __GetCurrentSize()                       { return this.__GetValue("m_uCurSize"); }
-    public void __SetCurrentSize(int curSize)           { this.__SetValue("m_uCurSize", curSize); }
+    public void __SetCurrentSize(int value)             { this.__SetValue("m_uCurSize", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public FileHelper __GetFileHelper()                 { return this.__GetValue("m_hFileHelper"); }
-    public void __SetFileHelper(FileHelper fileHelper)  { this.__SetValue("m_hFileHelper", fileHelper); }
+    public void __SetFileHelper(FileHelper value)       { this.__SetValue("m_hFileHelper", value); }
 
     // Rotate files:
     // log.txt -> log.1.txt

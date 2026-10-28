@@ -358,29 +358,29 @@ methodmap FileHelper < Handle
         view_as<StringMap>(this).SetString(key, value);
     }
 
-    public any __GetRefCnt()                                { return this.__GetValue("m_cRef"); }
-    public void __SetRefCnt(int refCnt)                     { this.__SetValue("m_cRef", refCnt); }
+    public any __GetRefCnt()                            { return this.__GetValue("m_cRef"); }
+    public void __SetRefCnt(int value)                  { this.__SetValue("m_cRef", value); }
 
-    public int __GetOwner(char[] owner, int maxlen)         { return this.__GetString("m_szOwner", owner, maxlen); }
-    public void __SetOwner(const char[] owner)              { this.__SetString("m_szOwner", owner); }
-
-    // Ownership and lifecycle are the same as this, closed in __FileHelper_OnClose.
-    public File __GetFile()                                 { return this.__GetValue("m_hFile"); }
-    public void __SetFile(File file)                        { this.__SetValue("m_hFile", file); }
-
-    public int __GetFileOwner(char[] fileOwner, int maxlen) { return this.__GetString("m_szFileOwner", fileOwner, maxlen); }
-    public void __SetFileOwner(const char[] fileOwner)      { this.__SetString("m_szFileOwner", fileOwner); }
-
-    public int __GetFilename(char[] filename, int maxlen)   { return this.__GetString("m_szFilename", filename, maxlen); }
-    public void __SetFilename(const char[] filename)        { this.__SetString("m_szFilename", filename); }
+    public int __GetOwner(char[] value, int maxlen)     { return this.__GetString("m_szOwner", value, maxlen); }
+    public void __SetOwner(const char[] value)          { this.__SetString("m_szOwner", value); }
 
     // Ownership and lifecycle are the same as this, closed in __FileHelper_OnClose.
-    public PrivateForward __GetFileOpenFwd()                { return this.__GetValue("m_hFileOpenFwd"); }
-    public void __SetFileOpenFwd(PrivateForward fileOpenFwd){ this.__SetValue("m_hFileOpenFwd", fileOpenFwd); }
+    public File __GetFile()                             { return this.__GetValue("m_hFile"); }
+    public void __SetFile(File value)                   { this.__SetValue("m_hFile", value); }
+
+    public int __GetFileOwner(char[] value, int maxlen) { return this.__GetString("m_szFileOwner", value, maxlen); }
+    public void __SetFileOwner(const char[] value)      { this.__SetString("m_szFileOwner", value); }
+
+    public int __GetFilename(char[] value, int maxlen)  { return this.__GetString("m_szFilename", value, maxlen); }
+    public void __SetFilename(const char[] value)       { this.__SetString("m_szFilename", value); }
 
     // Ownership and lifecycle are the same as this, closed in __FileHelper_OnClose.
-    public PrivateForward __GetFileCloseFwd()               { return this.__GetValue("m_hFileCloseFwd"); }
-    public void __SetFileCloseFwd(PrivateForward fileCloseFwd){ this.__SetValue("m_hFileCloseFwd", fileCloseFwd); }
+    public PrivateForward __GetFileOpenFwd()            { return this.__GetValue("m_hFileOpenFwd"); }
+    public void __SetFileOpenFwd(PrivateForward value)  { this.__SetValue("m_hFileOpenFwd", value); }
+
+    // Ownership and lifecycle are the same as this, closed in __FileHelper_OnClose.
+    public PrivateForward __GetFileCloseFwd()           { return this.__GetValue("m_hFileCloseFwd"); }
+    public void __SetFileCloseFwd(PrivateForward value) { this.__SetValue("m_hFileCloseFwd", value); }
 
     public void __CallFileOpenFunction() {
         PrivateForward fileOpenFwd = this.__GetFileOpenFwd();

@@ -206,40 +206,36 @@ methodmap DailyFileSink < Sink
 
     // *** Do not use the function below this line! *** //
 
-    public int __GetBaseFilename(char[] baseFilename, int maxlen) { return this.__GetString("m_szBaseFilename", baseFilename, maxlen); }
-    public void __SetBaseFilename(const char[] baseFilename)      { this.__SetString("m_szBaseFilename", baseFilename); }
+    public int __GetBaseFilename(char[] value, int maxlen)  { return this.__GetString("m_szBaseFilename", value, maxlen); }
+    public void __SetBaseFilename(const char[] value)   { this.__SetString("m_szBaseFilename", value); }
 
     public int __GetHour()                              { return this.__GetValue("m_iHour"); }
-    public void __SetHour(int hour)                     { this.__SetValue("m_iHour", hour); }
+    public void __SetHour(int value)                    { this.__SetValue("m_iHour", value); }
 
     public int __GetMinute()                            { return this.__GetValue("m_iMinute"); }
-    public void __SetMinute(int minute)                 { this.__SetValue("m_iMinute", minute); }
+    public void __SetMinute(int value)                  { this.__SetValue("m_iMinute", value); }
 
     // Returns a timestamp in seconds.
-    public Long __GetRotateTime() {
-        Long value;
-        view_as<StringMap>(this).GetArray("m_lRotateTime", value, sizeof(Long));
-        return value;
-    }
-    public void __SetRotateTime(Long rotateTime)        { view_as<StringMap>(this).SetArray("m_lRotateTime", rotateTime, sizeof(Long)); }
+    public Long __GetRotateTime()                       { return this.__GetLong("m_lRotateTime"); }
+    public void __SetRotateTime(Long value)             { this.__SetLong("m_lRotateTime", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public FileHelper __GetFileHelper()                 { return this.__GetValue("m_hFileHelper"); }
-    public void __SetFileHelper(FileHelper fileHelper)  { this.__SetValue("m_hFileHelper", fileHelper); }
+    public void __SetFileHelper(FileHelper value)       { this.__SetValue("m_hFileHelper", value); }
 
     public bool __GetTruncate()                         { return this.__GetValue("m_bTruncate"); }
-    public void __SetTruncate(bool truncate)            { this.__SetValue("m_bTruncate", truncate); }
+    public void __SetTruncate(bool value)               { this.__SetValue("m_bTruncate", value); }
 
     public int __GetMaxFiles()                          { return this.__GetValue("m_uMaxFiles"); }
-    public void __SetMaxFiles(int maxFiles)             { this.__SetValue("m_uMaxFiles", maxFiles); }
+    public void __SetMaxFiles(int value)                { this.__SetValue("m_uMaxFiles", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public ArrayList __GetFilenames()                   { return this.__GetValue("m_hFilenames"); }
-    public void __SetFilenames(ArrayList filenames)     { this.__SetValue("m_hFilenames", filenames); }
+    public void __SetFilenames(ArrayList value)         { this.__SetValue("m_hFilenames", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public PrivateForward __GetCalcFwd()                { return this.__GetValue("m_hCalcFwd"); }
-    public void __SetCalcFwd(PrivateForward calcFwd)    { this.__SetValue("m_hCalcFwd", calcFwd); }
+    public void __SetCalcFwd(PrivateForward value)      { this.__SetValue("m_hCalcFwd", value); }
 
     public void __InitFilenamesQueue() {
         int time64[2];

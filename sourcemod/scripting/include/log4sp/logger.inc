@@ -215,11 +215,11 @@ methodmap Logger < Handle
      *
      * @note Sinks clone handles must be freed via delete or CloseHandle() or Sink.Close().
      *
-     * @param sinks     Buffer to store sinks clone.
+     * @param buffer    Buffer to store sinks clone.
      * @param maxlen    Maximum length of the buffer.
      * @return          Number of sinks clone written.
      */
-    public native int GetSinks(Sink[] sinks, int maxlen);
+    public native int GetSinks(Sink[] buffer, int maxlen);
 
     /**
      * Gets the length of the logger sinks.
@@ -829,11 +829,11 @@ methodmap Logger < Handle
      *
      * @note Sinks clone handles must be freed via Sink.Close().
      *
-     * @param sinks     Buffer to store sinks clone.
+     * @param buffer    Buffer to store sinks clone.
      * @param maxlen    Maximum length of the buffer.
      * @return          Number of sinks clone written.
      */
-    public int GetSinks(Sink[] sinks, int maxlen) {
+    public int GetSinks(Sink[] buffer, int maxlen) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
@@ -848,7 +848,7 @@ methodmap Logger < Handle
             // Ownership belongs to an external party,
             // and the external party must manually shut it down.
             Sink sink = view_as<Sink>(this.__GetSinks().Get(counter));
-            sinks[counter] = sink.Clone();
+            buffer[counter] = sink.Clone();
             ++counter;
         }
         return counter;
@@ -1098,7 +1098,7 @@ methodmap Logger < Handle
      * If (value <= 0) cleanup handle
      */
     public any __GetRefCnt()                        { return this.__GetValue("m_cRef"); }
-    public void __SetRefCnt(int refCnt)             { this.__SetValue("m_cRef", refCnt); }
+    public void __SetRefCnt(int value)              { this.__SetValue("m_cRef", value); }
 
     /**
      * After Plugin A calls "new Logger()",
@@ -1113,17 +1113,17 @@ methodmap Logger < Handle
      * Owner is used to store and retrieve Plugin A.
      * Ultimately, calling Plugin A's __Logger_OnClose() cleanup the nested handle.
      */
-    public int __GetOwner(char[] owner, int maxlen) { return this.__GetString("m_szOwner", owner, maxlen); }
-    public void __SetOwner(const char[] owner)      { this.__SetString("m_szOwner", owner); }
+    public int __GetOwner(char[] value, int maxlen) { return this.__GetString("m_szOwner", value, maxlen); }
+    public void __SetOwner(const char[] value)      { this.__SetString("m_szOwner", value); }
 
-    public int __GetName(char[] name, int maxlen)   { return this.__GetString("m_szName", name, maxlen); }
-    public void __SetName(const char[] name)        { this.__SetString("m_szName", name); }
+    public int __GetName(char[] value, int maxlen)  { return this.__GetString("m_szName", value, maxlen); }
+    public void __SetName(const char[] value)       { this.__SetString("m_szName", value); }
 
     public int __GetNameLength()                    { return this.__GetValue("m_uNameLen"); }
-    public void __SetNameLength(int nameLength)     { this.__SetValue("m_uNameLen", nameLength); }
+    public void __SetNameLength(int value)          { this.__SetValue("m_uNameLen", value); }
 
     public LogLevel __GetLevel()                    { return this.__GetValue("m_eLvl"); }
-    public void __SetLevel(LogLevel lvl)            { this.__SetValue("m_eLvl", lvl); }
+    public void __SetLevel(LogLevel value)          { this.__SetValue("m_eLvl", value); }
 
     /**
      * Ownership and lifecycle are the same as this, closed in __Logger_OnClose().
@@ -1131,7 +1131,7 @@ methodmap Logger < Handle
      * they are closed individually based on SinkOwners.
      */
     public ArrayList __GetSinks()                   { return this.__GetValue("m_hSinks"); }
-    public void __SetSinks(ArrayList sinks)         { this.__SetValue("m_hSinks", sinks); }
+    public void __SetSinks(ArrayList value)         { this.__SetValue("m_hSinks", value); }
 
     /**
      * After plugin A calls "new Sink() & logger.AddSink(sink)",
@@ -1148,24 +1148,24 @@ methodmap Logger < Handle
      * Ownership and lifecycle are the same as this, closed in __Logger_OnClose().
      */
     public ArrayList __GetSinkOwners()              { return this.__GetValue("m_hSinkOwners"); }
-    public void __SetSinkOwners(ArrayList owners)   { this.__SetValue("m_hSinkOwners", owners); }
+    public void __SetSinkOwners(ArrayList value)    { this.__SetValue("m_hSinkOwners", value); }
 
     public LogLevel __GetFlushLevel()               { return this.__GetValue("m_eFlushLvl"); }
-    public void __SetFlushLevel(LogLevel lvl)       { this.__SetValue("m_eFlushLvl", lvl); }
+    public void __SetFlushLevel(LogLevel value)     { this.__SetValue("m_eFlushLvl", value); }
 
     public LogLevel __GetThrowLevel()               { return this.__GetValue("m_eThrowLvl"); }
-    public void __SetThrowLevel(LogLevel lvl)       { this.__SetValue("m_eThrowLvl", lvl); }
+    public void __SetThrowLevel(LogLevel value)     { this.__SetValue("m_eThrowLvl", value); }
 
     // Ownership and lifecycle are the same as this, closed in __Logger_OnClose().
     public PrivateForward __GetErrFwd()             { return this.__GetValue("m_hErrFwd"); }
-    public void __SetErrFwd(PrivateForward fwd)     { this.__SetValue("m_hErrFwd", fwd); }
+    public void __SetErrFwd(PrivateForward value)   { this.__SetValue("m_hErrFwd", value); }
 
     /**
      * Save the plugin associated with the current error handler function.
      * When setting a new error handler function, remove the old one.
      */
-    public int __GetErrPlugin(char[] plugin, int maxlen){ return this.__GetString("m_szErrPlugin", plugin, maxlen); }
-    public void __SetErrPlugin(const char[] plugin)     { this.__SetString("m_szErrPlugin", plugin); }
+    public int __GetErrPlugin(char[] value, int maxlen) { return this.__GetString("m_szErrPlugin", value, maxlen); }
+    public void __SetErrPlugin(const char[] value)  { this.__SetString("m_szErrPlugin", value); }
 
     public void __LogIt(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
         /**

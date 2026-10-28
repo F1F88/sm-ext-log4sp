@@ -170,11 +170,11 @@ methodmap CallbackSink < Sink
 
     // *** Do not use the function below this line! *** //
     public any __GetData()                              { return this.__GetValue("m_vData"); }
-    public void __SetData(any data)                     { this.__SetValue("m_vData", data); }
+    public void __SetData(any value)                    { this.__SetValue("m_vData", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
     public PrivateForward __GetCustomCloseFwd()         { return this.__GetValue("m_hCustomCloseFwd"); }
-    public void __SetCustomCloseFwd(PrivateForward fwd) { this.__SetValue("m_hCustomCloseFwd", fwd); }
+    public void __SetCustomCloseFwd(PrivateForward value) { this.__SetValue("m_hCustomCloseFwd", value); }
 #endif      // LOG4SP_HEADER_ONLY
 }
 
