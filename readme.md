@@ -59,7 +59,7 @@ Log4sp defines **`7`** log levels, from low to high: **`trace`** < **`debug`** <
 
 Log messages are formatted and delivered to sinks only if message level **≥** logger log level;
 
-Log messages are log to sink only if message level **≥** Sink log level.
+Log messages are logged to a sink only if message level **≥** Sink log level.
 
 Developers can filter logs based on severity, ensuring that only relevant messages are recorded, which improves debugging efficiency and maintains cleaner, more organized log files.
 
@@ -106,7 +106,7 @@ File `game/addons/sourcemod/logs/simple-file.log`:
 
 ### Format
 
-Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L62) as an example, ordinary `Log` method only output the log message as is, while the `LogF` method will format the parameters first and then output the formatted log message.
+Taking [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L47) as an example, ordinary `Log` method only output the log message as is, while the `LogF` method will format the parameters first and then output the formatted log message.
 
 Parameters formatting is performed at **Logger** layer and is triggered only if log message level **>=** logger log level.
 
@@ -422,7 +422,7 @@ This is particularly useful for scenarios where an error should both be logged a
 Without Throw Level, a typical parameter validation would need to perform both operations separately:
 
 ```sourcepawn
-logger.Error("Invalid client index: %d", client);
+logger.ErrorF("Invalid client index: %d", client);
 ThrowError("Invalid client index: %d", client);
 ```
 
@@ -587,9 +587,9 @@ These loggers can then be managed using Registry Natives, menus or console comma
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             Logger logger = new Logger("my-logger");
             LoggerRegistry.Instance().RegisterLogger(logger);
@@ -599,8 +599,11 @@ These loggers can then be managed using Registry Natives, menus or console comma
 
     public void OnPluginEnd()
     {
-        // Drop it when your plugin unloads.
-        LoggerRegistry.Instance().Drop("my-logger");
+        if (LoggerRegistry.IsAvailable())
+        {
+            // Drop it when your plugin unloads.
+            LoggerRegistry.Instance().Drop("my-logger");
+        }
     }
     ```
 
@@ -611,12 +614,12 @@ These loggers can then be managed using Registry Natives, menus or console comma
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             Logger logger = LoggerRegistry.Instance().Get("my-logger");
-            if (logger != INVALID_HANDLE)
+            if (logger != null)
             {
                 logger.Info("Some message");
             }
@@ -635,11 +638,17 @@ These loggers can then be managed using Registry Natives, menus or console comma
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
-            Logger logger = new Logger("my-logger");
+            Logger logger = LoggerRegistry.Instance().Get("my-logger");
+            if (logger != null)
+            {
+                LoggerRegistry.Instance().Drop("my-logger");
+            }
+
+            logger = new Logger("my-logger");
             LoggerRegistry.Instance().SetGlobalLogger(logger);
             logger.Close();
         }
@@ -653,9 +662,9 @@ These loggers can then be managed using Registry Natives, menus or console comma
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             // Set the logger log level of all loggers in the registry to Warn
             LoggerRegistry.Instance().SetLevel(LogLevel_Warn);
@@ -676,9 +685,9 @@ These loggers can then be managed using Registry Natives, menus or console comma
     #include <sourcemod>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             // Flush all loggers in the registry every 5 seconds
             LoggerRegistry.Instance().SetFlushEvery(5.0);
@@ -836,7 +845,7 @@ sudo apt-get install gcc-multilib g++-multilib
 
 /usr/bin/ld: cannot find -lstdc++
 
-> Remove "[cxx.linkflags += \['-static-libstdc++']](./AMBuildScript#L306)" in **`AMBuildScript`** file
+> Remove "[cxx.linkflags += \['-static-libstdc++']](./AMBuildScript#L309)" in **`AMBuildScript`** file
 
 #### Runtime Problem
 

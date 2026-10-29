@@ -106,7 +106,7 @@ public void OnPluginStart()
 
 ### 参数格式化
 
-以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L62) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogF` 方法则先将参数格式化，再输出格式化后的日志消息。
+以 [**Logger::Log**](./sourcemod/scripting/include/log4sp/logger.inc#L47) 为例，普通 `Log` 方法只会按原样输出日志消息，而 `LogF` 方法则先将参数格式化，再输出格式化后的日志消息。
 
 参数格式化在 **Logger** 层执行，且仅当日志消息级别 **≥** logger 日志级别时才会触发。
 
@@ -430,7 +430,7 @@ logger.ErrorF("Invalid client index: %d", client);
 
 ### 仅头文件
 
-仅头文件的所有代码实现于 `.inc` 头文件中，不依赖任何外部组件，可以轻易的整合到任何插件中，从而简化设置于集成工作。
+仅头文件的所有代码实现于 `.inc` 头文件中，不依赖任何外部组件，可以轻易的整合到任何插件中，从而简化设置与集成工作。
 
 使用仅头文件模式需在包含 `<log4sp>` 头文件之前定义宏 `LOG4SP_HEADER_ONLY`，也可以添加编译参数启用：`LOG4SP_HEADER_ONLY=`
 
@@ -582,9 +582,9 @@ flowchart TD
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             Logger logger = new Logger("my-logger");
             LoggerRegistry.Instance().RegisterLogger(logger);
@@ -594,8 +594,11 @@ flowchart TD
 
     public void OnPluginEnd()
     {
-        // Drop it when your plugin unloads.
-        LoggerRegistry.Instance().Drop("my-logger");
+        if (LoggerRegistry.IsAvailable())
+        {
+            // Drop it when your plugin unloads.
+            LoggerRegistry.Instance().Drop("my-logger");
+        }
     }
     ```
 
@@ -606,12 +609,12 @@ flowchart TD
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             Logger logger = LoggerRegistry.Instance().Get("my-logger");
-            if (logger != INVALID_HANDLE)
+            if (logger != null)
             {
                 logger.Info("Some message");
             }
@@ -630,11 +633,17 @@ flowchart TD
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
-            Logger logger = new Logger("my-logger");
+            Logger logger = LoggerRegistry.Instance().Get("my-logger");
+            if (logger != null)
+            {
+                LoggerRegistry.Instance().Drop("my-logger");
+            }
+
+            logger = new Logger("my-logger");
             LoggerRegistry.Instance().SetGlobalLogger(logger);
             logger.Close();
         }
@@ -648,9 +657,9 @@ flowchart TD
     #include <log4sp>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             // 修改注册表中所有记录器的日志级别为 Warn
             LoggerRegistry.Instance().SetLevel(LogLevel_Warn);
@@ -671,9 +680,9 @@ flowchart TD
     #include <sourcemod>
     #include <log4sp/registry>
 
-    public void OnPluginStart()
+    public void OnAllPluginsLoaded()
     {
-        if (LoggerRegistry.LibraryExists())
+        if (LoggerRegistry.IsAvailable())
         {
             // 每隔 5 秒刷写注册表中所有记录器
             LoggerRegistry.Instance().SetFlushEvery(5.0);
@@ -829,7 +838,7 @@ sudo apt-get install gcc-multilib g++-multilib
 
 /usr/bin/ld: cannot find -lstdc++
 
-> 删除 **`AMBuildScript`** 中的 [cxx.linkflags += ['-static-libstdc++']](./AMBuildScript#L306)
+> 删除 **`AMBuildScript`** 中的 [cxx.linkflags += ['-static-libstdc++']](./AMBuildScript#L309)
 
 #### 运行问题
 

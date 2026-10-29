@@ -49,7 +49,7 @@ methodmap LoggerRegistry < Handle
      *
      * @note Registered loggers must be freed via LoggerRegistry.Drop().
      *
-     * @param logger    Logger Handle to be registered.
+     * @param logger    Logger Handle to be initialized.
      * @error           Invalid Logger Handle, or Logger with name already exists.
      */
     public native void InitializeLogger(Logger logger);
