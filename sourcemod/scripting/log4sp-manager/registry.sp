@@ -257,14 +257,24 @@ static any Native_Registry_SetGlobalLogger(Handle plugin, int numParams)
     if (!logger.IsValid())
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Logger Handle %x.", logger);
 
+    // Get logger name
+    int size = logger.GetNameLength() + 1;
+    char[] name = new char[size];
+    logger.GetName(name, size);
+
     // Close and Drop global logger
     if (m_hGlobalLogger.IsValid())
     {
-        int size = m_hGlobalLogger.GetNameLength() + 1;
-        char[] name = new char[size];
-        m_hGlobalLogger.GetName(name, size);
+        // Get global logger name
+        size = m_hGlobalLogger.GetNameLength() + 1;
+        char[] buffer = new char[size];
+        m_hGlobalLogger.GetName(buffer, size);
 
-        LoggerRegistry.Instance().Drop(name);
+        // Throw if exists
+        if (m_hLoggers.ContainsKey(name) && !StrEqual(name, buffer))
+            ThrowNativeError(SP_ERROR_PARAM, "Logger with name \"%s\" already exists.", name);
+
+        LoggerRegistry.Instance().Drop(buffer);
         LoggerCloseAndDelete(m_hGlobalLogger);
     }
 
