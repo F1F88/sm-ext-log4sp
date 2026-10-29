@@ -62,11 +62,18 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
         }
     }
 
+    SourceMod::Handle_t calcPluginHandle = calcPlugin->GetMyHandle();
     Log4sp::Sinks::DailyFileSink::Calculator calculator = nullptr;
     if (calcFunc)
     {
-        calculator = [calcFunc](const spdlog::filename_t &filename, const tm &nowTime)
+        calculator = [calcPluginHandle, calcFunc](const spdlog::filename_t &filename, const tm &nowTime)
         {
+            if (!plsys->PluginFromHandle(calcPluginHandle, nullptr))
+            {
+                smutils->LogError(myself, "Daily filename calculator function is no longer valid; revert to the default calculator.");
+                return Log4sp::Sinks::DailyFileSink::DefaultCalc(filename, nowTime);
+            }
+
             std::array<char, sizeof(Log4sp::CellSourceLoc::filename)> relPath;
             ke::SafeStrcpy(relPath.data(), sizeof(relPath), filename.data());
 

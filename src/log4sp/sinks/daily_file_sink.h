@@ -36,6 +36,19 @@ class DailyFileSink final : public spdlog::sinks::base_sink<spdlog::details::nul
 public:
     using Calculator = std::function<Filename_t(const Filename_t &, const tm &)>;
 
+    static Filename_t DefaultCalc(const Filename_t &filename, const tm &nowTime) {
+        Filename_t basename, ext;
+        std::tie(basename, ext) = spdlog::details::file_helper::split_by_extension(filename);
+        auto relPath = spdlog::fmt_lib::format(
+            SPDLOG_FMT_STRING(
+                SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),
+                    basename, nowTime.tm_year + 1900, nowTime.tm_mon + 1, nowTime.tm_mday, ext);
+
+        std::array<char, PLATFORM_MAX_PATH> absPath;
+        smutils->BuildPath(Path_Game, absPath.data(), sizeof(absPath), "%s", relPath.c_str());
+        return Filename_t(absPath.data());
+    }
+
     // create daily file sink which rotates on given time
     DailyFileSink(Filename_t baseFilename,
                   int rotationHour,
@@ -159,16 +172,7 @@ private:
         if (m_Calculator) {
             return m_Calculator(filename, nowTime);
         } else {
-            spdlog::filename_t basename, ext;
-            std::tie(basename, ext) = spdlog::details::file_helper::split_by_extension(filename);
-            auto relPath = spdlog::fmt_lib::format(
-                SPDLOG_FMT_STRING(
-                    SPDLOG_FILENAME_T("{}_{:04d}{:02d}{:02d}{}")),
-                        basename, nowTime.tm_year + 1900, nowTime.tm_mon + 1, nowTime.tm_mday, ext);
-
-            std::array<char, PLATFORM_MAX_PATH> absPath;
-            smutils->BuildPath(Path_Game, absPath.data(), sizeof(absPath), "%s", relPath.c_str());
-            return spdlog::filename_t(absPath.data());
+            return DefaultCalc(filename, nowTime);
         }
     }
 
