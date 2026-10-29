@@ -194,9 +194,7 @@ static CommandCode CmdExecute_Log(DataPack data)
     char level[32];
     data.ReadString(level, sizeof(level));
 
-    LogLevel lvl = NameToLogLevel(level);
-    if (lvl == LogLevel_Off)
-        StringToIntEx(level, view_as<int>(lvl));
+    LogLevel lvl = CmdArg_StrToLogLevel(level);
     LogLevelToName(level, sizeof(level), lvl);
 
     char msg[COMMAND_MAX_LENGTH];
@@ -235,9 +233,7 @@ static CommandCode CmdExecute_ShouldLog(DataPack data)
     char level[32];
     data.ReadString(level, sizeof(level));
 
-    LogLevel lvl = NameToLogLevel(level);
-    if (lvl == LogLevel_Off)
-        StringToIntEx(level, view_as<int>(lvl));
+    LogLevel lvl = CmdArg_StrToLogLevel(level);
     LogLevelToName(level, sizeof(level), lvl);
 
     if (logger.ShouldLog(lvl))
@@ -300,9 +296,7 @@ static CommandCode CmdExecute_SetLvl(DataPack data)
     char level[32];
     data.ReadString(level, sizeof(level));
 
-    LogLevel lvl = NameToLogLevel(level);
-    if (lvl == LogLevel_Off)
-        StringToIntEx(level, view_as<int>(lvl));
+    LogLevel lvl = CmdArg_StrToLogLevel(level);
     LogLevelToName(level, sizeof(level), lvl);
 
     char oldLevel[32];
@@ -400,9 +394,7 @@ static CommandCode CmdExecute_ShouldFlush(DataPack data)
     char level[32];
     data.ReadString(level, sizeof(level));
 
-    LogLevel lvl = NameToLogLevel(level);
-    if (lvl == LogLevel_Off)
-        StringToIntEx(level, view_as<int>(lvl));
+    LogLevel lvl = CmdArg_StrToLogLevel(level);
     LogLevelToName(level, sizeof(level), lvl);
 
     if (logger.ShouldFlush(lvl))
@@ -466,9 +458,7 @@ static CommandCode CmdExecute_SetFlushLvl(DataPack data)
     char level[32];
     data.ReadString(level, sizeof(level));
 
-    LogLevel lvl = NameToLogLevel(level);
-    if (lvl == LogLevel_Off)
-        StringToIntEx(level, view_as<int>(lvl));
+    LogLevel lvl = CmdArg_StrToLogLevel(level);
     LogLevelToName(level, sizeof(level), lvl);
 
     char oldLevel[32];
@@ -593,6 +583,22 @@ static void CB_OnApplyAll_GetNames(Logger logger, StringMap loggers)
     char[] name = new char[size];
     logger.GetName(name, size);
     loggers.SetValue(name, 1);
+}
+
+
+static LogLevel CmdArg_StrToLogLevel(const char[] arg)
+{
+    int value;
+    if (StringToIntEx(arg, value) <= 0)
+        return NameToLogLevel(arg);
+
+    if (value < LOG4SP_LEVEL_TRACE)
+        return LogLevel_Trace;
+
+    if (value >= LOG4SP_LEVEL_OFF)
+        return LogLevel_Off;
+
+    return view_as<LogLevel>(value);
 }
 
 
