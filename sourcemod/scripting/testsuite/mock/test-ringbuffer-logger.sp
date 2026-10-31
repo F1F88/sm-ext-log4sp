@@ -62,7 +62,7 @@ void TestDrain()
     {
         for (int j = i; j <= sinkSize * i; ++j)
         {
-            logger.InfoF("%d", j);
+            logger.LogSrcF(LogLevel_Info, "%d", j);
         }
 
         // 缓冲区只能存储预设条数消息
@@ -123,6 +123,8 @@ public void CB_OnDrainLatest(LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES Sourc
     data.Reset();
     int counter = data.ReadCell();
 
+    AssertEq("Drain line", loc.line, 65);
+    AssertStrEq("Drain func", loc.funcname, "TestDrain");
     AssertStrEq("Drain name", name, "MyLogger");
     AssertEq("Drain lvl", lvl, LOG4SP_LEVEL_INFO);
     AssertEq("Drain msg", StringToInt(msg), counter);

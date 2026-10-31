@@ -5,6 +5,10 @@
 
 #include <log4sp/sinks/sink>
 
+#if defined LOG4SP_HEADER_ONLY
+#include <log4sp/details/circular_deque>
+#endif      // LOG4SP_HEADER_ONLY
+
 
 /**
  * Callback function called on RingBufferSink.DrainLatest() or RingBufferSink.DrainOldest().
@@ -18,8 +22,8 @@
  */
 typeset RingBufferDrainFunction
 {
-    function void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
-    function void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+    function void (LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
+    function void (LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
 }
 
 
@@ -108,11 +112,11 @@ methodmap RingBufferSink < Sink
                                                                   null, INVALID_FUNCTION,
                                                                   null, __RingBufferSink_OnClose));
         sink.__SetMaxSize(maxSize);
-        sink.__SetLogTimes(new ArrayList(sizeof(Long)));
-        sink.__SetLocs(new ArrayList(sizeof(SourceLoc)));
-        sink.__SetNames(new ArrayList(128)); // HACK: Hard-coded size
-        sink.__SetLvls(new ArrayList());
-        sink.__SetMsgs(new ArrayList(LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH));
+        sink.__SetLogTimes(new CircularDeque(maxSize, sizeof(Long)));
+        sink.__SetLocs(new CircularDeque(maxSize, sizeof(SourceLoc)));
+        sink.__SetNames(new CircularDeque(maxSize, ByteCountToCells(128))); // HACK: Hard-coded size
+        sink.__SetLvls(new CircularDeque(maxSize));
+        sink.__SetMsgs(new CircularDeque(maxSize, ByteCountToCells(LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH)));
         return sink;
     }
 
@@ -120,35 +124,33 @@ methodmap RingBufferSink < Sink
         if (!this.IsValid())
             ThrowError("Invalid RingBufferSink Handle %x.", this);
 
-        ArrayList logTimes = this.__GetLogTimes();
-        int length = logTimes.Length;
-        if (length <= 0)
+        CircularDeque logTimes = this.__GetLogTimes();
+        if (logTimes.IsEmpty())
             return false;
 
-        ArrayList locs = this.__GetLocs();
-        ArrayList names = this.__GetNames();
-        ArrayList lvls = this.__GetLvls();
-        ArrayList msgs = this.__GetMsgs();
+        CircularDeque locs = this.__GetLocs();
+        CircularDeque names = this.__GetNames();
+        CircularDeque lvls = this.__GetLvls();
+        CircularDeque msgs = this.__GetMsgs();
 
         Long logTime;
         SourceLoc loc;
-        char[] name    = new char[names.BlockSize];
-        char[] msg     = new char[msgs.BlockSize];
+        char name[128];
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 
-        int index = length - 1;
-        logTimes.GetArray(index, logTime);
-        locs.GetArray(index, loc);
-        names.GetString(index, name, names.BlockSize);
-        LogLevel lvl = lvls.Get(index);
-        msgs.GetString(index, msg, msgs.BlockSize);
+        logTimes.GetBackArray(logTime);
+        locs.GetBackArray(loc);
+        names.GetBackString(name, sizeof(name));
+        LogLevel lvl = lvls.GetBack();
+        msgs.GetBackString(msg, sizeof(msg));
 
-        logTimes.Erase(index);
-        locs.Erase(index);
-        names.Erase(index);
-        lvls.Erase(index);
-        msgs.Erase(index);
+        logTimes.PopBack();
+        locs.PopBack();
+        names.PopBack();
+        lvls.PopBack();
+        msgs.PopBack();
 
-        // void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+        // void (LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
         Call_StartFunction(plugin, func);
         Call_PushArray(logTime, sizeof(logTime));
         Call_PushArray(loc, sizeof(loc));
@@ -164,34 +166,33 @@ methodmap RingBufferSink < Sink
         if (!this.IsValid())
             ThrowError("Invalid RingBufferSink Handle %x.", this);
 
-        ArrayList logTimes = this.__GetLogTimes();
-        if (logTimes.Length <= 0)
+        CircularDeque logTimes = this.__GetLogTimes();
+        if (logTimes.IsEmpty())
             return false;
 
-        ArrayList locs = this.__GetLocs();
-        ArrayList names = this.__GetNames();
-        ArrayList lvls = this.__GetLvls();
-        ArrayList msgs = this.__GetMsgs();
+        CircularDeque locs = this.__GetLocs();
+        CircularDeque names = this.__GetNames();
+        CircularDeque lvls = this.__GetLvls();
+        CircularDeque msgs = this.__GetMsgs();
 
         Long logTime;
         SourceLoc loc;
-        char[] name    = new char[names.BlockSize];
-        char[] msg     = new char[msgs.BlockSize];
+        char name[128];
+        char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 
-        int index = 0;
-        logTimes.GetArray(index, logTime);
-        locs.GetArray(index, loc);
-        names.GetString(index, name, names.BlockSize);
-        LogLevel lvl = lvls.Get(index);
-        msgs.GetString(index, msg, msgs.BlockSize);
+        logTimes.GetFrontArray(logTime);
+        locs.GetFrontArray(loc);
+        names.GetFrontString(name, sizeof(name));
+        LogLevel lvl = lvls.GetFront();
+        msgs.GetFrontString(msg, sizeof(msg));
 
-        logTimes.Erase(index);
-        locs.Erase(index);
-        names.Erase(index);
-        lvls.Erase(index);
-        msgs.Erase(index);
+        logTimes.PopFront();
+        locs.PopFront();
+        names.PopFront();
+        lvls.PopFront();
+        msgs.PopFront();
 
-        // void (LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+        // void (LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
         Call_StartFunction(plugin, func);
         Call_PushArray(logTime, sizeof(logTime));
         Call_PushArray(loc, sizeof(loc));
@@ -237,65 +238,46 @@ methodmap RingBufferSink < Sink
     public void __SetMaxSize(int value)             { this.__SetValue("m_uMaxSize", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
-    public ArrayList __GetLogTimes()                { return this.__GetValue("m_hLogTimes"); }
-    public void __SetLogTimes(ArrayList value)      { this.__SetValue("m_hLogTimes", value); }
+    public CircularDeque __GetLogTimes()            { return this.__GetValue("m_hLogTimes"); }
+    public void __SetLogTimes(CircularDeque value)  { this.__SetValue("m_hLogTimes", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
-    public ArrayList __GetLocs()                    { return this.__GetValue("m_hLocs"); }
-    public void __SetLocs(ArrayList value)          { this.__SetValue("m_hLocs", value); }
+    public CircularDeque __GetLocs()                { return this.__GetValue("m_hLocs"); }
+    public void __SetLocs(CircularDeque value)      { this.__SetValue("m_hLocs", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
-    public ArrayList __GetNames()                   { return this.__GetValue("m_hNames"); }
-    public void __SetNames(ArrayList value)         { this.__SetValue("m_hNames", value); }
+    public CircularDeque __GetNames()               { return this.__GetValue("m_hNames"); }
+    public void __SetNames(CircularDeque value)     { this.__SetValue("m_hNames", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
-    public ArrayList __GetLvls()                    { return this.__GetValue("m_hLvls"); }
-    public void __SetLvls(ArrayList value)          { this.__SetValue("m_hLvls", value); }
+    public CircularDeque __GetLvls()                { return this.__GetValue("m_hLvls"); }
+    public void __SetLvls(CircularDeque value)      { this.__SetValue("m_hLvls", value); }
 
     // Ownership and lifecycle are the same as this, closed in OnClose.
-    public ArrayList __GetMsgs()                    { return this.__GetValue("m_hMsgs"); }
-    public void __SetMsgs(ArrayList value)          { this.__SetValue("m_hMsgs", value); }
+    public CircularDeque __GetMsgs()                { return this.__GetValue("m_hMsgs"); }
+    public void __SetMsgs(CircularDeque value)      { this.__SetValue("m_hMsgs", value); }
 #endif      // LOG4SP_HEADER_ONLY
 }
 
 
 #if defined LOG4SP_HEADER_ONLY
-public bool __RingBufferSink_OnLog(RingBufferSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __RingBufferSink_OnLog(RingBufferSink sink, char[] error, int maxlen, LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
-    int maxSize = sink.__GetMaxSize();
-    if (maxSize)
-    {
-        ArrayList logTimes = sink.__GetLogTimes();
-        ArrayList locs = sink.__GetLocs();
-        ArrayList names = sink.__GetNames();
-        ArrayList lvls = sink.__GetLvls();
-        ArrayList msgs = sink.__GetMsgs();
-
-        if (logTimes.Length >= maxSize)
-        {
-            logTimes.Erase(0);
-            locs.Erase(0);
-            names.Erase(0);
-            lvls.Erase(0);
-            msgs.Erase(0);
-        }
-
-        logTimes.PushArray(logTime, sizeof(logTime));
-        locs.PushArray(loc, sizeof(loc));
-        names.PushString(name);
-        lvls.Push(lvl);
-        msgs.PushString(msg);
-    }
+    sink.__GetLogTimes().PushBackArray(logTime);
+    sink.__GetLocs().PushBackArray(loc);
+    sink.__GetNames().PushBackString(name);
+    sink.__GetLvls().PushBack(lvl);
+    sink.__GetMsgs().PushBackString(msg);
     return true;
 }
 
 public void __RingBufferSink_OnClose(RingBufferSink sink)
 {
-    delete sink.__GetLogTimes();
-    delete sink.__GetLocs();
-    delete sink.__GetNames();
-    delete sink.__GetLvls();
-    delete sink.__GetMsgs();
+    sink.__GetLogTimes().Close();
+    sink.__GetLocs().Close();
+    sink.__GetNames().Close();
+    sink.__GetLvls().Close();
+    sink.__GetMsgs().Close();
 
     // It will be destroyed soon, so ignore resetting it to null.
     // sink.__SetLogTimes(null);

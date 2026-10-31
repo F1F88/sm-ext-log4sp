@@ -62,7 +62,7 @@ static cell_t DrainLatest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!func)
         return false;
 
-    // void (LOG4SP_ES_CONST Long logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+    // void (LOG4SP_CONST_ES Long logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
     auto fwd = forwards->CreateForwardEx(nullptr,
                 SourceMod::ExecType::ET_Ignore,
                 6,
@@ -199,7 +199,7 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     if (!func)
         return false;
 
-    // void (LOG4SP_ES_CONST Long logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
+    // void (LOG4SP_CONST_ES Long logTime, SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, any data);
     auto fwd = forwards->CreateForwardEx(nullptr,
                 SourceMod::ExecType::ET_Ignore,
                 6,
