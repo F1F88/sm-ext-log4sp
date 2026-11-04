@@ -117,7 +117,7 @@ methodmap Sink < Handle
 
 #else
 
-    public bool Log(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc,
+    public bool Log(LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc,
                     const char[] name, LogLevel lvl, const char[] msg,
                     char[] error="", int maxlen=0) {
         if (!this.IsValid())
@@ -328,7 +328,7 @@ methodmap Sink < Handle
         view_as<StringMap>(this).GetArray(key, value, sizeof(Long));
         return value;
     }
-    public void __SetLong(const char[] key, LOG4SP_ES_CONST Long value) {
+    public void __SetLong(const char[] key, LOG4SP_CONST_ES Long value) {
         view_as<StringMap>(this).SetArray(key, value, sizeof(Long));
     }
 
@@ -366,8 +366,8 @@ methodmap Sink < Handle
 
         PrivateForward logFwd;
         if (logFunc != INVALID_FUNCTION) {
-            // bool (Sink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime,
-            //       LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
+            // bool (Sink sink, char[] error, int maxlen, LOG4SP_CONST_ES Long logTime,
+            //       LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg);
             logFwd = new PrivateForward(ET_Single,   Param_Cell,   Param_String, Param_Cell, Param_Array,
                                         Param_Array, Param_String, Param_Cell,   Param_String);
             logFwd.AddFunction(logPlugin, logFunc);

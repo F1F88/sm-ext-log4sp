@@ -17,13 +17,13 @@
  * @param maxlen    Maximum length of the filename.
  * @param timestamp Timestamp in seconds.
  */
-typedef DailyFileCalculator = function void (char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp);
+typedef DailyFileCalculator = function void (char[] filename, int maxlen, LOG4SP_CONST_ES Long timestamp);
 
 
 /**
  * Generator of daily log file names with strftime format.
  */
-public void DailyFileFormatCalculator(char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp) {
+public void DailyFileFormatCalculator(char[] filename, int maxlen, LOG4SP_CONST_ES Long timestamp) {
     // FormatTime buffer cannot be the same as the format
     char buffer[256];
     strcopy(buffer, sizeof(buffer), filename);
@@ -136,7 +136,7 @@ methodmap DailyFileSink < Sink
 
         PrivateForward calcFwd;
         if (calcFunc != INVALID_FUNCTION) {
-            // void (char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp)
+            // void (char[] filename, int maxlen, LOG4SP_CONST_ES Long timestamp)
             calcFwd = new PrivateForward(ET_Ignore, Param_String, Param_Cell, Param_Array);
             calcFwd.AddFunction(calcPlugin, calcFunc);
         }
@@ -308,7 +308,7 @@ methodmap DailyFileSink < Sink
     }
 
     // Unit of timestamp is seconds.
-    public void __CalcFilename(char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp) {
+    public void __CalcFilename(char[] filename, int maxlen, LOG4SP_CONST_ES Long timestamp) {
         this.__GetBaseFilename(filename, maxlen);
         PrivateForward calcFwd = this.__GetCalcFwd();
         if (calcFwd) {
@@ -334,7 +334,7 @@ methodmap DailyFileSink < Sink
 
 
 #if defined LOG4SP_HEADER_ONLY
-public bool __DailyFileSink_OnLog(DailyFileSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __DailyFileSink_OnLog(DailyFileSink sink, char[] error, int maxlen, LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     int secs, msec;
     Long seconds;

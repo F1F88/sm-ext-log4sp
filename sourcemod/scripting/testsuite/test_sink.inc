@@ -19,7 +19,7 @@ enum struct LogEvent
     char msg[LOG4SP_HEADER_ONLY_MAX_MSG_LENGTH];
 #endif
 
-    void Set(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg) {
+    void Set(LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg) {
         this.logTime = logTime;
         this.loc = loc;
         strcopy(this.name, sizeof(LogEvent::name), name);
@@ -122,7 +122,7 @@ methodmap TestSink < Sink
 }
 
 
-public bool __TestSink_OnLog(TestSink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __TestSink_OnLog(TestSink sink, char[] error, int maxlen, LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     // Simulated delay
     SafeSleepForMilliseconds(view_as<TestSinkData>(view_as<CallbackSink>(sink).GetData()).logDelay);

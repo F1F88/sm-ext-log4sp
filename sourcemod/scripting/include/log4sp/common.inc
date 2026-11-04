@@ -3,11 +3,11 @@
 #endif
 #define _log4sp_common_included
 
-#if !defined LOG4SP_ES_CONST
+#if !defined LOG4SP_CONST_ES
     #if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR <= 11
-        #define LOG4SP_ES_CONST
+        #define LOG4SP_CONST_ES
     #else
-        #define LOG4SP_ES_CONST const
+        #define LOG4SP_CONST_ES const
     #endif
 #endif
 
@@ -135,7 +135,7 @@ typedef FileCloseFunction = function void (const char[] filename);
  * @param loc       The source location of the error.
  * @param msg       The details message of the error.
  */
-typedef ErrorHandler = function void (const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg);
+typedef ErrorHandler = function void (const char[] origin, LOG4SP_CONST_ES SourceLoc loc, const char[] msg);
 
 
 /**

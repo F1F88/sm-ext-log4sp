@@ -118,7 +118,7 @@ void TestEmptySize()
 }
 
 
-public void CB_OnDrainLatest(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, DataPack data)
+public void CB_OnDrainLatest(LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg, DataPack data)
 {
     data.Reset();
     int counter = data.ReadCell();
@@ -131,12 +131,12 @@ public void CB_OnDrainLatest(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST Sourc
     data.WriteCell(--counter);
 }
 
-public void CB_OnDrainLatest_Empty(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public void CB_OnDrainLatest_Empty(LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     AssertFalse("Drain empty", true); // should not be called since the sink is empty
 }
 
-public void CB_OnDrainLatest_EmptySize(LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public void CB_OnDrainLatest_EmptySize(LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     AssertFalse("Drain empty size", true); // should not be called since the sink size is 0
 }

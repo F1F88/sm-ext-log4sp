@@ -80,7 +80,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
             tm tmp = nowTime;
             auto timestamp = Log4sp::CellLong(static_cast<std::int64_t>(mktime(&tmp)));
 
-            /* void (char[] filename, int maxlen, LOG4SP_ES_CONST Long sec); */
+            /* void (char[] filename, int maxlen, LOG4SP_CONST_ES Long sec); */
             auto fwd = forwards->CreateForwardEx(nullptr,
                         SourceMod::ExecType::ET_Ignore,
                         3,

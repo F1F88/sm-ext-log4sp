@@ -87,7 +87,7 @@ static cell_t CallbackSink(SourcePawn::IPluginContext *ctx, const cell_t *params
     SourceMod::IChangeableForward *logFwd = nullptr;
     if (logFunc)
     {
-        // bool (Sink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, SourceLoc loc,
+        // bool (Sink sink, char[] error, int maxlen, LOG4SP_CONST_ES Long logTime, SourceLoc loc,
         //       const char[] name, LogLevel lvl, const char[] msg);
         logFwd = forwards->CreateForwardEx(nullptr,
                     SourceMod::ExecType::ET_Single,

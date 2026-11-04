@@ -129,7 +129,7 @@ void TestCustomErrorHandler()
 }
 
 
-public void CB_ErrorHandler(const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg)
+public void CB_ErrorHandler(const char[] origin, LOG4SP_CONST_ES SourceLoc loc, const char[] msg)
 {
     __iCustomErrCnt++;
 

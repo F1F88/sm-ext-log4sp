@@ -25,8 +25,8 @@ typedef CallbackSinkLogFunction = function bool (
     Sink sink,
     char[] error,
     int maxlen,
-    LOG4SP_ES_CONST Long logTime,
-    LOG4SP_ES_CONST SourceLoc loc,
+    LOG4SP_CONST_ES Long logTime,
+    LOG4SP_CONST_ES SourceLoc loc,
     const char[] name,
     LogLevel lvl,
     const char[] msg

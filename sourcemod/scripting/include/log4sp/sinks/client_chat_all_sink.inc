@@ -43,7 +43,7 @@ methodmap ClientChatAllSink < CallbackSink
 }
 
 
-public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, LOG4SP_ES_CONST Long logTime, LOG4SP_ES_CONST SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
+public bool __ClientChatAllSink_OnLog(Sink sink, char[] error, int maxlen, LOG4SP_CONST_ES Long logTime, LOG4SP_CONST_ES SourceLoc loc, const char[] name, LogLevel lvl, const char[] msg)
 {
     int secs, msec;
 #if !defined SM_INT64_SUPPORTED

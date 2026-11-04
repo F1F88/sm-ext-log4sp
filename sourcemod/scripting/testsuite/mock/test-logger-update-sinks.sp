@@ -310,5 +310,5 @@ void TestUpdateSinksCase7()
 
 
 // 仅一个文件不需要计算
-public void CB_OnDailyFileCalculator(char[] filename, int maxlen, LOG4SP_ES_CONST Long timestamp)
+public void CB_OnDailyFileCalculator(char[] filename, int maxlen, LOG4SP_CONST_ES Long timestamp)
 {}

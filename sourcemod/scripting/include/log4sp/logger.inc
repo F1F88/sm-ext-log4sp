@@ -295,7 +295,7 @@ methodmap Logger < Handle
         logger.__SetSinksOwner(new ArrayList(.blocksize=PLATFORM_MAX_PATH));
         logger.__SetFlushLevel(LogLevel_Off);
         logger.__SetThrowLevel(LogLevel_Off);
-        // function void (const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg);
+        // function void (const char[] origin, LOG4SP_CONST_ES SourceLoc loc, const char[] msg);
         logger.__SetErrFwd(new PrivateForward(ET_Ignore, Param_String, Param_Array, Param_String));
         logger.__SetErrPlugin("");
         return logger;
@@ -383,7 +383,7 @@ methodmap Logger < Handle
             this.__ThrowIt(loc, lvl, msg);
     }
 
-    public void LogLoc(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
+    public void LogLoc(LOG4SP_CONST_ES SourceLoc loc, LogLevel lvl, const char[] msg) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
@@ -399,7 +399,7 @@ methodmap Logger < Handle
             this.__ThrowIt(loc, lvl, msg);
     }
 
-    public void LogLocF(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] fmt, any ...) {
+    public void LogLocF(LOG4SP_CONST_ES SourceLoc loc, LogLevel lvl, const char[] fmt, any ...) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
@@ -1173,7 +1173,7 @@ methodmap Logger < Handle
     public int __GetErrPlugin(char[] value, int maxlen) { return this.__GetString("m_szErrPlugin", value, maxlen); }
     public void __SetErrPlugin(const char[] value)  { this.__SetString("m_szErrPlugin", value); }
 
-    public void __LogIt(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
+    public void __LogIt(LOG4SP_CONST_ES SourceLoc loc, LogLevel lvl, const char[] msg) {
         // Log Time (nanoseconds)
         Long now;
         now = GetMilliseconds();
@@ -1202,7 +1202,7 @@ methodmap Logger < Handle
             this.__FlushIt(loc);
     }
 
-    public void __FlushIt(LOG4SP_ES_CONST SourceLoc loc) {
+    public void __FlushIt(LOG4SP_CONST_ES SourceLoc loc) {
         ArrayList sinks = this.__GetSinks();
         int length = sinks.Length;
         char error[LOG4SP_HEADER_ONLY_MAX_ERR_LENGTH];
@@ -1218,7 +1218,7 @@ methodmap Logger < Handle
         }
     }
 
-    public void __ThrowIt(LOG4SP_ES_CONST SourceLoc loc, LogLevel lvl, const char[] msg) {
+    public void __ThrowIt(LOG4SP_CONST_ES SourceLoc loc, LogLevel lvl, const char[] msg) {
         char source[256];
         if (!loc.IsEmpty()) {
             int sepOffset = 0;
@@ -1237,7 +1237,7 @@ methodmap Logger < Handle
         ThrowError("[%c] %s%s", level[0], source, msg);
     }
 
-    public void __HandlerError(const char[] origin, LOG4SP_ES_CONST SourceLoc loc, const char[] msg) {
+    public void __HandlerError(const char[] origin, LOG4SP_CONST_ES SourceLoc loc, const char[] msg) {
         PrivateForward errFwd = this.__GetErrFwd();
         if (errFwd.FunctionCount) {
             Call_StartForward(errFwd);
