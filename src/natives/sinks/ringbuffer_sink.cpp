@@ -191,11 +191,11 @@ static cell_t DrainOldest(SourcePawn::IPluginContext *ctx, const cell_t *params)
     }
     else
     {
-        SourceMod::HandleError error;
-        plugin = plsys->PluginFromHandle(params[2], &error);
+        SourceMod::HandleError err;
+        plugin = plsys->PluginFromHandle(params[2], &err);
         if (!plugin)
         {
-            ctx->ReportError("Invalid Plugin Handle %x (error %d)", params[2], error);
+            ctx->ReportError("Invalid Plugin Handle %x (error %d)", params[2], err);
             return false;
         }
     }

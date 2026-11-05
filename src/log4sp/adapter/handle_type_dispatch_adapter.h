@@ -224,7 +224,7 @@ inline bool IHandleTypeDispatchAdapter<TypePointer, TypeName>::RemoveHandleType(
 }
 
 template <class TypePointer, const char *TypeName>
-inline void IHandleTypeDispatchAdapter<TypePointer, TypeName>::OnHandleDestroy(SourceMod::HandleType_t type, void *object) noexcept
+inline void IHandleTypeDispatchAdapter<TypePointer, TypeName>::OnHandleDestroy([[maybe_unused]] SourceMod::HandleType_t type, void *object) noexcept
 {
     delete static_cast<TypePointer>(object);
 }

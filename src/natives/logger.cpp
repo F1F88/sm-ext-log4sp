@@ -456,9 +456,9 @@ static cell_t GetSinks(SourcePawn::IPluginContext *ctx, const cell_t *params) no
 
     // 槽位大于 sink 个数时填入 sink 数量即可
     // 反之填满槽位即可
-    cell_t size = params[3];
-    if (size > logger->Sinks().size())
-        size = logger->Sinks().size();
+    auto maxlen = params[3];
+    if (maxlen > static_cast<cell_t>(logger->Sinks().size()))
+        maxlen = static_cast<cell_t>(logger->Sinks().size());
 
     // 克隆体所有权归于 native caller
     SourceMod::IdentityToken_t *owner = ctx->GetIdentity();
@@ -466,14 +466,14 @@ static cell_t GetSinks(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     SourceMod::HandleError error;
 
     cell_t counter = 0;
-    while (counter < size)
+    while (counter < maxlen)
     {
         auto handle = logger->SinksHandle().at(counter);
         auto cloned = Log4sp::SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
         if (!cloned)
         {
             // 发生错误, 先清理已克隆的 sink handle 再抛出错误信息
-            for (std::size_t i = 0; i < counter; ++i)
+            for (cell_t i = 0; i < counter; ++i)
             {
                 error = Log4sp::SinkHandler::Instance().FreeHandle(sinks[i], &security);
                 assert(error == SourceMod::HandleError::HandleError_None);

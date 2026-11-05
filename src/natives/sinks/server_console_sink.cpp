@@ -3,7 +3,7 @@
 #include "log4sp/adapter/sink_handler.h"
 
 
-static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t ServerConsoleSink(SourcePawn::IPluginContext *ctx, [[maybe_unused]] const cell_t *params) noexcept
 {
     spdlog::sinks::stdout_sink_st *sink;
     try
