@@ -32,7 +32,7 @@ enum struct LogEvent
         LogLevelToName(level, sizeof(level), this.lvl);
         return FormatEx(buffer, maxlen,
             "LogEvent{time=\"%s\",loc={func=\"%s\",line=%d,file=\"%s\"},name=\"%s\",lvl=\"%d\",msg=\"%s\"}.",
-            this.logTime.ToStringFixed(), this.loc.funcname, this.loc.line, this.loc.filename, this.name, level, this.msg);
+            this.logTime.ToStringArray(), this.loc.funcname, this.loc.line, this.loc.filename, this.name, level, this.msg);
     }
 
     void __Debug() {

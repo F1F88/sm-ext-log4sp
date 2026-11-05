@@ -432,7 +432,7 @@ enum struct Long
         return Int64ToString(this.__bits, buffer, maxlen);
     }
 
-    char[] ToStringFixed(int &bytes=0) {
+    char[] ToStringArray(int &bytes=0) {
         char buffer[21];
         bytes = Int64ToString(this.__bits, buffer, sizeof(buffer));
         return buffer;
@@ -634,7 +634,7 @@ enum struct Long
         return FormatEx(buffer, maxlen, "%ld", this.__digits);
     }
 
-    char[] ToStringFixed(int &bytes=0) {
+    char[] ToStringArray(int &bytes=0) {
         char buffer[21];
         bytes = FormatEx(buffer, sizeof(buffer), "%ld", this.__digits);
         return buffer;
