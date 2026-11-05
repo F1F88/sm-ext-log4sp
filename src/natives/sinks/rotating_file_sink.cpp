@@ -167,7 +167,14 @@ static cell_t RotateNow(SourcePawn::IPluginContext *ctx, const cell_t *params) n
 static cell_t GetMaxSize(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
 
     auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
     if (!rotatingFileSink)
@@ -182,7 +189,14 @@ static cell_t GetMaxSize(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 static cell_t SetMaxSize(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
 
     auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
     if (!rotatingFileSink)
@@ -209,7 +223,14 @@ static cell_t SetMaxSize(SourcePawn::IPluginContext *ctx, const cell_t *params) 
 static cell_t GetMaxFiles(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
 
     auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
     if (!rotatingFileSink)
@@ -224,7 +245,14 @@ static cell_t GetMaxFiles(SourcePawn::IPluginContext *ctx, const cell_t *params)
 static cell_t SetMaxFiles(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
-    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, nullptr);
+    SourceMod::HandleError error;
+
+    auto sink = Log4sp::SinkHandler::Instance().ReadHandle(params[1], &security, &error);
+    if (!sink)
+    {
+        ctx->ReportError("Invalid Sink Handle %x (error %d)", params[1], error);
+        return 0;
+    }
 
     auto rotatingFileSink = dynamic_cast<spdlog::sinks::rotating_file_sink_st*>(sink);
     if (!rotatingFileSink)

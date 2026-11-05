@@ -160,9 +160,9 @@ methodmap LoggerRegistry < Handle
     /**
      * Sets whether the Logger is automatically registered to the registry when it is initialized.
      *
-     * @param automaticRegistration     True to enable auto-registration.
+     * @param flag      True to enable auto-registration.
      */
-    public native void SetAutomaticRegistration(bool automaticRegistration);
+    public native void SetAutomaticRegistration(bool flag);
 
     /**
      * InitializeLogger, ApplyLoggerEnvLevels First set the log level according to this setting.
@@ -170,11 +170,10 @@ methodmap LoggerRegistry < Handle
      *
      * @note This native clones and saves the levels handle.
      *
-     * @param levels        The key is the logger name, and the value is the log level.
-     *                      If null, do not modify.
-     * @param globalLevel   Global log level.
+     * @param levels    The key is the logger name, and the value is the log level.
+     * @param lvl       Global log level.
      */
-    public native void SetLevels(StringMap levels, LogLevel globalLevel);
+    public native void SetLevels(StringMap levels, LogLevel lvl);
 
     /**
      * Set the log level based on the environment or use the global log level setting.

@@ -196,7 +196,7 @@ static cell_t Equals(SourcePawn::IPluginContext *ctx, const cell_t *params) noex
         return 0;
     }
 
-    auto sink2 = Log4sp::SinkHandler::Instance().ReadHandle(params[2], &security, nullptr);
+    auto sink2 = Log4sp::SinkHandler::Instance().ReadHandle(params[2], &security, &error);
     if (!sink2)
     {
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[2], error);

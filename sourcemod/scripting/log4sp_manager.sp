@@ -49,6 +49,7 @@ public void OnPluginStart()
 public void OnNotifyPluginUnloaded(Handle plugin)
 {
     RegistryHandleOwnershipPatch(plugin);
+    RegistryErrorHandlerPatch(plugin);
 }
 
 stock bool IsValidClient(int client)

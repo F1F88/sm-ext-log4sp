@@ -104,13 +104,16 @@ void RegistryHandleOwnershipPatch(Handle plugin)
         }
     }
     delete snapshot;
+#endif
+}
 
+void RegistryErrorHandlerPatch(Handle plugin)
+{
     if (plugin == m_hErrorPlugin)
     {
         m_hErrorPlugin = null;
         m_fnErrorFunc = INVALID_FUNCTION;
     }
-#endif
 }
 
 
@@ -257,24 +260,27 @@ static any Native_Registry_SetGlobalLogger(Handle plugin, int numParams)
     if (!logger.IsValid())
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Logger Handle %x.", logger);
 
-    // Get logger name
-    int size = logger.GetNameLength() + 1;
-    char[] name = new char[size];
-    logger.GetName(name, size);
-
     // Close and Drop global logger
     if (m_hGlobalLogger.IsValid())
     {
+        if (logger.Equals(m_hGlobalLogger))
+            return 0;
+
+        // Get logger name
+        int size1 = logger.GetNameLength() + 1;
+        char[] name1 = new char[size1];
+        logger.GetName(name1, size1);
+
         // Get global logger name
-        size = m_hGlobalLogger.GetNameLength() + 1;
-        char[] buffer = new char[size];
-        m_hGlobalLogger.GetName(buffer, size);
+        int size2 = m_hGlobalLogger.GetNameLength() + 1;
+        char[] name2 = new char[size2];
+        m_hGlobalLogger.GetName(name2, size2);
 
         // Throw if exists
-        if (m_hLoggers.ContainsKey(name) && !StrEqual(name, buffer))
-            ThrowNativeError(SP_ERROR_PARAM, "Logger with name \"%s\" already exists.", name);
+        if (m_hLoggers.ContainsKey(name1) && !StrEqual(name1, name2))
+            ThrowNativeError(SP_ERROR_PARAM, "Logger with name \"%s\" already exists.", name1);
 
-        LoggerRegistry.Instance().Drop(buffer);
+        LoggerRegistry.Instance().Drop(name2);
         LoggerCloseAndDelete(m_hGlobalLogger);
     }
 
@@ -294,6 +300,7 @@ static any Native_Registry_SetLevel(Handle plugin, int numParams)
 
     LogLevel lvl = GetNativeCell(2);
 
+    // apply to loggers
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
     for (int i = 0; i < snapshot.Length; ++i)
     {
@@ -323,19 +330,29 @@ static any Native_Registry_SetPattern(Handle plugin, int numParams)
     if (!IsValidRegistryHandle(pThis))
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
 
-    int len;
-    GetNativeStringLength(2, len);
-    char[] pattern = new char[len + 1];
-    GetNativeString(2, pattern, len + 1);
+    int size;
+    {
+        int err = GetNativeStringLength(2, size);
+        if (err != SP_ERROR_NONE)
+            ThrowNativeError(SP_ERROR_PARAM, "Invalid pattern (error %d)", err);
+    }
+
+    char[] pattern = new char[size + 1];
+    {
+        int err = GetNativeString(2, pattern, size + 1);
+        if (err != SP_ERROR_NONE)
+            ThrowNativeError(SP_ERROR_PARAM, "Invalid pattern (error %d)", err);
+    }
 
     PatternTimeType type = GetNativeCell(3);
 
     // Save to global
     m_hPatternData.Reset(true);
-    m_hPatternData.WriteCell(len);
+    m_hPatternData.WriteCell(size);
     m_hPatternData.WriteString(pattern);
     m_ePatternTimeType = type;
 
+    // apply to loggers
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
     for (int i = 0; i < snapshot.Length; ++i)
     {
@@ -359,6 +376,7 @@ static any Native_Registry_SetFlushLevel(Handle plugin, int numParams)
 
     LogLevel lvl = GetNativeCell(2);
 
+    // apply to loggers
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
     for (int i = 0; i < snapshot.Length; ++i)
     {
@@ -388,13 +406,10 @@ static any Native_Registry_SetFlushEvery(Handle plugin, int numParams)
 
     // Kill if exists
     if (m_hFlushTimer)
-    {
-        KillTimer(m_hFlushTimer);
-        m_hFlushTimer = null;
-    }
+        delete m_hFlushTimer;
 
-    // Set to global
-    m_hFlushTimer = CreateTimer(interval, Timer_FlushEvery, _, TIMER_REPEAT);
+    if (interval > 0.0)
+        m_hFlushTimer = CreateTimer(interval, Timer_FlushEvery, _, TIMER_REPEAT);
     return 0;
 }
 
@@ -425,6 +440,7 @@ static any Native_Registry_SetErrorHandler(Handle plugin, int numParams)
     if (errorFunc == INVALID_FUNCTION)
         ThrowNativeError(SP_ERROR_PARAM, "Invalid Error Handler.");
 
+    // apply to loggers
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
     for (int i = 0; i < snapshot.Length; ++i)
     {
@@ -459,7 +475,10 @@ static any Native_Registry_ApplyAll(Handle plugin, int numParams)
 
     PrivateForward fwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
     if (!fwd.AddFunction(applyAllPlugin, applyAllFunc))
+    {
+        delete fwd;
         ThrowNativeError(SP_ERROR_PARAM, "Invalid ApplyAll Function.");
+    }
 
     StringMapSnapshot snapshot = m_hLoggers.Snapshot();
     for (int i = 0; i < snapshot.Length; ++i)
@@ -474,7 +493,13 @@ static any Native_Registry_ApplyAll(Handle plugin, int numParams)
             Call_StartForward(fwd);
             Call_PushCell(logger);
             Call_PushCell(data);
-            Call_Finish();
+            int error = Call_Finish();
+            if (error != SP_ERROR_NONE)
+            {
+                delete snapshot;
+                delete fwd;
+                ThrowNativeError(SP_ERROR_PARAM, "Failed to execute ApplyAll forward (error %d)", error);
+            }
         }
     }
     delete snapshot;
@@ -586,35 +611,33 @@ static any Native_Registry_SetLevels(Handle plugin, int numParams)
 
     // <nameString, levelEnum>
     StringMap levels = GetNativeCell(2);
-    LogLevel globalLevel = GetNativeCell(3);
+    LogLevel lvl = GetNativeCell(3);
 
-    if (levels)
+    // apply to loggers
+    StringMapSnapshot snapshot = m_hLoggers.Snapshot();
+    for (int i = 0; i < snapshot.Length; ++i)
     {
-        StringMapSnapshot snapshot = m_hLoggers.Snapshot();
-        for (int i = 0; i < snapshot.Length; ++i)
+        // key: logger name
+        int keyLen = snapshot.KeyBufferSize(i);
+        char[] key = new char[keyLen + 1];
+        snapshot.GetKey(i, key, keyLen + 1);
+
+        Logger logger;
+        if (m_hLoggers.GetValue(key, logger))
         {
-            // key: logger name
-            int keyLen = snapshot.KeyBufferSize(i);
-            char[] key = new char[keyLen + 1];
-            snapshot.GetKey(i, key, keyLen + 1);
-
-            Logger logger;
-            if (m_hLoggers.GetValue(key, logger))
-            {
-                LogLevel lvl;
-                if (levels.GetValue(key, lvl))
-                    logger.SetLevel(lvl);
-                else
-                    logger.SetLevel(globalLevel);
-            }
-            // else: SM BUG?
+            LogLevel level;
+            if (levels.GetValue(key, level))
+                logger.SetLevel(level);
+            else
+                logger.SetLevel(lvl);
         }
-        delete snapshot;
-        delete m_hLogLevels;
-        m_hLogLevels = view_as<StringMap>(CloneHandle(levels));
+        // else: SM BUG?
     }
+    delete snapshot;
 
-    m_eGlobalLogLevel = globalLevel;
+    delete m_hLogLevels;
+    m_hLogLevels = view_as<StringMap>(CloneHandle(levels));
+    m_eGlobalLogLevel = lvl;
     return 0;
 }
 
