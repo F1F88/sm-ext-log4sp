@@ -193,6 +193,8 @@ methodmap LoggerRegistry < Handle
      */
     public native void ApplyLoggerEnvLevels(Logger logger);
 
+    public native bool IsHeaderOnly();
+
     public static native LoggerRegistry Instance();
 
     public static bool LibraryExists() {
@@ -238,6 +240,7 @@ public void __pl_log4sp_manager_SetNTVOptional()
     MarkNativeAsOptional("LoggerRegistry.SetAutomaticRegistration");
     MarkNativeAsOptional("LoggerRegistry.SetLevels");
     MarkNativeAsOptional("LoggerRegistry.ApplyLoggerEnvLevels");
+    MarkNativeAsOptional("LoggerRegistry.IsHeaderOnly");
     MarkNativeAsOptional("LoggerRegistry.Instance");
 }
 #endif

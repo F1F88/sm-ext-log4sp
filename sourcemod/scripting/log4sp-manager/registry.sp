@@ -45,6 +45,7 @@ void CreateRegistryNatives()
     CreateNative("LoggerRegistry.SetAutomaticRegistration", Native_Registry_SetAutomaticRegistration);
     CreateNative("LoggerRegistry.SetLevels",                Native_Registry_SetLevels);
     CreateNative("LoggerRegistry.ApplyLoggerEnvLevels",     Native_Registry_ApplyLoggerEnvLevels);
+    CreateNative("LoggerRegistry.IsHeaderOnly",             Native_Registry_IsHeaderOnly);
     CreateNative("LoggerRegistry.Instance",                 Native_Registry_Instance);
 }
 
@@ -688,6 +689,19 @@ static any Native_Registry_ApplyLoggerEnvLevels(Handle plugin, int numParams)
     else
         logger.SetLevel(m_eGlobalLogLevel);
     return 0;
+}
+
+static any Native_Registry_IsHeaderOnly(Handle plugin, int numParams)
+{
+    Handle pThis = GetNativeCell(1);
+    if (!IsValidRegistryHandle(pThis))
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
+
+#if !defined LOG4SP_HEADER_ONLY
+    return false;
+#else
+    return true;
+#endif
 }
 
 static any Native_Registry_Instance(Handle plugin, int numParams)
