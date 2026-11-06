@@ -26,6 +26,7 @@ void CreateRegistryNatives()
 {
     //* 不要忘记添加新增的 Native 到 __pl_log4sp_manager_SetNTVOptional !!! *//
     CreateNative("LoggerRegistry.RegisterLogger",           Native_Registry_RegisterLogger);
+    CreateNative("LoggerRegistry.RegisterOrReplaceLogger",  Native_Registry_RegisterOrReplaceLogger);
     CreateNative("LoggerRegistry.InitializeLogger",         Native_Registry_InitializeLogger);
     CreateNative("LoggerRegistry.Get",                      Native_Registry_Get);
     CreateNative("LoggerRegistry.GetGlobal",                Native_Registry_GetGlobal);
@@ -135,6 +136,30 @@ static any Native_Registry_RegisterLogger(Handle plugin, int numParams)
     // Throw if exists
     if (m_hLoggers.ContainsKey(name))
         ThrowNativeError(SP_ERROR_PARAM, "Logger with name \"%s\" already exists.", name);
+
+    // Cloning and registering the clone's handle
+    m_hLoggers.SetValue(name, logger.Clone());
+    return 0;
+}
+
+static any Native_Registry_RegisterOrReplaceLogger(Handle plugin, int numParams)
+{
+    Handle pThis = GetNativeCell(1);
+    if (!IsValidRegistryHandle(pThis))
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid Registry Handle %x.", pThis);
+
+    Logger logger = GetNativeCell(2);
+    if (!logger.IsValid())
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid Logger Handle %x.", logger);
+
+    // Get logger name
+    int size = logger.GetNameLength() + 1;
+    char[] name = new char[size];
+    logger.GetName(name, size);
+
+    // Drop if exists
+    if (m_hLoggers.ContainsKey(name))
+        LoggerRegistry.Instance().Drop(name);
 
     // Cloning and registering the clone's handle
     m_hLoggers.SetValue(name, logger.Clone());

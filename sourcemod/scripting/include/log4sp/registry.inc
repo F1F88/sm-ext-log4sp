@@ -33,6 +33,16 @@ methodmap LoggerRegistry < Handle
     public native void RegisterLogger(Logger logger);
 
     /**
+     * Clone the logger Handle and register it in the registry.
+     *
+     * @note Registered loggers must be freed via LoggerRegistry.Drop().
+     *
+     * @param logger    Logger Handle to be registered.
+     * @error           Invalid Logger Handle.
+     */
+    public native void RegisterOrReplaceLogger(Logger logger);
+
+    /**
      * Initialize the logger Handle's PatternFormatter, Log level, Flush level, ErrorHandler
      * according to the global settings, then clone the logger Handle and register it in the
      * registry.
@@ -209,6 +219,7 @@ public SharedPlugin __pl_log4sp_manager =
 public void __pl_log4sp_manager_SetNTVOptional()
 {
     MarkNativeAsOptional("LoggerRegistry.RegisterLogger");
+    MarkNativeAsOptional("LoggerRegistry.RegisterOrReplaceLogger");
     MarkNativeAsOptional("LoggerRegistry.InitializeLogger");
     MarkNativeAsOptional("LoggerRegistry.Get");
     MarkNativeAsOptional("LoggerRegistry.GetGlobal");
