@@ -124,7 +124,7 @@ methodmap LoggerRegistry < Handle
      */
     public native void SetFlushEvery(float interval);
 
-    public native Timer GetFlusher();
+    public native Handle GetFlusher();
 
     /**
      * Set the global handler function for logging errors and update all loggers in the registry.
