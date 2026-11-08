@@ -486,25 +486,34 @@ static cell_t AddSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noe
     if (!sink)
     {
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[2], error);
-        return 0;
+        return false;
     }
 
+    auto &sinks = logger->Sinks();
+    auto &handles = logger->SinksHandle();
+
+    // 避免重复添加
+    auto it = std::find(sinks.begin(), sinks.end(), sink);
+    if (it != sinks.end())
+        return false;
+
+    // 克隆体所有权归于 extension
     SourceMod::IdentityToken_t *owner = myself->GetIdentity();
-    security.pOwner = owner;
+    security = SourceMod::HandleSecurity(owner, myself->GetIdentity());
     auto cloned = Log4sp::SinkHandler::Instance().CloneHandle(params[2], owner, &security, &error);
     if (!cloned)
     {
         ctx->ReportError("Failed to clone Sink Handle %x (error %d)", params[2], error);
-        return 0;
+        return false;
     }
 
-    logger->Sinks().push_back(sink);
-    logger->SinksHandle().push_back(cloned);
+    sinks.push_back(sink);
+    handles.push_back(cloned);
 
     // HACK: CallbackSink
     if (auto callbackSink = dynamic_cast<Log4sp::Sinks::CallbackSink*>(sink))
         callbackSink->TryRegisterHandle(cloned);
-    return 0;
+    return true;
 }
 
 static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -518,15 +527,15 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
     if (!sink)
     {
         ctx->ReportError("Invalid Sink Handle %x (error %d)", params[2], error);
-        return 0;
+        return false;
     }
 
     auto &sinks = logger->Sinks();
     auto &handles = logger->SinksHandle();
-    security.pOwner = myself->GetIdentity();
 
-    // Sinks 里可能有多个同样的 Sink
-    // 从后向前遍历，避免删除元素时索引变化的问题
+    // 按 extension 身份关闭克隆体
+    security = SourceMod::HandleSecurity(myself->GetIdentity(), myself->GetIdentity());
+
     for (int i = static_cast<int>(sinks.size()) - 1; i >= 0; --i)
     {
         if (sinks.at(i) != sink)
@@ -546,11 +555,12 @@ static cell_t DropSink(SourcePawn::IPluginContext *ctx, const cell_t *params) no
         error = Log4sp::SinkHandler::Instance().FreeHandle(cloned, &security);
         if (error != SourceMod::HandleError::HandleError_None)
         {
-            ctx->ReportError("Failed to free a Sink Handle %x (error %d)", cloned, error);
-            return 0;
+            ctx->ReportError("Failed to free Sink Handle %x (error %d)", cloned, error);
+            return false;
         }
+        return true;
     }
-    return 0;
+    return false;
 }
 
 static cell_t SetErrorHandler(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept

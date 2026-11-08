@@ -216,18 +216,20 @@ methodmap Logger < Handle
     /**
      * Clone the sink handle and add it to the logger.
      *
-     * @param sink      Sink handle.
-     * @error           Invalid Sink handle.
+     * @param sink      Sink handle to add.
+     * @return          True on success, false if it already exist.
+     * @error           Invalid Sink Handle.
      */
-    public native void AddSink(Sink sink);
+    public native bool AddSink(Sink sink);
 
     /**
      * Close the cloned sink handle and remove from logger.
      *
      * @param sink      Sink handle.
-     * @error           Invalid Sink handle.
+     * @return          True on success, false if it not exist.
+     * @error           Invalid Sink Handle.
      */
-    public native void DropSink(Sink sink);
+    public native bool DropSink(Sink sink);
 
     /**
      * Sets the handler function for logging errors.
@@ -840,11 +842,19 @@ methodmap Logger < Handle
         return this.__GetSinks().Length;
     }
 
-    public void AddSink(Sink sink) {
+    public bool AddSink(Sink sink) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
         if (!sink.IsValid())
             ThrowError("Invalid Sink Handle %x.", sink);
+
+        ArrayList sinks = this.__GetSinks();
+        ArrayList owners = this.__GetSinksOwner();
+        for (int i = 0; i < sinks.Length; ++i) {
+            Sink cloned = sinks.Get(i);
+            if (cloned.Equals(sink))
+                return false;
+        }
 
         // Save the identity of the adder
         char owner[PLATFORM_MAX_PATH];
@@ -854,11 +864,12 @@ methodmap Logger < Handle
         // not affect the sink held by the logger.
         // Clones cannot be obtained externally;
         // they can only be closed using "logger.Drop()".
-        this.__GetSinks().Push(sink.Clone());
-        this.__GetSinksOwner().PushString(owner);
+        sinks.Push(sink.Clone());
+        owners.PushString(owner);
+        return true;
     }
 
-    public void DropSink(Sink sink) {
+    public bool DropSink(Sink sink) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
         if (!sink.IsValid())
@@ -886,8 +897,9 @@ methodmap Logger < Handle
             // Remove
             sinks.Erase(i);
             owners.Erase(i);
-            --i;
+            return true;
         }
+        return false;
     }
 
     public void SetErrorHandler(Handle plugin, ErrorHandler func) {
