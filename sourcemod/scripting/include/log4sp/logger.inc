@@ -223,6 +223,19 @@ methodmap Logger < Handle
     public native bool AddSink(Sink sink);
 
     /**
+     * Clone the sink handle and add it to the logger.
+     *
+     * @param sink      Sink handle to add.
+     * @return          True on success, false if it already exist.
+     * @error           Invalid Sink Handle.
+     */
+    public bool AddSinkAndClose(Sink sink) {
+        bool added = this.AddSink(sink);
+        sink.Close();
+        return added;
+    }
+
+    /**
      * Close the cloned sink handle and remove from logger.
      *
      * @param sink      Sink handle.
@@ -867,6 +880,12 @@ methodmap Logger < Handle
         sinks.Push(sink.Clone());
         owners.PushString(owner);
         return true;
+    }
+
+    public bool AddSinkAndClose(Sink sink) {
+        bool added = this.AddSink(sink);
+        sink.Close();
+        return added;
     }
 
     public bool DropSink(Sink sink) {
