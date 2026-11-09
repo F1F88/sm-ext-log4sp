@@ -443,48 +443,30 @@ static cell_t ShouldThrow(SourcePawn::IPluginContext *ctx, const cell_t *params)
     return logger->ShouldThrow(lvl);
 }
 
-static cell_t GetSinks(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
+static cell_t GetSink(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
 {
     READ_LOGGER_HANDLE_OR_ERROR(params[1]);
 
-    cell_t *sinks;
-    if (auto err = ctx->LocalToPhysAddr(params[2], &sinks))
+    auto index = static_cast<std::size_t>(params[2]);
+    if (index >= logger->Sinks().size())
     {
-        ctx->ReportError("Invalid sinks (error %d)", err);
-        return 0;
+        ctx->ReportError("Invalid index %u. [0-%u]", index, logger->Sinks().size());
+        return BAD_HANDLE;
     }
 
-    // 槽位大于 sink 个数时填入 sink 数量即可
-    // 反之填满槽位即可
-    auto maxlen = params[3];
-    if (maxlen > static_cast<cell_t>(logger->Sinks().size()))
-        maxlen = static_cast<cell_t>(logger->Sinks().size());
-
     // 克隆体所有权归于 native caller
+    SourceMod::Handle_t handle = logger->SinksHandle().at(index);
     SourceMod::IdentityToken_t *owner = ctx->GetIdentity();
     SourceMod::HandleSecurity security(ctx->GetIdentity(), myself->GetIdentity());
     SourceMod::HandleError error;
 
-    cell_t counter = 0;
-    while (counter < maxlen)
+    auto cloned = Log4sp::SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
+    if (!cloned)
     {
-        auto handle = logger->SinksHandle().at(counter);
-        auto cloned = Log4sp::SinkHandler::Instance().CloneHandle(handle, owner, &security, &error);
-        if (!cloned)
-        {
-            // 发生错误, 先清理已克隆的 sink handle 再抛出错误信息
-            for (cell_t i = 0; i < counter; ++i)
-            {
-                error = Log4sp::SinkHandler::Instance().FreeHandle(sinks[i], &security);
-                assert(error == SourceMod::HandleError::HandleError_None);
-            }
-
-            ctx->ReportError("Failed to clone a Sink Handle %x (error %d)", handle, error);
-            return 0;
-        }
-        sinks[counter++] = cloned;
+        ctx->ReportError("Failed to clone Sink Handle %x (error %d)", handle, error);
+        return BAD_HANDLE;
     }
-    return counter;
+    return cloned;
 }
 
 static cell_t GetSinksLength(SourcePawn::IPluginContext *ctx, const cell_t *params) noexcept
@@ -664,7 +646,7 @@ const sp_nativeinfo_t LoggerNatives[] =
     {"Logger.GetThrowLevel",                    GetThrowLevel},
     {"Logger.SetThrowLevel",                    SetThrowLevel},
     {"Logger.ShouldThrow",                      ShouldThrow},
-    {"Logger.GetSinks",                         GetSinks},
+    {"Logger.GetSink",                          GetSink},
     {"Logger.GetSinksLength",                   GetSinksLength},
     {"Logger.AddSink",                          AddSink},
     {"Logger.DropSink",                         DropSink},

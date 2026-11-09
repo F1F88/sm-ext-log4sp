@@ -477,7 +477,7 @@ In the extended library, instances can be cleaned up directly using the `delete`
 
 The header-only mode is similar to [sm-json](https://github.com/clugg/sm-json). It uses `StringMap` under the hood, you need to make sure you manage your memory properly by cleaning up instances when you're done with them. Simply using the `delete` keyword is insufficient, as there may be nested `ArrayList`, `PrivateForward`, `File`, etc. Handles. You need to use the `Close()` method of the corresponding `methodmap`, which will clean up and delete all handles.
 
-Additionally, there are some global helper function `LoggerCloseAndDelete()`, `LoggersCloseAndDelete()`, `SinkCloseAndDelete()`, `SinksCloseAndDelete()`, which first call the `Close()` method of the corresponding `methodmap`, and then set the passed variable or array element to `null`.
+Additionally, there are some global helper function `LoggerCloseAndDelete()`, `SinkCloseAndDelete()`, which first call the `Close()` method of the corresponding `methodmap`, and then set the passed variable or array element to `null`.
 
 ```sourcepawn
 logger.Close();

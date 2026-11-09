@@ -81,7 +81,7 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("Logger.GetThrowLevel");
     MarkNativeAsOptional("Logger.SetThrowLevel");
     MarkNativeAsOptional("Logger.ShouldThrow");
-    MarkNativeAsOptional("Logger.GetSinks");
+    MarkNativeAsOptional("Logger.GetSink");
     MarkNativeAsOptional("Logger.GetSinksLength");
     MarkNativeAsOptional("Logger.AddSink");
     MarkNativeAsOptional("Logger.DropSink");

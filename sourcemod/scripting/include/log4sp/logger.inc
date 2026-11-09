@@ -18,21 +18,6 @@ stock void LoggerCloseAndDelete(Logger &logger)
     logger = null;
 }
 
-/**
- * Close all logger handles and set the passed variable to null.
- *
- * @param loggers   Logger handles to close.
- * @param maxlen    Maximum length of the loggers.
- */
-stock void LoggersCloseAndDelete(Logger[] loggers, int maxlen)
-{
-    for (int i = 0; i < maxlen; ++i)
-    {
-        loggers[i].Close();
-        loggers[i] = null;
-    }
-}
-
 
 /**
  * The Logger is the core component of the logging library. It receives log
@@ -213,13 +198,13 @@ methodmap Logger < Handle
     /**
      * Gets the sinks clone of logger.
      *
-     * @note Sinks clone handles must be freed via delete or CloseHandle() or Sink.Close().
+     * @note Cloned Sink Handle must be freed via delete or CloseHandle() or Sink.Close().
      *
-     * @param buffer    Buffer to store sinks clone.
-     * @param maxlen    Maximum length of the buffer.
-     * @return          Number of sinks clone written.
+     * @param index     Index in the sinks (starting from 0).
+     * @return          Cloned Sink Handle.
+     * @error           Invalid index.
      */
-    public native int GetSinks(Sink[] buffer, int maxlen);
+    public native Sink GetSink(int index);
 
     /**
      * Gets the length of the logger sinks.
@@ -829,32 +814,23 @@ methodmap Logger < Handle
     /**
      * Gets the sinks clone of logger.
      *
-     * @note Sinks clone handles must be freed via Sink.Close().
+     * @note Cloned Sink Handle must be freed via Sink.Close().
      *
-     * @param buffer    Buffer to store sinks clone.
-     * @param maxlen    Maximum length of the buffer.
-     * @return          Number of sinks clone written.
+     * @param index     Index in the sinks (starting from 0).
+     * @return          Cloned Sink Handle.
+     * @error           Invalid index.
      */
-    public int GetSinks(Sink[] buffer, int maxlen) {
+    public Sink GetSink(int index) {
         if (!this.IsValid())
             ThrowError("Invalid Logger Handle %x.", this);
 
         ArrayList sinks = this.__GetSinks();
         int length = sinks.Length;
-        if (length > maxlen)
-            length = maxlen;
+        if (UInt32Compare(index, length) >= 0)
+            ThrowError("Invalid index %u. [0-%u]", index, length);
 
-        int counter = 0;
-        while (counter < length) {
-            // To prevent the internal clone from being destroyed by the outside,
-            // we return the clone of the internal clone.
-            // Ownership belongs to an external party,
-            // and the external party must manually shut it down.
-            Sink sink = sinks.Get(counter);
-            buffer[counter] = sink.Clone();
-            ++counter;
-        }
-        return counter;
+        Sink sink = sinks.Get(index);
+        return sink.Clone();
     }
 
     public int GetSinksLength() {

@@ -472,7 +472,7 @@ public void OnPluginStart()
 
 而仅头文件模式与 [sm-json](https://github.com/clugg/sm-json) 类似，底层使用 `StringMap`，您需要确保在实例使用完后妥善管理内存，清理它们。仅使用 `delete` 关键字清理实例是不够的，因为可能还嵌套了 ArrayList、PrivateForward、File 等 Handle。您需要使用对应 `methodmap` 的 `Close()` 方法来清理并删除所有 Handle。
 
-此外，还有一些全局辅助函数 `LoggerCloseAndDelete()`，`LoggersCloseAndDelete()`， `SinkCloseAndDelete()`，`SinksCloseAndDelete()`，它会先调用对应 `methodmap` 的 `Close()` 方法，然后将传递的变量或数组元素设置为 `null`。
+此外，还有一些全局辅助函数 `LoggerCloseAndDelete()`，`SinkCloseAndDelete()`，它会先调用对应 `methodmap` 的 `Close()` 方法，然后将传递的变量或数组元素设置为 `null`。
 
 ```sourcepawn
 logger.Close();

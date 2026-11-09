@@ -18,21 +18,6 @@ stock void SinkCloseAndDelete(Sink &sink)
     sink = null;
 }
 
-/**
- * Close all sink handles and set the passed variable to null.
- *
- * @param sinks     Sink handles to close.
- * @param maxlen    Maximum length of the sinks.
- */
-stock void SinksCloseAndDelete(Sink[] sinks, int maxlen)
-{
-    for (int i = 0; i < maxlen; ++i)
-    {
-        sinks[i].Close();
-        sinks[i] = null;
-    }
-}
-
 
 /**
  * The Sink is the core component of the logging library responsible for the

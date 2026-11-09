@@ -207,9 +207,8 @@ void TestCommandVersion()
 
 static TestSink GetTestSinkFromTestLogger()
 {
-    Sink sink[1];
-    LoggerRegistry.Instance().Get(LOGGER_NAME).GetSinks(sink, sizeof(sink));
-    return view_as<TestSink>(sink[0]);
+    Sink sink = LoggerRegistry.Instance().Get(LOGGER_NAME).GetSink(0);
+    return view_as<TestSink>(sink);
 }
 
 static void RegisterLogger()

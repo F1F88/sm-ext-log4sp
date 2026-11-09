@@ -322,11 +322,8 @@ public void Frame_AssertLogAndThrow(Logger logger)
 {
     FindConVar("sv_logecho").SetBool(true);
 
-    Sink sinks[1];
-    logger.GetSinks(sinks, sizeof(sinks));
-    logger.Close();
-
-    TestSink sink = view_as<TestSink>(sinks[0]);
+    TestSink sink = view_as<TestSink>(logger.GetSink(0));
+    LoggerCloseAndDelete(logger);
 
     AssertEq("log counter",     sink.GetLogCount(), 6);
     AssertEq("log level",       sink.DrainOldest().lvl, LogLevel_Trace);
