@@ -11,6 +11,7 @@
 #include <log4sp/sinks/client_chat_all_sink>
 #include <log4sp/sinks/client_console_all_sink>
 #include <log4sp/sinks/daily_file_sink>
+#include <log4sp/sinks/dist_sink>
 #include <log4sp/sinks/ringbuffer_sink>
 #include <log4sp/sinks/rotating_file_sink>
 #include <log4sp/sinks/server_console_sink>
@@ -102,6 +103,13 @@ public void __ext_log4sp_SetNTVOptional()
     MarkNativeAsOptional("DailyFileSink.DailyFileSink");
     MarkNativeAsOptional("DailyFileSink.GetFilename");
     MarkNativeAsOptional("DailyFileSink.IsValid");
+
+    MarkNativeAsOptional("DistSink.DistSink");
+    MarkNativeAsOptional("DistSink.GetSink");
+    MarkNativeAsOptional("DistSink.GetSinksLength");
+    MarkNativeAsOptional("DistSink.AddSink");
+    MarkNativeAsOptional("DistSink.DropSink");
+    MarkNativeAsOptional("DistSink.IsValid");
 
     MarkNativeAsOptional("RingBufferSink.RingBufferSink");
     MarkNativeAsOptional("RingBufferSink.DrainLatest");

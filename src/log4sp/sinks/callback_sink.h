@@ -231,10 +231,12 @@ private:
      *   映射下沉到 adapter 是自然的下一步.
      *
      * 实现: m_Handles 不拥有任何 Handle (从不对其 FreeHandle), 只作簿记.
-     *  登记 Logger::AddSink          登记其保留的克隆体
-     *  登记 Sink.Log/Flush Native    登记插件传入的 params[1]
-     *  摘除 Logger 析构 / DropSink 析构
-     *  解析 GetHandle()              逐个 ReadHandle 探测, 就地剔除失效项
+     *  登记 Logger::AddSink            登记其保留的克隆体
+     *  登记 DistSink::AddSink          登记其保留的克隆体
+     *  登记 Sink.Log/Flush Native      登记插件传入的 params[1]
+     *  摘除 Logger 析构 / DropSink     摘除其保留的克隆体
+     *  摘除 DistSink 析构 / DropSink   摘除其保留的克隆体
+     *  解析 GetHandle()                逐个 ReadHandle 探测, 就地剔除失效项
      *
      * sink_it_/flush_ 克隆解析结果后压栈、回调后释放, 使 forward 执行期间 master
      * 引用计数 >= 2, 插件回调里重入关闭其他 Handle 也不会销毁正在执行的 sink.
