@@ -150,6 +150,24 @@ stock Long GetMilliseconds()
     return milliseconds;
 }
 
+/**
+ * Compares two unsigned 32-bit integers.
+ *
+ * @param a     First value.
+ * @param b     Second value.
+ * @return      -1 if a < b, 0 if a == b, 1 if a > b.
+ */
+stock int UInt32Compare(int a, int b)
+{
+    if (a == b)
+        return 0;
+
+    if ((a & 0x80000000) != (b & 0x80000000))
+        return (a < 0) ? 1 : -1;
+
+    return (a < b) ? -1 : 1;
+}
+
 
 enum struct Long
 {
@@ -373,12 +391,7 @@ enum struct Long
     int Compare(Long value) {
         if (this.__bits[1] >  value.__bits[1]) return  1;
         if (this.__bits[1] <  value.__bits[1]) return -1;
-        if (this.__bits[0] == value.__bits[0]) return  0;
-
-        // 低位按无符号比较
-        if ((this.__bits[0] & 0x80000000) == (value.__bits[0] & 0x80000000))
-            return (this.__bits[0] < value.__bits[0]) ? -1 : 1;
-        return (this.__bits[0] > 0) ? -1 : 1;
+        return UInt32Compare(this.__bits[0], value.__bits[0]);
     }
 
     int Sign() {

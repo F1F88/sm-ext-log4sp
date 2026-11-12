@@ -39,7 +39,7 @@ methodmap RotatingFileSink < Sink
      *                      If null, defaults to the calling plugin.
      * @param closeFunc     Function to call after the sink close the file.
      * @return              A new RotatingFileSink Handle.
-     * @error               Param maxFile < 0, Param maxFiles > 200000.
+     * @error               Param maxSize == 0, Param maxFiles > 200000.
      */
     public native RotatingFileSink(const char[] baseFilename,
                                    const int maxSize,
@@ -147,7 +147,7 @@ methodmap RotatingFileSink < Sink
      *                      If null, defaults to the calling plugin.
      * @param closeFunc     Function to call after the sink close the file.
      * @return              A new RotatingFileSink Handle.
-     * @error               Param maxFile < 0, Param maxFiles > 200000.
+     * @error               Param maxSize == 0, Param maxFiles > 200000.
      */
     public RotatingFileSink(const char[] baseFilename,
                             const int maxSize,
@@ -155,12 +155,10 @@ methodmap RotatingFileSink < Sink
                             bool rotateOnOpen=false,
                             Handle openPlugin=null,  FileOpenFunction openFunc=INVALID_FUNCTION,
                             Handle closePlugin=null, FileCloseFunction closeFunc=INVALID_FUNCTION) {
-        if (maxSize <= 0)
-            ThrowError("RotatingFileSink constructor param maxSize cannot be less than or equal to zero.");
-        if (maxFiles < 0)
-            ThrowError("RotatingFileSink constructor param maxFiles cannot be less than zero.");
-        if (maxFiles > RotatingFileSink.MaxFiles())
-            ThrowError("RotatingFileSink constructor param maxFiles cannot exceed %d.", RotatingFileSink.MaxFiles());
+        if (maxSize == 0)
+            ThrowError("RotatingFileSink constructor param maxSize cannot be equal to 0.");
+        if (UInt32Compare(maxFiles, RotatingFileSink.MaxFiles()) > 0)
+            ThrowError("RotatingFileSink constructor param maxFiles cannot exceed %u.", RotatingFileSink.MaxFiles());
 
         RotatingFileSink sink = view_as<RotatingFileSink>(Sink.__Sink("RotatingFileSink",
                                                                       null, __RotatingFileSink_OnLog,
@@ -219,8 +217,8 @@ methodmap RotatingFileSink < Sink
     public bool SetMaxSize(const int maxSize, char[] error="", int maxlen=0) {
         if (!this.IsValid())
             ThrowError("Invalid RotatingFileSink Handle %x.", this);
-        if (maxSize <= 0) {
-            strcopy(error, maxlen, "Param maxSize cannot be less than or equal to 0.");
+        if (maxSize == 0) {
+            strcopy(error, maxlen, "Param maxSize cannot be equal to 0.");
             return false;
         }
         this.__SetMaxSize(maxSize);
@@ -241,7 +239,7 @@ methodmap RotatingFileSink < Sink
             return false;
         }
         if (maxFiles > RotatingFileSink.MaxFiles()) {
-            FormatEx(error, maxlen, "Param maxFiles cannot exceed %d.", RotatingFileSink.MaxFiles());
+            FormatEx(error, maxlen, "Param maxFiles cannot exceed %u.", RotatingFileSink.MaxFiles());
             return false;
         }
         this.__SetMaxFiles(maxFiles);
@@ -272,7 +270,7 @@ methodmap RotatingFileSink < Sink
 
         char path[PLATFORM_MAX_PATH], ext[PLATFORM_MAX_PATH];
         FileHelper.SplitByExtension(path, sizeof(path), ext, sizeof(ext), filename);
-        return FormatEx(buffer, maxlen, "%s.%d%s", path, index, ext);
+        return FormatEx(buffer, maxlen, "%s.%u%s", path, index, ext);
     }
 
     public static int MaxFiles() {
@@ -332,7 +330,11 @@ methodmap RotatingFileSink < Sink
                 }
             }
         }
-        return fileHelper.Reopen(true, error, maxlen);
+        if (!fileHelper.Reopen(true, error, maxlen))
+            return false;
+
+        this.__SetCurrentSize(0);
+        return true;
     }
 
     // delete the target if exists, and rename the src file to target
@@ -390,7 +392,7 @@ public bool __RotatingFileSink_OnLog(RotatingFileSink sink, char[] error, int ma
             else if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s:%d] ", loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%u] ", loc.filename[sepOffset], loc.line);
     }
 
     char level[6];

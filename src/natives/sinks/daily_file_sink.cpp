@@ -32,7 +32,7 @@ static cell_t DailyFileSink(SourcePawn::IPluginContext *ctx, const cell_t *param
 
     if (params[5] < 0 || params[5] > UINT16_MAX)
     {
-        ctx->ReportError("Invalid maxFiles %d. (0-%d)", params[5], UINT16_MAX);
+        ctx->ReportError("Invalid maxFiles %u. [0-%u]", params[5], UINT16_MAX);
         return BAD_HANDLE;
     }
 

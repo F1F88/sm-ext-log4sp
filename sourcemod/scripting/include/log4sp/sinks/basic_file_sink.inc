@@ -175,7 +175,7 @@ public bool __BasicFileSink_OnLog(BasicFileSink sink, char[] error, int maxlen, 
             if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s:%d] ", loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%u] ", loc.filename[sepOffset], loc.line);
     }
 
     char level[6];

@@ -50,8 +50,8 @@ methodmap DailyFileSink < Sink
      * @note DailyFileSink handles must be freed via delete or CloseHandle().
      *
      * @param baseFilename  The file path where the log messages will be written.
-     * @param hour          The hour of the day when the log file should be rotated. (0-23)
-     * @param minute        The minute of the hour when the log file should be rotated. (0-59)
+     * @param hour          The hour of the day when the log file should be rotated. [0-23]
+     * @param minute        The minute of the hour when the log file should be rotated. [0-59]
      * @param truncate      If true, the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
      * @param calcPlugin    Handle of the plugin that contains the calculator function.
@@ -102,8 +102,8 @@ methodmap DailyFileSink < Sink
      * @note Multi-plugin shared Handles must be freed before unload the plugin.
      *
      * @param baseFilename  The file path where the log messages will be written.
-     * @param hour          The hour of the day when the log file should be rotated. (0-23)
-     * @param minute        The minute of the hour when the log file should be rotated. (0-59)
+     * @param hour          The hour of the day when the log file should be rotated. [0-23]
+     * @param minute        The minute of the hour when the log file should be rotated. [0-59]
      * @param truncate      If true, the created file will be truncated.
      * @param maxFiles      If max_files > 0, retain only the last max_files and delete previous.
      * @param calcPlugin    Handle of the plugin that contains the calculator function.
@@ -379,7 +379,7 @@ public bool __DailyFileSink_OnLog(DailyFileSink sink, char[] error, int maxlen, 
             if (loc.filename[i] == '\\' || loc.filename[i] == '/')
                 sepOffset = i + 1;
         }
-        FormatEx(source, sizeof(source), "[%s:%d] ", loc.filename[sepOffset], loc.line);
+        FormatEx(source, sizeof(source), "[%s:%u] ", loc.filename[sepOffset], loc.line);
     }
 
     char level[6];

@@ -1304,11 +1304,11 @@ methodmap Logger < Handle
 
             int line = frame.LineNumber;
             if (line == 0) {
-                FormatEx(buffer, sizeof(buffer), "  [%d] %s", index, funcname);
+                FormatEx(buffer, sizeof(buffer), "  [%u] %s", index, funcname);
                 trace.PushString(buffer);
             } else {
                 frame.GetFilePath(filename, sizeof(filename));
-                FormatEx(buffer, sizeof(buffer), "  [%d] Line %d, %s::%s", index, line, filename, funcname);
+                FormatEx(buffer, sizeof(buffer), "  [%u] Line %u, %s::%s", index, line, filename, funcname);
                 trace.PushString(buffer);
             }
         }
