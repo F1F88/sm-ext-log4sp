@@ -200,6 +200,21 @@ methodmap LoggerRegistry < Handle
     public static bool LibraryExists() {
         return LibraryExists("log4sp_manager");
     }
+
+    public static bool IsAvailable() {
+        if (!LoggerRegistry.LibraryExists())
+            return false;
+
+        #if !defined LOG4SP_HEADER_ONLY
+            bool isHeaderOnly = false;
+        #else
+            bool isHeaderOnly = true;
+        #endif
+
+        if (LoggerRegistry.Instance().IsHeaderOnly() != isHeaderOnly)
+            return false;
+        return true;
+    }
 }
 
 
