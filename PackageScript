@@ -10,6 +10,7 @@ folder_list = [
   'addons/sourcemod/extensions',
   'addons/sourcemod/scripting/include',
   'addons/sourcemod/scripting/include/log4sp',
+  'addons/sourcemod/scripting/include/log4sp/details',
   'addons/sourcemod/scripting/include/log4sp/sinks',
   #'addons/sourcemod/gamedata',
   #'addons/sourcemod/configs',
@@ -42,7 +43,17 @@ CopyFiles('sourcemod/scripting/include', 'addons/sourcemod/scripting/include',
 CopyFiles('sourcemod/scripting/include/log4sp', 'addons/sourcemod/scripting/include/log4sp',
  [
    'common.inc',
-   'logger.inc'
+   'logger.inc',
+   'registry.inc',
+   'version.inc',
+ ]
+)
+CopyFiles('sourcemod/scripting/include/log4sp/details', 'addons/sourcemod/scripting/include/log4sp/details',
+ [
+   'circular_deque.inc',
+   'file_helper.inc',
+   'long.inc',
+   'os.inc',
  ]
 )
 CopyFiles('sourcemod/scripting/include/log4sp/sinks', 'addons/sourcemod/scripting/include/log4sp/sinks',
@@ -52,6 +63,8 @@ CopyFiles('sourcemod/scripting/include/log4sp/sinks', 'addons/sourcemod/scriptin
    'client_chat_all_sink.inc',
    'client_console_all_sink.inc',
    'daily_file_sink.inc',
+   'dist_sink.inc',
+   'dup_filter_sink.inc',
    'ringbuffer_sink.inc',
    'rotating_file_sink.inc',
    'server_console_sink.inc',

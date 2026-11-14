@@ -28,7 +28,6 @@ def Normalize(path):
 def SetArchFlags(compiler):
   if compiler.behavior == 'gcc':
     if compiler.target.arch == 'x86_64':
-      return
       compiler.cflags += ['-fPIC']
   elif compiler.like('msvc'):
     if compiler.target.arch == 'x86_64':
@@ -41,7 +40,7 @@ def GetGitHashCode():
     result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
     return result.strip()
   except BaseException:
-    print('::warning file=AMBuildScript,line=372,title=get_git_hash::Unable to get git hash!')
+    print('::Warning:: Unable to get git hash!')
     return "unknown"
 
 class ExtensionConfig(object):
@@ -67,12 +66,12 @@ class ExtensionConfig(object):
             # Error if archs were manually overridden.
             if builder.options.targets:
                 raise
-            print('Skipping target {}: {}'.format(arch, e))
+            print('::Warning:: Skipping target {}: {}'.format(arch, e))
             continue
         self.all_targets.append(cxx)
 
     if not self.all_targets:
-        raise Exception('No suitable C/C++ compiler was found.')
+        raise Exception('::Error:: No suitable C/C++ compiler was found.')
 
   @property
   def tag(self):
@@ -93,7 +92,7 @@ class ExtensionConfig(object):
     #     self.mms_root = ResolveEnvPath('MMSOURCE_DEV', 'mmsource-central')
 
     # if not self.mms_root or not os.path.isdir(self.mms_root):
-    #   raise Exception('Could not find a source copy of Metamod:Source')
+    #   raise Exception('::Error:: Could not find a source copy of Metamod:Source')
     # self.mms_root = Normalize(self.mms_root)
 
     if builder.options.sm_path:
@@ -108,7 +107,7 @@ class ExtensionConfig(object):
         self.sm_root = ResolveEnvPath('SOURCEMOD_DEV', 'sourcemod-central')
 
     if not self.sm_root or not os.path.isdir(self.sm_root):
-      raise Exception('Could not find a source copy of SourceMod')
+      raise Exception('::Error:: Could not find a source copy of SourceMod')
     self.sm_root = Normalize(self.sm_root)
 
   def configure(self):
@@ -116,7 +115,7 @@ class ExtensionConfig(object):
     allowed_archs = ['x86','x86_64']
 
     if not set(self.target_archs).issubset(allowed_archs):
-      raise Exception('Unknown target architecture: {0}'.format(self.target_archs))
+      raise Exception('::Error:: Unknown target architecture: {0}'.format(self.target_archs))
 
     for cxx in self.all_targets:
         self.configure_cxx(cxx)
@@ -124,13 +123,13 @@ class ExtensionConfig(object):
   def configure_cxx(self, cxx):
     if cxx.family == 'msvc':
       if cxx.version < 1914 and builder.options.generator != 'vs':
-        raise Exception(f'Only MSVC 2017 15.7 and later are supported, full C++17 support is required. ({str(cxx.version)} < 1914)')
+        raise Exception(f'::Error:: Only MSVC 2017 15.7 and later are supported, full C++17 support is required. ({str(cxx.version)} < 1914)')
     elif cxx.family == 'gcc':
       if cxx.version < 'gcc-8':
-        raise Exception('Only GCC versions 8 or later are supported, full C++17 support is required.')
+        raise Exception('::Error:: Only GCC versions 8 or later are supported, full C++17 support is required.')
     elif cxx.family == 'clang':
       if cxx.version < 'clang-5':
-        raise Exception('Only clang versions 5 or later are supported, full C++17 support is required.')
+        raise Exception('::Error:: Only clang versions 5 or later are supported, full C++17 support is required.')
 
     if cxx.like('gcc'):
       self.configure_gcc(cxx)
@@ -166,6 +165,9 @@ class ExtensionConfig(object):
       'SPDLOG_SHORT_LEVEL_NAMES={"T", "D", "I", "W", "E", "F", "O"}',
       'LOG4SP_SHA_SHORT="' + GetGitHashCode()[:7] + '"',
     ]
+
+    if os.environ.get('GITHUB_ACTIONS') != 'true':
+      cxx.defines += ['LOG4SP_BUILD_TAGS="manual"']
 
     # Platform-specifics
     if cxx.target.platform == 'linux':
@@ -333,12 +335,6 @@ class ExtensionConfig(object):
       os.path.join(context.currentSourcePath, 'src'),
       os.path.join(context.currentSourcePath, 'extern', 'spdlog', 'include'),
     ]
-
-    #*** log4sp addition ***#
-    if builder.options.debug == '1':
-      compiler.cxxincludes += [
-        os.path.join(context.currentSourcePath, 'tests'),
-      ]
 
     #*** log4sp addition ***#
     if builder.options.opt == '1':

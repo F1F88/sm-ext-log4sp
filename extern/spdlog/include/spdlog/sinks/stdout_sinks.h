@@ -9,7 +9,7 @@
 #include <spdlog/sinks/sink.h>
 
 #ifdef _WIN32
-    #include <spdlog/details/windows_include.h>
+#include <spdlog/details/windows_include.h>
 #endif
 
 namespace spdlog {
@@ -34,9 +34,6 @@ public:
     void set_pattern(const std::string &pattern) override;
 
     void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) override;
-
-    //* @log4sp hack *//
-    [[nodiscard]] std::string to_pattern(const details::log_msg &log_msg) final override;
 
 protected:
     mutex_t &mutex_;
@@ -83,5 +80,5 @@ std::shared_ptr<logger> stderr_logger_st(const std::string &logger_name);
 }  // namespace spdlog
 
 #ifdef SPDLOG_HEADER_ONLY
-    #include "stdout_sinks-inl.h"
+#include "stdout_sinks-inl.h"
 #endif

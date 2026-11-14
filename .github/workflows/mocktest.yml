@@ -1,0 +1,291 @@
+name: Mock testing in hl2sdk-mock
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'extern/**'
+      - 'sourcemod/**'
+      - 'src/**'
+      - 'AMBuilder'
+      - 'AMBuildScript'
+      - 'PackageScript'
+      - 'configure.py'
+  push:
+    paths:
+      - 'extern/**'
+      - 'sourcemod/**'
+      - 'src/**'
+      - 'AMBuilder'
+      - 'AMBuildScript'
+      - 'PackageScript'
+      - 'configure.py'
+
+env:
+  PYTHONUTF8: "1"
+  HL2SDK_MOCK_REF: bf0fbcc436f732f4a124d1e9b89b51d0c5953aae
+  METAMOD_REF: 1.12.0.1226
+
+jobs:
+  mocktest-modern_sm:
+    name: Test with ${{ matrix.sm_version }} ${{ matrix.variant }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/alliedmodders/build-containers/debian11-clang22:sha-c0ea207
+    strategy:
+      fail-fast: false
+      matrix:
+        sm_version: [sm_1_13, sm_1_12, sm_1_11]
+        variant: [extension, header_only]
+        include:
+          - sm_version: sm_1_13
+            sm_ref: 1.13.0.7472
+          - sm_version: sm_1_12
+            sm_ref: 1.12.0.7253
+          - sm_version: sm_1_11
+            sm_ref: 1.11-dev
+        exclude:
+          - sm_version: sm_1_11
+            variant: extension
+
+    steps:
+      - name: Check out hl2sdk-mock
+        uses: actions/checkout@v7
+        with:
+          repository: alliedmodders/hl2sdk-mock
+          submodules: recursive
+          path: hl2sdk-mock
+          ref: ${{ env.HL2SDK_MOCK_REF }}
+
+      - name: Check out Metamod-Source
+        uses: actions/checkout@v7
+        with:
+          repository: alliedmodders/metamod-source
+          submodules: recursive
+          path: metamod-source
+          ref: ${{ env.METAMOD_REF }}
+
+      - name: Check out SourceMod
+        uses: actions/checkout@v7
+        with:
+          repository: alliedmodders/sourcemod
+          submodules: recursive
+          path: sourcemod
+          ref: ${{ matrix.sm_ref }}
+
+      - name: Check out Log4sp
+        uses: actions/checkout@v7
+        with:
+          path: log4sp
+
+      - name: Build hl2sdk-mock
+        working-directory: hl2sdk-mock
+        run: |
+          python3 configure.py --enable-optimize --targets=x86,x86_64
+          ambuild objdir
+
+      - name: Build MetaMod-Source
+        working-directory: metamod-source
+        run: |
+          python3 configure.py --enable-optimize --sdks=mock --targets=x86,x86_64
+          ambuild objdir
+
+      - name: Disable Werror
+        if: matrix.sm_version == 'sm_1_11'
+        working-directory: sourcemod
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("AMBuildScript")
+          content = path.read_text()
+
+          pattern = re.compile(r"[ \t]*'-Werror',\n?", re.MULTILINE)
+          content, count = pattern.subn("", content)
+          path.write_text(content)
+
+          if count == 0:
+              print(f"::warning file={path}::"
+                    "Expected '-Werror' was not found; no modification was made.")
+          else:
+              print(f"::notice:: Removed {count} '-Werror' from '{path}'"
+                    " on '${{ runner.os }}-${{ matrix.sm_version }}-${{ matrix.variant }}'.")
+          PY
+
+      # fix: https://github.com/alliedmodders/sourcemod/issues/2480
+      - name: Enable SourceMod hl2sdk-mock SDK
+        if: matrix.sm_version == 'sm_1_12'
+        working-directory: sourcemod
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("extensions/sdktools/AMBuilder")
+          content = path.read_text()
+
+          pattern = re.compile(r"[ \t]*(?:"
+                               r"if sdk\['name'\] in \['mock'\]:"
+                               r"|"
+                               r"if sdk_name == ['\"]mock['\"]:"
+                               r")\s*\n"
+                               r"[ \t]*continue[ \t]*\n?",
+                               re.MULTILINE)
+          content, count = pattern.subn("", content)
+          path.write_text(content)
+
+          if count == 0:
+              print(f"::warning file={path}::"
+                    "Expected code was not found; no modification was made.")
+          else:
+              print(f"::notice:: Removed {count} mock SDK skip block(s) from '{path}'"
+                    " on '${{ runner.os }}-${{ matrix.sm_version }}-${{ matrix.variant }}'.")
+          PY
+
+      - name: Build SourceMod
+        working-directory: sourcemod
+        run: |
+          python3 configure.py --no-mysql --enable-optimize --sdks=mock --targets=x86,x86_64
+          ambuild objdir
+
+      - name: Build Log4sp
+        if: matrix.variant == 'extension'
+        working-directory: log4sp
+        run: |
+          python3 configure.py --enable-optimize --sm-path="$GITHUB_WORKSPACE/sourcemod" --targets=x86,x86_64
+          ambuild objdir
+
+      - name: Set up game directory
+        working-directory: hl2sdk-mock
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/gamedir"
+          ./build_gamedir.sh "$GITHUB_WORKSPACE/gamedir" "$GITHUB_WORKSPACE/metamod-source/objdir/package"
+          ./build_gamedir.sh "$GITHUB_WORKSPACE/gamedir" "$GITHUB_WORKSPACE/sourcemod/objdir/package"
+
+          if [[ "${{ matrix.variant }}" == "extension" ]]; then
+            ./build_gamedir.sh "$GITHUB_WORKSPACE/gamedir" "$GITHUB_WORKSPACE/log4sp/objdir/package"
+          fi
+
+      - name: Compile test plugins
+        working-directory: log4sp
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          SPCOMP64="$GITHUB_WORKSPACE/gamedir/addons/sourcemod/scripting/spcomp64"
+          OUTPUT_DIR="$GITHUB_WORKSPACE/gamedir/addons/sourcemod/plugins"
+          mkdir -p "$OUTPUT_DIR/optional"
+
+          COMPILE_ARGS=(
+            -i "sourcemod/scripting/include"
+            -i "$GITHUB_WORKSPACE/gamedir/addons/sourcemod/scripting/include"
+            "DEBUG="
+          )
+
+          if [[ "${{ matrix.variant }}" == "header_only" ]]; then
+            COMPILE_ARGS+=("LOG4SP_HEADER_ONLY=")
+          fi
+
+          if [[ "${{ matrix.sm_version }}" == "sm_1_11" ]]; then
+            COMPILE_ARGS+=("-w" "217")
+          else
+            COMPILE_ARGS+=("-E" "RANDOM_ITERATIONS=1000")
+          fi
+
+          files=(
+            sourcemod/scripting/*.sp
+            sourcemod/scripting/testsuite/bench/*.sp
+          )
+          for filename in "${files[@]}"; do
+            echo "==================================="
+            echo "Compiling $(basename "$filename")"
+            echo "==================================="
+            "$SPCOMP64" "$filename" "${COMPILE_ARGS[@]}" -o "$OUTPUT_DIR/$(basename "${filename%.sp}").smx"
+          done
+
+          for filename in sourcemod/scripting/testsuite/mock/*.sp; do
+            echo "==================================="
+            echo "Compiling $(basename "$filename")"
+            echo "==================================="
+            "$SPCOMP64" "$filename" "${COMPILE_ARGS[@]}" -o "$OUTPUT_DIR/optional/$(basename "${filename%.sp}").smx"
+          done
+
+      - name: Run test plugins
+        working-directory: hl2sdk-mock
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          PLUGINS_DIR="$GITHUB_WORKSPACE/gamedir/addons/sourcemod/plugins/optional"
+
+          archs=(x86)
+
+          if [[ "${{ matrix.sm_version }}" != "sm_1_11" ]]; then
+            archs+=(x86_64)
+          fi
+
+          for arch in ${archs[@]}; do
+            echo "==================================="
+            echo "Testing $arch..."
+            echo "==================================="
+
+            for plugin in $PLUGINS_DIR/*.smx; do
+              plugin_name="$(basename "$plugin")"
+
+              echo "==================================="
+              echo "Running $arch - $plugin_name ..."
+              echo "==================================="
+              timeout 180 objdir/dist/$arch/srcds -game_dir "$GITHUB_WORKSPACE/gamedir" +map de_thunder -command "sm plugins load optional/$plugin_name" -run -run-ticks 20 |
+              {
+                failed=0
+                failure_patterns=(
+                  "[FAIL]"
+                  "[SM] Blaming: log4sp_manager.smx"
+                  "[SM] Plugin log4sp_manager.smx failed to load:"
+                  "[SM] Unable to load plugin \"log4sp_manager.smx\""
+                  "[SM] Blaming: optional/$plugin_name"
+                  "[SM] Plugin optional/$plugin_name failed to load:"
+                  "[SM] Unable to load plugin \"optional/$plugin_name\""
+                )
+
+                succeeded=0
+                succeeded_patterns=(
+                  "[ OK ]"
+                )
+
+                while IFS= read -r line; do
+                  echo "$line"
+                  for pattern in "${failure_patterns[@]}"; do
+                    if [[ "$line" == *"$pattern"* ]]; then
+                      echo "::error:: Detected failure pattern: $pattern"
+                      failed=1
+                      break
+                    fi
+                  done
+
+                  for pattern in "${succeeded_patterns[@]}"; do
+                    if [[ "$line" == *"$pattern"* ]]; then
+                      succeeded=1
+                      break
+                    fi
+                  done
+                done
+
+                if [ "$failed" = "1" ]; then
+                  echo "::error:: $plugin_name failed."
+                  exit 1
+                elif [ "$succeeded" = "0" ]; then
+                  echo "::error:: No '${succeeded_patterns[0]}' marker was found for ${plugin_name}."
+                  exit 1
+                fi
+              }
+            done
+          done
+

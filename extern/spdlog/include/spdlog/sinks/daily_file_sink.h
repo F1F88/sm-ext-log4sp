@@ -58,9 +58,6 @@ struct daily_filename_format_calculator {
     }
 };
 
-//* @log4sp hack *//
-using log4sp_daily_filename_calculator = std::function<filename_t(const filename_t &filename, const tm &now_tm)>;
-
 /*
  * Rotating file sink based on date.
  * If truncate != false , the created file will be truncated.
@@ -77,26 +74,21 @@ public:
                     int rotation_minute,
                     bool truncate = false,
                     uint16_t max_files = 0,
-                    const file_event_handlers &event_handlers = {},
-                    //* @log4sp hack *//
-                    log4sp_daily_filename_calculator calculator = [](const filename_t &filename, const tm &now_tm) {
-                        return FileNameCalc::calc_filename(filename, now_tm);
-                    })
+                    const file_event_handlers &event_handlers = {})
         : base_filename_(std::move(base_filename)),
           rotation_h_(rotation_hour),
           rotation_m_(rotation_minute),
           file_helper_{event_handlers},
           truncate_(truncate),
           max_files_(max_files),
-          filenames_q_(),
-          calculator_(calculator) {
+          filenames_q_() {
         if (rotation_hour < 0 || rotation_hour > 23 || rotation_minute < 0 ||
             rotation_minute > 59) {
             throw_spdlog_ex("daily_file_sink: Invalid rotation time in ctor");
         }
 
         auto now = log_clock::now();
-        auto filename = calculator_(base_filename_, now_tm(now));
+        auto filename = FileNameCalc::calc_filename(base_filename_, now_tm(now));
         file_helper_.open(filename, truncate_);
         rotation_tp_ = next_rotation_tp_();
 
@@ -115,7 +107,7 @@ protected:
         auto time = msg.time;
         bool should_rotate = time >= rotation_tp_;
         if (should_rotate) {
-            auto filename = calculator_(base_filename_, now_tm(time));
+            auto filename = FileNameCalc::calc_filename(base_filename_, now_tm(time));
             file_helper_.open(filename, truncate_);
             rotation_tp_ = next_rotation_tp_();
         }
@@ -139,7 +131,7 @@ private:
         std::vector<filename_t> filenames;
         auto now = log_clock::now();
         while (filenames.size() < max_files_) {
-            auto filename = calculator_(base_filename_, now_tm(now));
+            auto filename = FileNameCalc::calc_filename(base_filename_, now_tm(now));
             if (!path_exists(filename)) {
                 break;
             }
@@ -197,7 +189,6 @@ private:
     bool truncate_;
     uint16_t max_files_;
     details::circular_q<filename_t> filenames_q_;
-    log4sp_daily_filename_calculator calculator_;       //* @log4sp hack *//
 };
 
 using daily_file_sink_mt = daily_file_sink<std::mutex>;

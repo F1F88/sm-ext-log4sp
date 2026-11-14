@@ -33,7 +33,6 @@
 
 #include "log4sp/adapter/logger_handler.h"
 #include "log4sp/adapter/sink_handler.h"
-#include "log4sp/command/root_console_command_handler.h"
 
 
 /**
@@ -45,7 +44,7 @@ Log4spExtension g_Log4sp; /**< Global singleton for extension's main interface *
 SMEXT_LINK(&g_Log4sp);
 
 
-bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
+bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, [[maybe_unused]] bool late)
 {
     static_assert(!NO_HANDLE_TYPE,  "NO_HANDLE_TYPE has changed, conditional statement for handle needs to be modified!");
     static_assert(!BAD_HANDLE,      "BAD_HANDLE has changed, conditional statement for handle needs to be modified!");
@@ -55,7 +54,6 @@ bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
     {
         Log4sp::LoggerHandler::Initialize();
         Log4sp::SinkHandler::Initialize();
-        Log4sp::RootConsoleCommandHandler::Initialize();
     }
     catch (const std::exception &ex)
     {
@@ -69,23 +67,18 @@ bool Log4spExtension::SDK_OnLoad(char *error, size_t maxlen, bool late)
     sharesys->AddNatives(myself, BasicFileSinkNatives);
     sharesys->AddNatives(myself, CallbackSinkNatives);
     sharesys->AddNatives(myself, DailyFileSinkNatives);
+    sharesys->AddNatives(myself, DistSinkNatives);
+    sharesys->AddNatives(myself, DupFilterSinkNatives);
     sharesys->AddNatives(myself, RingBufferSinkNatives);
     sharesys->AddNatives(myself, RotatingFileSinkNatives);
     sharesys->AddNatives(myself, ServerConsoleSinkNatives);
 
-#ifdef DEBUG
-    sharesys->AddNatives(myself, TestSinkNatives);
-#endif
-
     sharesys->RegisterLibrary(myself, "log4sp");
-
-    rootconsole->ConsolePrint("****************** log4sp.ext initialize complete! ******************");
     return true;
 }
 
 void Log4spExtension::SDK_OnUnload()
 {
-    Log4sp::RootConsoleCommandHandler::Destroy();
     Log4sp::LoggerHandler::Destroy();
     Log4sp::SinkHandler::Destroy();
 }

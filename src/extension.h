@@ -122,12 +122,10 @@ extern const sp_nativeinfo_t    SinkNatives[];
 extern const sp_nativeinfo_t    BasicFileSinkNatives[];
 extern const sp_nativeinfo_t    CallbackSinkNatives[];
 extern const sp_nativeinfo_t    DailyFileSinkNatives[];
+extern const sp_nativeinfo_t    DistSinkNatives[];
+extern const sp_nativeinfo_t    DupFilterSinkNatives[];
 extern const sp_nativeinfo_t    RingBufferSinkNatives[];
 extern const sp_nativeinfo_t    RotatingFileSinkNatives[];
 extern const sp_nativeinfo_t    ServerConsoleSinkNatives[];
-
-#ifdef DEBUG
-extern const sp_nativeinfo_t    TestSinkNatives[];
-#endif
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
